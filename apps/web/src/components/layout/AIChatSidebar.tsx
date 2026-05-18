@@ -1,0 +1,182 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, cn } from '@oktavius/base-ui';
+
+import { BotIcon, ChevronLeftIcon } from '@/lib/icons';
+
+import { OsirisChatShell } from './OsirisChatShell';
+
+const CHAT_SIDEBAR_WIDTH_KEY = 'chat-sidebar-width';
+const CHAT_SIDEBAR_COLLAPSED_KEY = 'chat-sidebar-collapsed';
+const COLLAPSED_WIDTH = 48;
+const DEFAULT_WIDTH = 480;
+const MIN_WIDTH = 380;
+const MAX_WIDTH = 800;
+const DRAG_COLLAPSE_THRESHOLD = 120;
+
+const clampSidebarWidth = (value: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, value));
+
+function readStoredSidebarWidth() {
+  if (typeof window === 'undefined') return DEFAULT_WIDTH;
+  const stored = window.localStorage.getItem(CHAT_SIDEBAR_WIDTH_KEY);
+  const parsed = stored ? Number.parseInt(stored, 10) : DEFAULT_WIDTH;
+  return clampSidebarWidth(Number.isFinite(parsed) ? parsed : DEFAULT_WIDTH);
+}
+
+function readStoredCollapsedState() {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(CHAT_SIDEBAR_COLLAPSED_KEY) === 'true';
+}
+
+export function AIChatSidebar() {
+  const [collapsed, setCollapsed] = useState(readStoredCollapsedState);
+  const [width, setWidth] = useState(readStoredSidebarWidth);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef<{ startX: number; startWidth: number; latestRawWidth: number } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(CHAT_SIDEBAR_WIDTH_KEY, String(width));
+  }, [width]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(CHAT_SIDEBAR_COLLAPSED_KEY, String(collapsed));
+  }, [collapsed]);
+
+  const setCollapsedState = useCallback(
+    (next: boolean) => {
+      if (!next && collapsed) {
+        setWidth(readStoredSidebarWidth());
+      }
+      setCollapsed(next);
+    },
+    [collapsed],
+  );
+
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!resizeRef.current) return;
+      const deltaX = resizeRef.current.startX - event.clientX;
+      const rawWidth = resizeRef.current.startWidth + deltaX;
+      resizeRef.current.latestRawWidth = rawWidth;
+      if (rawWidth <= MIN_WIDTH - DRAG_COLLAPSE_THRESHOLD) {
+        setCollapsedState(true);
+        setIsResizing(false);
+        resizeRef.current = null;
+        return;
+      }
+      setWidth(clampSidebarWidth(rawWidth));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeRef.current = null;
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, setCollapsedState]);
+
+  return (
+    <div
+      data-ai-chat-sidebar="true"
+      className={cn(
+        'relative hidden h-dvh max-h-dvh shrink-0 overflow-hidden border-l border-border bg-background xl:flex',
+        !isResizing && 'transition-[width] duration-200 ease-out',
+      )}
+      style={
+        collapsed
+          ? { width: `${COLLAPSED_WIDTH}px`, minWidth: `${COLLAPSED_WIDTH}px` }
+          : {
+              width: `${width}px`,
+              minWidth: `${MIN_WIDTH}px`,
+              maxWidth: `${MAX_WIDTH}px`,
+            }
+      }
+    >
+      {collapsed ? (
+        <TooltipProvider delayDuration={200}>
+          <div className="flex h-full w-full flex-col items-center">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="h-12 w-full shrink-0 border-b border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  onClick={() => setCollapsedState(false)}
+                >
+                  <BotIcon size={16} className="mx-auto" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left">Expand AI chat</TooltipContent>
+            </Tooltip>
+
+            <button
+              className="group flex w-full flex-1 items-center justify-center overflow-hidden py-4 transition-colors hover:bg-muted/50"
+              onClick={() => setCollapsedState(false)}
+            >
+              <span
+                className="select-none text-[11px] font-medium text-muted-foreground/50 transition-colors group-hover:text-muted-foreground"
+                style={{ writingMode: 'vertical-rl', maxHeight: '200px', overflow: 'hidden' }}
+              >
+                Agent chat
+              </span>
+            </button>
+          </div>
+        </TooltipProvider>
+      ) : (
+        <>
+          <div className="absolute inset-y-0 left-0 z-20 flex w-4 -translate-x-1/2 items-center justify-center group/resize">
+            <button
+              type="button"
+              className={cn(
+                'absolute z-10 h-6 w-6 rounded-full border border-border bg-background text-muted-foreground transition-opacity',
+                'pointer-events-none opacity-0 group-hover/resize:pointer-events-auto group-hover/resize:opacity-100 hover:text-foreground',
+                isResizing && 'pointer-events-none opacity-0',
+              )}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
+              onClick={() => setCollapsedState(true)}
+              title="Collapse AI chat"
+            >
+              <ChevronLeftIcon size={12} className="mx-auto rotate-180" />
+            </button>
+            <div
+              className={cn(
+                'absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 cursor-col-resize transition-colors',
+                isResizing ? 'bg-primary/40' : 'group-hover/resize:bg-primary/20',
+              )}
+              onMouseDown={(event) => {
+                event.preventDefault();
+                setIsResizing(true);
+                resizeRef.current = {
+                  startX: event.clientX,
+                  startWidth: width,
+                  latestRawWidth: width,
+                };
+              }}
+            />
+          </div>
+
+          <div className="flex min-h-0 flex-1">
+            <OsirisChatShell mode="sidebar" className="h-full max-h-dvh" />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
