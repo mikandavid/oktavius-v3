@@ -42,25 +42,22 @@ export function CollapsibleSection({
     <CollapsiblePrimitive.Root
       open={isOpen}
       onOpenChange={handleOpenChange}
-      className={cn(
-        isPlain ? '' : 'rounded-lg border border-border/60 bg-background',
-        className,
-      )}
+      className={cn(isPlain ? '' : 'rounded-card bg-card', className)}
     >
       <div
         className={cn(
           'flex w-full items-stretch gap-2 text-sm font-medium',
-          isPlain ? '' : 'px-4 py-3',
+          isPlain ? '' : 'px-4',
         )}
       >
         <CollapsiblePrimitive.Trigger asChild>
           <button
             type="button"
             className={cn(
-              'flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors',
+              'flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors py-3',
               isPlain
-                ? 'py-2 text-muted-foreground hover:text-foreground'
-                : 'px-2 py-2 hover:bg-muted/50',
+                ? 'text-muted-foreground hover:text-foreground'
+                : 'text-foreground hover:text-foreground',
             )}
           >
             <CaretRight
@@ -78,7 +75,7 @@ export function CollapsibleSection({
       <CollapsiblePrimitive.Content>
         <div
           className={cn(
-            isPlain ? 'pt-2 pb-1' : 'border-t border-border/40 px-4 py-4',
+            isPlain ? 'pt-2 pb-1' : 'px-4 pb-3 pt-1 border-t border-border/50',
           )}
         >
           {children}

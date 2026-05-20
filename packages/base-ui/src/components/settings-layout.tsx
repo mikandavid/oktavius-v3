@@ -78,7 +78,7 @@ export function SettingsLayout({
       </div>
 
       {/* Content */}
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1 rounded-card bg-card p-5">{children}</div>
     </div>
   );
 }
@@ -127,7 +127,7 @@ export function SettingsRow({
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 rounded-lg border border-border/60 bg-background p-4 sm:flex-row sm:items-center sm:justify-between',
+        'flex flex-col gap-3 py-3 border-b border-border/50 last:border-b-0 sm:flex-row sm:items-center sm:justify-between',
         className,
       )}
     >

@@ -96,9 +96,8 @@ export function MultiSelect({
           disabled={disabled}
           aria-expanded={open}
           className={cn(
-            'flex min-h-8 w-full flex-wrap items-center gap-1 rounded-md border border-input bg-background px-2 py-1 text-sm',
-            'ring-offset-background',
-            'focus:outline-none focus:ring-1 focus:ring-ring',
+            'flex min-h-8 w-full flex-wrap items-center gap-1 rounded-control bg-muted/60 px-2 py-1 text-sm hover:bg-muted/80 transition-colors',
+            'focus:outline-none focus:ring-2 focus:ring-ring/40',
             'disabled:cursor-not-allowed disabled:opacity-50',
             className,
           )}
@@ -183,7 +182,7 @@ export function MultiSelect({
                 >
                   <div
                     className={cn(
-                      'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-input',
+                      'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-sm border border-border/60',
                       isSelected && 'border-foreground bg-foreground text-background',
                     )}
                   >

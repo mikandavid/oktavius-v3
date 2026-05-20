@@ -254,16 +254,28 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
         </Link>
 
         <nav className="flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
-          <div className="space-y-0.5">
-            {SIDEBAR_SECTIONS[0].items.map((item) => (
-              <NavItemRow
-                key={item.id}
-                item={item}
-                expanded={isExpanded}
-                labelsVisible={isLabelsVisible}
-                onNavigate={onNavigate}
-              />
-            ))}
+          <div>
+            <div className="mb-1.5 h-5 px-2">
+              <span
+                className={cn(
+                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
+                )}
+              >
+                Main
+              </span>
+            </div>
+            <div className="space-y-0.5">
+              {SIDEBAR_SECTIONS[0].items.map((item) => (
+                <NavItemRow
+                  key={item.id}
+                  item={item}
+                  expanded={isExpanded}
+                  labelsVisible={isLabelsVisible}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="mt-4">

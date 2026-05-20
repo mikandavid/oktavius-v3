@@ -55,11 +55,11 @@ export function AttachmentList({
   }
 
   return (
-    <ul className={cn('space-y-1.5', className)}>
+    <ul className={cn('divide-y divide-border/50', className)}>
       {attachments.map((att) => (
         <li
           key={att.id}
-          className="flex items-center gap-3 rounded-lg border border-border/60 bg-background px-3 py-2.5"
+          className="flex items-center gap-3 py-2"
         >
           <div className="shrink-0 text-muted-foreground">{fileIcon(att.name, att.mimeType)}</div>
           <div className="min-w-0 flex-1">

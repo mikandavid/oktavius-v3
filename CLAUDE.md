@@ -147,11 +147,9 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<DropdownMenu>` `<DropdownMenuTrigger>` `<DropdownMenuContent>` `<DropdownMenuItem>` `<DropdownMenuSeparator>` | Action menus (kebab menus, context menus). CrudTable row actions use this internally |
 | `<Checkbox>` | Standalone binary input. In forms use EntityForm `checkbox` type instead |
 | `<Textarea>` | Standalone multi-line text. In forms use EntityForm `textarea` type instead |
-| `<Tooltip>` `<TooltipTrigger>` `<TooltipContent>` `<TooltipProvider>` | Hover labels on icon buttons, truncated text, abbreviations |
+| `<MouseTooltip content={<>…</>}>` | Cursor-following tooltip — wraps any element, tracks mouse SE. Use for all hover labels. |
 | `<ScrollArea>` | Bounded-height scrollable region with styled scrollbar |
 | `<Separator>` | Horizontal (`h-px`) or vertical (`w-px`) divider line |
-
-Wrap app in `<TooltipProvider>` once (already in AppLayout) — never add a second one per component.
 
 ### Display Atoms (base-ui)
 
@@ -196,7 +194,7 @@ Wrap app in `<TooltipProvider>` once (already in AppLayout) — never add a seco
 
 | Component | When to use |
 |---|---|
-| `<SectionCard title actions meta>` | Content section inside a module detail page — replaces raw `Card` for sectioned content |
+| `<SectionCard title actions meta>` | Borderless content section inside a module detail page — heading + bottom rule, no card chrome |
 | `<ListRow title subtitle leading trailing variant onClick>` | Item rows within a section (parties, tasks, events) — NOT a data table |
 | `<InlineEmptyState text centered>` | Dashed-border "no items yet" inside a SectionCard |
 | `<CollapsibleSection title badge actions>` | Long workspace forms, optional field groups |
@@ -260,13 +258,17 @@ Toaster is mounted in `AppLayout` — never add it yourself.
 
 ### Button Variants
 
-| Variant | When |
-|---|---|
-| `cta` | Primary page action (Create, Save) |
-| `default` | Secondary confirmed action |
-| `outline` | Toolbar actions, export, filters |
-| `ghost` | Icon buttons, inline controls |
-| `destructive` | Delete, irreversible actions |
+| Variant | Visual | When |
+|---|---|---|
+| `cta` | Brand violet | **The single most important action on the page.** Typically the "New entry" / create button in the page header. At most one per page. |
+| `default` | White + light border | The standard confirmed action — form Save, dialog Confirm, wizard Next/Submit, sub-entity Create inside a dialog. This is the workhorse primary. White surface sits on the white-tile aesthetic without adding chrome. |
+| `outline` | Bordered, white bg | Toolbar actions, export, filters, secondary action next to a primary |
+| `ghost` | No bg | Icon buttons, inline controls, low-emphasis actions |
+| `destructive` | Red | Delete, irreversible actions |
+
+**CTA scarcity rule:** `variant="cta"` must be reserved for the page-level primary entry-point action (e.g. `<Link to="/clients/new"><Button variant="cta">New client</Button></Link>` in the page header). Form submit buttons, dialog confirms, wizard step buttons, and sub-entity add buttons use `variant="default"` — never `cta`. The purple loses meaning if it appears on every form.
+
+Hierarchy (strongest → weakest): `cta` → `default` → `outline` → `ghost`.
 
 ### Status / Feedback
 
@@ -295,6 +297,19 @@ Toaster is mounted in `AppLayout` — never add it yourself.
 
 `DatePicker` accepts typed input in DD.MM.YYYY, DD/MM/YYYY, and YYYY-MM-DD — always normalizes display to DD.MM.YYYY on blur.
 
+### Input style — filled, no borders
+All input controls use a filled gray style. No visible border in normal state.
+
+| State | Classes |
+|---|---|
+| Normal | `bg-muted/60 rounded-control` |
+| Hover | `hover:bg-muted/80` |
+| Focus | `focus-visible:ring-2 focus-visible:ring-ring/40` |
+| Focus-within (container inputs) | `focus-within:ring-2 focus-within:ring-ring/40` |
+| Error | `ring-2 ring-destructive` |
+
+Never use `border border-input bg-background` on input surfaces. That style is retired.
+
 ### Input height standard
 All single-line input controls must be **`h-9`** (36px): `Input`, `Select`, `Combobox`, `NumberInput`, `DatePicker`. Exception: `InlineEdit` uses `h-7` (compact inline context only).
 
@@ -313,10 +328,10 @@ Button text is `text-sm` at all sizes except `sm` which uses `text-xs`.
 All radius and shadow values are centralized in `globals.css` as CSS variables. Change once, all components update.
 
 ```
---radius-card: 0.75rem     →  rounded-card    — all surface containers
---radius-control: 0.5rem   →  rounded-control — inputs, buttons, filter pills
---radius-badge: 0.25rem    →  rounded-badge   — badges, chips
---shadow-card: subtle 1px  →  shadow-card     — Card, StatCard, unified table container
+--radius-card: 0.75rem     →  rounded-card    — all surface containers (cards, panels, table container)
+--radius-control: 0.625rem →  rounded-control — inputs, buttons, filter pills
+--radius-badge: 0.375rem   →  rounded-badge   — badges, chips
+--shadow-card: none        →  shadow-card     — Card, StatCard, unified table container (flat)
 --shadow-elevated: deeper  →  shadow-elevated — dropdowns, popovers, dialogs
 ```
 
@@ -324,44 +339,56 @@ Always use semantic classes. Never use `rounded-lg` on named surfaces — use `r
 
 | Surface | Classes |
 |---|---|
-| `Card` | `rounded-card border bg-card shadow-card` |
-| `SectionCard` | `rounded-card border border-border/60 bg-background` |
-| `StatCard` | `rounded-card border border-border bg-background shadow-card` |
-| CrudMainView container | `rounded-card border border-border/70 bg-background shadow-card` |
+| `Card` | `rounded-card bg-card` (no border) |
+| `SectionCard` | borderless: heading + `border-b border-border/50` rule + content |
+| `StatCard` | `rounded-card bg-card` (no border) |
+| CrudMainView container | `rounded-card bg-card` (no border) |
+| `SplitView` | borderless outer; `border-r border-border/50` between sidebar/content |
+| `SettingsRow` | borderless; rows separated by `border-b border-border/50 last:border-b-0` |
+| `AttachmentList` | `divide-y divide-border/50` (no per-row card) |
+
+**Borderless surface rule.** Cards are pure white (`--card: 100%`) on a `bg-muted/40` page wash — separation comes from contrast, not from borders. Never re-add a `border` class to `Card`, `StatCard`, `SectionCard`, `CrudMainView` table container, or `SplitView` outer.
+
+**No drop shadows on card surfaces.** `shadow-card` is set to `none`. Only floating/overlay elements use shadows: dropdowns, dialogs, popovers, tooltips, the token editor panel (`shadow-elevated`).
 
 ### Section titles — no ALL-CAPS
 `SectionCard` titles use `text-sm font-semibold text-foreground`. Never `uppercase tracking-widest` — it looks dated. Reserve ALL-CAPS only for `StatCard` labels (`text-xs font-medium text-muted-foreground` — compact KPI context).
 
 ### Whiteness hierarchy (closer = whiter)
-The app uses elevation-through-brightness: the closer something is to the user (interactive), the whiter it is.
+Elevation through brightness — the closer something is to the user (interactive surfaces), the whiter it is.
 
 | Layer | Token / color | Example |
 |---|---|---|
-| App shell / page background | `hsl(0 0% 96.5%)` (body) | Main content area |
-| Sidebar | `bg-sidebar-background` | Nav rail |
-| Cards / panels / surfaces | `bg-background` (100% white) | `SectionCard`, `StatCard`, `Card`, `CollapsibleSection` |
-| Interactive inputs | `bg-background` (100% white) | `Input`, `Select`, `Textarea`, `Combobox`, `NumberInput` |
+| App page wash | `bg-muted/40` over white body | Main content area — only place a tint is applied |
+| Sidebar | `bg-sidebar-background` (100% white) | Nav rail — flush with cards |
+| Cards / panels / surfaces | `bg-card` (100% white, no border) | `Card`, `StatCard`, `CrudMainView` container |
+| Inline sections (no card) | no bg, no border | `SectionCard`, `CollapsibleSection`, `SettingsRow`, `AttachmentList` |
+| Interactive inputs | `bg-muted/60` (filled gray) | `Input`, `Select`, `Textarea`, `Combobox`, `NumberInput` |
+| Hover state on inputs | `bg-muted/80` | Hovered input controls |
 | Hover / muted fills | `bg-muted` (93%) | Button hover, item hover states |
 
-**Rule:** Never set a page-level or layout-level container to `bg-background`. White is reserved for surfaces and interactive elements. Let layout containers inherit the grey body background.
+**Rules:**
+- Cards are pure white. Never re-tint `bg-card`.
+- Page wash (`bg-muted/40`) is the only background tint. Containers go on top of it as white tiles.
+- Inputs stay filled-grey so form fields read as carved without borders. Never use `border border-input bg-background` on inputs.
 
 ### No cards-in-cards
-Page surfaces can be bordered containers. Internal grouping uses:
-- Section headings (`text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground`)
-- Dividers (`border-t border-border/70`)
-- Spacing (`space-y-4`)
+Page surfaces are borderless white tiles. Internal grouping inside them uses:
+- Section headings (`SectionCard` — heading + bottom rule)
+- Dividers (`border-t border-border/50`)
+- Spacing (`space-y-4` / `space-y-6`)
 
-Never nest `<Card>` inside `<Card>`. Use `<SectionCard>` for content sections inside module detail pages — it provides consistent border chrome without violating the nesting rule.
+Never nest `<Card>` inside `<Card>`. Use `<SectionCard>` for content sections inside module detail pages — it is borderless by design.
 
 ### Border opacity system
+Borders are reserved for **rules and dividers**, not container chrome. Card surfaces are borderless.
+
 | Token | Use |
 |---|---|
-| `border-border` | Full weight — page-level Card, outer containers (`--border` = 88% lightness) |
+| `border-border` | Heavy rules (rare) |
 | `border-border/70` | Section dividers inside EntityForm/DetailView |
-| `border-border/60` | SectionCard shells, ListRow borders |
-| `border-border/50` | Muted ListRow, inner sub-cards |
-| `border-border/40` | Dividers *inside* SectionCard (e.g. header–body separator) |
-| `border-dashed border-border/60` | InlineEmptyState, ListRow variant `dashed` |
+| `border-border/50` | `SectionCard` heading underline; `SettingsRow` row separators; `SplitView` sidebar/content split; `AttachmentList` row dividers; `ListRow` borders |
+| `border-dashed border-border/60` | `InlineEmptyState`, `ListRow` variant `dashed` |
 
 ### Detail page patterns
 - **Simple entity** (users, contacts): `ModulePage` + `DetailView` — flat sections in one scroll.
@@ -414,12 +441,17 @@ For managing sub-entity lists (parties, tasks, checklist items) inside a detail 
 |---|---|
 | `text-foreground` | Primary text |
 | `text-muted-foreground` | Secondary / meta |
-| `bg-background` | Page / card background |
-| `bg-muted` / `bg-muted/40` | Subtle fills, hover states |
+| `bg-background` | Card / surface background (white) |
+| `bg-muted/60` | Input fill (normal state) |
+| `bg-muted/80` | Input fill (hover state) |
+| `bg-muted` / `bg-muted/40` | Subtle page fills, item hover states |
 | `border-border` | Default borders |
 | `border-border/70` | Section dividers |
 | `text-destructive` | Errors, delete |
 | `text-success` / `text-warning` / `text-info` | Status colors |
+| `bg-primary text-primary-foreground` | Default button (near-black / near-white) |
+| `bg-cta text-cta-foreground` | CTA button (brand violet) |
+| `bg-accent text-accent-foreground` | Accent backgrounds (light violet tint) |
 
 ---
 
@@ -469,6 +501,10 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Add `exportOptions` to `CrudMainView` | Wire export separately per module |
 | Group form fields by `section` | Flat long single-section forms |
 | Use semantic color tokens | Hard-code `text-gray-500`, `bg-white` |
+| Use `bg-muted/60` + `hover:bg-muted/80` on input surfaces | `border border-input bg-background` on inputs (retired) |
+| Use `rounded-card` on all named surfaces (cards, list rows, panels) | `rounded-lg` on named surfaces |
+| Use `variant="cta"` ONLY for the page-level entry-point action (header "New X") — one per page max | Use `variant="cta"` on form Save, dialog Confirm, wizard Submit — those use `variant="default"` |
+| Use `variant="outline" size="sm"` for toolbar/filter reset buttons | Use default-size outline button next to compact controls |
 | Use `StatusBadge` for all status rendering | Inline ad-hoc badge per module |
 | Use `ModulePage` for every route | Custom page shells per module |
 | Use `SectionCard` for detail page content sections | Nest `<Card>` inside page `<Card>` |

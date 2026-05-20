@@ -11,7 +11,7 @@ export function InlineEmptyState({ text, centered = false, className }: InlineEm
   return (
     <div
       className={cn(
-        'rounded-lg border border-dashed border-border/60 px-3 py-4 text-sm text-muted-foreground',
+        'rounded-card border border-dashed border-border/60 px-3 py-4 text-sm text-muted-foreground',
         centered && 'py-6 text-center',
         className,
       )}

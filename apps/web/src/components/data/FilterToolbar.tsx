@@ -73,7 +73,7 @@ export function FilterToolbar({
           {filters.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2">
               {filters.map((filter) => (
-                <label key={filter.key} className="flex items-center gap-2 rounded-control border bg-background px-3 py-2">
+                <label key={filter.key} className="flex h-9 items-center gap-2 rounded-control bg-muted/60 px-3 transition-colors hover:bg-muted/80 focus-within:ring-2 focus-within:ring-ring/40">
                   <span className="text-xs font-medium text-muted-foreground">{filter.label}</span>
                   <Select
                     value={values[filter.key] || '__all__'}
@@ -81,7 +81,7 @@ export function FilterToolbar({
                       onFilterChange?.(filter.key, value === '__all__' ? '' : value)
                     }
                   >
-                    <SelectTrigger className="h-7 min-w-[8rem] border-0 bg-transparent px-0 py-0 text-sm shadow-none focus:ring-0">
+                    <SelectTrigger className="h-auto min-w-[8rem] border-0 bg-transparent px-0 py-0 text-sm shadow-none focus:ring-0">
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
@@ -102,7 +102,7 @@ export function FilterToolbar({
         <div className="flex flex-wrap items-center gap-2">
           {trailing}
           {hasActiveFilters ? (
-            <Button variant="outline" onClick={onReset}>
+            <Button variant="outline" size="sm" onClick={onReset}>
               <FilterIcon size={16} />
               Reset
             </Button>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {
   AlertBanner,
@@ -50,6 +50,7 @@ import {
   Label,
   ListRow,
   MoneyText,
+  MouseTooltip,
   MultiSelect,
   NumberInput,
   PageSkeleton,
@@ -72,9 +73,6 @@ import {
   TabsTrigger,
   Textarea,
   Timeline,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
   type TimelineEvent,
 } from '@oktavius/base-ui';
 import {
@@ -205,7 +203,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div id={id} className="space-y-4 scroll-mt-16">
+    <div id={id} className="space-y-4 scroll-mt-28">
       <div className="flex items-center gap-3 pt-2">
         <div className="h-px flex-1 bg-border/60" />
         <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
@@ -234,20 +232,82 @@ const NAV = [
 ];
 
 function ShowcaseNav() {
+  const [active, setActive] = useState<string>(NAV[0].id);
+
+  useEffect(() => {
+    const sections = NAV.map((n) => document.getElementById(n.id)).filter(
+      (el): el is HTMLElement => el !== null,
+    );
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      { rootMargin: '-20% 0px -60% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+
+    sections.forEach((s) => observer.observe(s));
+    return () => observer.disconnect();
+  }, []);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const el = document.getElementById(id);
+    if (!el) return;
+    const scroller = document.getElementById('app-main-content');
+    if (scroller) {
+      const scrollerRect = scroller.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const offset = 112;
+      const target = scroller.scrollTop + (elRect.top - scrollerRect.top) - offset;
+      scroller.scrollTo({ top: target, behavior: 'smooth' });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setActive(id);
+    history.replaceState(null, '', `#${id}`);
+  };
+
   return (
-    <div className="sticky top-0 z-10 -mx-6 px-6 py-2 bg-muted/80 backdrop-blur-sm">
-      <div className="flex flex-wrap gap-1.5 rounded-lg border border-border/60 bg-muted/30 p-2">
-        {NAV.map((n) => (
-          <a
-            key={n.id}
-            href={`#${n.id}`}
-            className="rounded px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            {n.label}
-          </a>
-        ))}
-      </div>
-    </div>
+    <nav
+      aria-label="Showcase sections"
+      className="fixed right-4 top-1/2 z-30 hidden -translate-y-1/2 lg:block"
+    >
+      <ul className="flex flex-col gap-0.5 rounded-card border border-border/60 bg-background/90 p-2 shadow-elevated backdrop-blur-md">
+        {NAV.map((n) => {
+          const isActive = active === n.id;
+          return (
+            <li key={n.id}>
+              <a
+                href={`#${n.id}`}
+                onClick={(e) => handleClick(e, n.id)}
+                aria-current={isActive ? 'true' : undefined}
+                className={[
+                  'group flex items-center gap-2 rounded-control px-2.5 py-1.5 text-xs font-medium transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                  isActive
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                ].join(' ')}
+              >
+                <span
+                  aria-hidden
+                  className={[
+                    'h-1.5 w-1.5 rounded-full transition-colors',
+                    isActive ? 'bg-cta' : 'bg-border group-hover:bg-muted-foreground/60',
+                  ].join(' ')}
+                />
+                {n.label}
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 
@@ -1016,9 +1076,9 @@ export function ComponentShowcasePage() {
                 <>
                   <Button variant="outline" disabled={wizardStep === 0} onClick={() => setWizardStep((s) => s - 1)}>Back</Button>
                   {wizardStep < 3 ? (
-                    <Button variant="cta" onClick={() => setWizardStep((s) => s + 1)}>Next</Button>
+                    <Button variant="default" onClick={() => setWizardStep((s) => s + 1)}>Next</Button>
                   ) : (
-                    <Button variant="cta" onClick={() => { setWizardStep(0); toast.success('Wizard completed.'); }}>Submit</Button>
+                    <Button variant="default" onClick={() => { setWizardStep(0); toast.success('Wizard completed.'); }}>Submit</Button>
                   )}
                 </>
               }
@@ -1250,17 +1310,20 @@ export function ComponentShowcasePage() {
           <Card>
             <CardHeader><CardTitle>Tooltip</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-3 text-xs text-muted-foreground">Wrap app in TooltipProvider once (done in AppLayout). Never add a second one.</p>
+              <p className="mb-3 text-xs text-muted-foreground">MouseTooltip follows the cursor (SE offset). Wrap any element — tooltip tracks the mouse.</p>
               <div className="flex flex-wrap gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild><Button variant="outline" size="sm">Hover me</Button></TooltipTrigger>
-                  <TooltipContent>This is a tooltip</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild><Button variant="ghost" size="icon"><InfoIcon size={16} /></Button></TooltipTrigger>
-                  <TooltipContent side="right">Icon button tooltip</TooltipContent>
-                </Tooltip>
+                <MouseTooltip content={<p>Button tooltip</p>}>
+                  <Button variant="outline" size="sm">Hover me</Button>
+                </MouseTooltip>
+                <MouseTooltip content={<p>Icon button tooltip</p>}>
+                  <Button variant="ghost" size="icon"><InfoIcon size={16} /></Button>
+                </MouseTooltip>
               </div>
+              <MouseTooltip content={<div><p className="font-medium">Rich content</p><p className="mt-0.5 text-muted-foreground">Tooltip follows cursor</p></div>}>
+                <div className="mt-3 inline-flex h-16 w-full cursor-default items-center justify-center rounded-control bg-muted/60 text-sm text-muted-foreground">
+                  Hover anywhere here
+                </div>
+              </MouseTooltip>
             </CardContent>
           </Card>
 
@@ -1348,7 +1411,7 @@ export function ComponentShowcasePage() {
                   </DialogHeader>
                   <p className="text-sm text-muted-foreground">EntityForm with task fields goes here.</p>
                   <DialogFooter>
-                    <Button variant="cta" onClick={() => toast.success('Task created.')}>Create</Button>
+                    <Button variant="default" onClick={() => toast.success('Task created.')}>Create</Button>
                   </DialogFooter>
                 </DialogContent>
                 <DialogTrigger asChild>
@@ -1384,7 +1447,7 @@ export function ComponentShowcasePage() {
           <p className="text-sm text-muted-foreground">Dialog body content goes here.</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button variant="cta" onClick={() => { setDialogOpen(false); toast.success('Saved.'); }}>Save</Button>
+            <Button variant="default" onClick={() => { setDialogOpen(false); toast.success('Saved.'); }}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -186,8 +186,8 @@ export function Combobox({
           disabled={disabled}
           aria-expanded={open}
           className={cn(
-            'flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm',
-            'ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring',
+            'flex h-9 w-full items-center justify-between rounded-control bg-muted/60 px-3 py-1 text-sm hover:bg-muted/80 transition-colors',
+            'focus:outline-none focus:ring-2 focus:ring-ring/40',
             'disabled:cursor-not-allowed disabled:opacity-50',
             !selectedOption && 'text-muted-foreground',
             className,

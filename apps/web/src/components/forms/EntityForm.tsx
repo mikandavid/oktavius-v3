@@ -403,7 +403,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
 
           <div className="flex items-center justify-end gap-2 border-t border-border/70 pt-4">
             {footerActions}
-            <Button type="submit" variant="cta" disabled={isSubmitting}>
+            <Button type="submit" variant="default" disabled={isSubmitting}>
               {isSubmitting ? 'Saving…' : submitLabel}
             </Button>
           </div>

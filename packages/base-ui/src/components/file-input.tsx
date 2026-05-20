@@ -43,7 +43,7 @@ export function FileInput({
   return (
     <div
       className={cn(
-        'relative flex min-h-[5rem] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed transition-colors',
+        'relative flex min-h-[5rem] cursor-pointer flex-col items-center justify-center rounded-card border-2 border-dashed transition-colors',
         dragging
           ? 'border-primary bg-primary/5'
           : 'border-border/60 bg-background hover:border-border/80 hover:bg-muted/20',

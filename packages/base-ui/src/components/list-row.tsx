@@ -36,12 +36,15 @@ export function ListRow({
   leadingIsInteractive = false,
 }: ListRowProps) {
   const shellClass = cn(
-    'flex w-full min-w-0 items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors',
-    variant === 'default' && 'border-border/50 bg-muted/20 hover:bg-muted/40',
-    variant === 'muted' && 'border-border/50 bg-muted/10 hover:bg-muted/20',
-    variant === 'warning' && 'border-warning/35 bg-warning/10 hover:bg-warning/15',
+    'flex w-full min-w-0 items-center gap-3 py-2.5 text-left transition-colors',
+    variant === 'default' &&
+      'border-b border-border/50 last:border-b-0 hover:bg-muted/40 px-2 -mx-2',
+    variant === 'muted' &&
+      'border-b border-border/40 last:border-b-0 hover:bg-muted/30 px-2 -mx-2',
+    variant === 'warning' &&
+      'rounded-control border border-warning/30 bg-warning/10 hover:bg-warning/15 px-3',
     variant === 'dashed' &&
-      'border-dashed border-border/60 bg-background hover:border-border/80 hover:bg-muted/20',
+      'rounded-control border border-dashed border-border/60 hover:border-border/80 hover:bg-muted/20 px-3',
     className,
   );
 

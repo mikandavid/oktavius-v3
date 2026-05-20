@@ -11,7 +11,7 @@ export function Input({ className, ref, ...props }: InputProps) {
     <input
       ref={ref}
       className={cn(
-        'flex h-9 w-full rounded-control border border-input bg-background px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-9 w-full rounded-control bg-muted/60 px-3 py-1 text-sm transition-colors placeholder:text-muted-foreground hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}

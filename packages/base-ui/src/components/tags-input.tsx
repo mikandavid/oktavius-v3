@@ -60,8 +60,8 @@ export function TagsInput({
   return (
     <div
       className={cn(
-        'flex min-h-8 w-full flex-wrap items-center gap-1.5 rounded-md border border-input bg-background px-2 py-1 text-sm',
-        'transition-colors focus-within:ring-1 focus-within:ring-ring',
+        'flex min-h-8 w-full flex-wrap items-center gap-1.5 rounded-control bg-muted/60 px-2 py-1 text-sm',
+        'transition-colors hover:bg-muted/80 focus-within:ring-2 focus-within:ring-ring/40',
         disabled && 'cursor-not-allowed opacity-50',
         className,
       )}

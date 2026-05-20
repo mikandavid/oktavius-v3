@@ -124,7 +124,7 @@ function TimeSpinner({ hours, minutes, minuteStep, onHoursChange, onMinutesChang
         <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustHours(1)}>▲</button>
         <input type="text" inputMode="numeric" value={pad(hours)} onMouseDown={(e) => e.stopPropagation()}
           onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n) && n >= 0 && n < 24) onHoursChange(n); }}
-          className="w-8 rounded border border-input bg-background px-1 py-0.5 text-center text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring" />
+          className="w-8 rounded-sm bg-muted/60 px-1 py-0.5 text-center text-sm font-medium transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring/40" />
         <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustHours(-1)}>▼</button>
       </div>
       <span className="text-sm font-medium text-muted-foreground">:</span>
@@ -132,7 +132,7 @@ function TimeSpinner({ hours, minutes, minuteStep, onHoursChange, onMinutesChang
         <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustMinutes(1)}>▲</button>
         <input type="text" inputMode="numeric" value={pad(minutes)} onMouseDown={(e) => e.stopPropagation()}
           onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n) && n >= 0 && n < 60) onMinutesChange(clampMinutes(n, minuteStep)); }}
-          className="w-8 rounded border border-input bg-background px-1 py-0.5 text-center text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring" />
+          className="w-8 rounded-sm bg-muted/60 px-1 py-0.5 text-center text-sm font-medium transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring/40" />
         <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustMinutes(-1)}>▼</button>
       </div>
     </div>
@@ -330,8 +330,8 @@ export function DatePicker({
           // ── Sectioned datetime trigger ──────────────────────────────────
           <div
             className={cn(
-              'flex h-9 w-full items-center rounded-md border bg-background',
-              dateInvalid ? 'border-destructive ring-1 ring-destructive' : 'border-input focus-within:ring-1 focus-within:ring-ring',
+              'flex h-9 w-full items-center rounded-control bg-muted/60 hover:bg-muted/80',
+              dateInvalid ? 'ring-2 ring-destructive' : 'focus-within:ring-2 focus-within:ring-ring/40',
               'transition-colors',
               'disabled:cursor-not-allowed disabled:opacity-50',
               className,
@@ -399,12 +399,12 @@ export function DatePicker({
               onBlur={mode === 'time' ? handleTimeBlur : handleDateBlur}
               onKeyDown={sharedKeyDown}
               className={cn(
-                'flex h-9 w-full rounded-md border bg-background py-1 pl-8 text-sm',
+                'flex h-9 w-full rounded-control bg-muted/60 hover:bg-muted/80 py-1 pl-8 text-sm',
                 'transition-colors placeholder:text-muted-foreground',
                 'focus-visible:outline-none',
                 mode === 'date' && dateInvalid
-                  ? 'border-destructive ring-1 ring-destructive'
-                  : 'border-input focus-visible:ring-1 focus-visible:ring-ring',
+                  ? 'ring-2 ring-destructive'
+                  : 'focus-visible:ring-2 focus-visible:ring-ring/40',
                 'disabled:cursor-not-allowed disabled:opacity-50',
                 hasClear ? 'pr-7' : 'pr-3',
               )}

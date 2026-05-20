@@ -141,7 +141,7 @@ export function CrudMainView<T extends { id: string }>({
 
   return (
     <ModulePage title={title} subtitle={subtitle} icon={icon} actions={resolvedHeaderActions}>
-      <div className="overflow-hidden rounded-card border border-border/70 bg-background shadow-card">
+      <div className="overflow-hidden rounded-card bg-card">
         <div className="border-b border-border/50">
           <FilterToolbar
             search={search}

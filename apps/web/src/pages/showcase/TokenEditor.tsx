@@ -21,7 +21,7 @@ const DEFAULTS: TokenState = {
   radiusControl: 0.625,
   radiusBadge: 0.375,
   radiusBase: 0.875,
-  shadowDepth: 'subtle',
+  shadowDepth: 'none',
   accentColor: '0.595 0.1488 293.77',
   fontFamily: 'inter',
   mutedLightness: 93,

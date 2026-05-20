@@ -47,7 +47,7 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
         ),
         range_end: 'day-range-end',
         selected:
-          '[&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground [&>button]:focus:bg-primary [&>button]:focus:text-primary-foreground',
+          '[&>button]:bg-cta [&>button]:text-cta-foreground [&>button]:hover:bg-cta [&>button]:hover:text-cta-foreground [&>button]:focus:bg-cta [&>button]:focus:text-cta-foreground',
         today: '[&>button]:bg-muted [&>button]:text-foreground',
         outside:
           'day-outside text-muted-foreground opacity-50 aria-selected:bg-muted/50 aria-selected:text-muted-foreground aria-selected:opacity-30',

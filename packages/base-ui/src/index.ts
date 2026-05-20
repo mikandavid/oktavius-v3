@@ -24,6 +24,7 @@ export * from './components/input';
 export * from './components/label';
 export * from './components/list-row';
 export * from './components/money-text';
+export * from './components/mouse-tooltip';
 export * from './components/multi-select';
 export * from './components/number-input';
 export * from './components/page-skeleton';

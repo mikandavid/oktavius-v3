@@ -77,9 +77,9 @@ export function NumberInput({
         onChange?.(draft.replace(/,/g, ''));
       }}
       className={cn(
-        'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm tabular-nums',
-        'ring-offset-background placeholder:text-muted-foreground',
-        'focus:outline-none focus:ring-1 focus:ring-ring',
+        'flex h-9 w-full rounded-control bg-muted/60 px-3 py-1 text-sm tabular-nums hover:bg-muted/80 transition-colors',
+        'placeholder:text-muted-foreground',
+        'focus:outline-none focus:ring-2 focus:ring-ring/40',
         'disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}

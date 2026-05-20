@@ -12,11 +12,11 @@ const TONE_DOT: Record<AlertBannerTone, string> = {
   destructive: 'bg-destructive',
 };
 
-const TONE_BORDER: Record<AlertBannerTone, string> = {
-  info: 'border-b-info/30',
-  success: 'border-b-success/30',
-  warning: 'border-b-warning/40',
-  destructive: 'border-b-destructive/40',
+const TONE: Record<AlertBannerTone, string> = {
+  info: 'border-b-info/25 bg-info/10 text-info',
+  success: 'border-b-success/25 bg-success/10 text-success',
+  warning: 'border-b-warning/25 bg-warning/10 text-warning',
+  destructive: 'border-b-destructive/25 bg-destructive/10 text-destructive',
 };
 
 export interface AlertBannerProps {
@@ -45,18 +45,18 @@ export function AlertBanner({
   return (
     <div
       className={cn(
-        'flex w-full items-center gap-3 border-b bg-background px-4 py-2.5 text-sm',
-        TONE_BORDER[tone],
+        'flex w-full items-center gap-3 border-b px-4 py-2.5 text-sm',
+        TONE[tone],
         className,
       )}
       role="alert"
     >
       <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', TONE_DOT[tone])} />
-      <div className="min-w-0 flex-1 text-foreground">{children}</div>
+      <div className="min-w-0 flex-1 text-foreground/90">{children}</div>
       {dismissible ? (
         <button
           type="button"
-          className="shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+          className="shrink-0 rounded p-0.5 opacity-70 transition-opacity hover:opacity-100"
           onClick={() => {
             setDismissed(true);
             onDismiss?.();
