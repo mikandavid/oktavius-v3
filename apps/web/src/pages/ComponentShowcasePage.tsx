@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import {
   AlertBanner,
@@ -14,6 +15,7 @@ import {
   AttachmentList,
   type Attachment,
   Avatar,
+  CalendarMonthPreview,
   avatarInitials,
   Badge,
   Breadcrumb,
@@ -22,6 +24,8 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  SimpleBarChart,
+  SimpleLineChart,
   Checkbox,
   CollapsibleSection,
   Combobox,
@@ -34,7 +38,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -55,6 +58,7 @@ import {
   NumberInput,
   PageSkeleton,
   RelativeTime,
+  RichTextEditor,
   ScrollArea,
   SectionCard,
   Separator,
@@ -74,6 +78,8 @@ import {
   Textarea,
   Timeline,
   type TimelineEvent,
+  buttonVariants,
+  cn,
 } from '@oktavius/base-ui';
 import {
   SuccessIcon as CheckCircle,
@@ -84,17 +90,34 @@ import {
   PlusIcon,
   WarningIcon,
 } from '@/lib/icons';
+import { sortRows } from '@/lib/sortRows';
 import { toast } from '@/lib/toast';
 
+import { useCommandPalette } from '@/components/command/CommandPalette';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { DetailView } from '@/components/common/DetailView';
 import { EmptyState } from '@/components/common/EmptyState';
 import { InfoBox } from '@/components/common/InfoBox';
 import { ModulePage } from '@/components/common/PageLayout';
+import { BulkImportWizard } from '@/components/data/BulkImportWizard';
+import { TreeList } from '@/components/data/TreeList';
 import { BulkAction, CrudTable, type CrudColumn, type CrudRowAction } from '@/components/data/CrudTable';
+import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
+import { NotificationPanel } from '@/components/layout/NotificationPanel';
+import { HeaderAccountMenu } from '@/components/layout/HeaderAccountMenu';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
+import {
+  clientFormDefaults,
+  clientFormFields,
+  type ClientFormValues,
+} from '@/modules/clients/shared';
 import { TokenEditor } from './showcase/TokenEditor';
+
+const editClientDialogFields = clientFormFields.filter((field) =>
+  ['Identity', 'Contact'].includes(field.section ?? ''),
+);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -228,6 +251,7 @@ const NAV = [
   { id: 'layout',   label: 'Layout' },
   { id: 'data',     label: 'Data & Forms' },
   { id: 'nav',      label: 'Navigation' },
+  { id: 'erp-shell', label: 'ERP shell' },
   { id: 'patterns', label: 'Patterns' },
 ];
 
@@ -337,15 +361,12 @@ export function ComponentShowcasePage() {
   const [rangeEnd, setRangeEnd] = useState<string | undefined>();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingAttachment, setDeletingAttachment] = useState<string | undefined>();
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [docPreviewId, setDocPreviewId] = useState('f1');
+  const [richNotes, setRichNotes] = useState('<p>Internal notes for this record.</p>');
+  const { setOpen: setCommandOpen } = useCommandPalette();
 
-  const sortedRows = [...showcaseRows].sort((a, b) => {
-    const key = sort.startsWith('-') ? sort.slice(1) : sort;
-    const desc = sort.startsWith('-');
-    const l = String((a as Record<string, unknown>)[key] ?? '');
-    const r = String((b as Record<string, unknown>)[key] ?? '');
-    const result = l.localeCompare(r, undefined, { numeric: true, sensitivity: 'base' });
-    return desc ? -result : result;
-  });
+  const sortedRows = sortRows(showcaseRows, sort);
 
   return (
     <ModulePage
@@ -408,7 +429,7 @@ export function ComponentShowcasePage() {
       <Section
         id="actions"
         label="Actions"
-        description={'Buttons are the primary interaction unit. One variant="cta" per page region. Use ghost for icon-only buttons (always with a Tooltip). For destructive actions, require confirmation.'}
+        description={'Buttons are the primary interaction unit. Use variant="cta" for page-header entry actions and dialog Save/Create. Full-page forms use variant="default" on submit. Use ghost for icon-only buttons (always with a Tooltip).'}
       >
 
         {/* Buttons */}
@@ -478,7 +499,9 @@ export function ComponentShowcasePage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => toast.error('Deleted.')}>Delete</AlertDialogAction>
+                      <AlertDialogAction variant="destructive" onClick={() => toast.error('Deleted.')}>
+                        Delete
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -1076,9 +1099,9 @@ export function ComponentShowcasePage() {
                 <>
                   <Button variant="outline" disabled={wizardStep === 0} onClick={() => setWizardStep((s) => s - 1)}>Back</Button>
                   {wizardStep < 3 ? (
-                    <Button variant="default" onClick={() => setWizardStep((s) => s + 1)}>Next</Button>
+                    <Button variant="outline" onClick={() => setWizardStep((s) => s + 1)}>Next</Button>
                   ) : (
-                    <Button variant="default" onClick={() => { setWizardStep(0); toast.success('Wizard completed.'); }}>Submit</Button>
+                    <Button variant="cta" onClick={() => { setWizardStep(0); toast.success('Wizard completed.'); }}>Submit</Button>
                   )}
                 </>
               }
@@ -1357,6 +1380,163 @@ export function ComponentShowcasePage() {
       </Section>
 
       {/* ═══════════════════════════════════════════════════════════════════════
+          § ERP shell patterns
+      ══════════════════════════════════════════════════════════════════════════ */}
+      <Section
+        id="erp-shell"
+        label="ERP shell patterns"
+        description="Global shell affordances and module-level patterns. Fits the three-pane layout: nav · grey workspace · chat rail. Command palette via ⌘K or header search."
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Header chrome</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap items-center gap-3">
+              <HeaderAccountMenu />
+              <NotificationPanel />
+              <p className="w-full text-xs text-muted-foreground">
+                Organization switcher lives inside the profile menu, below the user card.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setCommandOpen(true)}>
+                Open command palette
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Bulk import wizard</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-3 text-xs text-muted-foreground">
+                StepperLayout inside Dialog — purple Import on final step, outline Cancel throughout.
+              </p>
+              <Button variant="cta" size="sm" onClick={() => setBulkImportOpen(true)}>
+                <PlusIcon size={14} className="mr-1.5" />
+                Demo import
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Charts (dashboard KPIs)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <SimpleLineChart
+                data={[
+                  { label: 'Jan', value: 12 },
+                  { label: 'Feb', value: 18 },
+                  { label: 'Mar', value: 15 },
+                  { label: 'Apr', value: 22 },
+                  { label: 'May', value: 19 },
+                ]}
+              />
+              <SimpleBarChart
+                data={[
+                  { label: 'Active', value: 48 },
+                  { label: 'Trial', value: 12 },
+                  { label: 'Churned', value: 4 },
+                ]}
+                height={160}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Calendar preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CalendarMonthPreview
+                monthLabel="May 2026"
+                days={Array.from({ length: 35 }, (_, index) => {
+                  const day = index - 3;
+                  const date = day > 0 && day <= 31 ? `2026-05-${String(day).padStart(2, '0')}` : '';
+                  return {
+                    date,
+                    label: day > 0 && day <= 31 ? String(day) : '',
+                    isToday: day === 21,
+                    isOutsideMonth: day <= 0 || day > 31,
+                  };
+                })}
+                events={[
+                  { date: '2026-05-12', tone: 'primary' },
+                  { date: '2026-05-21', tone: 'warning' },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Rich text notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RichTextEditor value={richNotes} onChange={setRichNotes} placeholder="Add internal notes…" />
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tree list (folders)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TreeList
+                defaultExpandedIds={['clients']}
+                nodes={[
+                  {
+                    id: 'clients',
+                    label: 'Clients',
+                    children: [
+                      { id: 'c-active', label: 'Active accounts' },
+                      { id: 'c-trial', label: 'Trial accounts' },
+                    ],
+                  },
+                  {
+                    id: 'docs',
+                    label: 'Document templates',
+                    children: [{ id: 'd-contracts', label: 'Contracts' }],
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Access denied page</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Full-page pattern when RBAC blocks a module. Route: <code className="text-xs">/access-denied</code>
+              </p>
+              <Link
+                to="/access-denied"
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}
+              >
+                View sample page
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Document preview panel</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DocumentPreviewPanel selectedId={docPreviewId} onSelect={setDocPreviewId} />
+          </CardContent>
+        </Card>
+      </Section>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
           § 8  PATTERNS
           Entity Overview Tab · Sub-entity management
       ══════════════════════════════════════════════════════════════════════════ */}
@@ -1410,9 +1590,10 @@ export function ComponentShowcasePage() {
                     <DialogDescription>Create a new task linked to this record.</DialogDescription>
                   </DialogHeader>
                   <p className="text-sm text-muted-foreground">EntityForm with task fields goes here.</p>
-                  <DialogFooter>
-                    <Button variant="default" onClick={() => toast.success('Task created.')}>Create</Button>
-                  </DialogFooter>
+                  <DialogFormFooter
+                    confirmLabel="Create"
+                    onConfirm={() => toast.success('Task created.')}
+                  />
                 </DialogContent>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm"><PlusIcon size={14} /> Add</Button>
@@ -1437,20 +1618,37 @@ export function ComponentShowcasePage() {
 
       {/* ── Hidden dialogs ───────────────────────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit client</DialogTitle>
             <DialogDescription>
-              Use Dialog for forms, previews, and confirmations that need more space than a popover.
+              Dialog + EntityForm with <code className="text-xs">surface="dialog"</code> — purple Save, no nested card.
             </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Dialog body content goes here.</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button variant="default" onClick={() => { setDialogOpen(false); toast.success('Saved.'); }}>Save</Button>
-          </DialogFooter>
+          <EntityForm<ClientFormValues>
+            surface="dialog"
+            title="Edit client"
+            fields={editClientDialogFields}
+            defaultValues={clientFormDefaults}
+            submitLabel="Save"
+            footerActions={
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+            }
+            onSubmit={() => {
+              setDialogOpen(false);
+              toast.success('Client saved.');
+            }}
+          />
         </DialogContent>
       </Dialog>
+
+      <BulkImportWizard
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        entityLabel="clients"
+      />
 
       <ConfirmActionDialog
         open={confirmOpen}

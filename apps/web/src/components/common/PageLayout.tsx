@@ -20,7 +20,7 @@ export function PageLayout({
   children: ReactNode;
   className?: string;
 }) {
-  return <div className={cn('min-w-0 space-y-4', className)}>{children}</div>;
+  return <div className={cn('min-w-0 max-w-full space-y-4', className)}>{children}</div>;
 }
 
 export function ModulePage({
@@ -42,7 +42,7 @@ export function PageHeader({ title, subtitle, actions, icon, backTo }: PageHeade
       <div className="flex min-w-0 items-center gap-3">
         {backTo ? <BackButton to={backTo} label="Back" /> : null}
         {icon ? (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-muted/40 text-muted-foreground">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-border/60 bg-muted/40 text-muted-foreground">
             {icon}
           </div>
         ) : null}

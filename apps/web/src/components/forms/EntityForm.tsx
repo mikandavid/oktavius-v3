@@ -98,6 +98,12 @@ type EntityFormProps<T extends Record<string, FormFieldValue>> = {
   onSubmit: (values: T) => void;
   isSubmitting?: boolean;
   footerActions?: React.ReactNode;
+  /** `page` = card on route; `dialog` = fields inside Dialog (no nested card, purple save). */
+  surface?: 'page' | 'dialog';
+  /** Defaults to `cta` in dialogs and `default` on full pages. */
+  submitVariant?: 'default' | 'cta';
+  /** Hide the built-in title block when the parent Dialog already has DialogTitle. */
+  showHeader?: boolean;
 };
 
 // ─── Field Renderer ───────────────────────────────────────────────────────────
@@ -312,6 +318,64 @@ function FieldInput({
 
 // ─── EntityForm ───────────────────────────────────────────────────────────────
 
+function EntityFormFields<T extends Record<string, FormFieldValue>>({
+  groupedFields,
+  values,
+  set,
+}: {
+  groupedFields: Record<string, FormField[]>;
+  values: T;
+  set: (name: string, value: FormFieldValue) => void;
+}) {
+  return (
+    <div className="space-y-4">
+      {Object.entries(groupedFields).map(([section, sectionFields], index) => (
+        <section
+          key={section}
+          className={index === 0 ? 'space-y-3' : 'space-y-3 border-t border-border/70 pt-4'}
+        >
+          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {section}
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            {sectionFields.map((field) => {
+              const isBoolean = field.type === 'checkbox' || field.type === 'switch';
+              const inputId = `field-${field.name}`;
+              return (
+                <div
+                  key={field.name}
+                  className={field.colSpan === 2 ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'}
+                >
+                  {!isBoolean ? (
+                    <Label
+                      htmlFor={`field-${field.name}`}
+                      className="text-sm font-medium text-foreground"
+                    >
+                      {field.label}
+                      {field.required ? (
+                        <span className="ml-0.5 text-destructive">*</span>
+                      ) : null}
+                    </Label>
+                  ) : null}
+                  <FieldInput
+                    field={field}
+                    value={values[field.name]}
+                    inputId={inputId}
+                    onChange={(v) => set(field.name, v)}
+                  />
+                  {field.description ? (
+                    <p className="text-xs text-muted-foreground">{field.description}</p>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export function EntityForm<T extends Record<string, FormFieldValue>>({
   title,
   fields,
@@ -321,6 +385,9 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   onSubmit,
   isSubmitting = false,
   footerActions,
+  surface = 'page',
+  submitVariant,
+  showHeader,
 }: EntityFormProps<T>) {
   const [values, setValues] = useState<T>(defaultValues);
 
@@ -337,78 +404,50 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   const set = (name: string, value: FormFieldValue) =>
     setValues((current) => ({ ...current, [name]: value }));
 
+  const resolvedSubmitVariant = submitVariant ?? (surface === 'dialog' ? 'cta' : 'default');
+  const resolvedShowHeader = showHeader === true && surface === 'dialog';
+
+  const form = (
+    <form
+      className="space-y-4"
+      onSubmit={(event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        onSubmit(values);
+      }}
+    >
+      {resolvedShowHeader ? (
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold text-foreground">{title}</h3>
+          {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+        </div>
+      ) : null}
+      <EntityFormFields groupedFields={groupedFields} values={values} set={set} />
+      <div
+        className={
+          surface === 'dialog'
+            ? 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
+            : 'flex items-center justify-end gap-2 border-t border-border/70 pt-4'
+        }
+      >
+        {footerActions}
+        <Button type="submit" variant={resolvedSubmitVariant} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving…' : submitLabel}
+        </Button>
+      </div>
+    </form>
+  );
+
+  if (surface === 'dialog') {
+    return form;
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
       </CardHeader>
-      <CardContent>
-        <form
-          className="space-y-4"
-          onSubmit={(event: FormEvent<HTMLFormElement>) => {
-            event.preventDefault();
-            onSubmit(values);
-          }}
-        >
-          <div className="space-y-4">
-            {Object.entries(groupedFields).map(([section, sectionFields], index) => (
-              <section
-                key={section}
-                className={
-                  index === 0 ? 'space-y-3' : 'space-y-3 border-t border-border/70 pt-4'
-                }
-              >
-                <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  {section}
-                </h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {sectionFields.map((field) => {
-                    const isBoolean = field.type === 'checkbox' || field.type === 'switch';
-                    const inputId = `field-${field.name}`;
-                    return (
-                      <div
-                        key={field.name}
-                        className={
-                          field.colSpan === 2 ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'
-                        }
-                      >
-                        {!isBoolean ? (
-                          <Label
-                            htmlFor={`field-${field.name}`}
-                            className="text-sm font-medium text-foreground"
-                          >
-                            {field.label}
-                            {field.required ? (
-                              <span className="ml-0.5 text-destructive">*</span>
-                            ) : null}
-                          </Label>
-                        ) : null}
-                        <FieldInput
-                          field={field}
-                          value={values[field.name]}
-                          inputId={inputId}
-                          onChange={(v) => set(field.name, v)}
-                        />
-                        {field.description ? (
-                          <p className="text-xs text-muted-foreground">{field.description}</p>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-end gap-2 border-t border-border/70 pt-4">
-            {footerActions}
-            <Button type="submit" variant="default" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving…' : submitLabel}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
+      <CardContent>{form}</CardContent>
     </Card>
   );
 }

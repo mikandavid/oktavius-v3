@@ -359,12 +359,12 @@ function EmptyState({
 
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-muted/40">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-card bg-muted/40">
         <PlusIcon size={16} className="text-muted-foreground/35" />
       </div>
       <p className="mb-1 text-[13px] font-medium text-foreground/70">No conversations yet</p>
       <p className="mb-4 text-xs text-muted-foreground/60">Start the first conversation.</p>
-      <Button variant="outline" size="sm" onClick={onCreateItem} className="h-7 px-3 text-xs">
+      <Button variant="cta" size="sm" onClick={onCreateItem} className="h-7 px-3 text-xs">
         <PlusIcon size={14} className="mr-1.5" />
         New chat
       </Button>

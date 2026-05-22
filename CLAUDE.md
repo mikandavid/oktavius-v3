@@ -27,11 +27,13 @@ oktavius-v3/
 ├── apps/web/src/
 │   ├── app/              # Router, providers, demo data
 │   ├── components/
+│   │   ├── command/      # CommandPalette (⌘K global search)
 │   │   ├── common/       # PageLayout, BackButton, InfoBox, EmptyState, DetailView, ConfirmActionDialog
-│   │   ├── data/         # CrudTable, CrudMainView, FilterToolbar, Pagination, exportGrid
+│   │   ├── data/         # CrudTable, CrudMainView, BulkImportWizard, TreeList, exportGrid
+│   │   ├── documents/    # DocumentPreviewPanel
 │   │   └── forms/        # EntityForm (full field registry)
 │   ├── components/feedback/  # StatusBadge
-│   ├── components/layout/    # AppLayout, Sidebar, Header, MobileTopBar
+│   ├── components/layout/    # AppLayout, Sidebar, Header, HeaderAccountMenu, NotificationPanel, MobileTopBar
 │   ├── lib/
 │   │   └── icons.ts      # All icon exports — use this, not @phosphor-icons/react
 │   ├── modules/          # Feature modules (users/, …)
@@ -39,6 +41,28 @@ oktavius-v3/
 └── packages/base-ui/src/
     └── components/       # All shared primitives
 ```
+
+---
+
+## App shell (fixed three-pane layout)
+
+Desktop layout is always **nav left · workspace center · agent chat right**:
+
+```text
+| Sidebar (md+) | Header + main scroll | AIChatSidebar (lg+) |
+```
+
+Rules:
+
+- **Never** hide the left nav on desktop — `Sidebar` is `md:flex`; mobile uses a drawer overlay.
+- **Chat rail** mounts on every route except `/ai-chat` (that route uses the full center column for chat).
+- **Center column** scrolls (`APP_MAIN_SCROLL_CLASS` + gutter); fitted routes like `/ai-chat` use `APP_MAIN_FIT_CLASS` (no double scroll).
+- **Shell background** is grey (`bg-muted/40` on body and main); modules use white `bg-card` surfaces.
+- **Borders** separate panes (`border-r` on workspace, `border-l` on chat) — not shadows on rails.
+- Chat width is persisted and exposed as `--app-ai-chat-sidebar-width` on `<html>` (48px collapsed).
+- Below `lg`, chat moves to `/ai-chat` (mobile top bar bot icon). Do not build pages that assume full viewport width.
+
+Import shell classes from `@/components/common/pageChrome`.
 
 ---
 
@@ -74,6 +98,7 @@ Common aliases: `PlusIcon` `EditIcon` `DeleteIcon` `BackIcon` `SearchIcon` `More
 | Inline alert / tip / warning | `<InfoBox tone="info|success|warning|destructive">` | `@/components/common/InfoBox` |
 | Empty list / zero state | `<EmptyState>` | `@/components/common/EmptyState` |
 | Destructive confirm | `<ConfirmActionDialog>` | `@/components/common/ConfirmActionDialog` |
+| Dialog Cancel + Save footer | `<DialogFormFooter>` | `@/components/common/DialogFormFooter` — outline Cancel + purple confirm |
 
 ### Data / Tables
 
@@ -143,7 +168,7 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | Component | When to use |
 |---|---|
 | `<Dialog>` `<DialogContent>` `<DialogHeader>` `<DialogTitle>` `<DialogDescription>` `<DialogFooter>` | Modal for forms, previews, multi-field confirms — more space than a popover |
-| `<AlertDialog>` `<AlertDialogTrigger>` `<AlertDialogContent>` `<AlertDialogAction>` `<AlertDialogCancel>` | Blocking confirm modal — use for irreversible destructive actions. Lighter alternatives: `ConfirmPopover` (inline), `ConfirmActionDialog` (shared pattern) |
+| `<AlertDialog>` … `<AlertDialogAction variant="cta\|destructive">` | Blocking confirm — `cta` default for primary confirm, `destructive` for delete. Lighter: `ConfirmPopover`, `ConfirmActionDialog` |
 | `<DropdownMenu>` `<DropdownMenuTrigger>` `<DropdownMenuContent>` `<DropdownMenuItem>` `<DropdownMenuSeparator>` | Action menus (kebab menus, context menus). CrudTable row actions use this internally |
 | `<Checkbox>` | Standalone binary input. In forms use EntityForm `checkbox` type instead |
 | `<Textarea>` | Standalone multi-line text. In forms use EntityForm `textarea` type instead |
@@ -223,6 +248,22 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 |---|---|
 | `<StepperLayout steps currentStep footer>` | Multi-step form wrapper — stepper header + content + footer buttons |
 | `<Stepper steps currentStep>` | Standalone step indicator (use inside custom layouts) |
+| `<CommandDialog>` + cmdk primitives | Global command palette — wrap app in `CommandPaletteProvider` |
+| `<RichTextEditor>` | Internal notes / long text in detail tabs |
+| `<SimpleLineChart>` `<SimpleBarChart>` | Dashboard KPI charts (recharts, brand violet) |
+| `<CalendarMonthPreview>` | Static month grid for scheduling UI mock |
+
+### App shell patterns (apps/web)
+
+| Need | Component | Notes |
+|---|---|---|
+| ⌘K / header search | `CommandPaletteProvider` + `useCommandPalette` | `@/components/command/CommandPalette` |
+| Org switcher | `<OrganizationMenuSection>` | Inside profile dropdown (`HeaderAccountMenu`) — not a separate header control |
+| Notifications | `<NotificationPanel>` | Header popover with `ListRow` items |
+| Bulk CSV import | `<BulkImportWizard>` | Dialog + `StepperLayout`; final step uses `DialogFormFooter` + `cta` |
+| Folder tree | `<TreeList nodes>` | `CollapsibleSection` branches |
+| Document list + preview | `<DocumentPreviewPanel>` | `SplitView` master-detail |
+| RBAC blocked module | `<AccessDeniedPage>` | Route `/access-denied` sample |
 
 ### Toast
 
@@ -260,13 +301,13 @@ Toaster is mounted in `AppLayout` — never add it yourself.
 
 | Variant | Visual | When |
 |---|---|---|
-| `cta` | Brand violet | **The single most important action on the page.** Typically the "New entry" / create button in the page header. At most one per page. |
-| `default` | White + light border | The standard confirmed action — form Save, dialog Confirm, wizard Next/Submit, sub-entity Create inside a dialog. This is the workhorse primary. White surface sits on the white-tile aesthetic without adding chrome. |
+| `cta` | Brand violet | **Primary action in the current context.** Page header "New X", and Save/Create in dialogs (`EntityForm surface="dialog"`). Purple signals the recommended confirm action. |
+| `default` | White + light border | Full-page form Save/Create on dedicated routes, wizard steps, toolbar actions. |
 | `outline` | Bordered, white bg | Toolbar actions, export, filters, secondary action next to a primary |
 | `ghost` | No bg | Icon buttons, inline controls, low-emphasis actions |
 | `destructive` | Red | Delete, irreversible actions |
 
-**CTA scarcity rule:** `variant="cta"` must be reserved for the page-level primary entry-point action (e.g. `<Link to="/clients/new"><Button variant="cta">New client</Button></Link>` in the page header). Form submit buttons, dialog confirms, wizard step buttons, and sub-entity add buttons use `variant="default"` — never `cta`. The purple loses meaning if it appears on every form.
+**CTA usage:** Use `variant="cta"` for (1) the page-header entry action ("New client"), and (2) the primary confirm in a dialog (Save, Create) — Cancel stays `outline`. Full-page create/edit routes keep `variant="default"` on submit. Use `<EntityForm surface="dialog">` in modals; it defaults submit to `cta` and skips the nested card.
 
 Hierarchy (strongest → weakest): `cta` → `default` → `outline` → `ghost`.
 
@@ -503,7 +544,9 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Use semantic color tokens | Hard-code `text-gray-500`, `bg-white` |
 | Use `bg-muted/60` + `hover:bg-muted/80` on input surfaces | `border border-input bg-background` on inputs (retired) |
 | Use `rounded-card` on all named surfaces (cards, list rows, panels) | `rounded-lg` on named surfaces |
-| Use `variant="cta"` ONLY for the page-level entry-point action (header "New X") — one per page max | Use `variant="cta"` on form Save, dialog Confirm, wizard Submit — those use `variant="default"` |
+| Use `variant="cta"` for page-header "New X" and dialog Save/Create | Use `variant="cta"` on full-page form submit (use `default`) |
+| Use `<EntityForm surface="dialog">` or `<DialogFormFooter>` inside Dialog — purple Save/Create | Hand-roll dialog footers with `variant="default"` on confirm |
+| Pass `variant="destructive"` on `AlertDialogAction` / `ConfirmActionDialog` for deletes | Use purple CTA on delete confirms |
 | Use `variant="outline" size="sm"` for toolbar/filter reset buttons | Use default-size outline button next to compact controls |
 | Use `StatusBadge` for all status rendering | Inline ad-hoc badge per module |
 | Use `ModulePage` for every route | Custom page shells per module |

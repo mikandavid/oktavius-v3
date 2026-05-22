@@ -1,7 +1,7 @@
-import { ArrowLeft } from '@phosphor-icons/react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Button, buttonVariants, cn } from '@oktavius/base-ui';
+import { BackIcon } from '@/lib/icons';
 
 type BackButtonProps = {
   to?: string;
@@ -22,7 +22,7 @@ export function BackButton({ to, label, className }: BackButtonProps) {
           className,
         )}
       >
-        <ArrowLeft size={16} weight="bold" />
+        <BackIcon size={16} weight="bold" />
         {label}
       </Link>
     );
@@ -36,7 +36,7 @@ export function BackButton({ to, label, className }: BackButtonProps) {
       className={cn('h-8 px-2 text-muted-foreground hover:text-foreground', className)}
       onClick={() => navigate(-1)}
     >
-      <ArrowLeft size={16} weight="bold" />
+      <BackIcon size={16} weight="bold" />
       {label}
     </Button>
   );

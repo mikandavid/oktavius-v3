@@ -74,6 +74,7 @@ export {
 // ─── Users & Identity ────────────────────────────────────────────────────────
 export {
   User as UserIcon,
+  UserCircle as UserCircleIcon,
   UserPlus as UserAddIcon,
   UserMinus as UserRemoveIcon,
   UsersThree as TeamIcon,

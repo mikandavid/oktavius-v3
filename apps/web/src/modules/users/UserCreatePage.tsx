@@ -1,8 +1,8 @@
-import { CheckCircle } from '@phosphor-icons/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useDemoData } from '@/app/demo-data';
+import { SuccessIcon } from '@/lib/icons';
 import { InfoBox } from '@/components/common/InfoBox';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
@@ -15,7 +15,6 @@ type CreateUserFormValues = {
   team: string;
   role: string;
   status: string;
-  notes: string;
 };
 
 const defaultValues: CreateUserFormValues = {
@@ -24,7 +23,6 @@ const defaultValues: CreateUserFormValues = {
   team: '',
   role: 'Member',
   status: 'Pending',
-  notes: '',
 };
 
 export function UserCreatePage() {
@@ -41,7 +39,7 @@ export function UserCreatePage() {
       {createdMessage ? (
         <InfoBox
           tone="success"
-          icon={<CheckCircle size={18} weight="fill" />}
+          icon={<SuccessIcon size={18} weight="fill" />}
           title="User created"
         >
           {createdMessage}

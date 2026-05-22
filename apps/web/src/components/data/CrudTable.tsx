@@ -1009,6 +1009,7 @@ export function CrudTable<T extends { id: string }>({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
+              variant={confirmDialog?.action.destructive ? 'destructive' : 'cta'}
               onClick={() => {
                 if (!confirmDialog) return;
                 if (confirmDialog.mode === 'row') {

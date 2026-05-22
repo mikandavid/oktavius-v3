@@ -140,8 +140,14 @@ export function CrudMainView<T extends { id: string }>({
     ) : headerActions;
 
   return (
-    <ModulePage title={title} subtitle={subtitle} icon={icon} actions={resolvedHeaderActions}>
-      <div className="overflow-hidden rounded-card bg-card">
+    <ModulePage
+      title={title}
+      subtitle={subtitle}
+      icon={icon}
+      actions={resolvedHeaderActions}
+      layoutClassName="min-w-0"
+    >
+      <div className="min-w-0 overflow-hidden rounded-card bg-card">
         <div className="border-b border-border/50">
           <FilterToolbar
             search={search}

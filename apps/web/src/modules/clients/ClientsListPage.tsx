@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
+import { sortRows } from '@/lib/sortRows';
 
 import { clientColumns, ClientsHeaderAction } from './shared';
 
@@ -26,14 +27,7 @@ export function ClientsListPage() {
       return matchesSearch && matchesStatus && matchesType;
     });
 
-    const key = sort.startsWith('-') ? sort.slice(1) : sort;
-    const desc = sort.startsWith('-');
-    return [...rows].sort((a, b) => {
-      const l = String((a as Record<string, unknown>)[key] ?? '');
-      const r = String((b as Record<string, unknown>)[key] ?? '');
-      const result = l.localeCompare(r, undefined, { numeric: true, sensitivity: 'base' });
-      return desc ? -result : result;
-    });
+    return sortRows(rows, sort);
   }, [clients, search, filters, sort]);
 
   const pageSize = 10;

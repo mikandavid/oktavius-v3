@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, cn } from '@oktavius/base-ui';
+import { Tooltip, TooltipContent, TooltipTrigger, cn } from '@oktavius/base-ui';
 
 import { BotIcon, ChevronLeftIcon } from '@/lib/icons';
 
@@ -9,9 +9,9 @@ import { OsirisChatShell } from './OsirisChatShell';
 const CHAT_SIDEBAR_WIDTH_KEY = 'chat-sidebar-width';
 const CHAT_SIDEBAR_COLLAPSED_KEY = 'chat-sidebar-collapsed';
 const COLLAPSED_WIDTH = 48;
-const DEFAULT_WIDTH = 480;
-const MIN_WIDTH = 380;
-const MAX_WIDTH = 800;
+const DEFAULT_WIDTH = 420;
+const MIN_WIDTH = 300;
+const MAX_WIDTH = 640;
 const DRAG_COLLAPSE_THRESHOLD = 120;
 
 const clampSidebarWidth = (value: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, value));
@@ -45,6 +45,15 @@ export function AIChatSidebar() {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(CHAT_SIDEBAR_COLLAPSED_KEY, String(collapsed));
   }, [collapsed]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const widthPx = collapsed ? COLLAPSED_WIDTH : width;
+    document.documentElement.style.setProperty('--app-ai-chat-sidebar-width', `${widthPx}px`);
+    return () => {
+      document.documentElement.style.removeProperty('--app-ai-chat-sidebar-width');
+    };
+  }, [collapsed, width]);
 
   const setCollapsedState = useCallback(
     (next: boolean) => {
@@ -95,7 +104,7 @@ export function AIChatSidebar() {
     <div
       data-ai-chat-sidebar="true"
       className={cn(
-        'relative hidden h-dvh max-h-dvh shrink-0 overflow-hidden border-l border-border bg-background xl:flex',
+        'relative flex h-dvh max-h-dvh shrink-0 overflow-hidden border-l border-border/60 bg-card',
         !isResizing && 'transition-[width] duration-200 ease-out',
       )}
       style={
@@ -109,33 +118,31 @@ export function AIChatSidebar() {
       }
     >
       {collapsed ? (
-        <TooltipProvider delayDuration={200}>
-          <div className="flex h-full w-full flex-col items-center">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  className="h-12 w-full shrink-0 border-b border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  onClick={() => setCollapsedState(false)}
-                >
-                  <BotIcon size={16} className="mx-auto" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="left">Expand AI chat</TooltipContent>
-            </Tooltip>
-
-            <button
-              className="group flex w-full flex-1 items-center justify-center overflow-hidden py-4 transition-colors hover:bg-muted/50"
-              onClick={() => setCollapsedState(false)}
-            >
-              <span
-                className="select-none text-[11px] font-medium text-muted-foreground/50 transition-colors group-hover:text-muted-foreground"
-                style={{ writingMode: 'vertical-rl', maxHeight: '200px', overflow: 'hidden' }}
+        <div className="flex h-full w-full flex-col items-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="h-12 w-full shrink-0 border-b border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                onClick={() => setCollapsedState(false)}
               >
-                Agent chat
-              </span>
-            </button>
-          </div>
-        </TooltipProvider>
+                <BotIcon size={16} className="mx-auto" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left">Expand AI chat</TooltipContent>
+          </Tooltip>
+
+          <button
+            className="group flex w-full flex-1 items-center justify-center overflow-hidden py-4 transition-colors hover:bg-muted/50"
+            onClick={() => setCollapsedState(false)}
+          >
+            <span
+              className="select-none text-[11px] font-medium text-muted-foreground/50 transition-colors group-hover:text-muted-foreground"
+              style={{ writingMode: 'vertical-rl', maxHeight: '200px', overflow: 'hidden' }}
+            >
+              Agent chat
+            </span>
+          </button>
+        </div>
       ) : (
         <>
           <div className="absolute inset-y-0 left-0 z-20 flex w-4 -translate-x-1/2 items-center justify-center group/resize">

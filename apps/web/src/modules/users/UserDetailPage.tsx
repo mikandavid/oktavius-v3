@@ -1,10 +1,9 @@
-import { Trash } from '@phosphor-icons/react';
 import { useState } from 'react';
-import { UserCircle } from '@phosphor-icons/react';
 import { Navigate, useParams } from 'react-router-dom';
 
 import { Button } from '@oktavius/base-ui';
 import { useDemoData } from '@/app/demo-data';
+import { DeleteIcon, UserCircleIcon } from '@/lib/icons';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
@@ -24,11 +23,11 @@ export function UserDetailPage() {
     <ModulePage
       title={user.name}
       subtitle="Detail screens should reuse a standard sectioned record view."
-      icon={<UserCircle size={20} weight="duotone" />}
+      icon={<UserCircleIcon size={20} weight="duotone" />}
       backTo="/users"
       actions={
         <Button variant="outline" onClick={() => setConfirmDeleteOpen(true)}>
-          <Trash size={16} />
+          <DeleteIcon size={16} />
           Delete
         </Button>
       }

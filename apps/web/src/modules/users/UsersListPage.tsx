@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
 
 import { useDemoData } from '@/app/demo-data';
-import { UsersIcon } from '@/lib/icons';
 import { CrudMainView } from '@/components/data/CrudMainView';
+import { sortRows } from '@/lib/sortRows';
+import { UsersIcon } from '@/lib/icons';
 
 import { userColumns, usersHeaderAction } from './shared';
 
@@ -25,15 +26,7 @@ export function UsersListPage() {
       return matchesSearch && matchesStatus && matchesRole;
     });
 
-    const sortKey = sort.startsWith('-') ? sort.slice(1) : sort;
-    const sortDesc = sort.startsWith('-');
-
-    return [...filtered].sort((a, b) => {
-      const left = String((a as Record<string, unknown>)[sortKey] ?? '');
-      const right = String((b as Record<string, unknown>)[sortKey] ?? '');
-      const result = left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
-      return sortDesc ? -result : result;
-    });
+    return sortRows(filtered, sort);
   }, [filters.role, filters.status, search, sort, users]);
 
   const pageSize = 5;

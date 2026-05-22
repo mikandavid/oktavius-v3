@@ -220,7 +220,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   };
 
   return (
-    <div className={cn('flex h-full min-h-0 max-h-full flex-1 overflow-hidden bg-background', className)}>
+    <div className={cn('flex h-full min-h-0 max-h-full flex-1 overflow-hidden bg-card', className)}>
       {showHistory ? (
         <div
           className={cn(
@@ -290,7 +290,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
               activeConversation.messages.map((message) => (
                 <div
                   key={message.id}
-                  className="ml-auto max-w-[92%] rounded-2xl border border-foreground/10 bg-muted px-4 py-3"
+                  className="ml-auto max-w-[92%] rounded-card border border-foreground/10 bg-muted px-4 py-3"
                 >
                   <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                     <span>You</span>
@@ -300,8 +300,8 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                 </div>
               ))
             ) : (
-              <div className="rounded-2xl border border-dashed bg-card/70 px-5 py-8 text-center">
-                <div className="mx-auto flex w-fit items-center justify-center rounded-xl border bg-muted/50 px-3 py-2">
+              <div className="rounded-card border border-dashed bg-card/70 px-5 py-8 text-center">
+                <div className="mx-auto flex w-fit items-center justify-center rounded-card border bg-muted/50 px-3 py-2">
                   <BrandMark />
                 </div>
                 <div className="mt-4 text-base font-semibold text-foreground">Start an Oktavius thread</div>

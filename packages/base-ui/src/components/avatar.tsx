@@ -15,7 +15,8 @@ const SIZE_CLASS: Record<AvatarSize, string> = {
 
 const TONE_CLASS: Record<AvatarTone, string> = {
   muted: 'bg-muted text-muted-foreground',
-  accent: 'bg-accent text-accent-foreground',
+  /** Brand violet chip — white initials for contrast on saturated backgrounds */
+  accent: 'bg-cta text-cta-foreground',
   primary: 'bg-primary/10 text-primary',
 };
 

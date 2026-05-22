@@ -50,7 +50,7 @@ const MODULE_ITEMS: NavItem[] = [
 
 const ADMIN_ITEMS: NavItem[] = [
   { id: 'showcase', path: '/showcase', label: 'Showcase', icon: SlidersHorizontalIcon },
-  { id: 'settings', path: '/showcase', label: 'Settings', icon: SettingsIcon },
+  { id: 'settings', path: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 const SIDEBAR_SECTIONS = [
@@ -233,8 +233,15 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
     <aside
       className={cn(
         'relative z-40 flex shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-[width,transform] duration-200 ease-out',
-          mobile ? 'fixed inset-y-0 left-0 h-dvh w-full max-h-dvh' : isExpanded ? 'h-dvh w-52 max-h-dvh' : 'h-dvh w-12 max-h-dvh',
-          mobile ? (open ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0',
+          mobile
+            ? cn(
+                'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh shadow-elevated',
+                open ? 'translate-x-0' : '-translate-x-full',
+              )
+            : isExpanded
+              ? 'h-dvh w-52 max-h-dvh'
+              : 'h-dvh w-12 max-h-dvh',
+          !mobile && 'translate-x-0',
         )}
       >
         <Link

@@ -14,6 +14,8 @@ import {
 import { useDemoData } from '@/app/demo-data';
 import { ChevronDownIcon, SettingsIcon, UserIcon, UsersIcon } from '@/lib/icons';
 
+import { OrganizationMenuSection } from './OrgSwitcher';
+
 type HeaderAccountMenuProps = {
   compact?: boolean;
   className?: string;
@@ -52,7 +54,7 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-60">
+      <DropdownMenuContent align="end" className="w-72">
         <div className="px-2 py-2">
           <div className="text-sm font-medium text-foreground">{currentUser.name}</div>
           <div className="truncate text-xs text-muted-foreground">{currentUser.email}</div>
@@ -60,6 +62,8 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
             {currentUser.role} · {currentUser.team}
           </div>
         </div>
+        <DropdownMenuSeparator />
+        <OrganizationMenuSection />
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => navigate(`/users/${currentUser.id}`)} className="gap-2">
           <UserIcon size={14} />
@@ -69,9 +73,9 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
           <UsersIcon size={14} />
           Team members
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => navigate('/showcase')} className="gap-2">
+        <DropdownMenuItem onSelect={() => navigate('/settings')} className="gap-2">
           <SettingsIcon size={14} />
-          Interface settings
+          Settings
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

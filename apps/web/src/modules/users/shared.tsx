@@ -1,10 +1,10 @@
 import { Button } from '@oktavius/base-ui';
-import { UserPlus, Users } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 
 import type { UserRecord } from '@/app/demo-data';
+import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FormField } from '@/components/forms/EntityForm';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { UserAddIcon, UsersIcon } from '@/lib/icons';
 
 export const userFormFields: FormField[] = [
   {
@@ -46,54 +46,21 @@ export const userFormFields: FormField[] = [
     required: true,
     section: 'Assignment',
   },
-  {
-    name: 'notes',
-    label: 'Notes',
-    type: 'textarea',
-    section: 'Additional',
-    colSpan: 2,
-    description: 'Temporary extraction note field for debugging shared form layouts.',
-  },
 ];
 
-export const userColumns = [
-  {
-    key: 'name',
-    header: 'User',
-    render: (user: UserRecord) => user.name,
-    sortable: true,
-  },
-  {
-    key: 'email',
-    header: 'Email',
-    render: (user: UserRecord) => user.email,
-    sortable: true,
-  },
-  {
-    key: 'role',
-    header: 'Role',
-    render: (user: UserRecord) => user.role,
-    sortable: true,
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    render: (user: UserRecord) => <StatusBadge status={user.status} />,
-    sortable: true,
-  },
-  {
-    key: 'team',
-    header: 'Team',
-    render: (user: UserRecord) => user.team,
-    sortable: true,
-  },
+export const userColumns: CrudColumn<UserRecord>[] = [
+  { key: 'name', header: 'User', sortable: true },
+  { key: 'email', header: 'Email', sortable: true },
+  { key: 'role', header: 'Role', sortable: true },
+  { key: 'status', header: 'Status', sortable: true, type: 'status' },
+  { key: 'team', header: 'Team', sortable: true },
 ];
 
 export function usersHeaderAction() {
   return (
     <Link to="/users/new">
       <Button variant="cta">
-        <UserPlus size={16} />
+        <UserAddIcon size={16} />
         Create user
       </Button>
     </Link>
@@ -101,5 +68,5 @@ export function usersHeaderAction() {
 }
 
 export function usersPageIcon() {
-  return <Users size={20} weight="duotone" />;
+  return <UsersIcon size={20} weight="duotone" />;
 }

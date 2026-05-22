@@ -1,4 +1,4 @@
-import { StatCard } from '@oktavius/base-ui';
+import { SectionCard, SimpleBarChart, SimpleLineChart, StatCard } from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { InfoBox } from '@/components/common/InfoBox';
@@ -31,6 +31,30 @@ export function DashboardPage() {
           value="Tables + Forms"
           description="backend-backed module contracts"
         />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SectionCard title="Revenue trend" meta="Last 5 months">
+          <SimpleLineChart
+            data={[
+              { label: 'Jan', value: 12 },
+              { label: 'Feb', value: 18 },
+              { label: 'Mar', value: 15 },
+              { label: 'Apr', value: 22 },
+              { label: 'May', value: 19 },
+            ]}
+          />
+        </SectionCard>
+        <SectionCard title="Clients by status">
+          <SimpleBarChart
+            data={[
+              { label: 'Active', value: 48 },
+              { label: 'Trial', value: 12 },
+              { label: 'Churned', value: 4 },
+            ]}
+            height={200}
+          />
+        </SectionCard>
       </div>
     </ModulePage>
   );

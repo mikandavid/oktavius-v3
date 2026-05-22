@@ -113,7 +113,8 @@
   body {
     @apply text-foreground text-sm;
     margin: 0;
-    background-color: hsl(var(--background));
+    /* Level 0 shell — grey canvas; white surfaces live in sidebar, header, cards, chat */
+    @apply bg-muted/40;
     font-family: var(--font-sans);
     font-feature-settings:
       'rlig' 1,

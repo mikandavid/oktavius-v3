@@ -84,11 +84,20 @@ export const AlertDialogDescription = React.forwardRef<
 
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
 
+export type AlertDialogActionVariant = 'cta' | 'destructive' | 'default';
+
 export const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className, ...props }, ref) => (
-  <AlertDialogPrimitive.Action ref={ref} className={cn(buttonVariants(), className)} {...props} />
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action> & {
+    /** Primary confirm in modals defaults to brand violet; use `destructive` for delete flows. */
+    variant?: AlertDialogActionVariant;
+  }
+>(({ className, variant = 'cta', ...props }, ref) => (
+  <AlertDialogPrimitive.Action
+    ref={ref}
+    className={cn(buttonVariants({ variant }), className)}
+    {...props}
+  />
 ));
 
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;

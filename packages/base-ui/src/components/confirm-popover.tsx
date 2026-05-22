@@ -8,6 +8,8 @@ export interface ConfirmPopoverProps {
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  /** `destructive` for delete; `cta` for non-destructive confirms in a popover. */
+  confirmVariant?: 'destructive' | 'cta';
   onConfirm: () => void;
   /** The element that opens the popover. */
   trigger: React.ReactNode;
@@ -25,6 +27,7 @@ export function ConfirmPopover({
   description,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
+  confirmVariant = 'destructive',
   onConfirm,
   trigger,
   disabled = false,
@@ -62,7 +65,7 @@ export function ConfirmPopover({
             <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
               {cancelLabel}
             </Button>
-            <Button type="button" size="sm" variant="destructive" onClick={handleConfirm}>
+            <Button type="button" size="sm" variant={confirmVariant} onClick={handleConfirm}>
               {confirmLabel}
             </Button>
           </div>
