@@ -4,6 +4,7 @@ import { Button, buttonVariants, cn } from '@oktavius/base-ui';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { ModulePage } from '@/components/common/PageLayout';
+import { accessDeniedPageIcon } from '@/lib/modulePageIcons';
 import { LockIcon } from '@/lib/icons';
 
 type AccessDeniedPageProps = {
@@ -12,7 +13,7 @@ type AccessDeniedPageProps = {
 
 export function AccessDeniedPage({ moduleName = 'this module' }: AccessDeniedPageProps) {
   return (
-    <ModulePage title="Access denied" subtitle="You do not have permission to view this area.">
+    <ModulePage title="Access denied" subtitle="You do not have permission to view this area." icon={accessDeniedPageIcon()}>
       <div className="mx-auto max-w-md pt-8">
         <EmptyState
           title="Insufficient permissions"

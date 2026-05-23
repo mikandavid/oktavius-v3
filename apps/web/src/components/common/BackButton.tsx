@@ -5,25 +5,23 @@ import { BackIcon } from '@/lib/icons';
 
 type BackButtonProps = {
   to?: string;
-  label: string;
+  /** Accessible label — not shown visually */
+  label?: string;
   className?: string;
 };
 
-export function BackButton({ to, label, className }: BackButtonProps) {
+export function BackButton({ to, label = 'Back', className }: BackButtonProps) {
   const navigate = useNavigate();
+  const buttonClass = cn(
+    buttonVariants({ variant: 'ghost', size: 'icon' }),
+    'h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground',
+    className,
+  );
 
   if (to) {
     return (
-      <Link
-        to={to}
-        className={cn(
-          buttonVariants({ variant: 'ghost', size: 'sm' }),
-          'h-8 px-2 text-muted-foreground hover:text-foreground',
-          className,
-        )}
-      >
+      <Link to={to} className={buttonClass} aria-label={label}>
         <BackIcon size={16} weight="bold" />
-        {label}
       </Link>
     );
   }
@@ -32,12 +30,12 @@ export function BackButton({ to, label, className }: BackButtonProps) {
     <Button
       type="button"
       variant="ghost"
-      size="sm"
-      className={cn('h-8 px-2 text-muted-foreground hover:text-foreground', className)}
+      size="icon"
+      className={cn('h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground', className)}
+      aria-label={label}
       onClick={() => navigate(-1)}
     >
       <BackIcon size={16} weight="bold" />
-      {label}
     </Button>
   );
 }

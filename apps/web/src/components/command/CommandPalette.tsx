@@ -14,10 +14,19 @@ import {
 
 import {
   BotIcon,
+  CaseIcon,
+  ContractIcon,
   HomeIcon,
+  IncidentIcon,
+  InvoiceIcon,
+  OrderIcon,
+  ProductIcon,
+  ProjectIcon,
   ProjectsIcon,
+  ReportsIcon,
   SearchIcon,
   Settings2Icon,
+  SuperadminIcon,
   UsersIcon,
 } from '@/lib/icons';
 
@@ -38,15 +47,28 @@ export function useCommandPalette() {
 
 const NAV_ITEMS = [
   { label: 'Dashboard', path: '/dashboard', icon: HomeIcon, group: 'Modules' },
+  { label: 'Reports', path: '/reports', icon: ReportsIcon, group: 'Modules' },
+  { label: 'Cases', path: '/cases', icon: CaseIcon, group: 'Modules' },
+  { label: 'Case board', path: '/cases/board', icon: CaseIcon, group: 'Modules' },
+  { label: 'Incidents', path: '/incidents', icon: IncidentIcon, group: 'Modules' },
   { label: 'Clients', path: '/clients', icon: ProjectsIcon, group: 'Modules' },
+  { label: 'Contracts', path: '/contracts', icon: ContractIcon, group: 'Modules' },
+  { label: 'Orders', path: '/orders', icon: OrderIcon, group: 'Modules' },
+  { label: 'Invoices', path: '/invoices', icon: InvoiceIcon, group: 'Modules' },
+  { label: 'Products', path: '/products', icon: ProductIcon, group: 'Modules' },
+  { label: 'Projects', path: '/projects', icon: ProjectIcon, group: 'Modules' },
   { label: 'Users', path: '/users', icon: UsersIcon, group: 'Modules' },
   { label: 'AI Chat', path: '/ai-chat', icon: BotIcon, group: 'Modules' },
+  { label: 'Superadmin', path: '/superadmin', icon: SuperadminIcon, group: 'Admin' },
   { label: 'Component Showcase', path: '/showcase', icon: Settings2Icon, group: 'Admin' },
 ] as const;
 
 const QUICK_ACTIONS = [
+  { label: 'New case', path: '/cases/new' },
   { label: 'New client', path: '/clients/new' },
+  { label: 'New product', path: '/products/new' },
   { label: 'New user', path: '/users/new' },
+  { label: 'New organization', path: '/superadmin/orgs/new' },
 ] as const;
 
 export function CommandPaletteProvider({ children }: { children: ReactNode }) {

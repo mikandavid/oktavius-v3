@@ -9,7 +9,7 @@ import {
 } from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
-import { SettingsIcon } from '@/lib/icons';
+import { settingsPageIcon } from '@/lib/modulePageIcons';
 
 export function SettingsPage() {
   const [activeKey, setActiveKey] = useState('general');
@@ -18,7 +18,7 @@ export function SettingsPage() {
     <ModulePage
       title="Settings"
       subtitle="Organization and workspace preferences."
-      icon={<SettingsIcon size={18} />}
+      icon={settingsPageIcon()}
     >
       <SettingsLayout
         items={[

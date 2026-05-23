@@ -1,17 +1,18 @@
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button } from '@oktavius/base-ui';
-import { ExportIcon, SpinnerIcon } from '@/lib/icons';
 import { ModulePage } from '@/components/common/PageLayout';
+import { PageHeaderActions, PageHeaderExportButton } from '@/components/common/PageHeaderButtons';
 
 import { CrudTable, type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
 import { exportToXlsx } from './exportGrid';
 import { FilterToolbar, type FilterDef } from './FilterToolbar';
 import { Pagination } from './Pagination';
+import { buildStandardListCrudActions } from './standardListCrud';
 
 export type { BulkAction, CrudColumn, CrudRowAction };
+export { buildStandardListCrudActions } from './standardListCrud';
 
 type ExportOptions = {
   fileName: string;
@@ -44,6 +45,14 @@ type CrudMainViewProps<T extends { id: string }> = {
   emptyTitle: string;
   emptyDescription?: string;
   getRowHref?: (row: T) => string;
+  /**
+   * Enables checkbox multiselect, row menu (Edit / Delete), and bulk bar (Edit / Delete selected).
+   * Requires `getRowHref`. Set `enableListCrud={false}` to opt out.
+   */
+  entityLabel?: string;
+  pluralLabel?: string;
+  enableListCrud?: boolean;
+  onDeleteRows?: (ids: string[]) => void;
   onRowClick?: (row: T) => void;
   sort?: string;
   onSortChange?: (sort: string) => void;
@@ -80,6 +89,10 @@ export function CrudMainView<T extends { id: string }>({
   emptyTitle,
   emptyDescription,
   getRowHref,
+  entityLabel,
+  pluralLabel,
+  enableListCrud = true,
+  onDeleteRows,
   onRowClick,
   sort,
   onSortChange,
@@ -95,9 +108,30 @@ export function CrudMainView<T extends { id: string }>({
 }: CrudMainViewProps<T>) {
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const resolvedOnRowClick =
     onRowClick ?? (getRowHref ? (row: T) => navigate(getRowHref(row)) : undefined);
+
+  const standardCrud = useMemo(() => {
+    if (!enableListCrud || !entityLabel || !getRowHref) return null;
+    return buildStandardListCrudActions({
+      entityLabel,
+      pluralLabel,
+      getDetailHref: getRowHref,
+      navigate,
+      onDelete: onDeleteRows,
+      onAfterDelete: () => setSelectedIds([]),
+    });
+  }, [enableListCrud, entityLabel, pluralLabel, getRowHref, navigate, onDeleteRows]);
+
+  const resolvedSelectable = selectable ?? standardCrud?.selectable ?? false;
+  const resolvedRowActions = [...(standardCrud?.rowActions ?? []), ...(rowActions ?? [])];
+  const resolvedBulkActions = [...(standardCrud?.bulkActions ?? []), ...(bulkActions ?? [])];
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [page]);
 
   const handleExport = async () => {
     if (!exportOptions) return;
@@ -120,24 +154,19 @@ export function CrudMainView<T extends { id: string }>({
   };
 
   const resolvedHeaderActions =
-    exportOptions ? (
-      <div className="flex items-center gap-2">
+    exportOptions || headerActions ? (
+      <PageHeaderActions>
+        {exportOptions ? (
+          <PageHeaderExportButton
+            label={exportOptions.label ?? 'Export'}
+            disabled={isLoading || rows.length === 0 || isExporting}
+            isLoading={isExporting}
+            onClick={() => void handleExport()}
+          />
+        ) : null}
         {headerActions}
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isLoading || rows.length === 0 || isExporting}
-          onClick={() => void handleExport()}
-        >
-          {isExporting ? (
-            <SpinnerIcon className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <ExportIcon className="h-3.5 w-3.5" />
-          )}
-          {exportOptions.label ?? 'Export'}
-        </Button>
-      </div>
-    ) : headerActions;
+      </PageHeaderActions>
+    ) : undefined;
 
   return (
     <ModulePage
@@ -145,9 +174,9 @@ export function CrudMainView<T extends { id: string }>({
       subtitle={subtitle}
       icon={icon}
       actions={resolvedHeaderActions}
-      layoutClassName="min-w-0"
+      layoutClassName="min-w-0 w-full max-w-full"
     >
-      <div className="min-w-0 overflow-hidden rounded-card bg-card">
+      <div className="w-full max-w-full min-w-0 overflow-hidden rounded-card bg-card">
         <div className="border-b border-border/50">
           <FilterToolbar
             search={search}
@@ -161,11 +190,14 @@ export function CrudMainView<T extends { id: string }>({
           />
         </div>
         <CrudTable
+          columnStretch="all"
           data={rows}
           columns={columns}
-          rowActions={rowActions}
-          bulkActions={bulkActions}
-          selectable={selectable}
+          rowActions={resolvedRowActions}
+          bulkActions={resolvedBulkActions}
+          selectable={resolvedSelectable}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
           emptyTitle={emptyTitle}
           emptyDescription={emptyDescription}
           onRowClick={resolvedOnRowClick}

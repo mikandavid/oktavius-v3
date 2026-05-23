@@ -1,5 +1,5 @@
 import { Grid, useClientDataSource } from '@1771technologies/lytenyte-core';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { CheckIcon, MinusIcon, MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
 
@@ -24,17 +24,22 @@ import {
   Skeleton,
 } from '@oktavius/base-ui';
 
-import { cn } from '@oktavius/base-ui';
+import { cn, formatDisplayDate } from '@oktavius/base-ui';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 
 import {
   CRUD_TABLE_CELL_INNER_BASE,
+  CRUD_TABLE_COLUMN_PADDING_ACTIONS,
+  CRUD_TABLE_COLUMN_PADDING_SELECT,
   CRUD_TABLE_GRID_CHROME_EXTRA_PX,
   CRUD_TABLE_HEADER_HEIGHT_PX,
   CRUD_TABLE_HEADER_INNER_BASE,
+  crudTableAlignClass,
+  crudTableColumnPaddingClass,
   crudTableRowHeightPx,
+  resolveCrudColumnAlign,
 } from './crudTableDensity';
 import {
   nextSortValue,
@@ -59,7 +64,7 @@ const DEFAULT_RESIZE_MIN_WIDTH_PX = 80;
 const DEFAULT_RESIZE_MAX_WIDTH_PX = 1200;
 const DEFAULT_TRUNCATE_MAX_REM = '36rem';
 const TABLE_SELECTION_CHECKBOX_CLASS =
-  'border-muted-foreground/40 data-[state=checked]:border-foreground data-[state=checked]:bg-foreground data-[state=checked]:text-background';
+  'border-border/80 data-[state=checked]:border-sidebar-primary data-[state=checked]:bg-sidebar-primary data-[state=checked]:text-sidebar-primary-foreground data-[state=indeterminate]:border-sidebar-primary data-[state=indeterminate]:bg-sidebar-primary/80 data-[state=indeterminate]:text-sidebar-primary-foreground';
 
 const DEFAULT_WIDTH_BY_TYPE: Record<ColumnType, string> = {
   text: '18rem',
@@ -117,6 +122,10 @@ export interface BulkAction {
   icon?: React.ReactNode;
   onClick: (selectedIds: string[]) => void;
   destructive?: boolean;
+  /** Hide unless at least this many rows are selected */
+  minSelection?: number;
+  /** Hide when more than this many rows are selected (e.g. Edit → 1) */
+  maxSelection?: number;
   confirm?: {
     title: string | ((selectedCount: number) => string);
     description?: string;
@@ -182,19 +191,6 @@ function formatCurrency(value: unknown, symbol: string): React.ReactNode {
   );
 }
 
-function formatDate(value: unknown): React.ReactNode {
-  if (value === null || value === undefined) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-  const date = value instanceof Date ? value : new Date(String(value));
-  if (Number.isNaN(date.getTime())) return String(value);
-  return (
-    <span className="tabular-nums text-muted-foreground">
-      {date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-    </span>
-  );
-}
-
 function renderTypedCell<T>(item: T, column: CrudColumn<T>): React.ReactNode {
   if (column.render) return column.render(item);
 
@@ -212,7 +208,13 @@ function renderTypedCell<T>(item: T, column: CrudColumn<T>): React.ReactNode {
         />
       );
     case 'date':
-      return formatDate(value);
+      return (
+        <span className="tabular-nums text-muted-foreground">
+          {formatDisplayDate(
+            value instanceof Date ? value : value === null || value === undefined ? null : String(value),
+          )}
+        </span>
+      );
     case 'currency':
       return formatCurrency(value, (column.meta?.currencySymbol as string) || '€');
     case 'boolean':
@@ -277,14 +279,14 @@ function LoadingStateWithColumns<T>({
 
   return (
     <div className="overflow-hidden bg-background">
-      <div className="border-b bg-muted/20 px-3 py-2">
+      <div className="border-b bg-muted/20 px-5 py-2">
         <Skeleton className="h-4 w-40" />
       </div>
-      <div className="space-y-1 p-2.5">
+      <div className="space-y-1 px-4 py-2.5">
         {Array.from({ length: rows }).map((_, rowIndex) => (
           <div
             key={rowIndex}
-            className={cn('flex items-center gap-2 rounded-sm px-1', compact ? 'h-9' : 'h-11')}
+            className={cn('flex items-center gap-2 rounded-sm pl-1 pr-2', compact ? 'h-9' : 'h-11')}
           >
             {selectable ? <Skeleton className="h-3.5 w-3.5 rounded" /> : null}
             {columns.map((column) => (
@@ -299,6 +301,12 @@ function LoadingStateWithColumns<T>({
       </div>
     </div>
   );
+}
+
+function bulkActionVisible(action: BulkAction, selectedCount: number) {
+  if (action.minSelection != null && selectedCount < action.minSelection) return false;
+  if (action.maxSelection != null && selectedCount > action.maxSelection) return false;
+  return true;
 }
 
 function BulkActionBar({
@@ -318,37 +326,43 @@ function BulkActionBar({
   onToggleAll: () => void;
   invokeBulkAction: (action: BulkAction, ids: string[]) => void;
 }) {
-  if (selectedCount === 0 || actions.length === 0) return null;
+  const visibleActions = actions.filter((action) => bulkActionVisible(action, selectedCount));
+  if (selectedCount === 0 || visibleActions.length === 0) return null;
 
   const allRowsSelected = rowIds.length > 0 && rowIds.every((id) => selectedIds.includes(id));
   const hasPartialSelection = !allRowsSelected && rowIds.some((id) => selectedIds.includes(id));
 
   return (
-    <div className="absolute inset-x-0 top-0 z-20 flex h-10 items-center justify-between gap-2 border-b bg-background/95 px-3 backdrop-blur-sm">
-      <div className="flex min-w-0 items-center gap-2">
+    <div
+      role="toolbar"
+      aria-label="Bulk actions"
+      className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-sidebar-primary/15 bg-sidebar-primary/[0.06] px-5 py-2"
+    >
+      <div className="flex min-w-0 items-center gap-2.5">
         <Checkbox
           className={TABLE_SELECTION_CHECKBOX_CLASS}
           checked={allRowsSelected ? true : hasPartialSelection ? 'indeterminate' : false}
-          aria-label="Select all"
+          aria-label="Select all on this page"
           onCheckedChange={onToggleAll}
         />
-        <span className="truncate text-xs text-muted-foreground">
+        <span className="truncate text-sm font-medium text-foreground">
           {selectedCount} selected
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {actions.map((action) => (
+        {visibleActions.map((action) => (
           <Button
             key={action.key}
             variant={action.destructive ? 'destructive' : 'outline'}
             size="sm"
+            className="h-8 gap-1.5 bg-background/80"
             onClick={() => invokeBulkAction(action, selectedIds)}
           >
             {action.icon}
-            <span className="ml-1.5">{action.label}</span>
+            {action.label}
           </Button>
         ))}
-        <Button variant="ghost" size="sm" onClick={onClear}>
+        <Button variant="ghost" size="sm" className="h-8 text-muted-foreground" onClick={onClear}>
           Clear
         </Button>
       </div>
@@ -356,9 +370,12 @@ function BulkActionBar({
   );
 }
 
+type ColumnStretchMode = 'first' | 'all' | 'none';
+
 function mergeGridColumns<Spec extends CrudGridSpec<unknown>>(
   previous: Grid.Column<Spec>[],
   nextBase: Grid.Column<Spec>[],
+  stretch: ColumnStretchMode,
 ): Grid.Column<Spec>[] {
   const previousById = new Map(previous.map((column) => [column.id, column]));
   const baseById = new Map(nextBase.map((column) => [column.id, column]));
@@ -376,6 +393,14 @@ function mergeGridColumns<Spec extends CrudGridSpec<unknown>>(
       const previousColumn = previousById.get(id);
       if (!previousColumn) return base;
 
+      if (stretch === 'all') {
+        return {
+          ...base,
+          hide: previousColumn.hide ?? base.hide,
+          pin: previousColumn.pin ?? base.pin,
+        };
+      }
+
       return {
         ...previousColumn,
         ...base,
@@ -391,10 +416,12 @@ function mergeGridColumns<Spec extends CrudGridSpec<unknown>>(
 function applyPersistedColumns<Spec extends CrudGridSpec<unknown>>(
   baseColumns: Grid.Column<Spec>[],
   persistedState: PersistedColumnState,
+  stretch: ColumnStretchMode,
 ): Grid.Column<Spec>[] {
   const baseById = new Map(baseColumns.map((column) => [column.id, column]));
   const persistedById = new Map(persistedState.columns.map((column) => [column.id, column]));
   const persistedIds = new Set(persistedState.columns.map((column) => column.id));
+  const persistWidths = stretch !== 'all';
 
   const mergedInPersistedOrder = persistedState.columns
     .map((persistedColumn): Grid.Column<Spec> | null => {
@@ -403,9 +430,13 @@ function applyPersistedColumns<Spec extends CrudGridSpec<unknown>>(
 
       return {
         ...baseColumn,
-        width: persistedColumn.width ?? baseColumn.width,
-        widthMin: persistedColumn.widthMin ?? baseColumn.widthMin,
-        widthMax: persistedColumn.widthMax ?? baseColumn.widthMax,
+        ...(persistWidths
+          ? {
+              width: persistedColumn.width ?? baseColumn.width,
+              widthMin: persistedColumn.widthMin ?? baseColumn.widthMin,
+              widthMax: persistedColumn.widthMax ?? baseColumn.widthMax,
+            }
+          : {}),
         hide: persistedColumn.hide ?? baseColumn.hide,
         pin: persistedColumn.pin ?? baseColumn.pin,
       };
@@ -419,9 +450,13 @@ function applyPersistedColumns<Spec extends CrudGridSpec<unknown>>(
       if (!persistedColumn) return column;
       return {
         ...column,
-        width: persistedColumn.width ?? column.width,
-        widthMin: persistedColumn.widthMin ?? column.widthMin,
-        widthMax: persistedColumn.widthMax ?? column.widthMax,
+        ...(persistWidths
+          ? {
+              width: persistedColumn.width ?? column.width,
+              widthMin: persistedColumn.widthMin ?? column.widthMin,
+              widthMax: persistedColumn.widthMax ?? column.widthMax,
+            }
+          : {}),
         hide: persistedColumn.hide ?? column.hide,
         pin: persistedColumn.pin ?? column.pin,
       };
@@ -432,14 +467,20 @@ function applyPersistedColumns<Spec extends CrudGridSpec<unknown>>(
 
 function toPersistedColumnState<Spec extends CrudGridSpec<unknown>>(
   columns: Grid.Column<Spec>[],
+  stretch: ColumnStretchMode,
 ): PersistedColumnState {
+  const persistWidths = stretch !== 'all';
   return {
     v: 1,
     columns: columns.map((column) => ({
       id: column.id,
-      width: column.width,
-      widthMin: column.widthMin,
-      widthMax: column.widthMax,
+      ...(persistWidths
+        ? {
+            width: column.width,
+            widthMin: column.widthMin,
+            widthMax: column.widthMax,
+          }
+        : {}),
       hide: column.hide,
       pin: column.pin,
     })),
@@ -472,7 +513,7 @@ export function CrudTable<T extends { id: string }>({
   highlightedId,
   virtualizationMode = 'auto',
   virtualizationThreshold = 100,
-  columnStretch = 'first',
+  columnStretch = 'all',
   columnStateStorageKey,
   gridRef,
 }: CrudTableProps<T>) {
@@ -492,6 +533,8 @@ export function CrudTable<T extends { id: string }>({
 
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
   const [isPrinting, setIsPrinting] = useState(false);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1280 : window.innerWidth,
   );
@@ -516,6 +559,22 @@ export function CrudTable<T extends { id: string }>({
   }, []);
 
   const rows = useMemo(() => (Array.isArray(data) ? data : []), [data]);
+
+  useLayoutEffect(() => {
+    const node = gridContainerRef.current;
+    if (!node || columnStretch === 'none') return undefined;
+
+    const updateWidth = () => {
+      const next = node.clientWidth;
+      setContainerWidth((current) => (current === next ? current : next));
+    };
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [columnStretch, rows.length]);
+
   const selectedIds = controlledSelectedIds ?? internalSelectedIds;
   const setSelectedIds = onSelectionChange ?? setInternalSelectedIds;
   const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
@@ -560,7 +619,12 @@ export function CrudTable<T extends { id: string }>({
         resizable: false,
         hide: false,
         headerRenderer: () => (
-          <div className="flex h-full items-center justify-center">
+          <div
+            className={cn(
+              'flex h-full items-center justify-center',
+              CRUD_TABLE_COLUMN_PADDING_SELECT,
+            )}
+          >
             <Checkbox
               className={TABLE_SELECTION_CHECKBOX_CLASS}
               checked={
@@ -579,7 +643,12 @@ export function CrudTable<T extends { id: string }>({
           if (row.kind !== 'leaf' || !row.data) return null;
           const rowData = row.data;
           return (
-            <div className="flex h-full items-center justify-center">
+            <div
+              className={cn(
+                'flex h-full items-center justify-center',
+                CRUD_TABLE_COLUMN_PADDING_SELECT,
+              )}
+            >
               <Checkbox
                 className={TABLE_SELECTION_CHECKBOX_CLASS}
                 checked={selectedIds.includes(rowData.id)}
@@ -601,9 +670,8 @@ export function CrudTable<T extends { id: string }>({
       const width = parseCssSizeToPx(column.width, defaultWidth);
       const widthMin = parseCssSizeToPx(column.minWidth, DEFAULT_RESIZE_MIN_WIDTH_PX);
       const widthMax = parseCssSizeToPx(column.maxWidth, DEFAULT_RESIZE_MAX_WIDTH_PX);
-      const textAlign =
-        column.align ??
-        (column.type === 'currency' ? 'right' : column.type === 'boolean' ? 'center' : 'left');
+      const textAlign = resolveCrudColumnAlign(column);
+      const isLastColumn = colIndex === visibleColumns.length - 1 && !hasActions;
 
       const widthFlex =
         columnStretch === 'all' ? 1 : columnStretch === 'first' && colIndex === 0 ? 1 : undefined;
@@ -629,6 +697,12 @@ export function CrudTable<T extends { id: string }>({
               disabled={!sortable}
               className={cn(
                 CRUD_TABLE_HEADER_INNER_BASE,
+                crudTableColumnPaddingClass({
+                  isFirstColumn: colIndex === 0,
+                  isLastColumn,
+                  align: textAlign,
+                }),
+                crudTableAlignClass(textAlign),
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                 sortable
                   ? 'cursor-pointer text-foreground hover:text-foreground'
@@ -662,8 +736,12 @@ export function CrudTable<T extends { id: string }>({
             <div
               className={cn(
                 CRUD_TABLE_CELL_INNER_BASE,
-                textAlign === 'center' && 'justify-center text-center',
-                textAlign === 'right' && 'justify-end text-right',
+                crudTableColumnPaddingClass({
+                  isFirstColumn: colIndex === 0,
+                  isLastColumn,
+                  align: textAlign,
+                }),
+                crudTableAlignClass(textAlign),
                 column.className,
                 highlightedIdRef.current === row.data.id && 'font-medium',
               )}
@@ -679,9 +757,9 @@ export function CrudTable<T extends { id: string }>({
       builtColumns.push({
         id: '__actions__',
         name: '',
-        width: 48,
-        widthMin: 48,
-        widthMax: 48,
+        width: 56,
+        widthMin: 56,
+        widthMax: 56,
         pin: 'end',
         movable: false,
         resizable: false,
@@ -696,7 +774,12 @@ export function CrudTable<T extends { id: string }>({
           const destructiveActions = visibleActions.filter((action) => action.destructive);
 
           return (
-            <div className="relative z-10 flex h-full items-center justify-center">
+            <div
+              className={cn(
+                'relative z-10 flex h-full items-center justify-center',
+                CRUD_TABLE_COLUMN_PADDING_ACTIONS,
+              )}
+            >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -775,8 +858,8 @@ export function CrudTable<T extends { id: string }>({
   );
 
   const gridColumns = useMemo(
-    () => mergeGridColumns(userGridColumns ?? structuralColumns, structuralColumns),
-    [structuralColumns, userGridColumns],
+    () => mergeGridColumns(userGridColumns ?? structuralColumns, structuralColumns, columnStretch),
+    [structuralColumns, userGridColumns, columnStretch],
   );
 
   const resolvedColumnStateStorageKey = useMemo(() => {
@@ -795,28 +878,42 @@ export function CrudTable<T extends { id: string }>({
       const parsed = JSON.parse(raw) as PersistedColumnState;
       if (parsed?.v !== 1 || !Array.isArray(parsed.columns)) return;
       setUserGridColumns((previous) =>
-        applyPersistedColumns(previous ?? structuralColumns, parsed as PersistedColumnState),
+        applyPersistedColumns(previous ?? structuralColumns, parsed as PersistedColumnState, columnStretch),
       );
     } catch {
       // ignore malformed persisted state
     }
-  }, [resolvedColumnStateStorageKey, structuralColumns]);
+  }, [resolvedColumnStateStorageKey, structuralColumns, columnStretch]);
 
   useEffect(() => {
     if (!resolvedColumnStateStorageKey || typeof window === 'undefined') return;
     if (!userGridColumns || userGridColumns.length === 0) return;
 
     try {
-      const serialized = JSON.stringify(toPersistedColumnState(userGridColumns));
+      const serialized = JSON.stringify(toPersistedColumnState(userGridColumns, columnStretch));
       window.localStorage.setItem(resolvedColumnStateStorageKey, serialized);
     } catch {
       // ignore storage errors
     }
-  }, [resolvedColumnStateStorageKey, userGridColumns]);
+  }, [resolvedColumnStateStorageKey, userGridColumns, columnStretch]);
 
-  const handleColumnsChange = useCallback((nextColumns: Grid.Column<CrudGridSpec<T>>[]) => {
-    setUserGridColumns(nextColumns);
-  }, []);
+  const handleColumnsChange = useCallback(
+    (nextColumns: Grid.Column<CrudGridSpec<T>>[]) => {
+      if (columnStretch === 'all') {
+        const baseById = new Map(structuralColumns.map((column) => [column.id, column]));
+        setUserGridColumns(
+          nextColumns.map((column) => {
+            const base = baseById.get(column.id);
+            if (!base) return column;
+            return { ...base, hide: column.hide, pin: column.pin };
+          }),
+        );
+        return;
+      }
+      setUserGridColumns(nextColumns);
+    },
+    [columnStretch, structuralColumns],
+  );
 
   const rowSource = useClientDataSource<T>({
     data: rows,
@@ -854,6 +951,7 @@ export function CrudTable<T extends { id: string }>({
     () => ({
       viewport: {
         className: 'w-full min-w-0 max-w-full',
+        style: { width: '100%', maxWidth: '100%' },
       },
       row: {
         className: cn(
@@ -935,30 +1033,33 @@ export function CrudTable<T extends { id: string }>({
     );
   }
 
+  const gridReady = columnStretch === 'none' || containerWidth > 0;
+
   return (
-    <div className="w-full min-w-0">
-      <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden">
-        <div
-          className="ln-grid relative w-full min-w-0 overflow-hidden bg-background"
-          style={{
-            height: gridHeight,
-            minWidth: horizontalScrollMinWidth ? `${horizontalScrollMinWidth}px` : undefined,
-          }}
-        >
-          {isFetching ? (
-            <div className="absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden">
-              <div className="h-full w-full animate-[progress-slide_1.2s_ease-in-out_infinite] bg-primary/60" />
-            </div>
-          ) : null}
-          <BulkActionBar
-            selectedCount={selectedIds.length}
-            actions={bulkActions}
-            selectedIds={selectedIds}
-            rowIds={rowIds}
-            onClear={() => setSelectedIds([])}
-            onToggleAll={() => setSelectedIds(toggleAllIds(rowIds, selectedIds))}
-            invokeBulkAction={invokeBulkAction}
-          />
+    <div className="crud-table-host flex w-full max-w-full min-w-0 flex-col">
+      <BulkActionBar
+        selectedCount={selectedIds.length}
+        actions={bulkActions}
+        selectedIds={selectedIds}
+        rowIds={rowIds}
+        onClear={() => setSelectedIds([])}
+        onToggleAll={() => setSelectedIds(toggleAllIds(rowIds, selectedIds))}
+        invokeBulkAction={invokeBulkAction}
+      />
+      <div
+        ref={gridContainerRef}
+        className="relative w-full max-w-full min-w-0 bg-background"
+        style={{
+          height: gridHeight,
+          minWidth: horizontalScrollMinWidth ? `${horizontalScrollMinWidth}px` : undefined,
+        }}
+      >
+        {isFetching ? (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden">
+            <div className="h-full w-full animate-[progress-slide_1.2s_ease-in-out_infinite] bg-primary/60" />
+          </div>
+        ) : null}
+        {gridReady ? (
           <Grid<CrudGridSpec<T>>
             ref={gridRef}
             columns={gridColumns}
@@ -969,13 +1070,13 @@ export function CrudTable<T extends { id: string }>({
             rowHeight={crudTableRowHeightPx(compact)}
             rowAlternateAttr
             virtualizeRows={shouldVirtualize}
-            virtualizeCols={shouldVirtualize}
+            virtualizeCols={false}
             columnDoubleClickToAutosize
             editMode="readonly"
             styles={gridStyles}
             events={gridEvents}
           />
-        </div>
+        ) : null}
       </div>
 
       <AlertDialog

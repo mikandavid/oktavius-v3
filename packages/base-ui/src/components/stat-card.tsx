@@ -6,7 +6,7 @@ export type StatCardTrend = 'up' | 'down' | 'neutral';
 
 export interface StatCardProps {
   label: string;
-  value: string | number;
+  value: ReactNode;
   /** Formatted delta string e.g. "+12%" or "−3" */
   delta?: string;
   /** Drives delta color — up=success, down=destructive, neutral=muted */
@@ -49,7 +49,7 @@ export function StatCard({
           <div className="shrink-0 text-muted-foreground/60">{icon}</div>
         ) : null}
       </div>
-      <p className="text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+      <div className="text-2xl font-semibold tabular-nums text-foreground">{value}</div>
       <div className="flex items-center gap-2">
         {delta ? (
           <span className={cn('text-xs font-medium', deltaClass)}>{delta}</span>

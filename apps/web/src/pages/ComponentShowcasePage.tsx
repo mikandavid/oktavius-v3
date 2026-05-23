@@ -16,6 +16,11 @@ import {
   type Attachment,
   Avatar,
   CalendarMonthPreview,
+  CalendarView,
+  ResourceCalendar,
+  type CalendarEvent,
+  type CalendarSource,
+  type CalendarViewMode,
   avatarInitials,
   Badge,
   Breadcrumb,
@@ -91,15 +96,18 @@ import {
   WarningIcon,
 } from '@/lib/icons';
 import { sortRows } from '@/lib/sortRows';
+import { showcasePageIcon } from '@/lib/modulePageIcons';
 import { toast } from '@/lib/toast';
 
 import { useCommandPalette } from '@/components/command/CommandPalette';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { ChecklistSection, type ChecklistItem } from '@/components/common/ChecklistSection';
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { DetailView } from '@/components/common/DetailView';
 import { EmptyState } from '@/components/common/EmptyState';
 import { InfoBox } from '@/components/common/InfoBox';
 import { ModulePage } from '@/components/common/PageLayout';
+import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { BulkImportWizard } from '@/components/data/BulkImportWizard';
 import { TreeList } from '@/components/data/TreeList';
 import { BulkAction, CrudTable, type CrudColumn, type CrudRowAction } from '@/components/data/CrudTable';
@@ -240,6 +248,30 @@ function Section({
   );
 }
 
+const SHOWCASE_CALENDAR_SOURCES: CalendarSource[] = [
+  { id: 'work', label: 'Work', color: 'violet', visible: true },
+  { id: 'clients', label: 'Clients', color: 'blue', visible: true },
+  { id: 'company', label: 'Company', color: 'green', visible: true },
+  { id: 'personal', label: 'Personal', color: 'orange', visible: true },
+];
+
+const SHOWCASE_CALENDAR_EVENTS: CalendarEvent[] = [
+  { id: 'cal-1', title: 'Team standup', start: '2026-05-19T09:00', end: '2026-05-19T09:30', calendarId: 'work', resourceId: 'staff-1' },
+  { id: 'cal-2', title: 'Client review', start: '2026-05-21T14:00', end: '2026-05-21T15:00', calendarId: 'clients' },
+  { id: 'cal-3', title: 'Sprint planning', start: '2026-05-22T10:00', end: '2026-05-22T11:30', calendarId: 'work', resourceId: 'staff-2' },
+  { id: 'cal-4', title: 'Company offsite', start: '2026-05-23', end: '2026-05-23', allDay: true, calendarId: 'company' },
+  { id: 'cal-5', title: 'Board prep', start: '2026-05-23T16:00', end: '2026-05-23T17:00', calendarId: 'work', resourceId: 'staff-1' },
+  { id: 'cal-6', title: 'Dentist', start: '2026-05-26T11:00', end: '2026-05-26T11:45', calendarId: 'personal' },
+  { id: 'cal-7', title: 'Workshop', start: '2026-05-28T13:00', end: '2026-05-28T15:00', calendarId: 'clients' },
+  { id: 'cal-8', title: '1:1 with Marco', start: '2026-05-20T15:00', end: '2026-05-20T15:30', calendarId: 'work' },
+];
+
+const SHOWCASE_CALENDAR_RESOURCES = [
+  { id: 'staff-1', label: 'Anna H.' },
+  { id: 'staff-2', label: 'Marco B.' },
+  { id: 'staff-3', label: 'Room A' },
+];
+
 // ─── Nav bar ──────────────────────────────────────────────────────────────────
 
 const NAV = [
@@ -249,6 +281,7 @@ const NAV = [
   { id: 'display',  label: 'Display' },
   { id: 'feedback', label: 'Feedback' },
   { id: 'layout',   label: 'Layout' },
+  { id: 'calendar', label: 'Calendar' },
   { id: 'data',     label: 'Data & Forms' },
   { id: 'nav',      label: 'Navigation' },
   { id: 'erp-shell', label: 'ERP shell' },
@@ -337,6 +370,13 @@ function ShowcaseNav() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const SHOWCASE_CHECKLIST: ChecklistItem[] = [
+  { id: 'chk_demo_1', label: 'Acknowledge receipt to client', done: true, required: true },
+  { id: 'chk_demo_2', label: 'Pull invoice history from billing', done: true, required: true },
+  { id: 'chk_demo_3', label: 'Issue credit note if confirmed', done: false, required: true },
+  { id: 'chk_demo_4', label: 'Send closing summary email', done: false, required: false },
+];
+
 export function ComponentShowcasePage() {
   const [lastSubmit, setLastSubmit] = useState<ShowcaseFormValues | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -364,7 +404,25 @@ export function ComponentShowcasePage() {
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [docPreviewId, setDocPreviewId] = useState('f1');
   const [richNotes, setRichNotes] = useState('<p>Internal notes for this record.</p>');
+  const [showcaseChecklist, setShowcaseChecklist] = useState(SHOWCASE_CHECKLIST);
+  const [calendarAnchor, setCalendarAnchor] = useState(() => new Date(2026, 4, 23));
+  const [calendarView, setCalendarView] = useState<CalendarViewMode>('month');
+  const [calendarSources, setCalendarSources] = useState(SHOWCASE_CALENDAR_SOURCES);
   const { setOpen: setCommandOpen } = useCommandPalette();
+
+  const toggleCalendarSource = (calendarId: string, visible: boolean) => {
+    setCalendarSources((current) =>
+      current.map((source) =>
+        source.id === calendarId ? { ...source, visible } : source,
+      ),
+    );
+  };
+
+  const toggleShowcaseChecklist = (id: string, done: boolean) => {
+    setShowcaseChecklist((current) =>
+      current.map((item) => (item.id === id ? { ...item, done } : item)),
+    );
+  };
 
   const sortedRows = sortRows(showcaseRows, sort);
 
@@ -372,6 +430,7 @@ export function ComponentShowcasePage() {
     <ModulePage
       title="Component Showcase"
       subtitle="Live design reference with adjustable design tokens. Use the panel (bottom-right) to customize radius, shadow, and color."
+      icon={showcasePageIcon()}
     >
       <InfoBox tone="info" icon={<InfoIcon size={18} weight="fill" />} title="Token Editor">
         Open the settings panel (bottom-right ⚙) to adjust border radius, shadows, accent color, and fonts live. Changes apply instantly across all components.
@@ -523,7 +582,7 @@ export function ComponentShowcasePage() {
 
       {/* ═══════════════════════════════════════════════════════════════════════
           § 2  INPUTS
-          Input · Textarea · NumberInput · Checkbox · Switch · Select · Combobox
+          Input · Textarea · NumberInput · Checkbox · Switch · Combobox
           MultiSelect · TagsInput · DatePicker · DateRangePicker · FileInput
       ══════════════════════════════════════════════════════════════════════════ */}
       <Section
@@ -1063,20 +1122,22 @@ export function ComponentShowcasePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">SplitView — master-detail</p>
             <SplitView
               sidebarWidth="w-44"
+              className="h-40 w-full"
               sidebar={
-                <div className="space-y-1 p-2">
-                  {['Apex Tech', 'Bruckner', 'Eiger Ltd'].map((name) => (
-                    <button
+                <SplitViewQueue className="p-2">
+                  {['Apex Tech', 'Bruckner', 'Eiger Ltd'].map((name, index) => (
+                    <ListRow
                       key={name}
-                      type="button"
-                      className="flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                    >
-                      {name}
-                    </button>
+                      variant="queue"
+                      title={name}
+                      subtitle="Client"
+                      onClick={() => undefined}
+                      className={index === 0 ? QUEUE_ITEM_SELECTED_CLASS : undefined}
+                      aria-current={index === 0 ? 'true' : undefined}
+                    />
                   ))}
-                </div>
+                </SplitViewQueue>
               }
-              className="h-32"
             >
               <div className="p-4">
                 <p className="text-sm font-medium text-foreground">Apex Technologies GmbH</p>
@@ -1379,6 +1440,67 @@ export function ComponentShowcasePage() {
         </div>
       </Section>
 
+      <Section
+        id="calendar"
+        label="Calendar & scheduling"
+        description="Google Calendar–style planner: Day / Week / Month / Schedule views, colored events by calendar source, all-day row, current-time indicator, and optional sidebar legend."
+      >
+        <div className="space-y-4">
+          <CalendarView
+            anchor={calendarAnchor}
+            onAnchorChange={setCalendarAnchor}
+            view={calendarView}
+            onViewChange={setCalendarView}
+            events={SHOWCASE_CALENDAR_EVENTS}
+            calendars={calendarSources}
+            onCalendarVisibilityChange={toggleCalendarSource}
+            showCalendarLegend
+            leadingAction={
+              <Button variant="cta" size="sm" onClick={() => toast.info('Create event dialog')}>
+                <PlusIcon size={14} className="mr-1.5" />
+                Create
+              </Button>
+            }
+            onEventClick={(event) => toast.info(event.title)}
+            onSlotClick={(_, time) => toast.info(`New event at ${time}`)}
+          />
+
+          <ResourceCalendar
+            anchor={calendarAnchor}
+            onAnchorChange={setCalendarAnchor}
+            resources={SHOWCASE_CALENDAR_RESOURCES}
+            events={SHOWCASE_CALENDAR_EVENTS}
+            onEventClick={(event) => toast.info(event.title)}
+            onSlotClick={(resourceId, time) => toast.info(`Book ${resourceId} at ${time}`)}
+          />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>CalendarMonthPreview (legacy static mock)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CalendarMonthPreview
+                monthLabel="May 2026"
+                days={Array.from({ length: 35 }, (_, index) => {
+                  const day = index - 3;
+                  const date = day > 0 && day <= 31 ? `2026-05-${String(day).padStart(2, '0')}` : '';
+                  return {
+                    date,
+                    label: day > 0 && day <= 31 ? String(day) : '',
+                    isToday: day === 23,
+                    isOutsideMonth: day <= 0 || day > 31,
+                  };
+                })}
+                events={[
+                  { date: '2026-05-12', tone: 'primary' },
+                  { date: '2026-05-23', tone: 'warning' },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </Section>
+
       {/* ═══════════════════════════════════════════════════════════════════════
           § ERP shell patterns
       ══════════════════════════════════════════════════════════════════════════ */}
@@ -1442,31 +1564,6 @@ export function ComponentShowcasePage() {
                   { label: 'Churned', value: 4 },
                 ]}
                 height={160}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Calendar preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CalendarMonthPreview
-                monthLabel="May 2026"
-                days={Array.from({ length: 35 }, (_, index) => {
-                  const day = index - 3;
-                  const date = day > 0 && day <= 31 ? `2026-05-${String(day).padStart(2, '0')}` : '';
-                  return {
-                    date,
-                    label: day > 0 && day <= 31 ? String(day) : '',
-                    isToday: day === 21,
-                    isOutsideMonth: day <= 0 || day > 31,
-                  };
-                })}
-                events={[
-                  { date: '2026-05-12', tone: 'primary' },
-                  { date: '2026-05-21', tone: 'warning' },
-                ]}
               />
             </CardContent>
           </Card>
@@ -1613,6 +1710,26 @@ export function ComponentShowcasePage() {
             />
             <InlineEmptyState text="No further tasks." />
           </SectionCard>
+        </div>
+
+        {/* ChecklistSection */}
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">ChecklistSection — tick-off lists</p>
+          <p className="text-xs text-muted-foreground">
+            Resolution / workflow checklists on case detail (Workflow tab). Done items show checkbox + muted strikethrough label + faded row — not the tick alone. Use <code className="text-foreground">readOnly</code> on overview previews. Add items via <code className="text-foreground">SubEntityFormDialog</code> in modules.
+          </p>
+          <ChecklistSection
+            title="Resolution checklist"
+            meta="Interactive demo — toggle items below"
+            items={showcaseChecklist}
+            onToggle={toggleShowcaseChecklist}
+          />
+          <ChecklistSection
+            title="Checklist preview (read-only)"
+            items={showcaseChecklist.slice(0, 2)}
+            onToggle={toggleShowcaseChecklist}
+            readOnly
+          />
         </div>
       </Section>
 

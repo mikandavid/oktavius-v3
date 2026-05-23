@@ -29,7 +29,7 @@ export function CalendarMonthPreview({
   );
 
   return (
-    <div className={cn('rounded-card border border-border/60 bg-card', className)}>
+    <div className={cn('overflow-hidden rounded-card bg-card', className)}>
       <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
         <p className="text-sm font-semibold text-foreground">{monthLabel}</p>
         <p className="text-xs text-muted-foreground">Scheduling preview — static mock</p>

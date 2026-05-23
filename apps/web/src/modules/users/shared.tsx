@@ -1,10 +1,9 @@
-import { Button } from '@oktavius/base-ui';
-import { Link } from 'react-router-dom';
+import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
 
 import type { UserRecord } from '@/app/demo-data';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FormField } from '@/components/forms/EntityForm';
-import { UserAddIcon, UsersIcon } from '@/lib/icons';
+import { UserAddIcon } from '@/lib/icons';
 
 export const userFormFields: FormField[] = [
   {
@@ -58,15 +57,11 @@ export const userColumns: CrudColumn<UserRecord>[] = [
 
 export function usersHeaderAction() {
   return (
-    <Link to="/users/new">
-      <Button variant="cta">
-        <UserAddIcon size={16} />
-        Create user
-      </Button>
-    </Link>
+    <PageHeaderCtaLink to="/users/new">
+      <UserAddIcon size={14} />
+      Create user
+    </PageHeaderCtaLink>
   );
 }
 
-export function usersPageIcon() {
-  return <UsersIcon size={20} weight="duotone" />;
-}
+export { usersPageIcon, userRecordPageIcon } from '@/lib/modulePageIcons';

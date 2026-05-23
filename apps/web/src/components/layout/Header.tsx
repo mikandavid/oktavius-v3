@@ -12,7 +12,7 @@ export function Header() {
   return (
     <header className="shrink-0 border-b border-border/60 bg-card">
       <div className="flex h-12 items-center gap-3 px-4 md:px-6">
-        <div className="relative hidden min-w-0 flex-1 md:block">
+        <div className="relative hidden w-full min-w-0 max-w-xs md:block lg:max-w-sm">
           <SearchIcon
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             size={16}

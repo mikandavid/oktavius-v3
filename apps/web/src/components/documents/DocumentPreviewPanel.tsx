@@ -1,11 +1,13 @@
 import {
   Button,
+  ListRow,
   ScrollArea,
   SectionCard,
   SplitView,
   cn,
 } from '@oktavius/base-ui';
 
+import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { DocumentIcon, DownloadIcon } from '@/lib/icons';
 
 const DEMO_FILES = [
@@ -29,33 +31,26 @@ export function DocumentPreviewPanel({
 
   return (
     <SplitView
-      className={cn('min-h-[280px] rounded-card border border-border/60 bg-card', className)}
+      className={cn('min-h-[280px] w-full rounded-card bg-card', className)}
       sidebar={
         <ScrollArea className="h-full max-h-[320px]">
-          <div className="divide-y divide-border/50 p-1">
+          <SplitViewQueue>
             {DEMO_FILES.map((file) => (
-              <button
+              <ListRow
                 key={file.id}
-                type="button"
+                variant="queue"
+                leading={<DocumentIcon size={16} className="text-muted-foreground" />}
+                title={file.name}
+                subtitle={`${file.size} · ${file.updated}`}
                 onClick={() => onSelect?.(file.id)}
-                className={cn(
-                  'flex w-full items-start gap-2 rounded-control px-2 py-2 text-left text-sm transition-colors hover:bg-muted/40',
-                  file.id === selected.id && 'bg-muted/50',
-                )}
-              >
-                <DocumentIcon size={16} className="mt-0.5 shrink-0 text-muted-foreground" />
-                <span className="min-w-0">
-                  <span className="block truncate font-medium text-foreground">{file.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {file.size} · {file.updated}
-                  </span>
-                </span>
-              </button>
+                className={file.id === selected.id ? QUEUE_ITEM_SELECTED_CLASS : undefined}
+                aria-current={file.id === selected.id ? 'true' : undefined}
+              />
             ))}
-          </div>
+          </SplitViewQueue>
         </ScrollArea>
       }
-      sidebarWidth="w-[38%]"
+      sidebarWidth="w-[min(100%,16rem)]"
     >
       <SectionCard
         title={selected.name}

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "pnpm --filter @oktavius/web dev",
     "build": "pnpm --filter @oktavius/web build",
-    "typecheck": "pnpm --filter @oktavius/web typecheck"
+    "typecheck": "pnpm --filter @oktavius/web typecheck",
+    "lint": "pnpm --filter @oktavius/web lint"
   }
 }
 

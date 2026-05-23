@@ -1,13 +1,12 @@
-import { Button } from '@oktavius/base-ui';
-import { Link } from 'react-router-dom';
+import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
 
 import type { ClientRecord } from '@/app/demo-data';
+import { statusColumn } from '@/components/data/columns';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FormField } from '@/components/forms/EntityForm';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { PlusIcon } from '@/lib/icons';
 
-const CLIENT_STATUS_MAP = {
+export const CLIENT_STATUS_MAP = {
   Active: 'success',
   Prospect: 'info',
   Inactive: 'warning',
@@ -36,14 +35,7 @@ export const clientColumns: CrudColumn<ClientRecord>[] = [
     sortable: true,
     hideBelow: 'lg',
   },
-  {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    render: (row) => (
-      <StatusBadge status={row.status} variantMap={CLIENT_STATUS_MAP} />
-    ),
-  },
+  statusColumn<ClientRecord>('status', 'Status', CLIENT_STATUS_MAP),
   {
     key: 'accountManager',
     header: 'Account Manager',
@@ -66,7 +58,6 @@ export const clientColumns: CrudColumn<ClientRecord>[] = [
     sortable: true,
     type: 'date',
     hideBelow: 'lg',
-    render: (row) => row.contractEnd,
   },
 ];
 
@@ -181,13 +172,33 @@ export const clientFormDefaults: ClientFormValues = {
   accountManager: '',
 };
 
+const PARTY_ROLES = ['Primary contact', 'Billing contact', 'Technical contact', 'Legal', 'Other'];
+
+export const partyFormFields: FormField[] = [
+  { name: 'name', label: 'Name', type: 'text', required: true, section: 'Contact' },
+  { name: 'role', label: 'Role', type: 'combobox', options: PARTY_ROLES, required: true, section: 'Contact' },
+  { name: 'email', label: 'Email', type: 'email', required: true, section: 'Contact' },
+];
+
+export type PartyFormValues = {
+  name: string;
+  role: string;
+  email: string;
+};
+
+export const partyFormDefaults: PartyFormValues = {
+  name: '',
+  role: '',
+  email: '',
+};
+
 export function ClientsHeaderAction() {
   return (
-    <Link to="/clients/new">
-      <Button variant="cta">
-        <PlusIcon size={16} />
-        New client
-      </Button>
-    </Link>
+    <PageHeaderCtaLink to="/clients/new">
+      <PlusIcon size={14} />
+      New client
+    </PageHeaderCtaLink>
   );
 }
+
+export { clientsPageIcon } from '@/lib/modulePageIcons';

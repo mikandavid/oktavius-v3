@@ -2,6 +2,8 @@
 
 Drop this file into any session to get full context on stack, component registry, visual rules, and patterns.
 
+**Cursor rules:** `.cursor/rules/` — `ui-system.mdc` always applies; scoped rules cover headers, tables, forms, modules, detail pages, checklists, status/money, dialogs, dates, combobox, split-view. Prefer rules + this doc over improvising UI.
+
 ---
 
 ## Stack
@@ -55,6 +57,7 @@ Desktop layout is always **nav left · workspace center · agent chat right**:
 Rules:
 
 - **Never** hide the left nav on desktop — `Sidebar` is `md:flex`; mobile uses a drawer overlay.
+- **Sidebar active item** — `bg-sidebar-primary/10` + `text-sidebar-primary`. Never use `bg-accent` on nav rows (Showcase Token Editor can set `--accent` to solid purple).
 - **Chat rail** mounts on every route except `/ai-chat` (that route uses the full center column for chat).
 - **Center column** scrolls (`APP_MAIN_SCROLL_CLASS` + gutter); fitted routes like `/ai-chat` use `APP_MAIN_FIT_CLASS` (no double scroll).
 - **Shell background** is grey (`bg-muted/40` on body and main); modules use white `bg-card` surfaces.
@@ -92,12 +95,17 @@ Common aliases: `PlusIcon` `EditIcon` `DeleteIcon` `BackIcon` `SearchIcon` `More
 
 | Need | Component | Import |
 |---|---|---|
-| Full page with header + content | `<ModulePage>` | `@/components/common/PageLayout` |
+| Full page with header + content | `<ModulePage>` | `@/components/common/PageLayout` — **always** pass `icon` (`*PageIcon()` from `@/lib/modulePageIcons`) |
+| List page (CRUD) | `<CrudMainView>` | Same header — pass `icon={clientsPageIcon()}` etc. from module `shared.tsx` |
 | Page back navigation | `<BackButton>` | `@/components/common/BackButton` |
+| Record Edit / Delete (page header) | `<IconEditButton>` `<IconDeleteButton>` | `@/components/common/RecordIconButtons` — icon-only, `aria-label`, no visible text |
+| List header CTA / Export / secondary | `<PageHeaderExportButton>` `<PageHeaderCtaLink>` `<PageHeaderOutlineLink>` | `@/components/common/PageHeaderButtons` — all `size="sm"` (h-7); Export icon-only |
 | Read-only record detail | `<DetailView>` | `@/components/common/DetailView` |
 | Inline alert / tip / warning | `<InfoBox tone="info|success|warning|destructive">` | `@/components/common/InfoBox` |
 | Empty list / zero state | `<EmptyState>` | `@/components/common/EmptyState` |
 | Destructive confirm | `<ConfirmActionDialog>` | `@/components/common/ConfirmActionDialog` |
+| Sub-entity add/edit dialog | `<SubEntityFormDialog>` | `@/components/common/SubEntityFormDialog` — Dialog + EntityForm `surface="dialog"` |
+| Tick-off checklist | `<ChecklistSection>` | `@/components/common/ChecklistSection` — checkbox + muted strikethrough label when done; `onToggle`; `readOnly` for overview preview |
 | Dialog Cancel + Save footer | `<DialogFormFooter>` | `@/components/common/DialogFormFooter` — outline Cancel + purple confirm |
 
 ### Data / Tables
@@ -105,8 +113,16 @@ Common aliases: `PlusIcon` `EditIcon` `DeleteIcon` `BackIcon` `SearchIcon` `More
 | Need | Component | Notes |
 |---|---|---|
 | Record list (any module) | `<CrudMainView>` | Header + filter toolbar + table + pagination + optional export |
-| Table only | `<CrudTable>` | Lytenyte grid. Sortable, selectable, bulk actions, typed cells |
+| List page state hook | `useListPageState()` | `@/lib/useListPageState` — search, filters, sort, pagination for `CrudMainView` |
+| Status table column | `statusColumn(key, header, variantMap)` | `@/components/data/columns` — declarative `type: 'status'` column |
+| Table only | `<CrudTable>` | Lytenyte grid. Sortable, selectable, bulk actions, typed cells. List views use `columnStretch="all"` (via `CrudMainView`) so columns fill card width |
 | Export to XLSX | `exportToXlsx(data, columns, fileName)` | `@/components/data/exportGrid` — lazy xlsx, no spinner needed |
+
+**CrudMainView layout** — card and `FilterToolbar` are `w-full max-w-full`. Filter toolbar stays **one row** with **3 fixed filter slots** (`FILTER_TOOLBAR_SLOT_COUNT`) so comboboxes do not shift between list pages. `CrudTable` uses `columnStretch="all"` + `columnSizeToFit` inside `.crud-table-host` (do not persist pixel widths — only order/hide/pin). Workspace main uses `overflow-x-hidden` so tables never widen the page.
+
+**CrudTable cell padding** — use `crudTableColumnPaddingClass` from `crudTableDensity` (first column `pl-5`, last column `pr-5`, default `pl-4 pr-4`, actions `pr-5`). Filter toolbar + pagination use `px-5`. Do not use `px-2` on grid cells.
+
+**List CRUD** — on `CrudMainView`, pass `entityLabel` + `getRowHref` for multiselect, row Edit/Delete menu, and bulk Edit/Delete bar (`standardListCrud.tsx`). Opt out with `enableListCrud={false}`.
 
 **CrudMainView export** — pass `exportOptions`:
 ```tsx
@@ -123,7 +139,7 @@ Common aliases: `PlusIcon` `EditIcon` `DeleteIcon` `BackIcon` `SearchIcon` `More
 |---|---|
 | `text` (default) | Plain string |
 | `status` | `StatusBadge` — maps value to color via `meta.variantMap` |
-| `date` | Formatted date (MMM d, yyyy) |
+| `date` | `formatDisplayDate` — `DD.MM.YYYY` |
 | `currency` | Tabular number, symbol from `meta.currencySymbol` |
 | `boolean` | Check or dash |
 | `badge` | Outline `Badge` |
@@ -140,8 +156,8 @@ Use `<EntityForm>` for all create/edit forms. `T extends Record<string, FormFiel
 | `email` `url` `phone` | string | Contact fields |
 | `number` | string | Integers, quantities (parse on submit) |
 | `textarea` | string | Long text, notes |
-| `select` | string | Short known option list (≤10 items) |
-| `combobox` | string | Searchable dropdown, longer lists, async, create-new |
+| `select` | string | Renders **Combobox** (alias — same as `combobox`) |
+| `combobox` | string | Searchable single-select; async, create-new, footer action |
 | `multiselect` | string[] | Multiple choice, tag-style display |
 | `tags` | string[] | Free-form chips, Enter or comma to add |
 | `checkbox` | boolean | Single boolean with label |
@@ -188,7 +204,8 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<CopyButton value label>` | Clipboard copy with auto-tooltip + check icon confirmation |
 | `<ConfirmPopover trigger title onConfirm>` | Inline destructive confirm — lighter than full Dialog |
 | `<DateRangePicker startValue endValue onStartChange onEndChange>` | Start + end date pair, auto-clamps min/max between fields |
-| `<RelativeTime date withTitle>` | "3 days ago" / "in 2 hours" — activity feeds, timestamps, last-updated indicators. Shows absolute date on hover by default |
+| `<RelativeTime date withTitle>` | "3 days ago" / "in 2 hours" — tooltip uses `DD.MM.YYYY HH:mm` |
+| `formatDisplayDate` / `formatDisplayDateTime` | `@oktavius/base-ui` — **all** visible dates (`18.12.2024`); never `toLocaleDateString` in modules |
 | `<MoneyText value currency locale compact>` | Currency display via Intl.NumberFormat. Tabular nums. `compact` gives 1.2K/3.4M notation. Defaults EUR / de-AT |
 | `<AlertBanner tone dismissible onDismiss>` | Full-width page-top banner for maintenance notices, trial warnings, announcements. Different from InfoBox — sticky, banner placement |
 | `<AttachmentList attachments onDelete onOpen isDeleting readOnly>` | File attachment list with icon detection, size formatting, open + delete actions |
@@ -202,8 +219,8 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<Input>` | Single-line text, email, number, url, phone |
 | `<Textarea>` | Multi-line text |
 | `<NumberInput value onChange decimals locale>` | Numeric input — thousands-separator formatting on blur, raw value to onChange. Use for amounts, quantities |
-| `<Select>` | Short dropdown, no search |
-| `<Combobox>` | Searchable dropdown, descriptions, async, create-new |
+| `<Combobox>` | **All** single-select dropdowns (search built in). Async, create-new, footer actions |
+| ~~`<Select>`~~ | **Do not use in `apps/web`** — legacy Radix select only |
 | `<MultiSelect>` | Multiple choice with checkbox list and badge display |
 | `<TagsInput>` | Free-form chip entry (Enter/comma adds, Backspace removes) |
 | `<Checkbox>` | Binary field, form or table selection |
@@ -224,12 +241,21 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<InlineEmptyState text centered>` | Dashed-border "no items yet" inside a SectionCard |
 | `<CollapsibleSection title badge actions>` | Long workspace forms, optional field groups |
 | `<Tabs>` `<TabsList>` `<TabsTrigger attention>` `<TabsContent>` | Complex entity detail pages with multiple workspace sections |
-| `<SplitView sidebar sidebarWidth>` | Master-detail layout (list left, detail right) |
+| `<SplitView sidebar sidebarWidth>` | Master-detail layout (list left, detail right) — always `w-full` on the split container |
+| `<SplitViewQueue>` + `ListRow variant="queue"` | Spaced sidebar queue (`gap-2 p-3`), not stacked `border-b` rows |
 | `<SettingsLayout items activeKey onSelect>` | Settings page: nav sidebar + content panel |
 | `<SettingsSection title description>` | Group of settings controls with heading |
 | `<SettingsRow label description>` | Single settings control (label left, control right) |
 
-**ListRow variants:** `default` · `muted` · `warning` · `dashed`
+**ListRow variants:** `default` · `muted` · `warning` · `dashed` · `queue` (master-detail sidebar cards — use inside `<SplitViewQueue>`)
+
+### Master-detail (`SplitView`) pattern
+
+- **Container:** `<SplitView className="w-full min-h-[…]">` — fills module width; no extra outer border on the card (borderless surface rule).
+- **Sidebar queue:** Wrap items in `<SplitViewQueue>` from `@/components/common/SplitViewQueue`. Each item is `<ListRow variant="queue" onClick={…}>` with `gap-2` between cards — never `divide-y` or `p-1` stacks of border-bottom rows.
+- **Selection:** `QUEUE_ITEM_SELECTED_CLASS` — muted background only; no ring or left accent bar.
+- **Detail header:** Title + meta line; **status/severity badges below meta**, not in a top-right `actions` cluster (same rule as `ModulePage` headers).
+- **Queue filters:** Use `<Tabs>` / `<TabsList>` for Open/All-style filters above the split, not ad-hoc `Button` pairs.
 
 **Tabs attention dot:** Pass `attention` prop to `TabsTrigger` to show a warning dot (incomplete section, required fields).
 
@@ -251,7 +277,22 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<CommandDialog>` + cmdk primitives | Global command palette — wrap app in `CommandPaletteProvider` |
 | `<RichTextEditor>` | Internal notes / long text in detail tabs |
 | `<SimpleLineChart>` `<SimpleBarChart>` | Dashboard KPI charts (recharts, brand violet) |
-| `<CalendarMonthPreview>` | Static month grid for scheduling UI mock |
+| `<CalendarMonthPreview>` | Static month grid for scheduling UI mock (legacy — prefer `CalendarView`) |
+
+### Calendar / Planning (base-ui)
+
+| Component | When to use |
+|---|---|
+| `<CalendarView>` | **Primary planner** — Day / Week / Month / Schedule with toolbar, colors, time grid, legend |
+| `<CalendarViewSwitcher>` | Standalone view toggle (embedded in CalendarView toolbar by default) |
+| `<CalendarTimeGrid>` | Week or day time-slot grid (used internally; standalone if needed) |
+| `<CalendarSourceLegend>` | Sidebar calendar list with visibility toggles + color dots |
+| `<SchedulerView>` | Standalone week grid only — prefer `CalendarView view="week"` |
+| `<AgendaList>` | Standalone schedule list — prefer `CalendarView view="agenda"` |
+| `<ResourceCalendar>` | Staff / room columns by time |
+| `<DateRangePicker>` | Event start + end date pair in forms |
+
+Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use `calendarId` + source colors (Google-style left accent). Week starts Monday. See `.cursor/rules/calendar-components.mdc`.
 
 ### App shell patterns (apps/web)
 
@@ -359,8 +400,10 @@ All single-line input controls must be **`h-9`** (36px): `Input`, `Select`, `Com
 |---|---|---|
 | `sm` | `h-7` | SectionCard actions, row-level controls, tight toolbars |
 | `default` | `h-9` | Standard form actions — matches input height |
-| `lg` | `h-10` | Primary page CTA (Create, Save) |
-| `icon` | `h-9 w-9` | Icon-only buttons |
+| `lg` | `h-10` | Full-page form primary submit (not page header) |
+| `icon` | `h-9 w-9` | Icon-only buttons (back, Edit, Delete in header) |
+
+**Page header row:** only `sm` (h-7) for labeled buttons — use `PageHeaderButtons`. Export is icon-only (`h-7 w-7`). Do not use `default`/`lg` in the header.
 
 Button text is `text-sm` at all sizes except `sm` which uses `text-xs`.
 
@@ -431,8 +474,29 @@ Borders are reserved for **rules and dividers**, not container chrome. Card surf
 | `border-border/50` | `SectionCard` heading underline; `SettingsRow` row separators; `SplitView` sidebar/content split; `AttachmentList` row dividers; `ListRow` borders |
 | `border-dashed border-border/60` | `InlineEmptyState`, `ListRow` variant `dashed` |
 
+### Page header layout (`ModulePage` / `PageHeader`)
+
+The header is a two-column grid: **title block (left)** · **actions (top-right on `md+`)**.
+
+| Slot | What belongs there | What does **not** belong |
+|---|---|---|
+| `title` | Record name / number | Status chips |
+| `subtitle` | Meta line (client, SKU, owner) **and** `StatusBadge` / priority / stage tags | Primary CTAs |
+| `actions` | `variant="cta"` “New X” on list pages; icon-only Edit/Delete on detail pages; other real buttons | `StatusBadge`, `Badge`, or read-only state tags |
+| `backTo` | `<BackButton>` — icon-only, `aria-label="Back"` | Visible “Back” text |
+
+**Edit / Delete on detail pages:** Always icon-only — use `<IconEditButton>` / `<IconDeleteButton>` (`size="icon"`, `variant="outline"`, `aria-label`). Never render visible “Edit” or “Delete” labels in the page header. Dropdown menus and dialogs may still use text labels.
+
+**List page primary CTA:** Pass `headerActions` on `<CrudMainView>` (maps to `actions`) — use `<PageHeaderCtaLink>` or `<PageHeaderCtaButton>` from `PageHeaderButtons`. Export is rendered by `CrudMainView` via `<PageHeaderOutlineButton>` when `exportOptions` is set.
+
+**Header button sizing:** Every labeled button in the page header row uses **`size="sm"` (h-7)** via `PageHeaderButtons`. Never mix `default` or `lg` in `actions`. Export is **icon-only** (`PageHeaderExportButton`) with tooltip.
+
+**Header action order (always):** Export (icon) → secondary (`PageHeaderOutlineLink`, etc.) → primary CTA (`PageHeaderCtaLink`) last. `CrudMainView` renders Export before `headerActions`; put secondary then CTA inside `headerActions`.
+
+Import `PAGE_HEADER_ACTIONS_ROW` or wrap groups in `<PageHeaderActions>` from `@/components/common/PageHeaderButtons`.
+
 ### Detail page patterns
-- **Simple entity** (users, contacts): `ModulePage` + `DetailView` — flat sections in one scroll.
+- **Simple entity** (users, contacts): `ModulePage` + `DetailView` — flat sections in one scroll. **Do not nest `DetailView` inside `Tabs`** (it wraps a `Card`; use `SectionCard` in tab content instead).
 - **Complex entity / workspace** (cases, projects, clients with sub-entities): `ModulePage` + `Tabs` — each tab contains one or more `SectionCard` components.
 - Within tabs, use `ListRow` for sub-entity lists (parties, tasks, attachments). Use `CrudTable` only for independently sortable/paginated datasets.
 
@@ -472,7 +536,8 @@ For managing sub-entity lists (parties, tasks, checklist items) inside a detail 
 
 ### Typography scale
 - Page title: `text-xl font-semibold` (via `ModulePage`)
-- Section heading: `text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground`
+- Section heading (`SectionCard`, tab content): `text-sm font-semibold text-foreground` — sentence case, no ALL-CAPS
+- DetailView field labels (simple pages only): `text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground`
 - Card title: `CardTitle` component
 - Body: `text-sm`
 - Muted/meta: `text-xs text-muted-foreground`
@@ -504,13 +569,15 @@ Each ERP module in `apps/web/src/modules/<name>/`:
 clients/
 ├── ClientsListPage.tsx    # CrudMainView — filter, sort, paginate, export
 ├── ClientCreatePage.tsx   # ModulePage + EntityForm
-├── ClientDetailPage.tsx   # ModulePage + DetailView + action buttons
+├── ClientDetailPage.tsx   # ModulePage + DetailView or Tabs + action buttons
 └── shared.tsx             # columns (CrudColumn[]), formFields (FormField[]), header actions
 ```
 
-**List page sort state:** single `sort` string — `"field"` for asc, `"-field"` for desc. Pass to `CrudMainView` and sort data before passing `rows`.
+**List page sort state:** single `sort` string — `"field"` for asc, `"-field"` for desc. Use `useListPageState()` from `@/lib/useListPageState` for search/filter/sort/pagination, then pass the returned props to `CrudMainView`.
 
-**Detail page:** Use `DetailView` with sections. Never build custom field-row layouts.
+**Module page icon:** every `CrudMainView` and `ModulePage` must pass `icon`. Export `*PageIcon()` from `shared.tsx` (re-export from `@/lib/modulePageIcons`). User detail uses `userRecordPageIcon()` (`UserCircleIcon`); all other user routes use `usersPageIcon()`.
+
+**Detail page:** Simple records → `DetailView` with sections. Complex records → `Tabs` + `SectionCard` (never `DetailView` inside tabs). Never build custom field-row layouts.
 
 **Form page:** All fields go through `EntityForm`. Group logically via `section`. Boolean fields (checkbox/switch) skip the outer `<Label>` — label is inline with the control.
 
@@ -522,6 +589,8 @@ clients/
 cd oktavius-v3
 pnpm install
 pnpm dev          # http://localhost:5173
+pnpm lint         # UI guardrails + TypeScript checks
+pnpm typecheck
 ```
 
 Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/clients` `/clients/new` `/clients/:clientId`
@@ -534,9 +603,11 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 |---|---|
 | Import icons from `@/lib/icons` | Import from `@phosphor-icons/react` directly |
 | Use `CrudTable` / `CrudMainView` for all data grids | Build custom `<table>` layouts |
+| Keep `FilterToolbar` on one line — search + filters scale with `flex-nowrap` | Stack search and filter dropdowns vertically or use multi-row filter grids |
+| Keep list tables inside the card (`max-w-full`, `columnStretch="all"`) | Tables wider than the workspace / horizontal page scroll |
 | Use `EntityForm` with field registry | Build one-off form layouts |
 | Use `DatePicker` with `mode` prop | Use `<input type="date">` natively |
-| Use `Combobox` for searchable selects | Use `<select>` for long lists |
+| Use `Combobox` for **every** single-select dropdown (forms, filters, settings) | `Select` / `<select>` / Radix select in app code |
 | Use `MultiSelect` for multiple choice | Multiple checkboxes scattered in form |
 | Use `TagsInput` for free-form arrays | Comma-separated text fields |
 | Add `exportOptions` to `CrudMainView` | Wire export separately per module |
@@ -549,7 +620,11 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Pass `variant="destructive"` on `AlertDialogAction` / `ConfirmActionDialog` for deletes | Use purple CTA on delete confirms |
 | Use `variant="outline" size="sm"` for toolbar/filter reset buttons | Use default-size outline button next to compact controls |
 | Use `StatusBadge` for all status rendering | Inline ad-hoc badge per module |
-| Use `ModulePage` for every route | Custom page shells per module |
+| Use `ModulePage` for every route — always with `icon` | Custom page shells or header rows without module icon |
+| Put status / priority / stage tags in `subtitle`, not in `actions` | Status badges in the top-right header slot |
+| Use `<IconEditButton>` / `<IconDeleteButton>` in page header `actions` | Visible “Edit” / “Delete” text on header buttons |
+| Use `PageHeaderButtons` for list header actions (all h-7); Export icon-first | Labeled Export or `size="default"`/`lg` in page header |
+| Use `variant="cta"` for list-page “New X” in `CrudMainView` `headerActions` | Status chips or icon Edit/Delete in list header actions |
 | Use `SectionCard` for detail page content sections | Nest `<Card>` inside page `<Card>` |
 | Use `ListRow` for sub-entity item lists | Build custom bordered div rows per module |
 | Use `InlineEmptyState` inside `SectionCard` | Custom "no items" paragraph styling |
@@ -560,7 +635,9 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Use `Timeline` for audit trail and activity | Custom list markup per module |
 | Use `toast` from `@/lib/toast` for action feedback | `alert()`, inline banners for transient messages |
 | Use `StepperLayout` for multi-step creation flows | Accordion or tab abuse for wizards |
-| Use `SplitView` for master-detail pages | Custom flex layout per module |
+| Use `SplitView` + `SplitViewQueue` + `ListRow variant="queue"` for master-detail sidebars | `divide-y` or tight `p-1` stacks in split sidebars |
+| Put severity/status badges under detail title/meta in split panels | Badges in top-right of split detail header |
+| Use `Tabs` for master-detail queue filters (Open/All) | Loose filter `Button` groups above splits |
 | Use `SettingsLayout` + `SettingsRow` for settings pages | Custom settings layout per module |
 | Use `InlineEdit` for click-to-edit in detail views | Full form modal for single-field edits |
 | Use `relation` field type for entity pickers | Custom combobox wiring per form |
@@ -576,11 +653,13 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Use `ScrollArea` for bounded-height panels | `overflow-y-auto` without styled scrollbar |
 | Use `NumberInput` for numeric fields needing thousands formatting | `<Input type="number">` for display-formatted amounts |
 | Use `MoneyText` for all currency display | Ad-hoc `Intl.NumberFormat` calls per component |
-| Use `RelativeTime` for timestamps in feeds and detail views | `date.toLocaleDateString()` inline per component |
+| Use `formatDisplayDate` / `formatDisplayDateTime` from `@oktavius/base-ui` (or `@/lib/formatDate`) for all visible dates | `toLocaleDateString()`, `MMM d yyyy`, or per-module date helpers |
+| Use `RelativeTime` for timestamps in feeds and detail views | Raw ISO or US date strings in UI |
 | Use `AlertBanner` for page-top persistent notices | `InfoBox` for site-wide banners |
 | Use `AttachmentList` for all file attachment displays | Custom file list markup per module |
 | Use `PageSkeleton` / `DetailSkeleton` for page load states | Bare `<Skeleton>` lines scattered at page level |
 | Lead complex entity detail pages with an Overview tab (stats + timeline + party summary) | Start directly on the first data tab |
 | Use `Dialog` + `EntityForm` for sub-entity add/edit (parties, tasks) | Inline editing rows or custom modal markup per module |
+| Use `<ChecklistSection>` for tick-off checklists — done = strikethrough + muted label | Checkbox-only done state or `StatusBadge` on checklist rows |
 | Keep base-ui component APIs variant-based (`variant`, `size`, `tone`) | Add `*ClassName` / `triggerClassName` / `contentClassName` escape-hatch props to base-ui components |
 | Use `<TooltipProvider>` once (already in `AppLayout`) | Add `<TooltipProvider>` inside individual components |

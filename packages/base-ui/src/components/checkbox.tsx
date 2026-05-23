@@ -13,10 +13,10 @@ export function Checkbox({ className, ref, ...props }: CheckboxProps) {
     <CheckboxPrimitive.Root
       ref={ref}
       className={cn(
-        'peer h-4 w-4 shrink-0 rounded-sm border border-input bg-background ring-offset-background',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        'peer h-4 w-4 shrink-0 rounded-sm bg-muted/60 ring-offset-background',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'data-[state=checked]:bg-foreground data-[state=checked]:text-background data-[state=checked]:border-foreground',
+        'data-[state=checked]:bg-cta data-[state=checked]:text-cta-foreground',
         className,
       )}
       {...props}

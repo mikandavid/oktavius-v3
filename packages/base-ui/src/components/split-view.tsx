@@ -30,7 +30,7 @@ export function SplitView({
   contentClassName,
 }: SplitViewProps) {
   return (
-    <div className={cn('flex min-h-0 gap-0 rounded-card bg-card overflow-hidden', className)}>
+    <div className={cn('flex min-h-0 w-full min-w-0 gap-0 overflow-hidden rounded-card bg-card', className)}>
       <aside
         className={cn(
           'shrink-0 border-r border-border/50',

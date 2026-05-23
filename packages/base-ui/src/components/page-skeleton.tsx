@@ -5,33 +5,30 @@ import { Skeleton } from './skeleton';
 export function PageSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('space-y-4', className)}>
-      {/* Page header */}
       <div className="flex items-center gap-3">
-        <Skeleton className="h-10 w-10 rounded-lg" />
+        <Skeleton className="h-10 w-10 rounded-control" />
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-48" />
           <Skeleton className="h-3.5 w-72" />
         </div>
       </div>
-      {/* Stat cards row */}
       <div className="grid gap-3 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-card border border-border/60 p-4 space-y-2">
+          <div key={i} className="rounded-card bg-card p-4 space-y-2">
             <Skeleton className="h-3 w-20" />
             <Skeleton className="h-7 w-16" />
             <Skeleton className="h-3 w-24" />
           </div>
         ))}
       </div>
-      {/* Main content block */}
-      <div className="rounded-card border border-border/60">
-        <div className="border-b border-border/60 px-4 py-3">
+      <div className="rounded-card bg-card">
+        <div className="border-b border-border/50 px-4 py-3">
           <Skeleton className="h-3.5 w-32" />
         </div>
-        <div className="p-4 space-y-3">
+        <div className="space-y-3 p-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+              <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3.5" style={{ width: `${60 + (i % 3) * 15}%` }} />
                 <Skeleton className="h-3 w-2/5" />
@@ -53,9 +50,9 @@ export function DetailSkeleton({ className }: { className?: string }) {
         <Skeleton className="h-5 w-5" />
         <Skeleton className="h-5 w-48" />
       </div>
-      <div className="rounded-card border border-border/60 p-4 space-y-4">
+      <div className="rounded-card bg-card p-4 space-y-4">
         {Array.from({ length: 2 }).map((_, s) => (
-          <div key={s} className={s > 0 ? 'border-t border-border/40 pt-4 space-y-3' : 'space-y-3'}>
+          <div key={s} className={s > 0 ? 'space-y-3 border-t border-border/40 pt-4' : 'space-y-3'}>
             <Skeleton className="h-3 w-24" />
             <div className="grid gap-4 sm:grid-cols-2">
               {Array.from({ length: 4 }).map((_, i) => (

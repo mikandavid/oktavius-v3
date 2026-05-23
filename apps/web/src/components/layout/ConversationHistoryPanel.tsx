@@ -153,7 +153,7 @@ export function ConversationHistoryPanel({
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={placeholder}
-            className="h-8 rounded-lg border-border/40 bg-muted/30 pl-8 pr-8 text-[13px] placeholder:text-muted-foreground/50 focus:border-primary/30 focus:bg-background"
+            className="h-8 rounded-control border-border/40 bg-muted/30 pl-8 pr-8 text-[13px] placeholder:text-muted-foreground/50 focus:border-primary/30 focus:bg-background"
           />
           {searchQuery ? (
             <button
@@ -241,7 +241,7 @@ function ConversationHistoryRow({
   return (
     <div
       className={cn(
-        'group/conversation mx-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center overflow-hidden rounded-lg border border-transparent text-foreground transition-colors duration-200',
+        'group/conversation mx-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center overflow-hidden rounded-control border border-transparent text-foreground transition-colors duration-200',
         isActive ? 'border-border/60 bg-muted/70' : 'hover:border-border/40 hover:bg-muted/50',
       )}
       tabIndex={0}

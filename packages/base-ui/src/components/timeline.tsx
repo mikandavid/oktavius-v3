@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react';
 
+import { formatDisplayDateTime } from '../lib/format-display-date';
 import { cn } from '../lib/utils';
+
+function formatTimelineTimestamp(value?: string) {
+  if (!value) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) return formatDisplayDateTime(value);
+  return value;
+}
 
 export type TimelineEventTone = 'default' | 'success' | 'warning' | 'destructive' | 'info';
 
@@ -51,11 +58,13 @@ export function Timeline({ events, className }: TimelineProps) {
             </div>
 
             {/* Content */}
-            <div className={cn('min-w-0 pb-4', isLast && 'pb-0')}>
-              <div className="flex flex-wrap items-baseline gap-x-2">
-                <span className="text-sm font-medium text-foreground">{event.label}</span>
+            <div className={cn('min-w-0 flex-1 pb-4', isLast && 'pb-0')}>
+              <div className="flex items-start justify-between gap-4">
+                <span className="min-w-0 text-sm font-medium text-foreground">{event.label}</span>
                 {event.timestamp ? (
-                  <span className="text-xs text-muted-foreground">{event.timestamp}</span>
+                  <time className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                    {formatTimelineTimestamp(event.timestamp)}
+                  </time>
                 ) : null}
               </div>
               {event.description ? (

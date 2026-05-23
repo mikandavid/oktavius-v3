@@ -3,9 +3,8 @@ import { useMemo, useState } from 'react';
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
 import { sortRows } from '@/lib/sortRows';
-import { UsersIcon } from '@/lib/icons';
 
-import { userColumns, usersHeaderAction } from './shared';
+import { userColumns, usersHeaderAction, usersPageIcon } from './shared';
 
 export function UsersListPage() {
   const { users } = useDemoData();
@@ -38,7 +37,7 @@ export function UsersListPage() {
     <CrudMainView
       title="Users"
       subtitle="Simple entity lists should use the shared table system."
-      icon={<UsersIcon size={20} weight="duotone" />}
+      icon={usersPageIcon()}
       headerActions={usersHeaderAction()}
       search={search}
       onSearchChange={(value) => {
@@ -80,6 +79,7 @@ export function UsersListPage() {
       columns={userColumns}
       emptyTitle="No users found"
       emptyDescription="This module should default to a dense shared CRUD list view instead of a custom layout."
+      entityLabel="user"
       getRowHref={(user) => `/users/${user.id}`}
       sort={sort}
       onSortChange={(nextSort) => {

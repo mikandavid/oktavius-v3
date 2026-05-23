@@ -1,0 +1,59 @@
+---
+description: StatusBadge columns, MoneyText — no ad-hoc formatters
+globs: apps/web/src/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Status and money
+
+## Table status columns
+
+Use `type: 'status'` with `meta.variantMap` — never custom `render` with `<StatusBadge>`.
+
+Helper: `statusColumn(key, header, variantMap)` from `@/components/data/columns`.
+
+```tsx
+// shared.tsx
+const CLIENT_STATUS_MAP = { Active: 'success', Prospect: 'info', … } as const;
+
+export const clientColumns: CrudColumn<ClientRecord>[] = [
+  {
+    key: 'status',
+    header: 'Status',
+    sortable: true,
+    type: 'status',
+    meta: { variantMap: CLIENT_STATUS_MAP },
+  },
+];
+```
+
+Reuse the same map in detail page `subtitle` and DetailView field values.
+
+## StatusBadge elsewhere
+
+```tsx
+<StatusBadge status={row.status} variantMap={CLIENT_STATUS_MAP} />
+```
+
+Import from `@/components/feedback/StatusBadge`. Never inline `<Badge variant={…}>` for record status.
+
+## Currency display
+
+Use `<MoneyText>` from `@oktavius/base-ui` — never local `formatMoney()` helpers.
+
+```tsx
+// ✅ detail fields, StatCard values, table currency columns
+<MoneyText value={client.annualRevenue} currency="EUR" />
+
+// ✅ CrudTable — use column type
+{ key: 'total', type: 'currency', align: 'right', meta: { currencySymbol: '€' } }
+```
+
+```tsx
+// ❌ don't copy per module
+function formatMoney(v: string) {
+  return `€ ${Number(v).toLocaleString('de-AT', …)}`;
+}
+```
+
+Defaults: EUR / `de-AT` locale. Use `compact` for large dashboard KPIs.

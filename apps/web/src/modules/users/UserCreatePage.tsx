@@ -7,7 +7,7 @@ import { InfoBox } from '@/components/common/InfoBox';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
 
-import { userFormFields } from './shared';
+import { userFormFields, usersPageIcon } from './shared';
 
 type CreateUserFormValues = {
   name: string;
@@ -35,6 +35,7 @@ export function UserCreatePage() {
       title="Create User"
       subtitle="Forms in extracted modules should compose the shared entity form."
       backTo="/users"
+      icon={usersPageIcon()}
     >
       {createdMessage ? (
         <InfoBox

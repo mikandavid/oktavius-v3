@@ -1,5 +1,6 @@
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
+import { formatDisplayDateTime } from '../lib/format-display-date';
 import { cn } from '../lib/utils';
 
 export interface RelativeTimeProps {
@@ -19,7 +20,7 @@ export function RelativeTime({ date, withTitle = true, className }: RelativeTime
   if (isNaN(d.getTime())) return <span className={className}>—</span>;
 
   const relative = formatDistanceToNow(d, { addSuffix: true });
-  const absolute = d.toLocaleString();
+  const absolute = formatDisplayDateTime(d);
 
   return (
     <time

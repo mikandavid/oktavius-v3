@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { Button, ScrollArea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, cn } from '@oktavius/base-ui';
+import { Button, Combobox, ScrollArea, cn } from '@oktavius/base-ui';
 import { CloseIcon, SettingsIcon } from '@/lib/icons';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -130,15 +130,16 @@ export function TokenEditor() {
   // Apply tokens via inline style on :root — inline styles beat all stylesheet rules including @layer
   useEffect(() => {
     const root = document.documentElement;
+    // Legacy preview wrote solid purple to --accent/--primary and hid sidebar labels.
+    root.style.removeProperty('--accent');
+    root.style.removeProperty('--primary');
     root.style.setProperty('--radius-card', `${tokens.radiusCard}rem`);
     root.style.setProperty('--radius-control', `${tokens.radiusControl}rem`);
     root.style.setProperty('--radius-badge', `${tokens.radiusBadge}rem`);
     root.style.setProperty('--radius', `${tokens.radiusBase}rem`);
     root.style.setProperty('--shadow-card', SHADOW_PRESETS[tokens.shadowDepth].card);
     root.style.setProperty('--shadow-elevated', SHADOW_PRESETS[tokens.shadowDepth].elevated);
-    root.style.setProperty('--primary', tokens.accentColor);
     root.style.setProperty('--cta', tokens.accentColor);
-    root.style.setProperty('--accent', tokens.accentColor);
     root.style.setProperty('--ring', tokens.accentColor);
     root.style.setProperty('--sidebar-primary', tokens.accentColor);
     root.style.setProperty('--font-sans', FONT_PRESETS[tokens.fontFamily]);
@@ -150,8 +151,8 @@ export function TokenEditor() {
     return () => {
       const root = document.documentElement;
       const vars = ['--radius-card','--radius-control','--radius-badge','--radius',
-        '--shadow-card','--shadow-elevated','--primary','--cta','--accent',
-        '--ring','--sidebar-primary','--font-sans','--muted'];
+        '--shadow-card','--shadow-elevated','--cta','--ring','--sidebar-primary',
+        '--font-sans','--muted'];
       vars.forEach(v => root.style.removeProperty(v));
     };
   }, []);
@@ -266,20 +267,21 @@ export function TokenEditor() {
 
               {/* 2. Shadow Depth */}
               <TokenSection label="Shadow Depth">
-                <Select
+                <Combobox
+                  className="w-full"
+                  clearable={false}
+                  options={[
+                    { value: 'none', label: 'None' },
+                    { value: 'subtle', label: 'Subtle (default)' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'strong', label: 'Strong' },
+                  ]}
                   value={tokens.shadowDepth}
-                  onValueChange={(v) => update('shadowDepth', v as TokenState['shadowDepth'])}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="subtle">Subtle (default)</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="strong">Strong</SelectItem>
-                  </SelectContent>
-                </Select>
+                  searchPlaceholder="Search shadow…"
+                  onChange={(v) => {
+                    if (v) update('shadowDepth', v as TokenState['shadowDepth']);
+                  }}
+                />
               </TokenSection>
 
               {/* 3. Accent Color */}

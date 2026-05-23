@@ -55,7 +55,7 @@ export function RichTextEditor({
   return (
     <div
       className={cn(
-        'rounded-control border border-border/60 bg-muted/30 transition-colors focus-within:border-primary/30',
+        'rounded-control bg-muted/60 transition-colors focus-within:ring-2 focus-within:ring-ring/40',
         disabled && 'cursor-not-allowed opacity-60',
         className,
       )}

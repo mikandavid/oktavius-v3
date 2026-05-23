@@ -23,7 +23,7 @@ export function Pagination({
   const end = total === 0 ? 0 : Math.min(total, safePage * pageSize);
 
   return (
-    <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs text-muted-foreground">
           {total === 0 ? 'No records' : `${start}-${end} of ${total}`}
         </p>

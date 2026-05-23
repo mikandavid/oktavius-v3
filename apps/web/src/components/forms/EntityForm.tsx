@@ -3,10 +3,6 @@ import { useState } from 'react';
 
 import {
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Checkbox,
   Combobox,
   type ComboboxOption,
@@ -17,11 +13,7 @@ import {
   Label,
   MultiSelect,
   type MultiSelectOption,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  SectionCard,
   Switch,
   TagsInput,
   Textarea,
@@ -139,28 +131,7 @@ function FieldInput({
         />
       );
 
-    case 'select': {
-      const opts = (field.options ?? []).map((o) =>
-        typeof o === 'string' ? { value: o, label: o } : o,
-      );
-      return (
-        <Select value={strValue} disabled={field.disabled} onValueChange={(v) => onChange(v)}>
-          <SelectTrigger id={inputId} aria-label={field.label}>
-            <SelectValue
-              placeholder={field.placeholder ?? `Select ${field.label.toLowerCase()}`}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            {opts.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} disabled={opt.disabled}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    }
-
+    case 'select':
     case 'combobox':
     case 'relation': {
       const opts: ComboboxOption[] = (field.options ?? []).map((o) =>
@@ -442,12 +413,8 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
-      </CardHeader>
-      <CardContent>{form}</CardContent>
-    </Card>
+    <SectionCard title={title} meta={subtitle}>
+      {form}
+    </SectionCard>
   );
 }

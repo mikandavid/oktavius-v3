@@ -5,7 +5,7 @@ import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
 
-import { clientFormDefaults, clientFormFields, type ClientFormValues } from './shared';
+import { clientFormDefaults, clientFormFields, clientsPageIcon, type ClientFormValues } from './shared';
 
 export function ClientCreatePage() {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ export function ClientCreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   return (
-    <ModulePage title="New Client" backTo="/clients">
+    <ModulePage title="New Client" backTo="/clients" icon={clientsPageIcon()}>
       <EntityForm<ClientFormValues>
         title="Client details"
         fields={clientFormFields}

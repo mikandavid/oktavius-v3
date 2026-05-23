@@ -81,7 +81,7 @@ export function TreeList({ nodes, className, defaultExpandedIds = [] }: TreeList
   };
 
   return (
-    <div className={cn('rounded-card border border-border/60 bg-card px-2 py-2', className)}>
+    <div className={cn('rounded-card bg-card px-2 py-2', className)}>
       {nodes.map((node) => (
         <TreeBranch key={node.id} node={node} depth={0} expanded={expanded} onToggle={onToggle} />
       ))}

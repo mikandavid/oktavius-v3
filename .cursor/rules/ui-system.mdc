@@ -1,0 +1,66 @@
+---
+description: Core UI system — always follow when editing Oktavius frontend
+alwaysApply: true
+---
+
+# Oktavius UI system
+
+Canonical reference: `oktavius-v3/CLAUDE.md`. When in doubt, use the component registry there — do not invent layouts.
+
+## Stack constraints
+
+- React 19 + Tailwind v3 — semantic tokens only (`text-foreground`, `bg-muted/60`, `rounded-card`)
+- Icons: **`@/lib/icons` only** — never `@phosphor-icons/react`
+- Data grids: **`CrudMainView` / `CrudTable` only** — never custom `<table>`
+- Single-select: **`Combobox` only** in `apps/web` — never `Select`
+- Dates in UI: **`formatDisplayDate` / `formatDisplayDateTime`** — `DD.MM.YYYY`
+- Currency in UI: **`<MoneyText>`** — no ad-hoc `formatMoney` helpers
+
+## Page shells
+
+| Route type | Shell |
+|---|---|
+| List | `<CrudMainView>` + columns/formFields from `shared.tsx` |
+| Create/edit | `<ModulePage>` + `<EntityForm>` |
+| Detail (simple) | `<ModulePage>` + `<DetailView>` |
+| Detail (complex) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` |
+
+Every route uses `<ModulePage>`. Never build custom page headers or shells.
+
+**Module icon (required):** pass `icon={modulePageIcon()}` on every `ModulePage` and `CrudMainView`. Use helpers from `@/lib/modulePageIcons` or re-export in module `shared.tsx`. Standard: `size={20} weight="duotone"`, match sidebar nav icon.
+
+## Visual rules (non-negotiable)
+
+- Surfaces: `rounded-card bg-card` — **no borders** on cards, `CrudMainView`, `SplitView` outer
+- Inputs: `bg-muted/60` filled style — never `border border-input bg-background`
+- Page wash: `bg-muted/40` canvas; modules render white tiles on top
+- No `text-gray-*`, `bg-white`, or `rounded-lg` on named surfaces
+- No cards-in-cards — use `<SectionCard>` inside pages, not nested `<Card>`
+
+## Button hierarchy
+
+| Context | Variant |
+|---|---|
+| List header “New X” | `cta` via `PageHeaderCtaLink` |
+| Dialog Save / Create | `cta` via `EntityForm surface="dialog"` or `DialogFormFooter` |
+| Full-page form submit | `default` |
+| Delete confirm | `destructive` on `ConfirmActionDialog` / `AlertDialogAction` |
+| Toolbar / secondary | `outline` `size="sm"` |
+
+## App shell
+
+- Desktop: nav left · workspace center · chat right — never hide sidebar on desktop
+- Import layout classes from `@/components/common/pageChrome`
+- Toasts: `@/lib/toast` — Toaster already in `AppLayout`
+
+## Scoped rules (read when relevant)
+
+`page-header` · `crud-table` · `filter-toolbar` · `combobox` · `date-format` · `calendar-components` · `split-view-master-detail` · `entity-form` · `module-pattern` · `detail-pages` · `status-and-money` · `dialogs` · `checklist`
+
+## Lint (`pnpm lint`)
+
+Enforced in `apps/web/eslint.config.js`:
+
+- `@phosphor-icons/react` — only allowed in `src/lib/icons.ts`
+- `Select` / Radix select exports from `@oktavius/base-ui` — use `Combobox`
+- Forbidden Tailwind: `text-gray-*`, `bg-white`, `rounded-lg` — use semantic tokens (`rounded-card`, `rounded-control`)

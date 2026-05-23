@@ -1,0 +1,43 @@
+---
+description: EntityForm — all create/edit forms, field types, dialog vs page
+globs: apps/web/src/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# EntityForm
+
+Use `<EntityForm>` for every create/edit form. Never hand-roll field grids.
+
+## Surfaces
+
+| Context | Props |
+|---|---|
+| Full-page route (`/clients/new`) | Default `surface="page"` — nested card, submit `variant="default"` |
+| Dialog modal | `surface="dialog"` — no nested card, submit `variant="cta"`, `showHeader={false}` when parent has `DialogTitle` |
+
+```tsx
+<Dialog open={open} onOpenChange={setOpen}>
+  <DialogContent>
+    <DialogHeader><DialogTitle>Add party</DialogTitle></DialogHeader>
+    <EntityForm surface="dialog" showHeader={false} fields={…} defaultValues={…} onSubmit={…} />
+  </DialogContent>
+</Dialog>
+```
+
+## Field rules
+
+- Group with `section` — Identity, Contact, Contract, etc.
+- Wide fields: `colSpan: 2` (notes, textarea, tags)
+- Single-select: `type: 'combobox'` or `'select'` (both render Combobox)
+- Entity pickers: `type: 'relation'` with optional `asyncItems`, `onCreate`, `footerAction`
+- Booleans: `checkbox` or `switch` — label is inline, no outer `<Label>`
+- Dates stored as ISO strings — display handled by `DatePicker`
+
+## Don't
+
+- Raw `<Input>` / `<Combobox>` in page forms outside EntityForm
+- `variant="cta"` on full-page submit buttons
+- `<input type="date">` or native `<select>`
+- Flat single-section forms when 4+ fields — always use `section`
+
+Footer in dialogs: prefer built-in EntityForm submit, or `<DialogFormFooter confirmVariant="cta">`.

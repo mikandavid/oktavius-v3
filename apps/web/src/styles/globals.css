@@ -124,6 +124,22 @@
   }
 }
 
+@layer components {
+  /* Lytenyte grid host — prevent intrinsic min-width from widening the workspace */
+  .crud-table-host {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    contain: inline-size;
+  }
+
+  .crud-table-host [data-ln-viewport='true'] {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

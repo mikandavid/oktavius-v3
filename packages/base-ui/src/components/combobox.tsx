@@ -7,7 +7,7 @@
  *   - Create: pass `onCreate` to show an inline "add option" field
  *   - Footer: pass `footerAction` for a contextual footer button (e.g. "Manage options")
  *
- * For multi-select use MultiSelect. For plain dropdowns use Select.
+ * For multi-select use MultiSelect. Do not use Select in app UI — Combobox is the standard single-select.
  */
 
 import { CaretDown, Check, MagnifyingGlass, SpinnerGap, X } from '@phosphor-icons/react';
@@ -148,6 +148,23 @@ export function Combobox({
     setOpen(false);
   };
 
+  const selectFirstMatch = () => {
+    if (isLoading || isFetching || isCreating) return;
+    const first = displayOptions.find((option) => !option.disabled);
+    if (first) handleSelect(first);
+  };
+
+  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false);
+      return;
+    }
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    selectFirstMatch();
+  };
+
   const handleCreate = async () => {
     if (!onCreate || isCreatingPending) return;
     const trimmed = createLabel.trim();
@@ -205,7 +222,11 @@ export function Combobox({
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
             placeholder={searchPlaceholder}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={open}
             className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
           />
         </div>

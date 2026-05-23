@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 
-import { Button } from '@oktavius/base-ui';
 import { useDemoData } from '@/app/demo-data';
-import { DeleteIcon, UserCircleIcon } from '@/lib/icons';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+
+import { userRecordPageIcon } from './shared';
 
 export function UserDetailPage() {
   const { userId } = useParams();
@@ -23,14 +24,9 @@ export function UserDetailPage() {
     <ModulePage
       title={user.name}
       subtitle="Detail screens should reuse a standard sectioned record view."
-      icon={<UserCircleIcon size={20} weight="duotone" />}
+      icon={userRecordPageIcon()}
       backTo="/users"
-      actions={
-        <Button variant="outline" onClick={() => setConfirmDeleteOpen(true)}>
-          <DeleteIcon size={16} />
-          Delete
-        </Button>
-      }
+      actions={<IconDeleteButton onClick={() => setConfirmDeleteOpen(true)} />}
     >
       <DetailView
         title="User record"

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { cn } from '../lib/utils';
 
-export type ListRowVariant = 'default' | 'muted' | 'warning' | 'dashed';
+export type ListRowVariant = 'default' | 'muted' | 'warning' | 'dashed' | 'queue';
 
 export interface ListRowProps {
   title: ReactNode;
@@ -14,6 +14,7 @@ export interface ListRowProps {
   variant?: ListRowVariant;
   onClick?: () => void;
   className?: string;
+  'aria-current'?: boolean | 'true' | 'false';
   /**
    * When `onClick` is set AND `leadingIsInteractive` is true, `leading` sits
    * outside the clickable button — use this for checkbox rows.
@@ -33,6 +34,7 @@ export function ListRow({
   variant = 'default',
   onClick,
   className,
+  'aria-current': ariaCurrent,
   leadingIsInteractive = false,
 }: ListRowProps) {
   const shellClass = cn(
@@ -45,6 +47,8 @@ export function ListRow({
       'rounded-control border border-warning/30 bg-warning/10 hover:bg-warning/15 px-3',
     variant === 'dashed' &&
       'rounded-control border border-dashed border-border/60 hover:border-border/80 hover:bg-muted/20 px-3',
+    variant === 'queue' &&
+      'rounded-control border border-border/50 px-3 py-3 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30',
     className,
   );
 
@@ -52,7 +56,14 @@ export function ListRow({
     <div className="min-w-0 flex-1">
       <div className="truncate text-sm font-medium text-foreground">{title}</div>
       {subtitle ? (
-        <div className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</div>
+        <div
+          className={cn(
+            'text-xs text-muted-foreground',
+            variant === 'queue' ? 'mt-1 space-y-0.5' : 'mt-0.5 truncate',
+          )}
+        >
+          {subtitle}
+        </div>
       ) : null}
     </div>
   );
@@ -79,6 +90,7 @@ export function ListRow({
     <Comp
       type={onClick ? 'button' : undefined}
       onClick={onClick}
+      aria-current={ariaCurrent}
       className={shellClass}
     >
       {leading ? <div className="shrink-0">{leading}</div> : null}

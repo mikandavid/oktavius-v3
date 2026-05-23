@@ -5,7 +5,7 @@ import { cn } from '../lib/utils';
 export interface SectionCardProps {
   title: string;
   /** One-line subtitle below the title */
-  meta?: string;
+  meta?: ReactNode;
   /** Action buttons / badges in the header */
   actions?: ReactNode;
   className?: string;

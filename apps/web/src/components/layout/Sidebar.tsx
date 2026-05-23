@@ -6,15 +6,24 @@ import type { IconProps } from '@/lib/icons';
 
 import {
   BotIcon,
+  CaseIcon,
   CheckIcon,
+  ContractIcon,
   EditIcon,
   HomeIcon,
+  IncidentIcon,
+  InvoiceIcon,
+  OrderIcon,
+  ProductIcon,
+  ProjectIcon,
+  ReportsIcon,
   SortIcon,
   PanelLeftCloseIcon,
   PanelLeftIcon,
   ProjectsIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
+  SuperadminIcon,
   UsersIcon,
 } from '@/lib/icons';
 
@@ -44,11 +53,20 @@ const PRIMARY_ITEMS: NavItem[] = [
 ];
 
 const MODULE_ITEMS: NavItem[] = [
+  { id: 'cases', path: '/cases', label: 'Cases', icon: CaseIcon },
+  { id: 'incidents', path: '/incidents', label: 'Incidents', icon: IncidentIcon },
   { id: 'clients', path: '/clients', label: 'Clients', icon: ProjectsIcon },
+  { id: 'contracts', path: '/contracts', label: 'Contracts', icon: ContractIcon },
+  { id: 'orders', path: '/orders', label: 'Orders', icon: OrderIcon },
+  { id: 'invoices', path: '/invoices', label: 'Invoices', icon: InvoiceIcon },
+  { id: 'products', path: '/products', label: 'Products', icon: ProductIcon },
+  { id: 'projects', path: '/projects', label: 'Projects', icon: ProjectIcon },
   { id: 'users', path: '/users', label: 'Users', icon: UsersIcon },
+  { id: 'reports', path: '/reports', label: 'Reports', icon: ReportsIcon },
 ];
 
 const ADMIN_ITEMS: NavItem[] = [
+  { id: 'superadmin', path: '/superadmin', label: 'Superadmin', icon: SuperadminIcon },
   { id: 'showcase', path: '/showcase', label: 'Showcase', icon: SlidersHorizontalIcon },
   { id: 'settings', path: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
@@ -138,8 +156,8 @@ function NavItemRow({
         cn(
           'relative flex h-8 items-center rounded-md py-1.5 transition-colors',
           isActive
-            ? 'bg-sidebar-foreground/[0.08] font-medium text-foreground'
-            : 'text-muted-foreground hover:bg-sidebar-foreground/[0.05] hover:text-foreground',
+            ? 'bg-sidebar-primary/10 font-medium text-sidebar-primary'
+            : 'text-muted-foreground hover:bg-sidebar-primary/5 hover:text-foreground',
           expanded ? 'gap-3 px-2' : 'mx-auto w-8 justify-center px-0',
           isDragging && 'opacity-60',
         )

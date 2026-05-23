@@ -1,47 +1,40 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
-import { clientColumns, ClientsHeaderAction } from './shared';
+import type { ClientRecord } from '@/app/demo-data';
+import { clientColumns, clientsPageIcon, ClientsHeaderAction } from './shared';
 
 export function ClientsListPage() {
   const { clients } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '', type: '' });
-  const [sort, setSort] = useState('name');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = clients.filter((c) => {
+  const list = useListPageState<ClientRecord>({
+    rows: clients,
+    defaultSort: 'name',
+    pageSize: 10,
+    filterKeys: ['status', 'type'],
+    filterFn: (client, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        c.name.toLowerCase().includes(q) ||
-        c.email.toLowerCase().includes(q) ||
-        c.industry.toLowerCase().includes(q) ||
-        c.accountManager.toLowerCase().includes(q);
-      const matchesStatus = !filters.status || c.status === filters.status;
-      const matchesType = !filters.type || c.type === filters.type;
+        q.length === 0 ||
+        client.name.toLowerCase().includes(q) ||
+        client.email.toLowerCase().includes(q) ||
+        client.industry.toLowerCase().includes(q) ||
+        client.accountManager.toLowerCase().includes(q);
+      const matchesStatus = filters.status.length === 0 || client.status === filters.status;
+      const matchesType = filters.type.length === 0 || client.type === filters.type;
       return matchesSearch && matchesStatus && matchesType;
-    });
-
-    return sortRows(rows, sort);
-  }, [clients, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
       title="Clients"
       subtitle="Manage client accounts, contracts, and relationships."
+      icon={clientsPageIcon()}
       headerActions={<ClientsHeaderAction />}
-      search={search}
-      onSearchChange={(v) => { setSearch(v); setPage(1); }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search by name, email, industry…"
       filters={[
         {
@@ -63,23 +56,24 @@ export function ClientsListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => { setFilters((f) => ({ ...f, [key]: value })); setPage(1); }}
-      onReset={() => { setSearch(''); setFilters({ status: '', type: '' }); setPage(1); }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={clientColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       exportOptions={{ fileName: 'clients', label: 'Export' }}
       emptyTitle="No clients found"
       emptyDescription="Try adjusting filters or create a new client."
+      entityLabel="client"
       getRowHref={(c) => `/clients/${c.id}`}
-      sort={sort}
-      onSortChange={(s) => { setSort(s); setPage(1); }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }
