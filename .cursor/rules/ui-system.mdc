@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Oktavius UI system
 
-Canonical reference: `oktavius-v3/CLAUDE.md`. When in doubt, use the component registry there — do not invent layouts.
+Canonical references: `docs/ui-rules/README.md` (index) and `docs/ui-rules/component-registry.md`. When in doubt, use those — do not invent layouts.
 
 ## Stack constraints
 
@@ -54,6 +54,8 @@ Every route uses `<ModulePage>`. Never build custom page headers or shells.
 - Toasts: `@/lib/toast` — Toaster already in `AppLayout`
 
 ## Scoped rules (read when relevant)
+
+Full index: `docs/ui-rules/README.md`
 
 `page-header` · `crud-table` · `filter-toolbar` · `combobox` · `date-format` · `calendar-components` · `split-view-master-detail` · `entity-form` · `module-pattern` · `detail-pages` · `status-and-money` · `dialogs` · `checklist`
 

@@ -113,14 +113,15 @@ export function Combobox({
 
   const displayOptions = React.useMemo(() => {
     if (asyncItems) {
-      return query.trim() ? remoteOptions : [...options, ...remoteOptions.filter((r) => !options.some((o) => o.value === r.value))];
+      return query.trim()
+        ? remoteOptions
+        : [...options, ...remoteOptions.filter((r) => !options.some((o) => o.value === r.value))];
     }
     if (!query) return options;
     const q = query.toLowerCase();
     return options.filter(
       (o) =>
-        o.label.toLowerCase().includes(q) ||
-        (o.description?.toLowerCase().includes(q) ?? false),
+        o.label.toLowerCase().includes(q) || (o.description?.toLowerCase().includes(q) ?? false),
     );
   }, [asyncItems, options, query, remoteOptions]);
 
@@ -281,8 +282,14 @@ export function Combobox({
                     value={createLabel}
                     onChange={(e) => setCreateLabel(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') { e.preventDefault(); void handleCreate(); }
-                      if (e.key === 'Escape') { setIsCreating(false); setCreateLabel(''); }
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void handleCreate();
+                      }
+                      if (e.key === 'Escape') {
+                        setIsCreating(false);
+                        setCreateLabel('');
+                      }
                     }}
                     placeholder={onCreate.placeholder ?? searchPlaceholder}
                     disabled={isCreatingPending}
@@ -308,7 +315,10 @@ export function Combobox({
                     variant="ghost"
                     className="h-8 w-8 shrink-0"
                     disabled={isCreatingPending}
-                    onClick={() => { setIsCreating(false); setCreateLabel(''); }}
+                    onClick={() => {
+                      setIsCreating(false);
+                      setCreateLabel('');
+                    }}
                   >
                     <X className="h-3.5 w-3.5" />
                   </Button>
@@ -318,7 +328,10 @@ export function Combobox({
                   type="button"
                   variant="ghost"
                   className="h-8 w-full justify-start px-2 text-sm font-normal"
-                  onClick={() => { setIsCreating(true); setCreateLabel(query.trim()); }}
+                  onClick={() => {
+                    setIsCreating(true);
+                    setCreateLabel(query.trim());
+                  }}
                 >
                   {onCreate.label}
                 </Button>
@@ -332,9 +345,7 @@ export function Combobox({
                 disabled={isFooterPending}
                 onClick={() => void handleFooterAction()}
               >
-                {isFooterPending ? (
-                  <SpinnerGap className="mr-2 h-3.5 w-3.5 animate-spin" />
-                ) : null}
+                {isFooterPending ? <SpinnerGap className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
                 {footerAction.label}
               </Button>
             ) : null}

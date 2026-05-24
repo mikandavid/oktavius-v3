@@ -22,11 +22,16 @@ export interface TimelineEvent {
 
 function dotClass(tone: TimelineEventTone) {
   switch (tone) {
-    case 'success': return 'bg-success border-success/30';
-    case 'warning': return 'bg-warning border-warning/30';
-    case 'destructive': return 'bg-destructive border-destructive/30';
-    case 'info': return 'bg-info border-info/30';
-    default: return 'bg-border border-border/60';
+    case 'success':
+      return 'bg-success border-success/30';
+    case 'warning':
+      return 'bg-warning border-warning/30';
+    case 'destructive':
+      return 'bg-destructive border-destructive/30';
+    case 'info':
+      return 'bg-info border-info/30';
+    default:
+      return 'bg-border border-border/60';
   }
 }
 
@@ -49,7 +54,9 @@ export function Timeline({ events, className }: TimelineProps) {
               <div
                 className={cn(
                   'mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2',
-                  event.icon ? 'h-7 w-7 flex items-center justify-center rounded-full bg-muted text-muted-foreground border border-border/60' : dotClass(tone),
+                  event.icon
+                    ? 'h-7 w-7 flex items-center justify-center rounded-full bg-muted text-muted-foreground border border-border/60'
+                    : dotClass(tone),
                 )}
               >
                 {event.icon ?? null}

@@ -1,47 +1,36 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { projectColumns, projectsPageIcon } from './shared';
 
 export function ProjectsListPage() {
   const { projects } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '' });
-  const [sort, setSort] = useState('name');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = projects.filter((p) => {
+  const list = useListPageState({
+    rows: projects,
+    defaultSort: 'name',
+    pageSize: 10,
+    filterKeys: ['status'],
+    filterFn: (project, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.clientName.toLowerCase().includes(q) ||
-        p.manager.toLowerCase().includes(q);
-      const matchesStatus = !filters.status || p.status === filters.status;
+        q.length === 0 ||
+        project.name.toLowerCase().includes(q) ||
+        project.clientName.toLowerCase().includes(q) ||
+        project.manager.toLowerCase().includes(q);
+      const matchesStatus = filters.status.length === 0 || project.status === filters.status;
       return matchesSearch && matchesStatus;
-    });
-    return sortRows(rows, sort);
-  }, [projects, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
       title="Projects"
       subtitle="Delivery workspaces with tasks, documents, and milestones."
       icon={projectsPageIcon()}
-      search={search}
-      onSearchChange={(v) => {
-        setSearch(v);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search project, client, manager…"
       filters={[
         {
@@ -55,33 +44,23 @@ export function ProjectsListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((f) => ({ ...f, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ status: '' });
-        setPage(1);
-      }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={projectColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       exportOptions={{ fileName: 'projects', label: 'Export' }}
       emptyTitle="No projects found"
       entityLabel="project"
       getRowHref={(p) => `/projects/${p.id}`}
-      sort={sort}
-      onSortChange={(s) => {
-        setSort(s);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

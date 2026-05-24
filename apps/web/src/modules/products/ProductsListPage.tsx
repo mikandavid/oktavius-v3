@@ -1,37 +1,30 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { productColumns, productsPageIcon, ProductsHeaderAction } from './shared';
 
 export function ProductsListPage() {
   const { products } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '', category: '' });
-  const [sort, setSort] = useState('name');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = products.filter((p) => {
+  const list = useListPageState({
+    rows: products,
+    defaultSort: 'name',
+    pageSize: 10,
+    filterKeys: ['status', 'category'],
+    filterFn: (product, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q);
-      const matchesStatus = !filters.status || p.status === filters.status;
-      const matchesCategory = !filters.category || p.category === filters.category;
+        q.length === 0 ||
+        product.name.toLowerCase().includes(q) ||
+        product.sku.toLowerCase().includes(q) ||
+        product.category.toLowerCase().includes(q);
+      const matchesStatus = filters.status.length === 0 || product.status === filters.status;
+      const matchesCategory =
+        filters.category.length === 0 || product.category === filters.category;
       return matchesSearch && matchesStatus && matchesCategory;
-    });
-    return sortRows(rows, sort);
-  }, [products, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
@@ -39,11 +32,8 @@ export function ProductsListPage() {
       subtitle="Catalog of sellable items, licenses, and services."
       icon={productsPageIcon()}
       headerActions={<ProductsHeaderAction />}
-      search={search}
-      onSearchChange={(v) => {
-        setSearch(v);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search SKU, name, category…"
       filters={[
         {
@@ -65,33 +55,23 @@ export function ProductsListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((f) => ({ ...f, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ status: '', category: '' });
-        setPage(1);
-      }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={productColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       exportOptions={{ fileName: 'products', label: 'Export' }}
       emptyTitle="No products found"
       entityLabel="product"
       getRowHref={(p) => `/products/${p.id}`}
-      sort={sort}
-      onSortChange={(s) => {
-        setSort(s);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

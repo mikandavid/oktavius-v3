@@ -33,11 +33,26 @@ export function ProductDetailPage() {
       <DetailView
         title="Product record"
         fields={[
-          { key: 'sku', label: 'SKU', value: <span className="font-mono text-sm">{product.sku}</span>, section: 'Catalog' },
-          { key: 'category', label: 'Category', value: <Badge variant="outline">{product.category}</Badge>, section: 'Catalog' },
+          {
+            key: 'sku',
+            label: 'SKU',
+            value: <span className="font-mono text-sm">{product.sku}</span>,
+            section: 'Catalog',
+          },
+          {
+            key: 'category',
+            label: 'Category',
+            value: <Badge variant="outline">{product.category}</Badge>,
+            section: 'Catalog',
+          },
           { key: 'unit', label: 'Unit', value: product.unit, section: 'Catalog' },
           { key: 'price', label: 'List price', value: price, section: 'Inventory' },
-          { key: 'stock', label: 'Stock on hand', value: String(product.stock), section: 'Inventory' },
+          {
+            key: 'stock',
+            label: 'Stock on hand',
+            value: String(product.stock),
+            section: 'Inventory',
+          },
         ]}
       />
     </ModulePage>

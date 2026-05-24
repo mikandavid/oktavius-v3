@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Calendar components
 
-Canonical registry: `oktavius-v3/CLAUDE.md` (Calendar / Planning section).
+Canonical registry: `docs/ui-rules/component-registry.md` (Calendar / Planning section).
 
 ## Primary component
 

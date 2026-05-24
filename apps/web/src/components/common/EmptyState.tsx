@@ -11,13 +11,7 @@ type EmptyStateProps = {
   className?: string;
 };
 
-export function EmptyState({
-  title,
-  description,
-  action,
-  compact,
-  className,
-}: EmptyStateProps) {
+export function EmptyState({ title, description, action, compact, className }: EmptyStateProps) {
   return (
     <div
       className={cn(

@@ -25,7 +25,14 @@ const intakeFields: FormField[] = [
     section: 'Classification',
   },
   { name: 'clientName', label: 'Client', type: 'text', required: true, section: 'Classification' },
-  { name: 'title', label: 'Title', type: 'text', required: true, colSpan: 2, section: 'Classification' },
+  {
+    name: 'title',
+    label: 'Title',
+    type: 'text',
+    required: true,
+    colSpan: 2,
+    section: 'Classification',
+  },
 ];
 
 const detailFields: FormField[] = [
@@ -48,7 +55,11 @@ type DetailValues = { priority: string; assignee: string; dueAt: string; summary
 export function CaseCreatePage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [intake, setIntake] = useState<IntakeValues>({ type: 'Support', clientName: '', title: '' });
+  const [intake, setIntake] = useState<IntakeValues>({
+    type: 'Support',
+    clientName: '',
+    title: '',
+  });
   const [details, setDetails] = useState<DetailValues>({
     priority: 'Normal',
     assignee: 'Anna Hofer',
@@ -57,7 +68,12 @@ export function CaseCreatePage() {
   });
 
   return (
-    <ModulePage title="New case" subtitle="Multi-step intake wizard for complex case records." backTo="/cases" icon={casesPageIcon()}>
+    <ModulePage
+      title="New case"
+      subtitle="Multi-step intake wizard for complex case records."
+      backTo="/cases"
+      icon={casesPageIcon()}
+    >
       <StepperLayout
         steps={[...STEPS]}
         currentStep={step}
@@ -101,37 +117,52 @@ export function CaseCreatePage() {
           <SectionCard
             title="Review"
             actions={
-              <Button variant="cta" onClick={() => {
-                toast.success('Case created (demo).');
-                navigate('/cases');
-              }}>
+              <Button
+                variant="cta"
+                onClick={() => {
+                  toast.success('Case created (demo).');
+                  navigate('/cases');
+                }}
+              >
                 Create case
               </Button>
             }
           >
             <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Type</dt>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Type
+                </dt>
                 <dd className="mt-0.5 font-medium">{intake.type}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Client</dt>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Client
+                </dt>
                 <dd className="mt-0.5 font-medium">{intake.clientName || '—'}</dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Title</dt>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Title
+                </dt>
                 <dd className="mt-0.5 font-medium">{intake.title || '—'}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Priority</dt>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Priority
+                </dt>
                 <dd className="mt-0.5 font-medium">{details.priority}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Owner</dt>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Owner
+                </dt>
                 <dd className="mt-0.5 font-medium">{details.assignee}</dd>
               </div>
               <div className="sm:col-span-2">
-                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Summary</dt>
+                <dt className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  Summary
+                </dt>
                 <dd className="mt-0.5 text-muted-foreground">{details.summary || '—'}</dd>
               </div>
             </dl>

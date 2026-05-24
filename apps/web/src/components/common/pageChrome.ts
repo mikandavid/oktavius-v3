@@ -5,8 +5,7 @@ export const APP_MAIN_GUTTER_CLASS = 'p-3 md:p-6';
  * Page header `actions` row — top-right on md+.
  * Order: Export (icon) → secondary → CTA last. All h-7 via PageHeaderButtons.
  */
-export const PAGE_HEADER_ACTIONS_ROW =
-  'flex shrink-0 flex-wrap items-center justify-end gap-2';
+export const PAGE_HEADER_ACTIONS_ROW = 'flex shrink-0 flex-wrap items-center justify-end gap-2';
 
 /** Center column: header + scrollable module pages (between nav and chat). */
 export const APP_WORKSPACE_COLUMN_CLASS =

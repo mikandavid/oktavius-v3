@@ -1,47 +1,36 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { invoiceColumns, invoicesPageIcon } from './shared';
 
 export function InvoicesListPage() {
   const { invoices } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '' });
-  const [sort, setSort] = useState('-issuedAt');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = invoices.filter((inv) => {
+  const list = useListPageState({
+    rows: invoices,
+    defaultSort: '-issuedAt',
+    pageSize: 10,
+    filterKeys: ['status'],
+    filterFn: (invoice, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        inv.invoiceNumber.toLowerCase().includes(q) ||
-        inv.clientName.toLowerCase().includes(q) ||
-        inv.orderNumber.toLowerCase().includes(q);
-      const matchesStatus = !filters.status || inv.status === filters.status;
+        q.length === 0 ||
+        invoice.invoiceNumber.toLowerCase().includes(q) ||
+        invoice.clientName.toLowerCase().includes(q) ||
+        invoice.orderNumber.toLowerCase().includes(q);
+      const matchesStatus = filters.status.length === 0 || invoice.status === filters.status;
       return matchesSearch && matchesStatus;
-    });
-    return sortRows(rows, sort);
-  }, [invoices, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
       title="Invoices"
       subtitle="Billing documents linked to sales orders and clients."
       icon={invoicesPageIcon()}
-      search={search}
-      onSearchChange={(v) => {
-        setSearch(v);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search invoice, client, order…"
       filters={[
         {
@@ -55,33 +44,23 @@ export function InvoicesListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((f) => ({ ...f, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ status: '' });
-        setPage(1);
-      }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={invoiceColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       exportOptions={{ fileName: 'invoices', label: 'Export' }}
       emptyTitle="No invoices found"
       entityLabel="invoice"
       getRowHref={(inv) => `/invoices/${inv.id}`}
-      sort={sort}
-      onSortChange={(s) => {
-        setSort(s);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

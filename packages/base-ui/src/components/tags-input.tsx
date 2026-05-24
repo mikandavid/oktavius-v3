@@ -68,7 +68,11 @@ export function TagsInput({
       onClick={() => !disabled && inputRef.current?.focus()}
     >
       {tags.map((tag) => (
-        <Badge key={tag} variant="secondary" className="h-5 gap-1 rounded px-1.5 text-[11px] font-normal">
+        <Badge
+          key={tag}
+          variant="secondary"
+          className="h-5 gap-1 rounded px-1.5 text-[11px] font-normal"
+        >
           {tag}
           {!disabled ? (
             <button
@@ -91,7 +95,9 @@ export function TagsInput({
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
-        onBlur={() => { if (input.trim()) addTag(input); }}
+        onBlur={() => {
+          if (input.trim()) addTag(input);
+        }}
         placeholder={tags.length === 0 ? placeholder : undefined}
         disabled={disabled}
         className="h-6 min-w-[80px] flex-1 border-0 bg-transparent p-0 text-sm placeholder:text-muted-foreground focus:outline-none"

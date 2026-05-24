@@ -53,7 +53,11 @@ export function useListPageState<T extends Record<string, unknown>>({
       const q = search.trim().toLowerCase();
       const matchesSearch =
         q.length === 0 ||
-        (searchKeys ?? []).some((key) => String(row[key] ?? '').toLowerCase().includes(q));
+        (searchKeys ?? []).some((key) =>
+          String(row[key] ?? '')
+            .toLowerCase()
+            .includes(q),
+        );
       const matchesFilters = filterKeys.every(
         (key) => filters[key].length === 0 || String(row[key] ?? '') === filters[key],
       );

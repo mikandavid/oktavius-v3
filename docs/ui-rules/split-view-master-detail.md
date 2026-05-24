@@ -1,0 +1,49 @@
+# Master-detail (`SplitView`)
+
+## Layout
+
+```tsx
+<SplitView className="w-full min-h-[min(32rem,70vh)]" sidebarWidth="w-[min(100%,20rem)]" sidebar={…}>
+  {detail content}
+</SplitView>
+```
+
+- Split container is **`w-full`** (built into `SplitView` + pass `className="w-full"`).
+- Do not add `border` on the split outer card — use borderless white surface on `bg-muted/40`.
+
+## Sidebar queue
+
+```tsx
+import { SplitViewQueue, QUEUE_ITEM_SELECTED_CLASS } from '@/components/common/SplitViewQueue';
+
+sidebar={
+  <SplitViewQueue>
+    {items.map((item) => (
+      <ListRow
+        key={item.id}
+        variant="queue"
+        onClick={() => setSelectedId(item.id)}
+        aria-current={selectedId === item.id}
+        className={selectedId === item.id ? QUEUE_ITEM_SELECTED_CLASS : undefined}
+        …
+      />
+    ))}
+  </SplitViewQueue>
+}
+```
+
+- **Selection:** `QUEUE_ITEM_SELECTED_CLASS` — muted fill only (`bg-muted/70`). No ring, no left accent bar.
+
+| Do                             | Don't                                                               |
+| ------------------------------ | ------------------------------------------------------------------- |
+| `SplitViewQueue` (`gap-2 p-3`) | `divide-y`, `space-y-1 p-1`, or nested `<button><ListRow border-b>` |
+| `ListRow variant="queue"`      | `ListRow` default variant in sidebars (stacked bottom borders)      |
+
+## Queue filters
+
+Use shared `<Tabs>` above the split for Open/All-style filters — not standalone `Button` toggles.
+
+## Detail panel header
+
+- **Title** → **meta line** (id · service · time) → **badges** (`StatusBadge`, severity) in a row under meta.
+- Do not place badges in `justify-between` top-right next to the title (same as `ModulePage` `actions` rule).

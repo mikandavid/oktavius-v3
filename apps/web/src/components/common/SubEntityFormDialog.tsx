@@ -10,11 +10,7 @@ import {
   DialogTitle,
 } from '@oktavius/base-ui';
 
-import {
-  EntityForm,
-  type FormField,
-  type FormFieldValue,
-} from '@/components/forms/EntityForm';
+import { EntityForm, type FormField, type FormFieldValue } from '@/components/forms/EntityForm';
 
 type SubEntityFormDialogProps<T extends Record<string, FormFieldValue>> = {
   open: boolean;

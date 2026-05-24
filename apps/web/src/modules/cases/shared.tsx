@@ -16,12 +16,15 @@ const CASE_STATUS_MAP = {
   Closed: 'success',
 } as const;
 
-const PRIORITY_VARIANT: Record<CaseRecord['priority'], 'secondary' | 'info' | 'warning' | 'destructive'> = {
+export const CASE_PRIORITY_MAP = {
   Low: 'secondary',
   Normal: 'info',
   High: 'warning',
   Critical: 'destructive',
-};
+} as const;
+
+/** @deprecated Use CASE_PRIORITY_MAP with StatusBadge */
+export const PRIORITY_VARIANT = CASE_PRIORITY_MAP;
 
 export const caseColumns: CrudColumn<CaseRecord>[] = [
   {
@@ -53,7 +56,7 @@ export const caseColumns: CrudColumn<CaseRecord>[] = [
     key: 'priority',
     header: 'Priority',
     sortable: true,
-    render: (row) => <Badge variant={PRIORITY_VARIANT[row.priority]}>{row.priority}</Badge>,
+    render: (row) => <StatusBadge status={row.priority} variantMap={CASE_PRIORITY_MAP} />,
   },
   { key: 'assignee', header: 'Owner', sortable: true, hideBelow: 'lg' },
   { key: 'dueAt', header: 'Due', sortable: true, type: 'date', hideBelow: 'md' },
@@ -71,12 +74,19 @@ export function CasesHeaderActions() {
   );
 }
 
-export { CASE_STATUS_MAP, PRIORITY_VARIANT };
+export { CASE_STATUS_MAP };
 
 export { casesPageIcon } from '@/lib/modulePageIcons';
 
 export const checklistFormFields: FormField[] = [
-  { name: 'label', label: 'Checklist item', type: 'text', required: true, section: 'Item', colSpan: 2 },
+  {
+    name: 'label',
+    label: 'Checklist item',
+    type: 'text',
+    required: true,
+    section: 'Item',
+    colSpan: 2,
+  },
   {
     name: 'required',
     label: 'Required before case close',

@@ -12,7 +12,7 @@ export function PageSkeleton({ className }: { className?: string }) {
           <Skeleton className="h-3.5 w-72" />
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="rounded-card bg-card p-4 space-y-2">
             <Skeleton className="h-3 w-20" />

@@ -41,8 +41,7 @@ export function ListRow({
     'flex w-full min-w-0 items-center gap-3 py-2.5 text-left transition-colors',
     variant === 'default' &&
       'border-b border-border/50 last:border-b-0 hover:bg-muted/40 px-2 -mx-2',
-    variant === 'muted' &&
-      'border-b border-border/40 last:border-b-0 hover:bg-muted/30 px-2 -mx-2',
+    variant === 'muted' && 'border-b border-border/40 last:border-b-0 hover:bg-muted/30 px-2 -mx-2',
     variant === 'warning' &&
       'rounded-control border border-warning/30 bg-warning/10 hover:bg-warning/15 px-3',
     variant === 'dashed' &&

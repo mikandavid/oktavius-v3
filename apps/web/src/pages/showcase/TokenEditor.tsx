@@ -150,10 +150,20 @@ export function TokenEditor() {
   useEffect(() => {
     return () => {
       const root = document.documentElement;
-      const vars = ['--radius-card','--radius-control','--radius-badge','--radius',
-        '--shadow-card','--shadow-elevated','--cta','--ring','--sidebar-primary',
-        '--font-sans','--muted'];
-      vars.forEach(v => root.style.removeProperty(v));
+      const vars = [
+        '--radius-card',
+        '--radius-control',
+        '--radius-badge',
+        '--radius',
+        '--shadow-card',
+        '--shadow-elevated',
+        '--cta',
+        '--ring',
+        '--sidebar-primary',
+        '--font-sans',
+        '--muted',
+      ];
+      vars.forEach((v) => root.style.removeProperty(v));
     };
   }, []);
 
@@ -198,14 +208,18 @@ export function TokenEditor() {
           {/* Scrollable content */}
           <ScrollArea className="flex-1">
             <div className="space-y-5 px-4 py-4">
-
               {/* Live preview strip */}
               <div className="space-y-1.5">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Preview</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                  Preview
+                </p>
                 <div className="flex items-center gap-2">
                   <div
                     className="h-10 flex-1 border bg-muted/40"
-                    style={{ borderRadius: `${tokens.radiusCard}rem`, boxShadow: SHADOW_PRESETS[tokens.shadowDepth].card }}
+                    style={{
+                      borderRadius: `${tokens.radiusCard}rem`,
+                      boxShadow: SHADOW_PRESETS[tokens.shadowDepth].card,
+                    }}
                     title="Card surface"
                   />
                   <div
@@ -332,7 +346,9 @@ export function TokenEditor() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Page tone (lightness)</span>
-                    <span className="font-mono text-xs text-foreground">{tokens.mutedLightness}%</span>
+                    <span className="font-mono text-xs text-foreground">
+                      {tokens.mutedLightness}%
+                    </span>
                   </div>
                   <input
                     type="range"
@@ -345,7 +361,6 @@ export function TokenEditor() {
                   />
                 </div>
               </TokenSection>
-
             </div>
           </ScrollArea>
 

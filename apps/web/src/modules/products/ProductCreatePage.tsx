@@ -5,7 +5,12 @@ import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
 
-import { productFormDefaults, productFormFields, productsPageIcon, type ProductFormValues } from './shared';
+import {
+  productFormDefaults,
+  productFormFields,
+  productsPageIcon,
+  type ProductFormValues,
+} from './shared';
 
 export function ProductCreatePage() {
   const navigate = useNavigate();

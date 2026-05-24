@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, Input, ScrollArea, Skeleton, cn } from '@oktavius/base-ui';
+import { Button, Input, RelativeTime, ScrollArea, Skeleton, cn } from '@oktavius/base-ui';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import { BackIcon, CloseIcon, DeleteIcon, EditIcon, PlusIcon, SearchIcon } from '@/lib/icons';
 
 export type ConversationHistoryItem = {
@@ -30,20 +31,6 @@ type ConversationHistoryPanelProps = {
 const FULL_WIDTH_CONTENT_CLASS = 'mx-auto w-full max-w-5xl';
 
 type TimeGroup = 'today' | 'yesterday' | 'thisWeek' | 'thisMonth' | 'older';
-
-function formatRelativeTime(value: string) {
-  const date = new Date(value);
-  const diffMs = Date.now() - date.getTime();
-  const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
-
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  const diffHours = Math.round(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.round(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-
-  return new Intl.DateTimeFormat('de-AT', { month: 'short', day: 'numeric' }).format(date);
-}
 
 function getTimeGroup(value: string): TimeGroup {
   const date = new Date(value).getTime();
@@ -172,7 +159,10 @@ export function ConversationHistoryPanel({
         <div className={cn('px-2 pb-3', fullWidth && FULL_WIDTH_CONTENT_CLASS)}>
           {loading ? <ConversationHistorySkeleton /> : null}
           {!loading && items.length === 0 ? (
-            <EmptyState hasSearch={Boolean(searchQuery.trim())} onCreateItem={onCreateItem} />
+            <ConversationHistoryEmptyState
+              hasSearch={Boolean(searchQuery.trim())}
+              onCreateItem={onCreateItem}
+            />
           ) : null}
           {!loading
             ? groupedItems.map(({ group, items: grouped }) => (
@@ -190,7 +180,9 @@ export function ConversationHistoryPanel({
                         isActive={item.id === activeItemId}
                         onSelect={() => onSelectItem(item.id)}
                         onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
-                        onRename={onRenameItem ? (nextTitle) => onRenameItem(item.id, nextTitle) : undefined}
+                        onRename={
+                          onRenameItem ? (nextTitle) => onRenameItem(item.id, nextTitle) : undefined
+                        }
                       />
                     ))}
                   </div>
@@ -256,7 +248,7 @@ function ConversationHistoryRow({
     >
       <div className="min-w-0 flex-1 overflow-hidden px-3 py-2">
         {isEditing ? (
-          <input
+          <Input
             ref={inputRef}
             value={draftTitle}
             onChange={(event) => setDraftTitle(event.target.value)}
@@ -265,14 +257,14 @@ function ConversationHistoryRow({
               if (event.key === 'Escape') setIsEditing(false);
             }}
             onBlur={commitRename}
-            className="h-6 w-full border-0 border-b border-border/70 bg-transparent px-0 py-0 text-[13px] font-medium leading-snug text-foreground outline-none"
+            className="h-6 border-0 border-b border-border/70 bg-transparent px-0 py-0 text-[13px] font-medium shadow-none focus-visible:ring-0"
           />
         ) : (
           <div className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-snug">
             {item.title || 'Untitled'}
           </div>
         )}
-        <div className="mt-0.5 text-[10px] text-muted-foreground/60">{formatRelativeTime(item.updatedAt)}</div>
+        <RelativeTime date={item.updatedAt} className="mt-0.5 block text-[10px]" />
       </div>
 
       <div
@@ -339,7 +331,7 @@ function ConversationHistorySkeleton() {
   );
 }
 
-function EmptyState({
+function ConversationHistoryEmptyState({
   hasSearch,
   onCreateItem,
 }: {
@@ -348,26 +340,27 @@ function EmptyState({
 }) {
   if (hasSearch) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-muted/40">
-          <SearchIcon size={14} className="text-muted-foreground/40" />
-        </div>
-        <p className="text-[13px] text-muted-foreground/70">No matching conversations</p>
-      </div>
+      <EmptyState
+        compact
+        className="mx-2 border-0 bg-transparent"
+        title="No matching conversations"
+        description="Try a different search term."
+      />
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-card bg-muted/40">
-        <PlusIcon size={16} className="text-muted-foreground/35" />
-      </div>
-      <p className="mb-1 text-[13px] font-medium text-foreground/70">No conversations yet</p>
-      <p className="mb-4 text-xs text-muted-foreground/60">Start the first conversation.</p>
-      <Button variant="cta" size="sm" onClick={onCreateItem} className="h-7 px-3 text-xs">
-        <PlusIcon size={14} className="mr-1.5" />
-        New chat
-      </Button>
-    </div>
+    <EmptyState
+      compact
+      className="mx-2 border-0 bg-transparent"
+      title="No conversations yet"
+      description="Start the first conversation."
+      action={
+        <Button variant="cta" size="sm" onClick={onCreateItem}>
+          <PlusIcon size={14} className="mr-1.5" />
+          New chat
+        </Button>
+      }
+    />
   );
 }

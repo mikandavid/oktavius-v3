@@ -24,9 +24,7 @@ export function CalendarEventChip({
   const interactive = Boolean(onClick);
   const start = eventStartDate(event);
   const label =
-    showTime && !event.allDay && start
-      ? `${format(start, 'HH:mm')} ${event.title}`
-      : event.title;
+    showTime && !event.allDay && start ? `${format(start, 'HH:mm')} ${event.title}` : event.title;
 
   return (
     <button

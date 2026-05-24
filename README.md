@@ -9,3 +9,7 @@ The first frontend extraction slice now includes:
 - a sample `users` module proving list, create, and detail composition
 
 The target shape follows the architecture defined in `../FE`.
+
+## UI rules
+
+All frontend/UI documentation: [`docs/ui-rules/README.md`](docs/ui-rules/README.md)

@@ -3,7 +3,9 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 
-export interface ScrollAreaProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> {
+export interface ScrollAreaProps extends React.ComponentPropsWithoutRef<
+  typeof ScrollAreaPrimitive.Root
+> {
   ref?: React.Ref<React.ComponentRef<typeof ScrollAreaPrimitive.Root>>;
 }
 
@@ -23,7 +25,9 @@ export function ScrollArea({ className, children, ref, ...props }: ScrollAreaPro
   );
 }
 
-export interface ScrollBarProps extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar> {
+export interface ScrollBarProps extends React.ComponentPropsWithoutRef<
+  typeof ScrollAreaPrimitive.ScrollAreaScrollbar
+> {
   ref?: React.Ref<React.ComponentRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>>;
 }
 

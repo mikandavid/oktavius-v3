@@ -6,7 +6,10 @@ import { cn } from '../lib/utils';
 import { Button, type ButtonProps } from './button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
-export interface CopyButtonProps extends Omit<ButtonProps, 'children' | 'onClick' | 'value' | 'aria-label'> {
+export interface CopyButtonProps extends Omit<
+  ButtonProps,
+  'children' | 'onClick' | 'value' | 'aria-label'
+> {
   /** Text to write to clipboard. */
   value: string;
   /** Optional visible label. Without it, renders icon-only. */

@@ -69,14 +69,21 @@ function tryParseDate(text: string): Date | null {
   const t = text.trim();
   if (!t) return null;
   for (const fmt of [
-    'dd.MM.yyyy', 'd.M.yyyy', 'd.MM.yyyy', 'dd.M.yyyy',
-    'dd/MM/yyyy', 'MM/dd/yyyy', 'M/d/yyyy',
+    'dd.MM.yyyy',
+    'd.M.yyyy',
+    'd.MM.yyyy',
+    'dd.M.yyyy',
+    'dd/MM/yyyy',
+    'MM/dd/yyyy',
+    'M/d/yyyy',
     'yyyy-MM-dd',
   ]) {
     try {
       const d = parse(t, fmt, new Date());
       if (isValid(d)) return d;
-    } catch { /* */ }
+    } catch {
+      /* */
+    }
   }
   return null;
 }
@@ -89,7 +96,9 @@ function tryParseTime(text: string): { h: number; m: number } | null {
     try {
       const d = parse(t, fmt, new Date());
       if (isValid(d)) return { h: d.getHours(), m: d.getMinutes() };
-    } catch { /* */ }
+    } catch {
+      /* */
+    }
   }
   return null;
 }
@@ -104,36 +113,91 @@ interface TimeSpinnerProps {
   onMinutesChange: (m: number) => void;
 }
 
-function TimeSpinner({ hours, minutes, minuteStep, onHoursChange, onMinutesChange }: TimeSpinnerProps) {
+function TimeSpinner({
+  hours,
+  minutes,
+  minuteStep,
+  onHoursChange,
+  onMinutesChange,
+}: TimeSpinnerProps) {
   const pad = (n: number) => String(n).padStart(2, '0');
 
   const adjustHours = (delta: number) => onHoursChange((hours + delta + 24) % 24);
   const adjustMinutes = (delta: number) => {
     const next = clampMinutes(minutes + delta * minuteStep, minuteStep);
-    if (next < 0) { onMinutesChange(60 - minuteStep); adjustHours(-1); }
-    else if (next >= 60) { onMinutesChange(0); adjustHours(1); }
-    else onMinutesChange(next);
+    if (next < 0) {
+      onMinutesChange(60 - minuteStep);
+      adjustHours(-1);
+    } else if (next >= 60) {
+      onMinutesChange(0);
+      adjustHours(1);
+    } else onMinutesChange(next);
   };
 
-  const spinBtn = 'flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-xs font-bold select-none';
+  const spinBtn =
+    'flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground transition-colors text-xs font-bold select-none';
 
   return (
     <div className="flex items-center gap-1 px-3 pb-3 pt-1">
       <Clock className="mr-1 h-3.5 w-3.5 text-muted-foreground" />
       <div className="flex flex-col items-center gap-0.5">
-        <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustHours(1)}>▲</button>
-        <input type="text" inputMode="numeric" value={pad(hours)} onMouseDown={(e) => e.stopPropagation()}
-          onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n) && n >= 0 && n < 24) onHoursChange(n); }}
-          className="w-8 rounded-sm bg-muted/60 px-1 py-0.5 text-center text-sm font-medium transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring/40" />
-        <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustHours(-1)}>▼</button>
+        <button
+          type="button"
+          className={spinBtn}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => adjustHours(1)}
+        >
+          ▲
+        </button>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={pad(hours)}
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const n = parseInt(e.target.value, 10);
+            if (!isNaN(n) && n >= 0 && n < 24) onHoursChange(n);
+          }}
+          className="w-8 rounded-sm bg-muted/60 px-1 py-0.5 text-center text-sm font-medium transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring/40"
+        />
+        <button
+          type="button"
+          className={spinBtn}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => adjustHours(-1)}
+        >
+          ▼
+        </button>
       </div>
       <span className="text-sm font-medium text-muted-foreground">:</span>
       <div className="flex flex-col items-center gap-0.5">
-        <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustMinutes(1)}>▲</button>
-        <input type="text" inputMode="numeric" value={pad(minutes)} onMouseDown={(e) => e.stopPropagation()}
-          onChange={(e) => { const n = parseInt(e.target.value, 10); if (!isNaN(n) && n >= 0 && n < 60) onMinutesChange(clampMinutes(n, minuteStep)); }}
-          className="w-8 rounded-sm bg-muted/60 px-1 py-0.5 text-center text-sm font-medium transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring/40" />
-        <button type="button" className={spinBtn} onMouseDown={(e) => e.preventDefault()} onClick={() => adjustMinutes(-1)}>▼</button>
+        <button
+          type="button"
+          className={spinBtn}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => adjustMinutes(1)}
+        >
+          ▲
+        </button>
+        <input
+          type="text"
+          inputMode="numeric"
+          value={pad(minutes)}
+          onMouseDown={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const n = parseInt(e.target.value, 10);
+            if (!isNaN(n) && n >= 0 && n < 60) onMinutesChange(clampMinutes(n, minuteStep));
+          }}
+          className="w-8 rounded-sm bg-muted/60 px-1 py-0.5 text-center text-sm font-medium transition-colors hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-ring/40"
+        />
+        <button
+          type="button"
+          className={spinBtn}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => adjustMinutes(-1)}
+        >
+          ▼
+        </button>
       </div>
     </div>
   );
@@ -159,14 +223,18 @@ export function DatePicker({
 
   const parsedDate = parseValue(value, mode);
 
-  const formatDate = (d: Date | null) => d ? format(d, 'dd.MM.yyyy') : '';
+  const formatDate = (d: Date | null) => (d ? format(d, 'dd.MM.yyyy') : '');
   const formatTime = (d: Date | null) =>
-    d ? `${String(d.getHours()).padStart(2, '0')}:${String(clampMinutes(d.getMinutes(), minuteStep)).padStart(2, '0')}` : '';
+    d
+      ? `${String(d.getHours()).padStart(2, '0')}:${String(clampMinutes(d.getMinutes(), minuteStep)).padStart(2, '0')}`
+      : '';
 
   const [dateText, setDateText] = React.useState(() => formatDate(parsedDate));
   const [timeText, setTimeText] = React.useState(() => formatTime(parsedDate));
   const [hours, setHours] = React.useState(parsedDate?.getHours() ?? 0);
-  const [minutes, setMinutes] = React.useState(clampMinutes(parsedDate?.getMinutes() ?? 0, minuteStep));
+  const [minutes, setMinutes] = React.useState(
+    clampMinutes(parsedDate?.getMinutes() ?? 0, minuteStep),
+  );
   const [dateInvalid, setDateInvalid] = React.useState(false);
 
   // Sync display from external value
@@ -179,13 +247,16 @@ export function DatePicker({
       setHours(d.getHours());
       setMinutes(clampMinutes(d.getMinutes(), minuteStep));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, mode, minuteStep]);
 
   const emitDate = React.useCallback(
     (date: Date | null, h?: number, m?: number) => {
       if (!onChange) return;
-      if (!date) { onChange(null); return; }
+      if (!date) {
+        onChange(null);
+        return;
+      }
       const out = new Date(date);
       if (mode !== 'date') out.setHours(h ?? hours, m ?? minutes, 0, 0);
       onChange(toOutputString(out, mode));
@@ -311,7 +382,10 @@ export function DatePicker({
   };
 
   const sharedKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') { setOpen(false); (e.target as HTMLElement).blur(); }
+    if (e.key === 'Escape') {
+      setOpen(false);
+      (e.target as HTMLElement).blur();
+    }
     if (e.key === 'Enter') setOpen(false);
   };
 
@@ -330,8 +404,10 @@ export function DatePicker({
           // ── Sectioned datetime trigger ──────────────────────────────────
           <div
             className={cn(
-              'flex h-9 w-full items-center rounded-control bg-muted/60 hover:bg-muted/80',
-              dateInvalid ? 'ring-2 ring-destructive' : 'focus-within:ring-2 focus-within:ring-ring/40',
+              'flex h-9 w-full min-w-0 items-center rounded-control bg-muted/60 hover:bg-muted/80',
+              dateInvalid
+                ? 'ring-2 ring-destructive'
+                : 'focus-within:ring-2 focus-within:ring-ring/40',
               'transition-colors',
               'disabled:cursor-not-allowed disabled:opacity-50',
               className,
@@ -351,7 +427,7 @@ export function DatePicker({
               onChange={(e) => handleDateChange(e.target.value)}
               onBlur={handleDateBlur}
               onKeyDown={sharedKeyDown}
-              className={cn(inputBase, 'w-24 px-2')}
+              className={cn(inputBase, 'min-w-0 flex-1 px-2')}
             />
             <span className="select-none text-xs text-border">|</span>
             <span className="flex shrink-0 items-center pl-2 text-muted-foreground">
@@ -367,7 +443,7 @@ export function DatePicker({
               onChange={(e) => handleTimeChange(e.target.value)}
               onBlur={handleTimeBlur}
               onKeyDown={sharedKeyDown}
-              className={cn(inputBase, 'w-14 px-2')}
+              className={cn(inputBase, 'w-14 shrink-0 px-2')}
             />
             {hasClear ? (
               <button
@@ -379,13 +455,19 @@ export function DatePicker({
               >
                 <X className="h-3 w-3" />
               </button>
-            ) : <span className="flex-1" />}
+            ) : (
+              <span className="flex-1" />
+            )}
           </div>
         ) : (
           // ── Single input trigger (date or time) ─────────────────────────
           <div className={cn('relative', className)}>
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              {mode === 'time' ? <Clock className="h-3.5 w-3.5" /> : <CalendarBlank className="h-3.5 w-3.5" />}
+              {mode === 'time' ? (
+                <Clock className="h-3.5 w-3.5" />
+              ) : (
+                <CalendarBlank className="h-3.5 w-3.5" />
+              )}
             </span>
             <input
               ref={dateInputRef}
@@ -395,7 +477,11 @@ export function DatePicker({
               value={mode === 'time' ? timeText : dateText}
               placeholder={placeholder ?? (mode === 'time' ? 'HH:mm' : 'DD.MM.YYYY')}
               onFocus={() => !disabled && setOpen(true)}
-              onChange={(e) => mode === 'time' ? handleTimeChange(e.target.value) : handleDateChange(e.target.value)}
+              onChange={(e) =>
+                mode === 'time'
+                  ? handleTimeChange(e.target.value)
+                  : handleDateChange(e.target.value)
+              }
               onBlur={mode === 'time' ? handleTimeBlur : handleDateBlur}
               onKeyDown={sharedKeyDown}
               className={cn(
@@ -426,8 +512,13 @@ export function DatePicker({
 
       <PopoverContent className="w-auto p-0" align="start">
         {mode === 'time' ? (
-          <TimeSpinner hours={hours} minutes={minutes} minuteStep={minuteStep}
-            onHoursChange={handleHoursChange} onMinutesChange={handleMinutesChange} />
+          <TimeSpinner
+            hours={hours}
+            minutes={minutes}
+            minuteStep={minuteStep}
+            onHoursChange={handleHoursChange}
+            onMinutesChange={handleMinutesChange}
+          />
         ) : (
           <div>
             <div className={mode === 'datetime' ? 'flex' : undefined}>
@@ -444,26 +535,44 @@ export function DatePicker({
               />
               {mode === 'datetime' ? (
                 <div className="flex items-center justify-center border-l border-border px-2">
-                  <TimeSpinner hours={hours} minutes={minutes} minuteStep={minuteStep}
-                    onHoursChange={handleHoursChange} onMinutesChange={handleMinutesChange} />
+                  <TimeSpinner
+                    hours={hours}
+                    minutes={minutes}
+                    minuteStep={minuteStep}
+                    onHoursChange={handleHoursChange}
+                    onMinutesChange={handleMinutesChange}
+                  />
                 </div>
               ) : null}
             </div>
             <div className="flex justify-between border-t border-border px-3 py-2">
-              <button type="button" onMouseDown={(e) => e.preventDefault()}
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   const now = new Date();
                   if (mode === 'datetime') {
-                    const h = now.getHours(); const m = clampMinutes(now.getMinutes(), minuteStep);
-                    setHours(h); setMinutes(m); emitDate(now, h, m);
-                  } else { emitDate(now); setOpen(false); }
+                    const h = now.getHours();
+                    const m = clampMinutes(now.getMinutes(), minuteStep);
+                    setHours(h);
+                    setMinutes(m);
+                    emitDate(now, h, m);
+                  } else {
+                    emitDate(now);
+                    setOpen(false);
+                  }
                 }}
-                className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
                 Today
               </button>
               {mode === 'datetime' ? (
-                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setOpen(false)}
-                  className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setOpen(false)}
+                  className="rounded px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
                   Done
                 </button>
               ) : null}

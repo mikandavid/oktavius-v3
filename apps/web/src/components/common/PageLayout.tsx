@@ -13,13 +13,7 @@ type PageHeaderProps = {
   backTo?: string;
 };
 
-export function PageLayout({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function PageLayout({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cn('min-w-0 max-w-full space-y-4', className)}>{children}</div>;
 }
 

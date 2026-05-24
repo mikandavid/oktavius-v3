@@ -39,7 +39,10 @@ export function InlineEdit({
   }, [editing, value]);
 
   const commit = async () => {
-    if (draft === value) { setEditing(false); return; }
+    if (draft === value) {
+      setEditing(false);
+      return;
+    }
     setSaving(true);
     try {
       await onSave(draft);
@@ -55,10 +58,17 @@ export function InlineEdit({
         role={disabled ? undefined : 'button'}
         tabIndex={disabled ? undefined : 0}
         onClick={disabled ? undefined : () => setEditing(true)}
-        onKeyDown={disabled ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') setEditing(true); }}
+        onKeyDown={
+          disabled
+            ? undefined
+            : (e) => {
+                if (e.key === 'Enter' || e.key === ' ') setEditing(true);
+              }
+        }
         className={cn(
           'rounded px-1 -mx-1 py-0.5 text-sm transition-colors',
-          !disabled && 'cursor-text hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          !disabled &&
+            'cursor-text hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           !value && 'text-muted-foreground',
           disabled && 'cursor-default',
         )}
@@ -78,8 +88,13 @@ export function InlineEdit({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => void commit()}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') { e.preventDefault(); void commit(); }
-          if (e.key === 'Escape') { setEditing(false); }
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            void commit();
+          }
+          if (e.key === 'Escape') {
+            setEditing(false);
+          }
         }}
         className="h-7"
       />

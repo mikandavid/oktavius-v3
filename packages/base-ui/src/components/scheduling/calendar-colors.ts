@@ -79,17 +79,11 @@ export function resolveEventColorKey(
   return TONE_TO_COLOR[event.tone ?? 'default'];
 }
 
-export function eventChipClasses(
-  event: CalendarEvent,
-  calendars?: CalendarSource[],
-): string {
+export function eventChipClasses(event: CalendarEvent, calendars?: CalendarSource[]): string {
   return CALENDAR_COLOR_STYLES[resolveEventColorKey(event, calendars)].chip;
 }
 
-export function eventBlockClasses(
-  event: CalendarEvent,
-  calendars?: CalendarSource[],
-): string {
+export function eventBlockClasses(event: CalendarEvent, calendars?: CalendarSource[]): string {
   return CALENDAR_COLOR_STYLES[resolveEventColorKey(event, calendars)].block;
 }
 
@@ -106,9 +100,7 @@ export function visibleEvents(
   calendars?: CalendarSource[],
 ): CalendarEvent[] {
   if (!calendars?.length) return events;
-  const hidden = new Set(
-    calendars.filter((c) => c.visible === false).map((c) => c.id),
-  );
+  const hidden = new Set(calendars.filter((c) => c.visible === false).map((c) => c.id));
   if (hidden.size === 0) return events;
   return events.filter((event) => !event.calendarId || !hidden.has(event.calendarId));
 }

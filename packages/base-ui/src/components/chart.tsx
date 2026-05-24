@@ -75,8 +75,7 @@ function ChartTooltip({
   );
 }
 
-const chartSurfaceClass =
-  'w-full min-w-0 rounded-control border border-border/50 bg-muted/25 p-3';
+const chartSurfaceClass = 'w-full min-w-0 rounded-control border border-border/50 bg-muted/25 p-3';
 
 export function SimpleLineChart({
   data,
@@ -152,10 +151,7 @@ export function SimpleBarChart({
           />
           <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={48}>
             {data.map((point, index) => (
-              <Cell
-                key={point.label}
-                fill={resolvePointColor(point, index, singleSeriesColor)}
-              />
+              <Cell key={point.label} fill={resolvePointColor(point, index, singleSeriesColor)} />
             ))}
           </Bar>
         </BarChart>

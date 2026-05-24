@@ -5,7 +5,12 @@ import { cn } from '../lib/utils';
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-export function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+export function Calendar({
+  className,
+  classNames,
+  showOutsideDays = true,
+  ...props
+}: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -52,8 +57,7 @@ export function Calendar({ className, classNames, showOutsideDays = true, ...pro
         outside:
           'day-outside text-muted-foreground opacity-50 aria-selected:bg-muted/50 aria-selected:text-muted-foreground aria-selected:opacity-30',
         disabled: 'text-muted-foreground opacity-50',
-        range_middle:
-          'aria-selected:bg-muted aria-selected:text-foreground',
+        range_middle: 'aria-selected:bg-muted aria-selected:text-foreground',
         hidden: 'invisible',
         ...classNames,
       }}

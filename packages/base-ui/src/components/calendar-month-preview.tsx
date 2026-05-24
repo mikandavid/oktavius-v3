@@ -23,10 +23,7 @@ export function CalendarMonthPreview({
   events = [],
   className,
 }: CalendarMonthPreviewProps) {
-  const eventDates = React.useMemo(
-    () => new Set(events.map((event) => event.date)),
-    [events],
-  );
+  const eventDates = React.useMemo(() => new Set(events.map((event) => event.date)), [events]);
 
   return (
     <div className={cn('overflow-hidden rounded-card bg-card', className)}>

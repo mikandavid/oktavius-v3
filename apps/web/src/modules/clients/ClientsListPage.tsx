@@ -1,31 +1,36 @@
-import { useDemoData } from '@/app/demo-data';
+import { useMemo } from 'react';
+
 import { CrudMainView } from '@/components/data/CrudMainView';
 import { useListPageState } from '@/lib/useListPageState';
 
 import type { ClientRecord } from '@/app/demo-data';
+import { useClientsList } from './clients-api';
 import { clientColumns, clientsPageIcon, ClientsHeaderAction } from './shared';
 
 export function ClientsListPage() {
-  const { clients } = useDemoData();
-
   const list = useListPageState<ClientRecord>({
-    rows: clients,
+    rows: [],
     defaultSort: 'name',
     pageSize: 10,
     filterKeys: ['status', 'type'],
-    filterFn: (client, { search, filters }) => {
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        q.length === 0 ||
-        client.name.toLowerCase().includes(q) ||
-        client.email.toLowerCase().includes(q) ||
-        client.industry.toLowerCase().includes(q) ||
-        client.accountManager.toLowerCase().includes(q);
-      const matchesStatus = filters.status.length === 0 || client.status === filters.status;
-      const matchesType = filters.type.length === 0 || client.type === filters.type;
-      return matchesSearch && matchesStatus && matchesType;
-    },
   });
+
+  const listParams = useMemo(
+    () => ({
+      page: String(list.page),
+      pageSize: String(list.pageSize),
+      sort: list.sort,
+      search: list.search,
+      status: list.filters.status,
+      type: list.filters.type,
+    }),
+    [list.page, list.pageSize, list.sort, list.search, list.filters.status, list.filters.type],
+  );
+
+  const { data, isLoading, isFetching } = useClientsList(listParams);
+  const rows = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = data?.totalPages ?? 1;
 
   return (
     <CrudMainView
@@ -59,9 +64,9 @@ export function ClientsListPage() {
       values={list.values}
       onFilterChange={list.onFilterChange}
       onReset={list.onReset}
-      rows={list.paged}
+      rows={rows}
       columns={clientColumns}
-      allRows={list.filtered}
+      allRows={rows}
       exportOptions={{ fileName: 'clients', label: 'Export' }}
       emptyTitle="No clients found"
       emptyDescription="Try adjusting filters or create a new client."
@@ -71,9 +76,10 @@ export function ClientsListPage() {
       onSortChange={list.onSortChange}
       page={list.page}
       pageSize={list.pageSize}
-      total={list.total}
-      totalPages={list.totalPages}
+      total={total}
+      totalPages={totalPages}
       onPageChange={list.onPageChange}
+      isLoading={isLoading || isFetching}
     />
   );
 }

@@ -1,13 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import {
-  SectionCard,
-  SimpleBarChart,
-  SimpleLineChart,
-  StatCard,
-  buttonVariants,
-  cn,
-} from '@oktavius/base-ui';
+import { ChartCard, SectionCard, StatCard, buttonVariants, cn } from '@oktavius/base-ui';
 
 import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';
@@ -55,28 +48,30 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title="Revenue trend" meta="Last 5 months">
-          <SimpleLineChart
-            data={[
-              { label: 'Jul', value: 42 },
-              { label: 'Aug', value: 38 },
-              { label: 'Sep', value: 51 },
-              { label: 'Oct', value: 47 },
-              { label: 'Nov', value: 58 },
-            ]}
-          />
-        </SectionCard>
-        <SectionCard title="Pipeline" meta="Orders by status">
-          <SimpleBarChart
-            data={[
-              { label: 'Confirmed', value: orders.filter((o) => o.status === 'Confirmed').length },
-              { label: 'Shipped', value: orders.filter((o) => o.status === 'Shipped').length },
-              { label: 'Delivered', value: orders.filter((o) => o.status === 'Delivered').length },
-              { label: 'Draft', value: orders.filter((o) => o.status === 'Draft').length },
-            ]}
-            height={200}
-          />
-        </SectionCard>
+        <ChartCard
+          title="Revenue trend"
+          meta="Last 5 months"
+          type="line"
+          data={[
+            { label: 'Jul', value: 42 },
+            { label: 'Aug', value: 38 },
+            { label: 'Sep', value: 51 },
+            { label: 'Oct', value: 47 },
+            { label: 'Nov', value: 58 },
+          ]}
+        />
+        <ChartCard
+          title="Pipeline"
+          meta="Orders by status"
+          type="bar"
+          height={200}
+          data={[
+            { label: 'Confirmed', value: orders.filter((o) => o.status === 'Confirmed').length },
+            { label: 'Shipped', value: orders.filter((o) => o.status === 'Shipped').length },
+            { label: 'Delivered', value: orders.filter((o) => o.status === 'Delivered').length },
+            { label: 'Draft', value: orders.filter((o) => o.status === 'Draft').length },
+          ]}
+        />
       </div>
 
       <SectionCard title="Modules" meta="Typical ERP pages">

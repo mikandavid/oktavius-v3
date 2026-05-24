@@ -1,12 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import {
-  StatCard,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@oktavius/base-ui';
+import { StatCard, Tabs, TabsContent, TabsList, TabsTrigger } from '@oktavius/base-ui';
 
 import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';

@@ -127,9 +127,7 @@ export function ResourceCalendar({
                       )}
                       style={{ height: `${slotHeightRem}rem` }}
                       aria-label={
-                        onSlotClick
-                          ? `Create event for ${resource.label} at ${slot}`
-                          : undefined
+                        onSlotClick ? `Create event for ${resource.label} at ${slot}` : undefined
                       }
                     />
                   ))}

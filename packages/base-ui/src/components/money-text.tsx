@@ -21,7 +21,8 @@ export function MoneyText({
   className,
 }: MoneyTextProps) {
   const num = typeof value === 'string' ? parseFloat(value) : (value ?? 0);
-  if (isNaN(num)) return <span className={cn('tabular-nums text-muted-foreground', className)}>—</span>;
+  if (isNaN(num))
+    return <span className={cn('tabular-nums text-muted-foreground', className)}>—</span>;
 
   const formatted = new Intl.NumberFormat(locale, {
     style: 'currency',

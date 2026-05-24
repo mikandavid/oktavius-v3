@@ -3,7 +3,8 @@ import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
 import type { ClientRecord } from '@/app/demo-data';
 import { statusColumn } from '@/components/data/columns';
 import type { CrudColumn } from '@/components/data/CrudTable';
-import type { FormField } from '@/components/forms/EntityForm';
+import type { FormField, AddressValue } from '@/components/forms/EntityForm';
+import { EMPTY_ADDRESS } from '@/components/forms/EntityForm';
 import { PlusIcon } from '@/lib/icons';
 
 export const CLIENT_STATUS_MAP = {
@@ -18,15 +19,14 @@ export const clientColumns: CrudColumn<ClientRecord>[] = [
     key: 'name',
     header: 'Client',
     sortable: true,
-    render: (row) => (
-      <span className="font-medium text-foreground">{row.name}</span>
-    ),
+    render: (row) => <span className="font-medium text-foreground">{row.name}</span>,
   },
   {
     key: 'type',
     header: 'Type',
     sortable: true,
     type: 'badge',
+    hideBelow: 'md',
     render: (row) => row.type,
   },
   {
@@ -75,27 +75,30 @@ const INDUSTRIES = [
   'Other',
 ];
 
-const ACCOUNT_MANAGERS = [
-  'Anna Hofer',
-  'Markus Leitner',
-  'Nina Weiss',
-];
+const ACCOUNT_MANAGERS = ['Anna Hofer', 'Markus Leitner', 'Nina Weiss'];
 
-const COUNTRIES = [
-  'Austria',
-  'Germany',
-  'Switzerland',
-  'Italy',
-  'France',
-  'Netherlands',
-  'Other',
-];
+const COUNTRIES = ['Austria', 'Germany', 'Switzerland', 'Italy', 'France', 'Netherlands', 'Other'];
 
 export const clientFormFields: FormField[] = [
   // Identity
   { name: 'name', label: 'Client Name', type: 'text', required: true, section: 'Identity' },
-  { name: 'type', label: 'Type', type: 'select', options: ['Company', 'Individual'], required: true, section: 'Identity' },
-  { name: 'industry', label: 'Industry', type: 'combobox', options: INDUSTRIES, required: true, section: 'Identity' },
+  {
+    name: 'type',
+    label: 'Type',
+    type: 'radio',
+    options: ['Company', 'Individual'],
+    required: true,
+    section: 'Identity',
+    radioOrientation: 'horizontal',
+  },
+  {
+    name: 'industry',
+    label: 'Industry',
+    type: 'combobox',
+    options: INDUSTRIES,
+    required: true,
+    section: 'Identity',
+  },
   {
     name: 'status',
     label: 'Status',
@@ -104,14 +107,27 @@ export const clientFormFields: FormField[] = [
     required: true,
     section: 'Identity',
   },
-  { name: 'tags', label: 'Tags', type: 'tags', section: 'Identity', colSpan: 2, placeholder: 'Add tag, press Enter…' },
+  {
+    name: 'tags',
+    label: 'Tags',
+    type: 'tags',
+    section: 'Identity',
+    colSpan: 2,
+    placeholder: 'Add tag, press Enter…',
+  },
 
   // Contact
   { name: 'email', label: 'Email', type: 'email', required: true, section: 'Contact' },
-  { name: 'phone', label: 'Phone', type: 'phone', section: 'Contact' },
+  { name: 'phone', label: 'Phone', type: 'phone', section: 'Contact', placeholder: 'Local number' },
   { name: 'website', label: 'Website', type: 'url', section: 'Contact' },
-  { name: 'country', label: 'Country', type: 'combobox', options: COUNTRIES, section: 'Contact' },
-  { name: 'city', label: 'City', type: 'text', section: 'Contact' },
+  {
+    name: 'address',
+    label: 'Address',
+    type: 'address',
+    section: 'Contact',
+    colSpan: 2,
+    countries: COUNTRIES,
+  },
 
   // Contract
   {
@@ -144,8 +160,7 @@ export type ClientFormValues = {
   email: string;
   phone: string;
   website: string;
-  country: string;
-  city: string;
+  address: AddressValue;
   tags: string[];
   notes: string;
   annualRevenue: string;
@@ -162,8 +177,7 @@ export const clientFormDefaults: ClientFormValues = {
   email: '',
   phone: '',
   website: '',
-  country: '',
-  city: '',
+  address: { ...EMPTY_ADDRESS },
   tags: [],
   notes: '',
   annualRevenue: '',
@@ -176,7 +190,14 @@ const PARTY_ROLES = ['Primary contact', 'Billing contact', 'Technical contact', 
 
 export const partyFormFields: FormField[] = [
   { name: 'name', label: 'Name', type: 'text', required: true, section: 'Contact' },
-  { name: 'role', label: 'Role', type: 'combobox', options: PARTY_ROLES, required: true, section: 'Contact' },
+  {
+    name: 'role',
+    label: 'Role',
+    type: 'combobox',
+    options: PARTY_ROLES,
+    required: true,
+    section: 'Contact',
+  },
   { name: 'email', label: 'Email', type: 'email', required: true, section: 'Contact' },
 ];
 

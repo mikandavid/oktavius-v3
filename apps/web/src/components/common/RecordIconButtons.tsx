@@ -20,7 +20,11 @@ export function IconEditButton({ to, onClick, label = 'Edit', className }: IconE
     return (
       <Link
         to={to}
-        className={cn(buttonVariants({ variant: 'outline', size: 'icon' }), iconButtonClass, className)}
+        className={cn(
+          buttonVariants({ variant: 'outline', size: 'icon' }),
+          iconButtonClass,
+          className,
+        )}
         aria-label={label}
       >
         <EditIcon size={14} />

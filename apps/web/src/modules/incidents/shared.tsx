@@ -9,7 +9,10 @@ const INCIDENT_STATUS_MAP = {
   Resolved: 'success',
 } as const;
 
-const SEVERITY_VARIANT: Record<IncidentRecord['severity'], 'secondary' | 'info' | 'warning' | 'destructive'> = {
+const SEVERITY_VARIANT: Record<
+  IncidentRecord['severity'],
+  'secondary' | 'info' | 'warning' | 'destructive'
+> = {
   Low: 'secondary',
   Medium: 'info',
   High: 'warning',

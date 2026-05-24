@@ -45,10 +45,7 @@ export function CollapsibleSection({
       className={cn(isPlain ? '' : 'rounded-card bg-card', className)}
     >
       <div
-        className={cn(
-          'flex w-full items-stretch gap-2 text-sm font-medium',
-          isPlain ? '' : 'px-4',
-        )}
+        className={cn('flex w-full items-stretch gap-2 text-sm font-medium', isPlain ? '' : 'px-4')}
       >
         <CollapsiblePrimitive.Trigger asChild>
           <button
@@ -73,11 +70,7 @@ export function CollapsibleSection({
         {actions ? <span className="shrink-0 self-center">{actions}</span> : null}
       </div>
       <CollapsiblePrimitive.Content>
-        <div
-          className={cn(
-            isPlain ? 'pt-2 pb-1' : 'px-4 pb-3 pt-1 border-t border-border/50',
-          )}
-        >
+        <div className={cn(isPlain ? 'pt-2 pb-1' : 'px-4 pb-3 pt-1 border-t border-border/50')}>
           {children}
         </div>
       </CollapsiblePrimitive.Content>

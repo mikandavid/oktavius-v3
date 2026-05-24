@@ -2,13 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 
 import { Button, ScrollArea, cn } from '@oktavius/base-ui';
 
-import {
-  CloseIcon,
-  HistoryIcon,
-  MicIcon,
-  PaperclipIcon,
-  PlusIcon,
-} from '@/lib/icons';
+import { CloseIcon, HistoryIcon, MicIcon, PaperclipIcon, PlusIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
 import { BrandMark } from './BrandMark';
@@ -61,7 +55,8 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const recognitionRef = useRef<any>(null);
 
   const fullWidthContentClass = 'mx-auto w-full max-w-5xl';
-  const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
+  const activeConversation =
+    conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
   const hasComposerContent = draft.trim().length > 0 || selectedFiles.length > 0;
 
   const filteredConversations = useMemo(() => {
@@ -187,8 +182,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
       webkitSpeechRecognition?: new () => any;
     };
     const SpeechRecognitionCtor =
-      browserWindow.SpeechRecognition ||
-      browserWindow.webkitSpeechRecognition;
+      browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
 
     if (!SpeechRecognitionCtor) {
       toast.error('Voice input is not available in this browser.');
@@ -254,7 +248,9 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="h-12 shrink-0 border-b border-border">
-          <div className={cn('flex h-full w-full items-center gap-1.5 px-2', fullWidthContentClass)}>
+          <div
+            className={cn('flex h-full w-full items-center gap-1.5 px-2', fullWidthContentClass)}
+          >
             <Button
               variant="ghost"
               size="icon"
@@ -285,7 +281,9 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
         </div>
 
         <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
-          <div className={cn('flex w-full flex-col gap-4 px-3 py-4 md:px-5', fullWidthContentClass)}>
+          <div
+            className={cn('flex w-full flex-col gap-4 px-3 py-4 md:px-5', fullWidthContentClass)}
+          >
             {activeConversation?.messages.length ? (
               activeConversation.messages.map((message) => (
                 <div
@@ -296,7 +294,9 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                     <span>You</span>
                     <span>{formatTimestamp(message.createdAt)}</span>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{message.content}</p>
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
+                    {message.content}
+                  </p>
                 </div>
               ))
             ) : (
@@ -304,7 +304,9 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                 <div className="mx-auto flex w-fit items-center justify-center rounded-card border bg-muted/50 px-3 py-2">
                   <BrandMark />
                 </div>
-                <div className="mt-4 text-base font-semibold text-foreground">Start an Oktavius thread</div>
+                <div className="mt-4 text-base font-semibold text-foreground">
+                  Start an Oktavius thread
+                </div>
                 <p className="mt-2 text-sm text-muted-foreground">
                   The Osiris chat shell is in place. Connect an agent runtime here when ready.
                 </p>

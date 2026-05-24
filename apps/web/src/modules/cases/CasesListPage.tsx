@@ -1,39 +1,32 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { caseColumns, casesPageIcon, CasesHeaderActions } from './shared';
 
 export function CasesListPage() {
   const { cases } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ stage: '', priority: '', type: '' });
-  const [sort, setSort] = useState('-openedAt');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = cases.filter((c) => {
+  const list = useListPageState({
+    rows: cases,
+    defaultSort: '-openedAt',
+    pageSize: 10,
+    filterKeys: ['stage', 'priority', 'type'],
+    filterFn: (caseRecord, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        c.caseNumber.toLowerCase().includes(q) ||
-        c.title.toLowerCase().includes(q) ||
-        c.clientName.toLowerCase().includes(q) ||
-        c.assignee.toLowerCase().includes(q);
-      const matchesStage = !filters.stage || c.stage === filters.stage;
-      const matchesPriority = !filters.priority || c.priority === filters.priority;
-      const matchesType = !filters.type || c.type === filters.type;
+        q.length === 0 ||
+        caseRecord.caseNumber.toLowerCase().includes(q) ||
+        caseRecord.title.toLowerCase().includes(q) ||
+        caseRecord.clientName.toLowerCase().includes(q) ||
+        caseRecord.assignee.toLowerCase().includes(q);
+      const matchesStage = filters.stage.length === 0 || caseRecord.stage === filters.stage;
+      const matchesPriority =
+        filters.priority.length === 0 || caseRecord.priority === filters.priority;
+      const matchesType = filters.type.length === 0 || caseRecord.type === filters.type;
       return matchesSearch && matchesStage && matchesPriority && matchesType;
-    });
-    return sortRows(rows, sort);
-  }, [cases, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
@@ -41,11 +34,8 @@ export function CasesListPage() {
       subtitle="Track support, legal, billing, and onboarding cases through a defined workflow."
       icon={casesPageIcon()}
       headerActions={<CasesHeaderActions />}
-      search={search}
-      onSearchChange={(v) => {
-        setSearch(v);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search case, client, owner…"
       filters={[
         {
@@ -79,33 +69,23 @@ export function CasesListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((f) => ({ ...f, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ stage: '', priority: '', type: '' });
-        setPage(1);
-      }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={caseColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       exportOptions={{ fileName: 'cases', label: 'Export' }}
       emptyTitle="No cases found"
       entityLabel="case"
       getRowHref={(c) => `/cases/${c.id}`}
-      sort={sort}
-      onSortChange={(s) => {
-        setSort(s);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

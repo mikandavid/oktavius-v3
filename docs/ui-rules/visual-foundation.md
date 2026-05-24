@@ -1,0 +1,281 @@
+# Visual Foundation
+
+## Purpose
+
+Single source of truth for colors, typography, spacing, borders, shadows, and radius.
+
+**Code-specific rules:** [`ui-system.md`](./ui-system.md) and [`component-registry.md`](./component-registry.md) take precedence for component APIs and patterns.
+
+---
+
+## Color System
+
+### Philosophy
+
+Color communicates hierarchy and meaning. Never decoration.
+
+Use color for:
+
+- The single primary action on a page
+- Semantic state (success / warning / destructive / info)
+- Active/selected system states
+- Links inside text
+- Data series in charts
+
+Do not use color to make a plain layout feel more interesting.
+
+### Semantic Tokens
+
+Always use these tokens. Never hard-code hex or Tailwind color scales.
+
+```
+text-foreground           Primary text
+text-muted-foreground     Secondary text, meta, descriptions, labels
+text-destructive          Errors, delete actions
+text-success              Confirmed, approved, healthy
+text-warning              Pending, needs attention
+text-info                 In progress, informational
+
+bg-background             Body / page canvas (100% white)
+bg-card                   Card surfaces — Card, StatCard, CrudMainView (100% white, no border)
+bg-muted/40               Page wash — main content area only (over white body)
+bg-muted/60               Input fill (filled-grey form controls)
+bg-muted/80               Input hover fill
+bg-muted                  Button hover, item hover fills (93%)
+
+border-border             Heavy rules (rare)
+border-border/70          Section dividers inside EntityForm / DetailView
+border-border/50          SectionCard heading rule · SettingsRow row separator · SplitView sidebar/content split · AttachmentList row dividers · ListRow borders
+border-dashed border-border/60   InlineEmptyState, dashed ListRow variant
+ring-ring                 Focus rings
+```
+
+### Semantic State Mapping
+
+```
+active / approved / completed / healthy   → success
+pending / waiting / review needed         → warning
+failed / rejected / deleted / blocked     → destructive
+in progress / informational               → info
+inactive / secondary / empty              → muted / secondary
+selected / contextual emphasis            → highlight
+```
+
+### Color Hard Rules
+
+- Never use the primary color as a generic selection highlight everywhere. It loses meaning.
+- Never invent local module status colors. Use the semantic tokens above.
+- Never use random Tailwind palette colors (e.g. `text-blue-500`, `bg-rose-200`).
+- Status must never rely on color alone. Pair with text, icon, or label.
+- Do not tint entire page backgrounds with accent color.
+- Dark mode: keep surfaces especially border-led; avoid bright containers entirely.
+
+---
+
+## Typography
+
+### Fonts
+
+```
+--font-sans: 'Inter'      → all UI text
+--font-mono: 'Space Mono' → IDs, codes, tokens, logs, machine-readable values
+--font-serif: 'Lora'      → document-preview contexts only, never general UI
+```
+
+Do not introduce additional font families.
+
+### Type Scale (Resolved)
+
+```
+Page title:          text-xl  (20px) / font-semibold / tracking-tight
+Card / section title: text-sm (14px) / font-semibold / text-foreground
+Subsection / group:  text-xs  (12px) / font-semibold / uppercase / tracking-[0.08em] / text-muted-foreground
+Body:                text-sm  (14px) / font-normal
+Label:               text-sm  (14px) / font-medium  or  text-xs / font-medium (dense)
+Meta / description:  text-xs  (12px) / text-muted-foreground
+Table cell:          text-sm  (14px) / font-normal
+Badge:               text-xs  (12px) / font-medium
+Button (all sizes):  text-sm  (14px) except size="sm" which uses text-xs
+```
+
+### Typography Hierarchy Rules
+
+1. Semibold for page titles and card/section headings.
+2. Medium for labels, column headers, and UI controls.
+3. Regular for body text and table cell content.
+4. Muted foreground for meta, descriptions, secondary information.
+5. Mono only for IDs, codes, logs, technical values.
+
+### Section Heading Style — Resolved
+
+Two distinct treatments. Do not mix them:
+
+**Card / SectionCard title** (prominent section heading inside a bordered surface):
+
+```
+text-sm font-semibold text-foreground
+```
+
+Used in: `CardTitle`, `SectionCard` title prop, `DetailView` section titles.
+
+**Page-level group label / field group label** (quiet organizer between content blocks):
+
+```
+text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground
+```
+
+Used in: Showcase section dividers, tab content field group headers, StatCard labels.
+
+**StatCard label** (compact KPI context only):
+
+```
+text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground
+```
+
+Do not use uppercase on card titles, SectionCard titles, dialog titles, or page headings.
+Do not use text-xl or larger inside ERP modules except the page title.
+Do not use negative letter-spacing anywhere.
+
+### Line Length
+
+Operational text (form descriptions, tooltips, inline hints): 1–2 lines max.
+Prose in settings/help panels: 60–80 characters per line max.
+Never use long uninterrupted paragraphs on operational ERP screens.
+
+---
+
+## Spacing Scale
+
+Base unit: 4px. All spacing derives from multiples.
+
+```
+gap-0.5  →  2px
+gap-1    →  4px
+gap-1.5  →  6px
+gap-2    →  8px
+gap-3    →  12px
+gap-4    →  16px
+gap-5    →  20px
+gap-6    →  24px
+gap-8    →  32px
+gap-10   →  40px
+gap-12   →  48px
+gap-16   →  64px
+```
+
+Most ERP screen spacing lives between 4px and 24px. Use 32px+ only for major page-level separation.
+
+### Spacing by Relationship
+
+```
+Icon + label gap:               gap-1.5 or gap-2
+Controls within a button group: gap-2
+Form field gap (label→input):   gap-1.5
+Form fields within a section:   gap-4 (grid gap)
+Form sections gap:              space-y-6
+Page content blocks:            space-y-4
+Large page section breaks:      space-y-6
+Table cell padding:             px-3 py-2
+Card internal padding:          p-4
+Dialog padding:                 p-4 to p-6
+Sidebar item padding:           px-2 py-1.5
+```
+
+Do not use arbitrary spacing values like `mt-7`, `px-11`, or `mb-[13px]`.
+Do not apply equal spacing between unrelated and related groups.
+
+---
+
+## Surfaces — Borderless White Tiles
+
+Page wash + white tiles. Separation comes from **contrast** (white-on-tint), not borders.
+
+| Surface                                                                                 | Treatment                                                    |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `Card`, `StatCard`, `CrudMainView` container                                            | `rounded-card bg-card` — no border, no shadow                |
+| `Dialog`, `Popover`, `DropdownMenu`, `Tooltip`, `Combobox`/`Select` content             | `bg-popover` + `shadow-elevated` — floats above page         |
+| `SectionCard`, `CollapsibleSection`, `SettingsRow`, `AttachmentList`, `SplitView` outer | borderless — heading rule / row dividers / spacing only      |
+| Page main area                                                                          | `bg-muted/40` over white body (only place a tint is applied) |
+| Sidebar                                                                                 | `bg-sidebar-background` (100% white)                         |
+| Inputs                                                                                  | `bg-muted/60` filled-grey (no border)                        |
+
+### Hard Rules
+
+- Cards are pure white (`--card: 100%`). Never re-tint `bg-card`.
+- Never re-add `border` to `Card`, `StatCard`, `CrudMainView` table container, or `SplitView` outer.
+- Page wash (`bg-muted/40`) is the only background tint. Containers sit on top as white tiles.
+- Inputs stay filled-grey so form fields read as carved without borders. Never use `border border-input bg-background` on inputs.
+- Dark mode: keep flat — no shadows on cards, no extra borders to "compensate" for the loss of contrast.
+
+---
+
+## Borders — Rules, Not Chrome
+
+Borders are reserved for **dividers and rules between sibling content**. Not container chrome.
+
+### Where borders ARE used
+
+```
+border-border/70    Section dividers inside EntityForm / DetailView
+border-border/50    SectionCard heading underline
+                    SettingsRow row separator (border-b, last:border-b-0)
+                    SplitView sidebar/content split (border-r)
+                    AttachmentList row dividers (divide-y)
+                    ListRow borders (default variant)
+border-dashed border-border/60    InlineEmptyState, ListRow variant="dashed"
+```
+
+### Where borders are NOT used
+
+- Card, StatCard, CrudMainView container, SectionCard outer, SplitView outer
+- Sidebar outer, page main wrapper
+
+---
+
+## Shadow System — Floats Only
+
+Shadow exists to lift things **above** the page. Never to outline things **on** the page.
+
+### Shadow Rules by Context
+
+**Floating overlays — require `shadow-elevated`:**
+
+- `Dialog`, `AlertDialog`
+- `Popover`, `Tooltip`
+- `DropdownMenu`, `Combobox`/`Select` content
+- Floating token editor / nav rails
+- Toast
+
+**Everything on the page — no shadow:**
+
+- `Card`, `StatCard`, `CrudMainView`, `SectionCard`, `ListRow`
+- Sidebar, Header, MobileTopBar
+- Tabs, table rows, form fields
+
+**Dark mode:** No shadow anywhere. Use brightness contrast.
+
+### Shadow Hard Rules
+
+- `shadow-card` token is set to `none`. Don't re-enable it.
+- Never apply shadow to anchored page surfaces (Card, SectionCard, ListRow, table rows, sidebar, header).
+- Never apply shadow to form fields.
+- Do not stack shadow + heavy tint on the same surface.
+
+---
+
+## Radius
+
+Semantic tokens in `globals.css` — use these, not raw Tailwind radius on named surfaces.
+
+```
+rounded-card      → var(--radius-card)      — Card, StatCard, CrudMainView, panels
+rounded-control   → var(--radius-control)   — Input, Button, Combobox trigger, filter pills
+rounded-badge     → var(--radius-badge)     — Badge, chips
+rounded-full              → Avatar, CountBadge, StatusDot, pill badges
+```
+
+Hard rules:
+
+- Named surfaces: `rounded-card` — never `rounded-lg`, `rounded-xl`, `rounded-2xl`
+- Controls: `rounded-control`
+- Do not over-round cards — ERP is not a consumer app.

@@ -13,7 +13,12 @@ const PRODUCT_STATUS_MAP = {
 } as const;
 
 export const productColumns: CrudColumn<ProductRecord>[] = [
-  { key: 'sku', header: 'SKU', sortable: true, render: (row) => <span className="font-mono text-xs">{row.sku}</span> },
+  {
+    key: 'sku',
+    header: 'SKU',
+    sortable: true,
+    render: (row) => <span className="font-mono text-xs">{row.sku}</span>,
+  },
   {
     key: 'name',
     header: 'Product',
@@ -58,9 +63,22 @@ export const productFormFields: FormField[] = [
     required: true,
     section: 'Product',
   },
-  { name: 'price', label: 'Price', type: 'currency', currencySymbol: '€', required: true, section: 'Pricing' },
+  {
+    name: 'price',
+    label: 'Price',
+    type: 'currency',
+    currencySymbol: '€',
+    required: true,
+    section: 'Pricing',
+  },
   { name: 'stock', label: 'Stock on hand', type: 'number', section: 'Pricing' },
-  { name: 'unit', label: 'Unit', type: 'text', section: 'Pricing', placeholder: 'seat, day, unit…' },
+  {
+    name: 'unit',
+    label: 'Unit',
+    type: 'text',
+    section: 'Pricing',
+    placeholder: 'seat, day, unit…',
+  },
 ];
 
 export type ProductFormValues = {

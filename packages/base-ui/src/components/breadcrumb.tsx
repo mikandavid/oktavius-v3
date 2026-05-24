@@ -30,10 +30,7 @@ export function Breadcrumb({ items, className }: BreadcrumbProps) {
                     {item.label}
                   </span>
                 ) : (
-                  <a
-                    href={item.href}
-                    className="truncate transition-colors hover:text-foreground"
-                  >
+                  <a href={item.href} className="truncate transition-colors hover:text-foreground">
                     {item.label}
                   </a>
                 )}

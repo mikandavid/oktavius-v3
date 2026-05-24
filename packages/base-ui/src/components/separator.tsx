@@ -3,11 +3,19 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 
-export interface SeparatorProps extends React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root> {
+export interface SeparatorProps extends React.ComponentPropsWithoutRef<
+  typeof SeparatorPrimitive.Root
+> {
   ref?: React.Ref<React.ComponentRef<typeof SeparatorPrimitive.Root>>;
 }
 
-export function Separator({ className, orientation = 'horizontal', decorative = true, ref, ...props }: SeparatorProps) {
+export function Separator({
+  className,
+  orientation = 'horizontal',
+  decorative = true,
+  ref,
+  ...props
+}: SeparatorProps) {
   return (
     <SeparatorPrimitive.Root
       ref={ref}

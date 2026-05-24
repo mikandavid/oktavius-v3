@@ -1,7 +1,7 @@
 import { Grid, useClientDataSource } from '@1771technologies/lytenyte-core';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { CheckIcon, MinusIcon, MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
+import { MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
 
 import {
   AlertDialog,
@@ -12,8 +12,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  Badge,
-  type BadgeProps,
   Button,
   Checkbox,
   DropdownMenu,
@@ -24,10 +22,9 @@ import {
   Skeleton,
 } from '@oktavius/base-ui';
 
-import { cn, formatDisplayDate } from '@oktavius/base-ui';
+import { cn } from '@oktavius/base-ui';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
 
 import {
   CRUD_TABLE_CELL_INNER_BASE,
@@ -42,16 +39,21 @@ import {
   resolveCrudColumnAlign,
 } from './crudTableDensity';
 import {
+  computeMinTableWidth,
   nextSortValue,
   parseCssSizeToPx,
+  resolveEffectiveTableWidth,
   shouldHideForViewport,
   sortValueForColumn,
   toggleAllIds,
   toggleId,
-  type Breakpoint,
+  BREAKPOINT_MIN_WIDTHS,
 } from './gridUtils';
+import { renderTypedCell, shouldTruncateCell } from './crudTableCells';
+import { CrudTableMobileList } from './CrudTableMobileList';
+import type { BulkAction, ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
 
-export type ColumnType = 'text' | 'status' | 'date' | 'currency' | 'boolean' | 'badge';
+export type { BulkAction, ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
 
 type CrudGridColumnState = {
   sort?: 'asc' | 'desc' | null;
@@ -85,53 +87,6 @@ const SKELETON_WIDTHS: Record<ColumnType, string> = {
 };
 
 const LEAF_ID_FN = <T extends { id: string }>(item: T) => item.id;
-
-export interface CrudColumn<T> {
-  key: string;
-  header: string;
-  sortable?: boolean;
-  render?: (item: T) => React.ReactNode;
-  hideBelow?: Breakpoint;
-  className?: string;
-  type?: ColumnType;
-  align?: 'left' | 'center' | 'right';
-  width?: string | number;
-  minWidth?: string | number;
-  maxWidth?: string | number;
-  truncate?: boolean;
-  meta?: Record<string, unknown>;
-}
-
-export interface CrudRowAction<T> {
-  key: string;
-  label: string;
-  icon?: React.ReactNode;
-  onClick: (item: T) => void;
-  destructive?: boolean;
-  hidden?: (item: T) => boolean;
-  confirm?: {
-    title: string;
-    description?: string;
-    actionLabel?: string;
-  };
-}
-
-export interface BulkAction {
-  key: string;
-  label: string;
-  icon?: React.ReactNode;
-  onClick: (selectedIds: string[]) => void;
-  destructive?: boolean;
-  /** Hide unless at least this many rows are selected */
-  minSelection?: number;
-  /** Hide when more than this many rows are selected (e.g. Edit → 1) */
-  maxSelection?: number;
-  confirm?: {
-    title: string | ((selectedCount: number) => string);
-    description?: string;
-    actionLabel?: string;
-  };
-}
 
 export interface CrudTableProps<T extends { id: string }> {
   data: T[];
@@ -169,72 +124,6 @@ type PersistedColumnState = {
     pin?: Grid.Column<CrudGridSpec<unknown>>['pin'];
   }>;
 };
-
-function safeRender(value: unknown): React.ReactNode {
-  if (value === null || value === undefined) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-  return String(value);
-}
-
-function formatCurrency(value: unknown, symbol: string): React.ReactNode {
-  const num = Number(value);
-  if (value === null || value === undefined) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-  if (Number.isNaN(num)) return String(value);
-  return (
-    <span className="tabular-nums">
-      {symbol}
-      {num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-    </span>
-  );
-}
-
-function renderTypedCell<T>(item: T, column: CrudColumn<T>): React.ReactNode {
-  if (column.render) return column.render(item);
-
-  const value = (item as Record<string, unknown>)[column.key];
-
-  switch (column.type) {
-    case 'status':
-      if (value === null || value === undefined) {
-        return <span className="text-muted-foreground">—</span>;
-      }
-      return (
-        <StatusBadge
-          status={String(value)}
-          variantMap={column.meta?.variantMap as Record<string, BadgeProps['variant']>}
-        />
-      );
-    case 'date':
-      return (
-        <span className="tabular-nums text-muted-foreground">
-          {formatDisplayDate(
-            value instanceof Date ? value : value === null || value === undefined ? null : String(value),
-          )}
-        </span>
-      );
-    case 'currency':
-      return formatCurrency(value, (column.meta?.currencySymbol as string) || '€');
-    case 'boolean':
-      if (value === null || value === undefined) {
-        return <span className="text-muted-foreground">—</span>;
-      }
-      return value ? (
-        <CheckIcon className="h-4 w-4 text-success" />
-      ) : (
-        <MinusIcon className="h-4 w-4 text-muted-foreground/40" />
-      );
-    case 'badge':
-      if (value === null || value === undefined) {
-        return <span className="text-muted-foreground">—</span>;
-      }
-      return <Badge variant="outline">{String(value)}</Badge>;
-    default:
-      return safeRender(value);
-  }
-}
 
 function TruncatedCell({
   children,
@@ -599,10 +488,23 @@ export function CrudTable<T extends { id: string }>({
   const selectableRef = useRef(selectable);
   selectableRef.current = selectable;
 
-  const visibleColumns = useMemo(
-    () => columns.filter((column) => !shouldHideForViewport(column.hideBelow, viewportWidth)),
-    [columns, viewportWidth],
+  const visibleColumns = useMemo(() => {
+    const effectiveWidth = resolveEffectiveTableWidth(containerWidth, viewportWidth);
+    return columns.filter((column) => !shouldHideForViewport(column.hideBelow, effectiveWidth));
+  }, [columns, containerWidth, viewportWidth]);
+
+  const effectiveTableWidth = resolveEffectiveTableWidth(containerWidth, viewportWidth);
+  const useMobileLayout = effectiveTableWidth > 0 && effectiveTableWidth < BREAKPOINT_MIN_WIDTHS.sm;
+  const minTableWidth = useMemo(
+    () => computeMinTableWidth(visibleColumns, { selectable, hasActions }),
+    [visibleColumns, selectable, hasActions],
   );
+  const useScrollLayout =
+    columnStretch === 'all' &&
+    effectiveTableWidth > 0 &&
+    minTableWidth > effectiveTableWidth &&
+    !useMobileLayout;
+  const resolvedColumnStretch = useScrollLayout ? 'none' : columnStretch;
 
   const structuralColumns = useMemo(() => {
     const builtColumns: Grid.Column<CrudGridSpec<T>>[] = [];
@@ -674,7 +576,11 @@ export function CrudTable<T extends { id: string }>({
       const isLastColumn = colIndex === visibleColumns.length - 1 && !hasActions;
 
       const widthFlex =
-        columnStretch === 'all' ? 1 : columnStretch === 'first' && colIndex === 0 ? 1 : undefined;
+        resolvedColumnStretch === 'all'
+          ? 1
+          : resolvedColumnStretch === 'first' && colIndex === 0
+            ? 1
+            : undefined;
 
       builtColumns.push({
         id: column.key,
@@ -724,7 +630,7 @@ export function CrudTable<T extends { id: string }>({
           }
 
           const content = renderTypedCell(row.data, column);
-          const cellContent = column.truncate ? (
+          const cellContent = shouldTruncateCell(column) ? (
             <TruncatedCell maxWidth={column.width ?? DEFAULT_TRUNCATE_MAX_REM}>
               {content}
             </TruncatedCell>
@@ -844,7 +750,7 @@ export function CrudTable<T extends { id: string }>({
 
     return builtColumns;
   }, [
-    columnStretch,
+    resolvedColumnStretch,
     hasActions,
     selectable,
     selectedIds,
@@ -858,8 +764,13 @@ export function CrudTable<T extends { id: string }>({
   );
 
   const gridColumns = useMemo(
-    () => mergeGridColumns(userGridColumns ?? structuralColumns, structuralColumns, columnStretch),
-    [structuralColumns, userGridColumns, columnStretch],
+    () =>
+      mergeGridColumns(
+        userGridColumns ?? structuralColumns,
+        structuralColumns,
+        resolvedColumnStretch,
+      ),
+    [structuralColumns, userGridColumns, resolvedColumnStretch],
   );
 
   const resolvedColumnStateStorageKey = useMemo(() => {
@@ -878,7 +789,11 @@ export function CrudTable<T extends { id: string }>({
       const parsed = JSON.parse(raw) as PersistedColumnState;
       if (parsed?.v !== 1 || !Array.isArray(parsed.columns)) return;
       setUserGridColumns((previous) =>
-        applyPersistedColumns(previous ?? structuralColumns, parsed as PersistedColumnState, columnStretch),
+        applyPersistedColumns(
+          previous ?? structuralColumns,
+          parsed as PersistedColumnState,
+          columnStretch,
+        ),
       );
     } catch {
       // ignore malformed persisted state
@@ -927,7 +842,7 @@ export function CrudTable<T extends { id: string }>({
   }, [compact, rows.length]);
 
   const horizontalScrollMinWidth = useMemo(() => {
-    if (columnStretch !== 'none') return undefined;
+    if (resolvedColumnStretch !== 'none') return undefined;
     return gridColumns.reduce((sum, column) => {
       if (column.hide) return sum;
       const width =
@@ -938,7 +853,7 @@ export function CrudTable<T extends { id: string }>({
             : DEFAULT_RESIZE_MIN_WIDTH_PX;
       return sum + width;
     }, 0);
-  }, [columnStretch, gridColumns]);
+  }, [resolvedColumnStretch, gridColumns]);
 
   const shouldVirtualize = useMemo(() => {
     if (isPrinting) return false;
@@ -1033,7 +948,8 @@ export function CrudTable<T extends { id: string }>({
     );
   }
 
-  const gridReady = columnStretch === 'none' || containerWidth > 0;
+  const gridReady = resolvedColumnStretch === 'none' || containerWidth > 0;
+  const scrollMinWidth = useScrollLayout ? minTableWidth : horizontalScrollMinWidth;
 
   return (
     <div className="crud-table-host flex w-full max-w-full min-w-0 flex-col">
@@ -1046,38 +962,60 @@ export function CrudTable<T extends { id: string }>({
         onToggleAll={() => setSelectedIds(toggleAllIds(rowIds, selectedIds))}
         invokeBulkAction={invokeBulkAction}
       />
-      <div
-        ref={gridContainerRef}
-        className="relative w-full max-w-full min-w-0 bg-background"
-        style={{
-          height: gridHeight,
-          minWidth: horizontalScrollMinWidth ? `${horizontalScrollMinWidth}px` : undefined,
-        }}
-      >
-        {isFetching ? (
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden">
-            <div className="h-full w-full animate-[progress-slide_1.2s_ease-in-out_infinite] bg-primary/60" />
+      {useMobileLayout ? (
+        <CrudTableMobileList
+          rows={rows}
+          columns={visibleColumns}
+          selectable={selectable}
+          selectedIds={selectedIds}
+          onSelectionChange={setSelectedIds}
+          rowActions={rowActions}
+          onRowClick={onRowClick}
+          highlightedId={highlightedId}
+          compact={compact}
+          onRowActionConfirm={(action, item) => setConfirmDialog({ mode: 'row', action, item })}
+        />
+      ) : (
+        <div
+          ref={gridContainerRef}
+          className={cn(
+            'relative w-full max-w-full min-w-0 bg-background',
+            useScrollLayout && 'overflow-x-auto',
+          )}
+        >
+          <div
+            style={{
+              height: gridHeight,
+              width: scrollMinWidth ? `${scrollMinWidth}px` : '100%',
+              minWidth: scrollMinWidth ? `${scrollMinWidth}px` : undefined,
+            }}
+          >
+            {isFetching ? (
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden">
+                <div className="h-full w-full animate-[progress-slide_1.2s_ease-in-out_infinite] bg-primary/60" />
+              </div>
+            ) : null}
+            {gridReady ? (
+              <Grid<CrudGridSpec<T>>
+                ref={gridRef}
+                columns={gridColumns}
+                onColumnsChange={handleColumnsChange}
+                columnSizeToFit={resolvedColumnStretch !== 'none'}
+                rowSource={rowSource}
+                headerHeight={CRUD_TABLE_HEADER_HEIGHT_PX}
+                rowHeight={crudTableRowHeightPx(compact)}
+                rowAlternateAttr
+                virtualizeRows={shouldVirtualize}
+                virtualizeCols={false}
+                columnDoubleClickToAutosize
+                editMode="readonly"
+                styles={gridStyles}
+                events={gridEvents}
+              />
+            ) : null}
           </div>
-        ) : null}
-        {gridReady ? (
-          <Grid<CrudGridSpec<T>>
-            ref={gridRef}
-            columns={gridColumns}
-            onColumnsChange={handleColumnsChange}
-            columnSizeToFit={columnStretch !== 'none'}
-            rowSource={rowSource}
-            headerHeight={CRUD_TABLE_HEADER_HEIGHT_PX}
-            rowHeight={crudTableRowHeightPx(compact)}
-            rowAlternateAttr
-            virtualizeRows={shouldVirtualize}
-            virtualizeCols={false}
-            columnDoubleClickToAutosize
-            editMode="readonly"
-            styles={gridStyles}
-            events={gridEvents}
-          />
-        ) : null}
-      </div>
+        </div>
+      )}
 
       <AlertDialog
         open={Boolean(confirmDialog)}
@@ -1123,9 +1061,9 @@ export function CrudTable<T extends { id: string }>({
             >
               {confirmDialog?.mode === 'bulk'
                 ? (confirmDialog.action.confirm?.actionLabel ?? 'Delete')
-                : (confirmDialog?.mode === 'row'
-                    ? (confirmDialog.action.confirm?.actionLabel ?? 'Confirm')
-                    : 'Confirm')}
+                : confirmDialog?.mode === 'row'
+                  ? (confirmDialog.action.confirm?.actionLabel ?? 'Confirm')
+                  : 'Confirm'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

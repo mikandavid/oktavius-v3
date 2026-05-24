@@ -57,9 +57,7 @@ export function ConfirmPopover({
         <div className="space-y-3">
           <div className="space-y-1">
             <p className="text-sm font-medium text-foreground">{title}</p>
-            {description ? (
-              <p className="text-xs text-muted-foreground">{description}</p>
-            ) : null}
+            {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
           </div>
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>

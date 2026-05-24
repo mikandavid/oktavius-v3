@@ -51,7 +51,10 @@ export function FileInput({
         className,
       )}
       onClick={() => inputRef.current?.click()}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
       onDragLeave={() => setDragging(false)}
       onDrop={handleDrop}
     >
@@ -72,17 +75,25 @@ export function FileInput({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">{value.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {(value.size / 1024).toFixed(1)} KB
-            </p>
+            <p className="text-xs text-muted-foreground">{(value.size / 1024).toFixed(1)} KB</p>
           </div>
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onChange?.(null); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onChange?.(null);
+            }}
             className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="Remove file"
           >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            >
               <path d="M1 1l10 10M11 1L1 11" />
             </svg>
           </button>
@@ -90,9 +101,7 @@ export function FileInput({
       ) : (
         <div className="px-4 py-3 text-center">
           <p className="text-sm text-muted-foreground">{placeholder}</p>
-          {accept ? (
-            <p className="mt-0.5 text-xs text-muted-foreground/70">{accept}</p>
-          ) : null}
+          {accept ? <p className="mt-0.5 text-xs text-muted-foreground/70">{accept}</p> : null}
         </div>
       )}
     </div>

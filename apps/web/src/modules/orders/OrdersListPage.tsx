@@ -1,47 +1,36 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { orderColumns, ordersPageIcon } from './shared';
 
 export function OrdersListPage() {
   const { orders } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '' });
-  const [sort, setSort] = useState('-orderDate');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = orders.filter((o) => {
+  const list = useListPageState({
+    rows: orders,
+    defaultSort: '-orderDate',
+    pageSize: 10,
+    filterKeys: ['status'],
+    filterFn: (order, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        o.orderNumber.toLowerCase().includes(q) ||
-        o.clientName.toLowerCase().includes(q) ||
-        o.owner.toLowerCase().includes(q);
-      const matchesStatus = !filters.status || o.status === filters.status;
+        q.length === 0 ||
+        order.orderNumber.toLowerCase().includes(q) ||
+        order.clientName.toLowerCase().includes(q) ||
+        order.owner.toLowerCase().includes(q);
+      const matchesStatus = filters.status.length === 0 || order.status === filters.status;
       return matchesSearch && matchesStatus;
-    });
-    return sortRows(rows, sort);
-  }, [orders, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
       title="Sales orders"
       subtitle="Track quotes, confirmations, fulfillment, and delivery."
       icon={ordersPageIcon()}
-      search={search}
-      onSearchChange={(v) => {
-        setSearch(v);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search order, client, owner…"
       filters={[
         {
@@ -56,34 +45,24 @@ export function OrdersListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((f) => ({ ...f, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ status: '' });
-        setPage(1);
-      }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={orderColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       exportOptions={{ fileName: 'orders', label: 'Export' }}
       emptyTitle="No orders found"
       emptyDescription="Adjust filters or create a new sales order."
       entityLabel="order"
       getRowHref={(o) => `/orders/${o.id}`}
-      sort={sort}
-      onSortChange={(s) => {
-        setSort(s);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

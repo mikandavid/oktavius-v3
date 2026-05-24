@@ -12,9 +12,14 @@ import {
 } from '@oktavius/base-ui';
 
 import { useDemoData } from '@/app/demo-data';
-import { ChevronDownIcon, SettingsIcon, UserIcon, UsersIcon } from '@/lib/icons';
+import { ChevronDownIcon, SettingsIcon, SignOutIcon } from '@/lib/icons';
+import { toast } from '@/lib/toast';
 
-import { OrganizationMenuSection } from './OrgSwitcher';
+import {
+  DesignMenuSection,
+  LanguageMenuSection,
+  OrganizationMenuSection,
+} from './AccountMenuSections';
 
 type HeaderAccountMenuProps = {
   compact?: boolean;
@@ -23,12 +28,23 @@ type HeaderAccountMenuProps = {
 
 export function HeaderAccountMenu({ compact = false, className }: HeaderAccountMenuProps) {
   const navigate = useNavigate();
-  const { users } = useDemoData();
+  const { users, getUserOrganizations, activeOrgId, organizations } = useDemoData();
   const currentUser = users[0];
 
   if (!currentUser) {
     return null;
   }
+
+  const userOrgs = getUserOrganizations(currentUser.id);
+  const activeOrg =
+    userOrgs.find((org) => org.id === activeOrgId) ??
+    organizations.find((org) => org.id === activeOrgId) ??
+    userOrgs[0];
+
+  const handleSignOut = () => {
+    toast.info('Signed out (demo)');
+    navigate('/dashboard');
+  };
 
   return (
     <DropdownMenu>
@@ -58,24 +74,32 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
         <div className="px-2 py-2">
           <div className="text-sm font-medium text-foreground">{currentUser.name}</div>
           <div className="truncate text-xs text-muted-foreground">{currentUser.email}</div>
-          <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-            {currentUser.role} · {currentUser.team}
-          </div>
+          {activeOrg ? (
+            <div className="mt-1 truncate text-xs text-muted-foreground">
+              {activeOrg.name} · {activeOrg.environment}
+            </div>
+          ) : (
+            <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              {currentUser.role} · {currentUser.team}
+            </div>
+          )}
         </div>
+
         <DropdownMenuSeparator />
-        <OrganizationMenuSection />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => navigate(`/users/${currentUser.id}`)} className="gap-2">
-          <UserIcon size={14} />
-          Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => navigate('/users')} className="gap-2">
-          <UsersIcon size={14} />
-          Team members
-        </DropdownMenuItem>
+
         <DropdownMenuItem onSelect={() => navigate('/settings')} className="gap-2">
           <SettingsIcon size={14} />
           Settings
+        </DropdownMenuItem>
+        <OrganizationMenuSection userId={currentUser.id} />
+        <LanguageMenuSection />
+        <DesignMenuSection />
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem onSelect={handleSignOut} className="gap-2">
+          <SignOutIcon size={14} />
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

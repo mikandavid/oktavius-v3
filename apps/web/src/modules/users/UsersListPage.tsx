@@ -1,37 +1,29 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { userColumns, usersHeaderAction, usersPageIcon } from './shared';
 
 export function UsersListPage() {
   const { users } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '', role: '' });
-  const [sort, setSort] = useState('name');
 
-  const filteredUsers = useMemo(() => {
-    const filtered = users.filter((user) => {
+  const list = useListPageState({
+    rows: users,
+    defaultSort: 'name',
+    pageSize: 5,
+    filterKeys: ['status', 'role'],
+    filterFn: (user, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        search.length === 0 ||
-        user.name.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase()) ||
-        user.team.toLowerCase().includes(search.toLowerCase());
+        q.length === 0 ||
+        user.name.toLowerCase().includes(q) ||
+        user.email.toLowerCase().includes(q) ||
+        user.team.toLowerCase().includes(q);
       const matchesStatus = filters.status.length === 0 || user.status === filters.status;
       const matchesRole = filters.role.length === 0 || user.role === filters.role;
       return matchesSearch && matchesStatus && matchesRole;
-    });
-
-    return sortRows(filtered, sort);
-  }, [filters.role, filters.status, search, sort, users]);
-
-  const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const pagedUsers = filteredUsers.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
@@ -39,11 +31,8 @@ export function UsersListPage() {
       subtitle="Simple entity lists should use the shared table system."
       icon={usersPageIcon()}
       headerActions={usersHeaderAction()}
-      search={search}
-      onSearchChange={(value) => {
-        setSearch(value);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search users, teams, or email"
       filters={[
         {
@@ -65,32 +54,22 @@ export function UsersListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((current) => ({ ...current, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ status: '', role: '' });
-        setPage(1);
-      }}
-      rows={pagedUsers}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={userColumns}
       emptyTitle="No users found"
       emptyDescription="This module should default to a dense shared CRUD list view instead of a custom layout."
       entityLabel="user"
       getRowHref={(user) => `/users/${user.id}`}
-      sort={sort}
-      onSortChange={(nextSort) => {
-        setSort(nextSort);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filteredUsers.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

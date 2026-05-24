@@ -37,7 +37,14 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
               >
                 {isDone ? (
                   <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="currentColor">
-                    <path d="M1.5 6.5l3 3 6-6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    <path
+                      d="M1.5 6.5l3 3 6-6"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 ) : (
                   index + 1
@@ -53,7 +60,9 @@ export function Stepper({ steps, currentStep, className }: StepperProps) {
                   {step.label}
                 </p>
                 {step.description ? (
-                  <p className="hidden text-xs text-muted-foreground sm:block">{step.description}</p>
+                  <p className="hidden text-xs text-muted-foreground sm:block">
+                    {step.description}
+                  </p>
                 ) : null}
               </div>
             </div>

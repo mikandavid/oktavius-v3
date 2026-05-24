@@ -105,6 +105,11 @@ export {
   Phone as PhoneIcon,
   MapPin as LocationIcon,
   Globe as WebIcon,
+  Globe as GlobeIcon,
+  Sun as SunIcon,
+  Moon as MoonIcon,
+  Desktop as SystemThemeIcon,
+  SignOut as SignOutIcon,
 } from '@phosphor-icons/react';
 
 // ─── Form & Input ────────────────────────────────────────────────────────────

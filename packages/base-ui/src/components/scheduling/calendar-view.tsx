@@ -175,10 +175,7 @@ export function CalendarView({
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Calendars
             </p>
-            <CalendarSourceLegend
-              calendars={calendars}
-              onToggle={onCalendarVisibilityChange}
-            />
+            <CalendarSourceLegend calendars={calendars} onToggle={onCalendarVisibilityChange} />
           </aside>
         ) : null}
 

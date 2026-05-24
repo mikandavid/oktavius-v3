@@ -63,16 +63,17 @@ export function CalendarTimeGrid({
   const slotHeightRem = slotMinutes >= 60 ? 3 : 2;
   const slotsPerHour = 60 / slotMinutes;
   const columnTemplate =
-    days.length === 1
-      ? '4rem minmax(0, 1fr)'
-      : `4rem repeat(${days.length}, minmax(0, 1fr))`;
+    days.length === 1 ? '4rem minmax(0, 1fr)' : `4rem repeat(${days.length}, minmax(0, 1fr))`;
 
   const allDayByDay = days.map((day) => eventsForDay(events, day).filter((e) => e.allDay));
   const hasAllDay = allDayByDay.some((list) => list.length > 0);
 
   return (
     <div className={cn('overflow-hidden rounded-control', className)}>
-      <div className="grid border-t border-border/40" style={{ gridTemplateColumns: columnTemplate }}>
+      <div
+        className="grid border-t border-border/40"
+        style={{ gridTemplateColumns: columnTemplate }}
+      >
         <div className="bg-muted/20" />
         {days.map((day) => (
           <div key={day.toISOString()} className={schedulingColumnHeaderClass}>
@@ -98,7 +99,10 @@ export function CalendarTimeGrid({
       </div>
 
       {hasAllDay ? (
-        <div className="grid border-t border-border/40 bg-muted/10" style={{ gridTemplateColumns: columnTemplate }}>
+        <div
+          className="grid border-t border-border/40 bg-muted/10"
+          style={{ gridTemplateColumns: columnTemplate }}
+        >
           <div className="flex items-start border-r border-border/40 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             All day
           </div>
@@ -166,7 +170,9 @@ export function CalendarTimeGrid({
                     )}
                     style={{ height: `${slotHeightRem}rem` }}
                     aria-label={
-                      onSlotClick ? `Create event at ${format(day, 'dd.MM.yyyy')} ${slot}` : undefined
+                      onSlotClick
+                        ? `Create event at ${format(day, 'dd.MM.yyyy')} ${slot}`
+                        : undefined
                     }
                   />
                 ))}
@@ -206,7 +212,7 @@ export function CalendarTimeGrid({
                     >
                       <span className="block truncate font-semibold">{event.title}</span>
                       {start ? (
-                          <span className="block truncate text-[10px] opacity-90">
+                        <span className="block truncate text-[10px] opacity-90">
                           {format(start, 'HH:mm')}
                         </span>
                       ) : null}

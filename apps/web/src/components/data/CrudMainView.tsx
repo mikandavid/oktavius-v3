@@ -1,70 +1,31 @@
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { PageHeaderActions, PageHeaderExportButton } from '@/components/common/PageHeaderButtons';
 
-import { CrudTable, type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
+import { CrudListShell, type CrudListShellProps } from './CrudListShell';
+import { type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
 import { exportToXlsx } from './exportGrid';
-import { FilterToolbar, type FilterDef } from './FilterToolbar';
-import { Pagination } from './Pagination';
-import { buildStandardListCrudActions } from './standardListCrud';
 
 export type { BulkAction, CrudColumn, CrudRowAction };
 export { buildStandardListCrudActions } from './standardListCrud';
+export { CrudListShell } from './CrudListShell';
 
 type ExportOptions = {
   fileName: string;
   sheetName?: string;
   label?: string;
-  /** Override default export — receives all rows (not just current page) */
   onExport?: () => void | Promise<void>;
 };
 
-type CrudMainViewProps<T extends { id: string }> = {
+type CrudMainViewProps<T extends { id: string }> = CrudListShellProps<T> & {
   title: ReactNode;
   subtitle?: ReactNode;
   icon?: ReactNode;
   headerActions?: ReactNode;
-  search: string;
-  onSearchChange: (value: string) => void;
-  searchPlaceholder?: string;
-  filters?: FilterDef[];
-  values?: Record<string, string>;
-  onFilterChange?: (key: string, value: string) => void;
-  onReset?: () => void;
-  toolbarTrailing?: ReactNode;
-  rows: T[];
-  /** All rows (unfiltered/unpaginated) used for export. Falls back to `rows` if omitted. */
   allRows?: T[];
-  columns: CrudColumn<T>[];
-  rowActions?: CrudRowAction<T>[];
-  bulkActions?: BulkAction[];
-  selectable?: boolean;
-  emptyTitle: string;
-  emptyDescription?: string;
-  getRowHref?: (row: T) => string;
-  /**
-   * Enables checkbox multiselect, row menu (Edit / Delete), and bulk bar (Edit / Delete selected).
-   * Requires `getRowHref`. Set `enableListCrud={false}` to opt out.
-   */
-  entityLabel?: string;
-  pluralLabel?: string;
-  enableListCrud?: boolean;
-  onDeleteRows?: (ids: string[]) => void;
-  onRowClick?: (row: T) => void;
-  sort?: string;
-  onSortChange?: (sort: string) => void;
-  isLoading?: boolean;
-  isFetching?: boolean;
-  highlightedId?: string;
   exportOptions?: ExportOptions;
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
 };
 
 export function CrudMainView<T extends { id: string }>({
@@ -72,66 +33,14 @@ export function CrudMainView<T extends { id: string }>({
   subtitle,
   icon,
   headerActions,
-  search,
-  onSearchChange,
-  searchPlaceholder,
-  filters,
-  values,
-  onFilterChange,
-  onReset,
-  toolbarTrailing,
-  rows,
   allRows,
-  columns,
-  rowActions,
-  bulkActions,
-  selectable,
-  emptyTitle,
-  emptyDescription,
-  getRowHref,
-  entityLabel,
-  pluralLabel,
-  enableListCrud = true,
-  onDeleteRows,
-  onRowClick,
-  sort,
-  onSortChange,
-  isLoading,
-  isFetching,
-  highlightedId,
   exportOptions,
-  page,
-  pageSize,
-  total,
-  totalPages,
-  onPageChange,
+  rows,
+  columns,
+  isLoading,
+  ...shellProps
 }: CrudMainViewProps<T>) {
-  const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-
-  const resolvedOnRowClick =
-    onRowClick ?? (getRowHref ? (row: T) => navigate(getRowHref(row)) : undefined);
-
-  const standardCrud = useMemo(() => {
-    if (!enableListCrud || !entityLabel || !getRowHref) return null;
-    return buildStandardListCrudActions({
-      entityLabel,
-      pluralLabel,
-      getDetailHref: getRowHref,
-      navigate,
-      onDelete: onDeleteRows,
-      onAfterDelete: () => setSelectedIds([]),
-    });
-  }, [enableListCrud, entityLabel, pluralLabel, getRowHref, navigate, onDeleteRows]);
-
-  const resolvedSelectable = selectable ?? standardCrud?.selectable ?? false;
-  const resolvedRowActions = [...(standardCrud?.rowActions ?? []), ...(rowActions ?? [])];
-  const resolvedBulkActions = [...(standardCrud?.bulkActions ?? []), ...(bulkActions ?? [])];
-
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [page]);
 
   const handleExport = async () => {
     if (!exportOptions) return;
@@ -176,47 +85,7 @@ export function CrudMainView<T extends { id: string }>({
       actions={resolvedHeaderActions}
       layoutClassName="min-w-0 w-full max-w-full"
     >
-      <div className="w-full max-w-full min-w-0 overflow-hidden rounded-card bg-card">
-        <div className="border-b border-border/50">
-          <FilterToolbar
-            search={search}
-            onSearchChange={onSearchChange}
-            searchPlaceholder={searchPlaceholder}
-            filters={filters}
-            values={values}
-            onFilterChange={onFilterChange}
-            onReset={onReset}
-            trailing={toolbarTrailing}
-          />
-        </div>
-        <CrudTable
-          columnStretch="all"
-          data={rows}
-          columns={columns}
-          rowActions={resolvedRowActions}
-          bulkActions={resolvedBulkActions}
-          selectable={resolvedSelectable}
-          selectedIds={selectedIds}
-          onSelectionChange={setSelectedIds}
-          emptyTitle={emptyTitle}
-          emptyDescription={emptyDescription}
-          onRowClick={resolvedOnRowClick}
-          sort={sort}
-          onSortChange={onSortChange}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          highlightedId={highlightedId}
-        />
-        <div className="border-t border-border/50">
-          <Pagination
-            page={page}
-            pageSize={pageSize}
-            total={total}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-          />
-        </div>
-      </div>
+      <CrudListShell rows={rows} columns={columns} isLoading={isLoading} {...shellProps} />
     </ModulePage>
   );
 }

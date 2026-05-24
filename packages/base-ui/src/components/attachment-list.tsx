@@ -29,10 +29,8 @@ function fileIcon(name: string, mimeType?: string): ReactNode {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
   if (mimeType?.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext))
     return <Image className="h-4 w-4" />;
-  if (ext === 'pdf' || mimeType === 'application/pdf')
-    return <FilePdf className="h-4 w-4" />;
-  if (['doc', 'docx'].includes(ext))
-    return <FileDoc className="h-4 w-4" />;
+  if (ext === 'pdf' || mimeType === 'application/pdf') return <FilePdf className="h-4 w-4" />;
+  if (['doc', 'docx'].includes(ext)) return <FileDoc className="h-4 w-4" />;
   return <File className="h-4 w-4" />;
 }
 
@@ -57,10 +55,7 @@ export function AttachmentList({
   return (
     <ul className={cn('divide-y divide-border/50', className)}>
       {attachments.map((att) => (
-        <li
-          key={att.id}
-          className="flex items-center gap-3 py-2"
-        >
+        <li key={att.id} className="flex items-center gap-3 py-2">
           <div className="shrink-0 text-muted-foreground">{fileIcon(att.name, att.mimeType)}</div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-foreground">{att.name}</p>

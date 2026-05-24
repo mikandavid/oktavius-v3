@@ -42,12 +42,49 @@ export function parseCssSizeToPx(
   return fallback;
 }
 
-export function shouldHideForViewport(
-  hideBelow: Breakpoint | undefined,
-  viewportWidth: number,
-): boolean {
+export function shouldHideForViewport(hideBelow: Breakpoint | undefined, width: number): boolean {
   if (!hideBelow) return false;
-  return viewportWidth < BREAKPOINT_MIN_WIDTHS[hideBelow];
+  return width < BREAKPOINT_MIN_WIDTHS[hideBelow];
+}
+
+export function resolveEffectiveTableWidth(containerWidth: number, viewportWidth: number): number {
+  if (containerWidth > 0) return containerWidth;
+  return viewportWidth;
+}
+
+const DEFAULT_COLUMN_WIDTH_BY_TYPE = {
+  text: '18rem',
+  status: '9rem',
+  date: '11rem',
+  currency: '11rem',
+  boolean: '6rem',
+  badge: '9rem',
+} as const;
+
+export function computeMinTableWidth(
+  columns: Array<{
+    type?: string;
+    width?: string | number;
+    minWidth?: string | number;
+  }>,
+  options: { selectable: boolean; hasActions: boolean },
+): number {
+  const SELECT_WIDTH = 44;
+  const ACTIONS_WIDTH = 56;
+  let total = 0;
+
+  if (options.selectable) total += SELECT_WIDTH;
+  if (options.hasActions) total += ACTIONS_WIDTH;
+
+  for (const column of columns) {
+    const type = (column.type ?? 'text') as keyof typeof DEFAULT_COLUMN_WIDTH_BY_TYPE;
+    const defaultWidth = parseCssSizeToPx(DEFAULT_COLUMN_WIDTH_BY_TYPE[type] ?? '18rem', 80) ?? 80;
+    const width = parseCssSizeToPx(column.width, defaultWidth) ?? defaultWidth;
+    const widthMin = parseCssSizeToPx(column.minWidth, 80) ?? 80;
+    total += Math.max(widthMin, Math.min(width, defaultWidth));
+  }
+
+  return total;
 }
 
 export function toggleId(selectedIds: string[], id: string): string[] {

@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-  CheckCircle,
-  Info,
-  Warning,
-  WarningCircle,
-  X,
-} from '@phosphor-icons/react';
+import { CheckCircle, Info, Warning, WarningCircle, X } from '@phosphor-icons/react';
 
 import { cn } from '../lib/utils';
 

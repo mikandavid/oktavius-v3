@@ -161,7 +161,9 @@ export function formatAgendaDayHeading(day: Date): string {
   return format(day, 'EEEE, dd.MM.yyyy');
 }
 
-export function groupEventsByDay(events: CalendarEvent[]): Array<{ day: Date; events: CalendarEvent[] }> {
+export function groupEventsByDay(
+  events: CalendarEvent[],
+): Array<{ day: Date; events: CalendarEvent[] }> {
   const sorted = sortEventsByStart(events);
   const groups = new Map<string, CalendarEvent[]>();
 

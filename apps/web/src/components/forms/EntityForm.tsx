@@ -2,22 +2,31 @@ import type { ChangeEvent, FormEvent } from 'react';
 import { useState } from 'react';
 
 import {
+  AddressField,
+  type AddressValue,
   Button,
   Checkbox,
   Combobox,
   type ComboboxOption,
   DatePicker,
   type DatePickerMode,
+  EMPTY_ADDRESS,
   FileInput,
+  FormField as FormFieldControl,
   Input,
   Label,
   MultiSelect,
   type MultiSelectOption,
+  PhoneInput,
+  RadioGroupField,
   SectionCard,
   Switch,
   TagsInput,
   Textarea,
 } from '@oktavius/base-ui';
+
+export type { AddressValue };
+export { EMPTY_ADDRESS } from '@oktavius/base-ui';
 
 // ─── Field Types ─────────────────────────────────────────────────────────────
 
@@ -35,13 +44,23 @@ export type FieldType =
   | 'tags'
   | 'checkbox'
   | 'switch'
+  | 'radio'
   | 'date'
   | 'time'
   | 'datetime'
   | 'currency'
-  | 'file';
+  | 'file'
+  | 'address';
 
-export type FormFieldValue = string | boolean | number | string[] | File | null | undefined;
+export type FormFieldValue =
+  | string
+  | boolean
+  | number
+  | string[]
+  | File
+  | AddressValue
+  | null
+  | undefined;
 
 export type FormField = {
   name: string;
@@ -53,6 +72,8 @@ export type FormField = {
   options?: string[] | ComboboxOption[];
   section?: string;
   description?: string;
+  /** Field-level validation message (also overridable via EntityForm `errors`). */
+  error?: string;
   colSpan?: 1 | 2;
   placeholder?: string;
   min?: string;
@@ -77,6 +98,10 @@ export type FormField = {
   };
   /** `file`: accepted MIME types / extensions e.g. ".pdf,image/*" */
   accept?: string;
+  /** `address`: country options — defaults to DACH-focused list */
+  countries?: string[];
+  /** `radio`: layout direction */
+  radioOrientation?: 'horizontal' | 'vertical';
 };
 
 // ─── Form Props ───────────────────────────────────────────────────────────────
@@ -90,6 +115,8 @@ type EntityFormProps<T extends Record<string, FormFieldValue>> = {
   onSubmit: (values: T) => void;
   isSubmitting?: boolean;
   footerActions?: React.ReactNode;
+  /** Server or client validation errors keyed by field name. */
+  errors?: Partial<Record<keyof T & string, string>>;
   /** `page` = card on route; `dialog` = fields inside Dialog (no nested card, purple save). */
   surface?: 'page' | 'dialog';
   /** Defaults to `cta` in dialogs and `default` on full pages. */
@@ -97,6 +124,25 @@ type EntityFormProps<T extends Record<string, FormFieldValue>> = {
   /** Hide the built-in title block when the parent Dialog already has DialogTitle. */
   showHeader?: boolean;
 };
+
+function isAddressValue(value: FormFieldValue): value is AddressValue {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !(value instanceof File) &&
+    !Array.isArray(value) &&
+    'line1' in value &&
+    'city' in value &&
+    'country' in value
+  );
+}
+
+function resolveFieldError<T extends Record<string, FormFieldValue>>(
+  field: FormField,
+  errors?: Partial<Record<keyof T & string, string>>,
+) {
+  return errors?.[field.name] ?? field.error;
+}
 
 // ─── Field Renderer ───────────────────────────────────────────────────────────
 
@@ -176,6 +222,46 @@ function FieldInput({
           id={inputId}
           value={arrValue}
           placeholder={field.placeholder ?? 'Add tag…'}
+          disabled={field.disabled}
+          onChange={(v) => onChange(v)}
+        />
+      );
+    }
+
+    case 'radio': {
+      const opts = (field.options ?? []).map((o) =>
+        typeof o === 'string' ? { value: o, label: o } : o,
+      );
+      return (
+        <RadioGroupField
+          id={inputId}
+          options={opts}
+          value={strValue || undefined}
+          disabled={field.disabled}
+          orientation={field.radioOrientation}
+          onChange={(v) => onChange(v)}
+        />
+      );
+    }
+
+    case 'phone':
+      return (
+        <PhoneInput
+          id={inputId}
+          value={strValue}
+          disabled={field.disabled}
+          placeholder={field.placeholder ?? 'Local number'}
+          onChange={(v) => onChange(v)}
+        />
+      );
+
+    case 'address': {
+      const addressValue = isAddressValue(value) ? value : EMPTY_ADDRESS;
+      return (
+        <AddressField
+          id={inputId}
+          value={addressValue}
+          countries={field.countries}
           disabled={field.disabled}
           onChange={(v) => onChange(v)}
         />
@@ -265,7 +351,7 @@ function FieldInput({
           accept={field.accept}
           disabled={field.disabled}
           placeholder={field.placeholder}
-          onChange={(f) => onChange(f)}
+          onChange={(f: File | null) => onChange(f)}
         />
       );
     }
@@ -292,10 +378,12 @@ function FieldInput({
 function EntityFormFields<T extends Record<string, FormFieldValue>>({
   groupedFields,
   values,
+  errors,
   set,
 }: {
   groupedFields: Record<string, FormField[]>;
   values: T;
+  errors?: Partial<Record<keyof T & string, string>>;
   set: (name: string, value: FormFieldValue) => void;
 }) {
   return (
@@ -312,32 +400,49 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
             {sectionFields.map((field) => {
               const isBoolean = field.type === 'checkbox' || field.type === 'switch';
               const inputId = `field-${field.name}`;
+              const error = resolveFieldError(field, errors);
+
+              if (isBoolean) {
+                return (
+                  <div
+                    key={field.name}
+                    className={field.colSpan === 2 ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'}
+                  >
+                    <FieldInput
+                      field={field}
+                      value={values[field.name]}
+                      inputId={inputId}
+                      onChange={(v) => set(field.name, v)}
+                    />
+                    {field.description ? (
+                      <p className="text-xs text-muted-foreground">{field.description}</p>
+                    ) : null}
+                    {error ? (
+                      <p role="alert" className="text-xs text-destructive">
+                        {error}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              }
+
               return (
-                <div
+                <FormFieldControl
                   key={field.name}
-                  className={field.colSpan === 2 ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'}
+                  id={inputId}
+                  label={field.label}
+                  required={field.required}
+                  description={field.description}
+                  error={error}
+                  className={field.colSpan === 2 ? 'md:col-span-2' : undefined}
                 >
-                  {!isBoolean ? (
-                    <Label
-                      htmlFor={`field-${field.name}`}
-                      className="text-sm font-medium text-foreground"
-                    >
-                      {field.label}
-                      {field.required ? (
-                        <span className="ml-0.5 text-destructive">*</span>
-                      ) : null}
-                    </Label>
-                  ) : null}
                   <FieldInput
                     field={field}
                     value={values[field.name]}
                     inputId={inputId}
                     onChange={(v) => set(field.name, v)}
                   />
-                  {field.description ? (
-                    <p className="text-xs text-muted-foreground">{field.description}</p>
-                  ) : null}
-                </div>
+                </FormFieldControl>
               );
             })}
           </div>
@@ -356,6 +461,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   onSubmit,
   isSubmitting = false,
   footerActions,
+  errors,
   surface = 'page',
   submitVariant,
   showHeader,
@@ -392,7 +498,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
           {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
         </div>
       ) : null}
-      <EntityFormFields groupedFields={groupedFields} values={values} set={set} />
+      <EntityFormFields groupedFields={groupedFields} values={values} errors={errors} set={set} />
       <div
         className={
           surface === 'dialog'

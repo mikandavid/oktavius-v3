@@ -38,11 +38,7 @@ export function UserCreatePage() {
       icon={usersPageIcon()}
     >
       {createdMessage ? (
-        <InfoBox
-          tone="success"
-          icon={<SuccessIcon size={18} weight="fill" />}
-          title="User created"
-        >
+        <InfoBox tone="success" icon={<SuccessIcon size={18} weight="fill" />} title="User created">
           {createdMessage}
         </InfoBox>
       ) : null}

@@ -10,7 +10,8 @@ const FORBIDDEN = [
   },
   {
     pattern: /\brounded-lg\b/,
-    message: 'Use rounded-card (surfaces) or rounded-control (inputs/buttons) instead of rounded-lg.',
+    message:
+      'Use rounded-card (surfaces) or rounded-control (inputs/buttons) instead of rounded-lg.',
   },
 ];
 

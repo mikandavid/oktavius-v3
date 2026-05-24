@@ -56,8 +56,7 @@ export function MultiSelect({
     const q = query.toLowerCase();
     return options.filter(
       (o) =>
-        o.label.toLowerCase().includes(q) ||
-        (o.description?.toLowerCase().includes(q) ?? false),
+        o.label.toLowerCase().includes(q) || (o.description?.toLowerCase().includes(q) ?? false),
     );
   }, [options, query]);
 
@@ -204,9 +203,7 @@ export function MultiSelect({
 
         {selected.length > 0 ? (
           <div className="border-t border-border px-3 py-1.5">
-            <span className="text-xs text-muted-foreground">
-              {selected.length} selected
-            </span>
+            <span className="text-xs text-muted-foreground">{selected.length} selected</span>
           </div>
         ) : null}
       </PopoverContent>

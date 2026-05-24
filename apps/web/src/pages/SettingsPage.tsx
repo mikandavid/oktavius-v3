@@ -1,12 +1,6 @@
 import { useState } from 'react';
 
-import {
-  Button,
-  SettingsLayout,
-  SettingsRow,
-  SettingsSection,
-  Switch,
-} from '@oktavius/base-ui';
+import { Button, SettingsLayout, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { settingsPageIcon } from '@/lib/modulePageIcons';

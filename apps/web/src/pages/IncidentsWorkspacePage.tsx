@@ -39,7 +39,12 @@ export function IncidentsWorkspacePage() {
 
   const timelineFor = (incident: IncidentRecord): TimelineEvent[] => [
     { id: '1', label: 'Incident reported', timestamp: incident.reportedAt, tone: 'destructive' },
-    { id: '2', label: `Assigned to ${incident.assignee}`, timestamp: incident.reportedAt, tone: 'info' },
+    {
+      id: '2',
+      label: `Assigned to ${incident.assignee}`,
+      timestamp: incident.reportedAt,
+      tone: 'info',
+    },
     {
       id: '3',
       label: `Status: ${incident.status}`,
@@ -80,7 +85,9 @@ export function IncidentsWorkspacePage() {
                 title={incident.incidentNumber}
                 subtitle={
                   <>
-                    <span className="line-clamp-2 text-sm text-foreground/90">{incident.title}</span>
+                    <span className="line-clamp-2 text-sm text-foreground/90">
+                      {incident.title}
+                    </span>
                     <span>{incident.service}</span>
                   </>
                 }
@@ -98,7 +105,8 @@ export function IncidentsWorkspacePage() {
             <div className="min-w-0 space-y-1.5">
               <h2 className="text-lg font-semibold text-foreground">{selected.title}</h2>
               <p className="text-sm text-muted-foreground">
-                {selected.incidentNumber} · {selected.service} · {formatDisplayDateTime(selected.reportedAt)}
+                {selected.incidentNumber} · {selected.service} ·{' '}
+                {formatDisplayDateTime(selected.reportedAt)}
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-0.5">
                 <IncidentSeverityBadge severity={selected.severity} />
@@ -114,7 +122,14 @@ export function IncidentsWorkspacePage() {
               <Timeline events={timelineFor(selected)} />
             </SectionCard>
 
-            <SectionCard title="Actions" actions={<Button variant="cta" size="sm">Update status</Button>}>
+            <SectionCard
+              title="Actions"
+              actions={
+                <Button variant="cta" size="sm">
+                  Update status
+                </Button>
+              }
+            >
               <p className="text-sm text-muted-foreground">
                 Owner: <span className="font-medium text-foreground">{selected.assignee}</span>
               </p>

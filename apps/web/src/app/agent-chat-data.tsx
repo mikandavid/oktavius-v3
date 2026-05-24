@@ -120,7 +120,9 @@ function deriveAssistantResponse(params: {
 export function AgentChatProvider({ children }: { children: ReactNode }) {
   const { users, clients } = useDemoData();
   const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
-  const [activeConversationId, setActiveConversationId] = useState(INITIAL_CONVERSATIONS[0]?.id ?? '');
+  const [activeConversationId, setActiveConversationId] = useState(
+    INITIAL_CONVERSATIONS[0]?.id ?? '',
+  );
   const [draft, setDraft] = useState('');
   const [isResponding, setIsResponding] = useState(false);
   const pendingTimeoutRef = useRef<number | null>(null);

@@ -35,24 +35,27 @@ import { InfoIcon, PlusIcon, WarningIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
 import {
+  CASE_PRIORITY_MAP,
   CASE_STAGES,
   CASE_STATUS_MAP,
   casesPageIcon,
   checklistFormDefaults,
   checklistFormFields,
   type ChecklistFormValues,
-  PRIORITY_VARIANT,
 } from './shared';
 
 const WORKFLOW_STEPS = CASE_STAGES.map((stage) => ({ key: stage.toLowerCase(), label: stage }));
 
 export function CaseDetailPage() {
   const { caseId } = useParams();
-  const { cases, parties, tasks, caseChecklists, toggleChecklistItem, createChecklistItem } = useDemoData();
+  const { cases, parties, tasks, caseChecklists, toggleChecklistItem, createChecklistItem } =
+    useDemoData();
   const [tab, setTab] = useState('overview');
   const [docId, setDocId] = useState('f1');
   const [addChecklistOpen, setAddChecklistOpen] = useState(false);
-  const [notes, setNotes] = useState('<p>Internal case notes — visible to the assigned team only.</p>');
+  const [notes, setNotes] = useState(
+    '<p>Internal case notes — visible to the assigned team only.</p>',
+  );
 
   const [calendarAnchor, setCalendarAnchor] = useState(() => new Date());
   const [calendarView, setCalendarView] = useState<CalendarViewMode>('month');
@@ -98,7 +101,12 @@ export function CaseDetailPage() {
 
   const activity: TimelineEvent[] = [
     { id: '1', label: 'Case opened', timestamp: `${caseRecord.openedAt}T09:00:00Z`, tone: 'info' },
-    { id: '2', label: 'Assigned to ' + caseRecord.assignee, timestamp: `${caseRecord.openedAt}T11:00:00Z`, tone: 'info' },
+    {
+      id: '2',
+      label: 'Assigned to ' + caseRecord.assignee,
+      timestamp: `${caseRecord.openedAt}T11:00:00Z`,
+      tone: 'info',
+    },
     {
       id: '3',
       label: 'Stage changed to ' + caseRecord.stage,
@@ -127,7 +135,7 @@ export function CaseDetailPage() {
           <span className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
             <span>{caseRecord.title}</span>
             <span className="flex flex-wrap items-center gap-2">
-              <Badge variant={PRIORITY_VARIANT[caseRecord.priority]}>{caseRecord.priority}</Badge>
+              <StatusBadge status={caseRecord.priority} variantMap={CASE_PRIORITY_MAP} />
               <StatusBadge status={caseRecord.stage} variantMap={CASE_STATUS_MAP} />
               <Badge variant="outline">{caseRecord.type}</Badge>
             </span>
@@ -167,7 +175,7 @@ export function CaseDetailPage() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 pt-4">
-            <div className="grid gap-3 sm:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
               <StatCard label="Stage" value={caseRecord.stage} />
               <StatCard label="Parties" value={String(allParties.length)} />
               <StatCard
@@ -205,7 +213,12 @@ export function CaseDetailPage() {
               <Stepper steps={WORKFLOW_STEPS} currentStep={Math.max(0, stageIndex)} />
               <div className="mt-4 flex flex-wrap gap-2">
                 {CASE_STAGES.map((stage) => (
-                  <Button key={stage} variant={stage === caseRecord.stage ? 'cta' : 'outline'} size="sm" type="button">
+                  <Button
+                    key={stage}
+                    variant={stage === caseRecord.stage ? 'cta' : 'outline'}
+                    size="sm"
+                    type="button"
+                  >
                     {stage}
                   </Button>
                 ))}
@@ -230,7 +243,15 @@ export function CaseDetailPage() {
           </TabsContent>
 
           <TabsContent value="parties" className="pt-4">
-            <SectionCard title="Parties" meta={`${allParties.length} linked`} actions={<Button variant="outline" size="sm">Add party</Button>}>
+            <SectionCard
+              title="Parties"
+              meta={`${allParties.length} linked`}
+              actions={
+                <Button variant="outline" size="sm">
+                  Add party
+                </Button>
+              }
+            >
               {allParties.map((party) => (
                 <ListRow
                   key={party.id}
@@ -243,7 +264,14 @@ export function CaseDetailPage() {
           </TabsContent>
 
           <TabsContent value="tasks" className="pt-4">
-            <SectionCard title="Tasks" actions={<Button variant="outline" size="sm">Add task</Button>}>
+            <SectionCard
+              title="Tasks"
+              actions={
+                <Button variant="outline" size="sm">
+                  Add task
+                </Button>
+              }
+            >
               {caseTasks.length ? (
                 caseTasks.map((task) => (
                   <ListRow
@@ -267,7 +295,11 @@ export function CaseDetailPage() {
 
           <TabsContent value="notes" className="pt-4">
             <SectionCard title="Internal notes" meta="Rich text">
-              <RichTextEditor value={notes} onChange={setNotes} placeholder="Add investigation notes…" />
+              <RichTextEditor
+                value={notes}
+                onChange={setNotes}
+                placeholder="Add investigation notes…"
+              />
             </SectionCard>
           </TabsContent>
 

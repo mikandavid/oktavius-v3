@@ -76,7 +76,11 @@ export function AppLayout() {
           </div>
 
           {showDesktopChatRail ? (
-            <div className="hidden min-h-0 shrink-0 lg:flex" aria-label="Agent chat" role="complementary">
+            <div
+              className="hidden min-h-0 shrink-0 lg:flex"
+              aria-label="Agent chat"
+              role="complementary"
+            >
               <AIChatSidebar />
             </div>
           ) : null}

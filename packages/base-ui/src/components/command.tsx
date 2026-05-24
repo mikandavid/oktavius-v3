@@ -66,7 +66,11 @@ export const CommandEmpty = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.Empty>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
 >((props, ref) => (
-  <CommandPrimitive.Empty ref={ref} className="py-6 text-center text-sm text-muted-foreground" {...props} />
+  <CommandPrimitive.Empty
+    ref={ref}
+    className="py-6 text-center text-sm text-muted-foreground"
+    {...props}
+  />
 ));
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName;
 
@@ -89,7 +93,11 @@ export const CommandSeparator = React.forwardRef<
   React.ComponentRef<typeof CommandPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.Separator ref={ref} className={cn('-mx-1 h-px bg-border/60', className)} {...props} />
+  <CommandPrimitive.Separator
+    ref={ref}
+    className={cn('-mx-1 h-px bg-border/60', className)}
+    {...props}
+  />
 ));
 CommandSeparator.displayName = CommandPrimitive.Separator.displayName;
 

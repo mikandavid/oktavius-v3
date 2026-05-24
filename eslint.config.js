@@ -1,10 +1,11 @@
 import js from '@eslint/js';
+import eslintConfigPrettier from 'eslint-config-prettier';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-import noForbiddenTailwindClasses from './eslint-rules/no-forbidden-tailwind-classes.mjs';
+import noForbiddenTailwindClasses from './apps/web/eslint-rules/no-forbidden-tailwind-classes.mjs';
 
 const selectImportRestriction = {
   name: '@oktavius/base-ui',
@@ -33,7 +34,9 @@ const oktaviusUiPlugin = {
 };
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules'] },
+  {
+    ignores: ['**/dist/**', '**/node_modules/**', 'apps/web/dist/**'],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -57,7 +60,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['apps/web/src/**/*.{ts,tsx}'],
     rules: {
       'oktavius/no-forbidden-tailwind-classes': 'error',
       'no-restricted-imports': [
@@ -69,7 +72,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/lib/icons.ts'],
+    files: ['apps/web/src/lib/icons.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -80,9 +83,10 @@ export default tseslint.config(
     },
   },
   {
-    files: ['../../packages/base-ui/src/**/*.{ts,tsx}'],
+    files: ['packages/base-ui/src/**/*.{ts,tsx}'],
     rules: {
       'oktavius/no-forbidden-tailwind-classes': 'error',
     },
   },
+  eslintConfigPrettier,
 );

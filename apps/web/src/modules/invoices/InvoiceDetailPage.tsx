@@ -53,7 +53,12 @@ export function InvoiceDetailPage() {
             ),
             section: 'Billing',
           },
-          { key: 'issued', label: 'Issued', value: formatDisplayDate(invoice.issuedAt), section: 'Dates' },
+          {
+            key: 'issued',
+            label: 'Issued',
+            value: formatDisplayDate(invoice.issuedAt),
+            section: 'Dates',
+          },
           { key: 'due', label: 'Due', value: formatDisplayDate(invoice.dueAt), section: 'Dates' },
         ]}
       />

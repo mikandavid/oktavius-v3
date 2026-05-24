@@ -1,4 +1,8 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+
+import { ApiProvider } from '@/api/ApiProvider';
+import type { DemoApiRegistry } from '@/api/demo-client';
+import { buildClientsDemoHandlers } from '@/modules/clients/clients-demo-handlers';
 
 export type UserRecord = {
   id: string;
@@ -197,6 +201,8 @@ type DemoDataContextValue = {
   createUser: (input: CreateUserInput) => UserRecord;
   organizations: OrganizationRecord[];
   orgMemberships: OrgMembershipRecord[];
+  activeOrgId: string;
+  setActiveOrgId: (orgId: string) => void;
   createOrganization: (input: CreateOrganizationInput) => OrganizationRecord;
   getOrgMembers: (orgId: string) => Array<OrgMembershipRecord & { user: UserRecord }>;
   getUserOrganizations: (userId: string) => OrganizationRecord[];
@@ -372,10 +378,38 @@ const INITIAL_ORDERS: OrderRecord[] = [
 ];
 
 const INITIAL_ORDER_LINES: OrderLineRecord[] = [
-  { id: 'ol_1', orderId: 'ord_2001', productName: 'Enterprise License', sku: 'LIC-ENT-01', quantity: 1, unitPrice: '22000' },
-  { id: 'ol_2', orderId: 'ord_2001', productName: 'Onboarding Package', sku: 'SVC-ONB-12', quantity: 1, unitPrice: '4500' },
-  { id: 'ol_3', orderId: 'ord_2001', productName: 'Support Add-on', sku: 'SVC-SUP-Y1', quantity: 1, unitPrice: '1950' },
-  { id: 'ol_4', orderId: 'ord_2002', productName: 'Consulting Days', sku: 'SVC-CON-10', quantity: 4, unitPrice: '1550' },
+  {
+    id: 'ol_1',
+    orderId: 'ord_2001',
+    productName: 'Enterprise License',
+    sku: 'LIC-ENT-01',
+    quantity: 1,
+    unitPrice: '22000',
+  },
+  {
+    id: 'ol_2',
+    orderId: 'ord_2001',
+    productName: 'Onboarding Package',
+    sku: 'SVC-ONB-12',
+    quantity: 1,
+    unitPrice: '4500',
+  },
+  {
+    id: 'ol_3',
+    orderId: 'ord_2001',
+    productName: 'Support Add-on',
+    sku: 'SVC-SUP-Y1',
+    quantity: 1,
+    unitPrice: '1950',
+  },
+  {
+    id: 'ol_4',
+    orderId: 'ord_2002',
+    productName: 'Consulting Days',
+    sku: 'SVC-CON-10',
+    quantity: 4,
+    unitPrice: '1550',
+  },
 ];
 
 const INITIAL_INVOICES: InvoiceRecord[] = [
@@ -422,11 +456,56 @@ const INITIAL_INVOICES: InvoiceRecord[] = [
 ];
 
 const INITIAL_PRODUCTS: ProductRecord[] = [
-  { id: 'prd_4001', sku: 'LIC-ENT-01', name: 'Enterprise License', category: 'Licenses', status: 'Active', price: '22000', stock: 999, unit: 'seat' },
-  { id: 'prd_4002', sku: 'SVC-ONB-12', name: 'Onboarding Package', category: 'Services', status: 'Active', price: '4500', stock: 0, unit: 'package' },
-  { id: 'prd_4003', sku: 'SVC-CON-10', name: 'Consulting Days', category: 'Services', status: 'Active', price: '1550', stock: 0, unit: 'day' },
-  { id: 'prd_4004', sku: 'HW-RTR-05', name: 'Edge Router Pro', category: 'Hardware', status: 'Active', price: '1290', stock: 42, unit: 'unit' },
-  { id: 'prd_4005', sku: 'LIC-STD-01', name: 'Standard License', category: 'Licenses', status: 'Discontinued', price: '8900', stock: 0, unit: 'seat' },
+  {
+    id: 'prd_4001',
+    sku: 'LIC-ENT-01',
+    name: 'Enterprise License',
+    category: 'Licenses',
+    status: 'Active',
+    price: '22000',
+    stock: 999,
+    unit: 'seat',
+  },
+  {
+    id: 'prd_4002',
+    sku: 'SVC-ONB-12',
+    name: 'Onboarding Package',
+    category: 'Services',
+    status: 'Active',
+    price: '4500',
+    stock: 0,
+    unit: 'package',
+  },
+  {
+    id: 'prd_4003',
+    sku: 'SVC-CON-10',
+    name: 'Consulting Days',
+    category: 'Services',
+    status: 'Active',
+    price: '1550',
+    stock: 0,
+    unit: 'day',
+  },
+  {
+    id: 'prd_4004',
+    sku: 'HW-RTR-05',
+    name: 'Edge Router Pro',
+    category: 'Hardware',
+    status: 'Active',
+    price: '1290',
+    stock: 42,
+    unit: 'unit',
+  },
+  {
+    id: 'prd_4005',
+    sku: 'LIC-STD-01',
+    name: 'Standard License',
+    category: 'Licenses',
+    status: 'Discontinued',
+    price: '8900',
+    stock: 0,
+    unit: 'seat',
+  },
 ];
 
 const INITIAL_PROJECTS: ProjectRecord[] = [
@@ -544,11 +623,41 @@ const INITIAL_CASES: CaseRecord[] = [
 ];
 
 const INITIAL_CASE_CHECKLISTS: CaseChecklistItem[] = [
-  { id: 'chk_1', caseId: 'case_6001', label: 'Acknowledge receipt to client', done: true, required: true },
-  { id: 'chk_2', caseId: 'case_6001', label: 'Pull invoice history from billing', done: true, required: true },
-  { id: 'chk_3', caseId: 'case_6001', label: 'Issue credit note if confirmed', done: false, required: true },
-  { id: 'chk_4', caseId: 'case_6003', label: 'Post-incident review scheduled', done: false, required: true },
-  { id: 'chk_5', caseId: 'case_6003', label: 'Notify affected integrations', done: true, required: true },
+  {
+    id: 'chk_1',
+    caseId: 'case_6001',
+    label: 'Acknowledge receipt to client',
+    done: true,
+    required: true,
+  },
+  {
+    id: 'chk_2',
+    caseId: 'case_6001',
+    label: 'Pull invoice history from billing',
+    done: true,
+    required: true,
+  },
+  {
+    id: 'chk_3',
+    caseId: 'case_6001',
+    label: 'Issue credit note if confirmed',
+    done: false,
+    required: true,
+  },
+  {
+    id: 'chk_4',
+    caseId: 'case_6003',
+    label: 'Post-incident review scheduled',
+    done: false,
+    required: true,
+  },
+  {
+    id: 'chk_5',
+    caseId: 'case_6003',
+    label: 'Notify affected integrations',
+    done: true,
+    required: true,
+  },
 ];
 
 const INITIAL_INCIDENTS: IncidentRecord[] = [
@@ -627,22 +736,114 @@ const INITIAL_CONTRACTS: ContractRecord[] = [
 ];
 
 const INITIAL_PARTIES: PartyRecord[] = [
-  { id: 'pty_1', clientId: 'cli_1001', name: 'Anna Hofer', role: 'Account Manager', email: 'anna@apex.at' },
-  { id: 'pty_2', clientId: 'cli_1001', name: 'Markus Leitner', role: 'Billing Contact', email: 'markus@apex.at' },
-  { id: 'pty_3', clientId: 'cli_1001', name: 'Thomas Berger', role: 'Technical Lead', email: 'thomas@apex.at' },
-  { id: 'pty_4', clientId: 'cli_1002', name: 'Eva Bruckner', role: 'Primary Contact', email: 'eva@bruckner.test' },
-  { id: 'pty_5', caseId: 'case_6001', name: 'Finance Team Apex', role: 'Billing', email: 'finance@apex.at' },
-  { id: 'pty_6', caseId: 'case_6003', name: 'Ops Lead Donau', role: 'Technical', email: 'ops@donau-logistics.test' },
+  {
+    id: 'pty_1',
+    clientId: 'cli_1001',
+    name: 'Anna Hofer',
+    role: 'Account Manager',
+    email: 'anna@apex.at',
+  },
+  {
+    id: 'pty_2',
+    clientId: 'cli_1001',
+    name: 'Markus Leitner',
+    role: 'Billing Contact',
+    email: 'markus@apex.at',
+  },
+  {
+    id: 'pty_3',
+    clientId: 'cli_1001',
+    name: 'Thomas Berger',
+    role: 'Technical Lead',
+    email: 'thomas@apex.at',
+  },
+  {
+    id: 'pty_4',
+    clientId: 'cli_1002',
+    name: 'Eva Bruckner',
+    role: 'Primary Contact',
+    email: 'eva@bruckner.test',
+  },
+  {
+    id: 'pty_5',
+    caseId: 'case_6001',
+    name: 'Finance Team Apex',
+    role: 'Billing',
+    email: 'finance@apex.at',
+  },
+  {
+    id: 'pty_6',
+    caseId: 'case_6003',
+    name: 'Ops Lead Donau',
+    role: 'Technical',
+    email: 'ops@donau-logistics.test',
+  },
 ];
 
 const INITIAL_TASKS: TaskRecord[] = [
-  { id: 'tsk_1', parentId: 'cli_1001', parentType: 'client', title: 'Send renewal proposal', assignee: 'Anna Hofer', dueDate: '2024-12-15', status: 'Pending' },
-  { id: 'tsk_2', parentId: 'cli_1001', parentType: 'client', title: 'Schedule QBR', assignee: 'Markus Leitner', dueDate: '2024-12-20', status: 'Active' },
-  { id: 'tsk_3', parentId: 'prj_5001', parentType: 'project', title: 'UAT sign-off', assignee: 'Anna Hofer', dueDate: '2025-01-10', status: 'Pending' },
-  { id: 'tsk_4', parentId: 'prj_5001', parentType: 'project', title: 'Data migration dry run', assignee: 'Nina Weiss', dueDate: '2024-12-08', status: 'Active' },
-  { id: 'tsk_5', parentId: 'ord_2001', parentType: 'order', title: 'Confirm delivery address', assignee: 'Anna Hofer', dueDate: '2024-11-10', status: 'Completed' },
-  { id: 'tsk_6', parentId: 'case_6001', parentType: 'case', title: 'Reconcile November invoices', assignee: 'Markus Leitner', dueDate: '2024-12-08', status: 'Active' },
-  { id: 'tsk_7', parentId: 'case_6003', parentType: 'case', title: 'Publish status page update', assignee: 'Nina Weiss', dueDate: '2024-11-16', status: 'Pending' },
+  {
+    id: 'tsk_1',
+    parentId: 'cli_1001',
+    parentType: 'client',
+    title: 'Send renewal proposal',
+    assignee: 'Anna Hofer',
+    dueDate: '2024-12-15',
+    status: 'Pending',
+  },
+  {
+    id: 'tsk_2',
+    parentId: 'cli_1001',
+    parentType: 'client',
+    title: 'Schedule QBR',
+    assignee: 'Markus Leitner',
+    dueDate: '2024-12-20',
+    status: 'Active',
+  },
+  {
+    id: 'tsk_3',
+    parentId: 'prj_5001',
+    parentType: 'project',
+    title: 'UAT sign-off',
+    assignee: 'Anna Hofer',
+    dueDate: '2025-01-10',
+    status: 'Pending',
+  },
+  {
+    id: 'tsk_4',
+    parentId: 'prj_5001',
+    parentType: 'project',
+    title: 'Data migration dry run',
+    assignee: 'Nina Weiss',
+    dueDate: '2024-12-08',
+    status: 'Active',
+  },
+  {
+    id: 'tsk_5',
+    parentId: 'ord_2001',
+    parentType: 'order',
+    title: 'Confirm delivery address',
+    assignee: 'Anna Hofer',
+    dueDate: '2024-11-10',
+    status: 'Completed',
+  },
+  {
+    id: 'tsk_6',
+    parentId: 'case_6001',
+    parentType: 'case',
+    title: 'Reconcile November invoices',
+    assignee: 'Markus Leitner',
+    dueDate: '2024-12-08',
+    status: 'Active',
+  },
+  {
+    id: 'tsk_7',
+    parentId: 'case_6003',
+    parentType: 'case',
+    title: 'Publish status page update',
+    assignee: 'Nina Weiss',
+    dueDate: '2024-11-16',
+    status: 'Pending',
+  },
 ];
 
 const INITIAL_ORGANIZATIONS: OrganizationRecord[] = [
@@ -765,40 +966,43 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<UserRecord[]>(INITIAL_USERS);
   const [organizations, setOrganizations] = useState<OrganizationRecord[]>(INITIAL_ORGANIZATIONS);
   const [orgMemberships] = useState<OrgMembershipRecord[]>(INITIAL_ORG_MEMBERSHIPS);
+  const [activeOrgId, setActiveOrgId] = useState('org_apex');
   const [clients, setClients] = useState<ClientRecord[]>(INITIAL_CLIENTS);
+  const clientsRef = useRef(clients);
+  clientsRef.current = clients;
   const [products, setProducts] = useState<ProductRecord[]>(INITIAL_PRODUCTS);
   const [parties, setParties] = useState<PartyRecord[]>(INITIAL_PARTIES);
-  const [caseChecklists, setCaseChecklists] = useState<CaseChecklistItem[]>(INITIAL_CASE_CHECKLISTS);
+  const [caseChecklists, setCaseChecklists] =
+    useState<CaseChecklistItem[]>(INITIAL_CASE_CHECKLISTS);
 
-  const value = useMemo<DemoDataContextValue>(
-    () => {
-      const getUserOrganizations = (userId: string) => {
-        const orgIds = orgMemberships
-          .filter((membership) => membership.userId === userId)
-          .map((membership) => membership.orgId);
-        return organizations.filter((org) => orgIds.includes(org.id));
-      };
+  const value = useMemo<DemoDataContextValue>(() => {
+    const getUserOrganizations = (userId: string) => {
+      const orgIds = orgMemberships
+        .filter((membership) => membership.userId === userId)
+        .map((membership) => membership.orgId);
+      return organizations.filter((org) => orgIds.includes(org.id));
+    };
 
-      const getOrgMembers = (orgId: string) =>
-        orgMemberships
-          .filter((membership) => membership.orgId === orgId)
-          .map((membership) => {
-            const user = users.find((entry) => entry.id === membership.userId);
-            if (!user) return null;
-            return { ...membership, user };
-          })
-          .filter((entry): entry is OrgMembershipRecord & { user: UserRecord } => entry !== null);
+    const getOrgMembers = (orgId: string) =>
+      orgMemberships
+        .filter((membership) => membership.orgId === orgId)
+        .map((membership) => {
+          const user = users.find((entry) => entry.id === membership.userId);
+          if (!user) return null;
+          return { ...membership, user };
+        })
+        .filter((entry): entry is OrgMembershipRecord & { user: UserRecord } => entry !== null);
 
-      const platformUsers: PlatformUserRow[] = users.map((user) => {
-        const orgs = getUserOrganizations(user.id);
-        return {
-          ...user,
-          organizationCount: orgs.length,
-          organizationNames: orgs.map((org) => org.name).join(', ') || '—',
-        };
-      });
-
+    const platformUsers: PlatformUserRow[] = users.map((user) => {
+      const orgs = getUserOrganizations(user.id);
       return {
+        ...user,
+        organizationCount: orgs.length,
+        organizationNames: orgs.map((org) => org.name).join(', ') || '—',
+      };
+    });
+
+    return {
       users,
       createUser: (input) => {
         const next: UserRecord = {
@@ -810,6 +1014,8 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       },
       organizations,
       orgMemberships,
+      activeOrgId,
+      setActiveOrgId,
       createOrganization: (input) => {
         const next: OrganizationRecord = {
           id: `org_${Date.now()}`,
@@ -872,11 +1078,32 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       incidents: INITIAL_INCIDENTS,
       contracts: INITIAL_CONTRACTS,
     };
-    },
-    [users, organizations, orgMemberships, clients, products, parties, caseChecklists],
+  }, [
+    users,
+    organizations,
+    orgMemberships,
+    activeOrgId,
+    clients,
+    products,
+    parties,
+    caseChecklists,
+  ]);
+
+  const demoRegistry = useMemo<DemoApiRegistry>(
+    () => ({
+      clients: buildClientsDemoHandlers({
+        getClients: () => clientsRef.current,
+        setClients,
+      }),
+    }),
+    [],
   );
 
-  return <DemoDataContext.Provider value={value}>{children}</DemoDataContext.Provider>;
+  return (
+    <DemoDataContext.Provider value={value}>
+      <ApiProvider demoRegistry={demoRegistry}>{children}</ApiProvider>
+    </DemoDataContext.Provider>
+  );
 }
 
 export function useDemoData() {
@@ -886,4 +1113,3 @@ export function useDemoData() {
   }
   return context;
 }
-

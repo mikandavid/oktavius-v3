@@ -30,7 +30,12 @@ export function SplitView({
   contentClassName,
 }: SplitViewProps) {
   return (
-    <div className={cn('flex min-h-0 w-full min-w-0 gap-0 overflow-hidden rounded-card bg-card', className)}>
+    <div
+      className={cn(
+        'flex min-h-0 w-full min-w-0 gap-0 overflow-hidden rounded-card bg-card',
+        className,
+      )}
+    >
       <aside
         className={cn(
           'shrink-0 border-r border-border/50',
@@ -41,9 +46,7 @@ export function SplitView({
       >
         {sidebar}
       </aside>
-      <div className={cn('min-w-0 flex-1 overflow-y-auto', contentClassName)}>
-        {children}
-      </div>
+      <div className={cn('min-w-0 flex-1 overflow-y-auto', contentClassName)}>{children}</div>
     </div>
   );
 }

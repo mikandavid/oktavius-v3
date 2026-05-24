@@ -80,7 +80,11 @@ export function BulkImportWizard({
                 }}
                 onCancel={reset}
                 leading={
-                  <Button type="button" variant="outline" onClick={() => setStep((current) => current - 1)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep((current) => current - 1)}
+                  >
                     Back
                   </Button>
                 }

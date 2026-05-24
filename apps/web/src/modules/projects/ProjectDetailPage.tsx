@@ -38,9 +38,19 @@ export function ProjectDetailPage() {
   const projectTasks = tasks.filter((t) => t.parentId === project.id && t.parentType === 'project');
 
   const activity: TimelineEvent[] = [
-    { id: '1', label: 'Kick-off completed', timestamp: `${project.startDate}T09:00:00Z`, tone: 'success' },
+    {
+      id: '1',
+      label: 'Kick-off completed',
+      timestamp: `${project.startDate}T09:00:00Z`,
+      tone: 'success',
+    },
     { id: '2', label: 'Sprint 4 started', timestamp: '2024-11-01T08:00:00Z', tone: 'info' },
-    { id: '3', label: 'Budget review scheduled', timestamp: '2024-12-05T11:00:00Z', tone: 'warning' },
+    {
+      id: '3',
+      label: 'Budget review scheduled',
+      timestamp: '2024-12-05T11:00:00Z',
+      tone: 'warning',
+    },
   ];
 
   return (
@@ -67,8 +77,14 @@ export function ProjectDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 pt-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <StatCard label="Completion" value={`${project.completion}%`} trend="up" delta="+8% this month" icon={<SuccessIcon size={16} />} />
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+            <StatCard
+              label="Completion"
+              value={`${project.completion}%`}
+              trend="up"
+              delta="+8% this month"
+              icon={<SuccessIcon size={16} />}
+            />
             <StatCard label="Budget" value={<MoneyText value={project.budget} />} />
             <StatCard label="End date" value={formatDisplayDate(project.endDate)} />
           </div>
@@ -94,7 +110,15 @@ export function ProjectDetailPage() {
         </TabsContent>
 
         <TabsContent value="tasks" className="pt-4">
-          <SectionCard title="Tasks" meta={`${projectTasks.length} open`} actions={<Button variant="outline" size="sm">Add task</Button>}>
+          <SectionCard
+            title="Tasks"
+            meta={`${projectTasks.length} open`}
+            actions={
+              <Button variant="outline" size="sm">
+                Add task
+              </Button>
+            }
+          >
             {projectTasks.length ? (
               projectTasks.map((task) => (
                 <ListRow

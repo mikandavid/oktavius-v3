@@ -53,7 +53,12 @@ export function DialogFormFooter({
         </Button>
       ) : (
         <DialogClose asChild>
-          <Button type={confirmType} variant={confirmVariant} form={confirmForm} disabled={confirmDisabled}>
+          <Button
+            type={confirmType}
+            variant={confirmVariant}
+            form={confirmForm}
+            disabled={confirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </DialogClose>

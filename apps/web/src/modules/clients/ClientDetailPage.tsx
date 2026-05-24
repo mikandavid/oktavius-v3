@@ -29,6 +29,8 @@ import { PlusIcon, ProjectsIcon } from '@/lib/icons';
 import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
 import { toast } from '@/lib/toast';
 
+import { useClientDetail, useDeleteClient } from './clients-api';
+
 import {
   CLIENT_STATUS_MAP,
   clientsPageIcon,
@@ -39,7 +41,9 @@ import {
 
 function formatStatMoney(value: string) {
   if (!value) return '—';
-  return new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' }).format(Number(value));
+  return new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' }).format(
+    Number(value),
+  );
 }
 
 function DetailFields({
@@ -64,14 +68,23 @@ function DetailFields({
 
 export function ClientDetailPage() {
   const { clientId } = useParams();
-  const { clients, parties, tasks, orders, createParty } = useDemoData();
+  const { parties, tasks, orders, createParty } = useDemoData();
+  const { data: client, isLoading } = useClientDetail(clientId);
+  const deleteClient = useDeleteClient();
   const navigate = useNavigate();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [addPartyOpen, setAddPartyOpen] = useState(false);
   const [tab, setTab] = useState('overview');
   const [docId, setDocId] = useState('f1');
 
-  const client = clients.find((c) => c.id === clientId);
+  if (isLoading) {
+    return (
+      <ModulePage title="Client" backTo="/clients" icon={clientsPageIcon()}>
+        <p className="text-sm text-muted-foreground">Loading client…</p>
+      </ModulePage>
+    );
+  }
+
   if (!client) return <Navigate to="/clients" replace />;
 
   const clientParties = parties.filter((p) => p.clientId === client.id);
@@ -81,7 +94,12 @@ export function ClientDetailPage() {
   const activity: TimelineEvent[] = [
     { id: '1', label: 'Contract renewed', timestamp: '2024-10-15T10:00:00Z', tone: 'success' },
     { id: '2', label: 'QBR completed', timestamp: '2024-09-20T14:00:00Z', tone: 'info' },
-    { id: '3', label: 'Support ticket escalated', timestamp: '2024-08-02T09:30:00Z', tone: 'warning' },
+    {
+      id: '3',
+      label: 'Support ticket escalated',
+      timestamp: '2024-08-02T09:30:00Z',
+      tone: 'warning',
+    },
   ];
 
   return (
@@ -116,8 +134,12 @@ export function ClientDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 pt-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <StatCard label="Parties" value={String(clientParties.length)} icon={<ProjectsIcon size={16} />} />
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+            <StatCard
+              label="Parties"
+              value={String(clientParties.length)}
+              icon={<ProjectsIcon size={16} />}
+            />
             <StatCard label="Open orders" value={String(clientOrders.length)} />
             <StatCard label="Annual revenue" value={formatStatMoney(client.annualRevenue)} />
           </div>
@@ -239,7 +261,10 @@ export function ClientDetailPage() {
               title={order.orderNumber}
               subtitle={formatDisplayDate(order.orderDate)}
               trailing={
-                <Link to={`/orders/${order.id}`} className="text-xs font-medium text-cta hover:underline">
+                <Link
+                  to={`/orders/${order.id}`}
+                  className="text-xs font-medium text-cta hover:underline"
+                >
                   Open
                 </Link>
               }
@@ -274,7 +299,11 @@ export function ClientDetailPage() {
         title={`Delete ${client.name}?`}
         description="This action cannot be undone. The client record will be permanently removed."
         confirmLabel="Delete"
-        onConfirm={() => navigate('/clients')}
+        onConfirm={() => {
+          deleteClient.mutate(client.id, {
+            onSuccess: () => navigate('/clients'),
+          });
+        }}
       />
     </ModulePage>
   );

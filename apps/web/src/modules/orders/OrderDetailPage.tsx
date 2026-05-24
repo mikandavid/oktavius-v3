@@ -52,8 +52,18 @@ export function OrderDetailPage() {
   const orderTasks = tasks.filter((t) => t.parentId === order.id && t.parentType === 'order');
 
   const activity: TimelineEvent[] = [
-    { id: '1', label: 'Order confirmed', timestamp: `${order.orderDate}T10:00:00Z`, tone: 'success' },
-    { id: '2', label: 'Invoice generated', timestamp: `${order.orderDate}T14:30:00Z`, tone: 'info' },
+    {
+      id: '1',
+      label: 'Order confirmed',
+      timestamp: `${order.orderDate}T10:00:00Z`,
+      tone: 'success',
+    },
+    {
+      id: '2',
+      label: 'Invoice generated',
+      timestamp: `${order.orderDate}T14:30:00Z`,
+      tone: 'info',
+    },
     { id: '3', label: 'Fulfillment started', timestamp: '2024-11-12T09:00:00Z', tone: 'info' },
   ];
 
@@ -62,7 +72,10 @@ export function OrderDetailPage() {
       title={order.orderNumber}
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
-          <Link to={`/clients/${order.clientId}`} className="underline underline-offset-2 hover:text-foreground">
+          <Link
+            to={`/clients/${order.clientId}`}
+            className="underline underline-offset-2 hover:text-foreground"
+          >
             {order.clientName}
           </Link>
           <span className="text-muted-foreground">· {order.owner}</span>
@@ -82,8 +95,12 @@ export function OrderDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 pt-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <StatCard label="Order total" value={<MoneyText value={order.total} />} icon={<OrderIcon size={16} />} />
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
+            <StatCard
+              label="Order total"
+              value={<MoneyText value={order.total} />}
+              icon={<OrderIcon size={16} />}
+            />
             <StatCard label="Line items" value={String(order.lineCount)} />
             <StatCard label="Due date" value={formatDisplayDate(order.dueDate)} />
           </div>
@@ -117,7 +134,14 @@ export function OrderDetailPage() {
         </TabsContent>
 
         <TabsContent value="tasks" className="pt-4">
-          <SectionCard title="Tasks" actions={<Button variant="outline" size="sm">Add task</Button>}>
+          <SectionCard
+            title="Tasks"
+            actions={
+              <Button variant="outline" size="sm">
+                Add task
+              </Button>
+            }
+          >
             {orderTasks.length ? (
               orderTasks.map((task) => (
                 <ListRow

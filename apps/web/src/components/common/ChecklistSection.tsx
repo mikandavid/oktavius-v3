@@ -51,7 +51,9 @@ export function ChecklistSection({
               <Checkbox
                 checked={item.done}
                 disabled={readOnly}
-                aria-label={item.done ? `Mark "${item.label}" incomplete` : `Mark "${item.label}" complete`}
+                aria-label={
+                  item.done ? `Mark "${item.label}" incomplete` : `Mark "${item.label}" complete`
+                }
                 onCheckedChange={(checked) => {
                   if (readOnly || checked === 'indeterminate') return;
                   onToggle(item.id, checked);

@@ -35,28 +35,17 @@ export function StatCard({
         : 'text-muted-foreground';
 
   return (
-    <div
-      className={cn(
-        'rounded-card bg-card p-4 space-y-1',
-        className,
-      )}
-    >
+    <div className={cn('min-w-0 rounded-card bg-card p-4 space-y-1', className)}>
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">
-          {label}
-        </p>
-        {icon ? (
-          <div className="shrink-0 text-muted-foreground/60">{icon}</div>
-        ) : null}
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        {icon ? <div className="shrink-0 text-muted-foreground/60">{icon}</div> : null}
       </div>
-      <div className="text-2xl font-semibold tabular-nums text-foreground">{value}</div>
+      <div className="min-w-0 text-xl font-semibold leading-tight tabular-nums tracking-tight text-foreground xl:text-2xl">
+        {value}
+      </div>
       <div className="flex items-center gap-2">
-        {delta ? (
-          <span className={cn('text-xs font-medium', deltaClass)}>{delta}</span>
-        ) : null}
-        {description ? (
-          <span className="text-xs text-muted-foreground">{description}</span>
-        ) : null}
+        {delta ? <span className={cn('text-xs font-medium', deltaClass)}>{delta}</span> : null}
+        {description ? <span className="text-xs text-muted-foreground">{description}</span> : null}
       </div>
     </div>
   );

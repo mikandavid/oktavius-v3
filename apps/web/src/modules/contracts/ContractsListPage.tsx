@@ -1,47 +1,36 @@
-import { useMemo, useState } from 'react';
-
 import { useDemoData } from '@/app/demo-data';
 import { CrudMainView } from '@/components/data/CrudMainView';
-import { sortRows } from '@/lib/sortRows';
+import { useListPageState } from '@/lib/useListPageState';
 
 import { contractColumns, contractsPageIcon } from './shared';
 
 export function ContractsListPage() {
   const { contracts } = useDemoData();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [filters, setFilters] = useState<Record<string, string>>({ status: '' });
-  const [sort, setSort] = useState('contractNumber');
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    const rows = contracts.filter((c) => {
+  const list = useListPageState({
+    rows: contracts,
+    defaultSort: 'contractNumber',
+    pageSize: 10,
+    filterKeys: ['status'],
+    filterFn: (contract, { search, filters }) => {
+      const q = search.trim().toLowerCase();
       const matchesSearch =
-        !q ||
-        c.contractNumber.toLowerCase().includes(q) ||
-        c.title.toLowerCase().includes(q) ||
-        c.clientName.toLowerCase().includes(q);
-      const matchesStatus = !filters.status || c.status === filters.status;
+        q.length === 0 ||
+        contract.contractNumber.toLowerCase().includes(q) ||
+        contract.title.toLowerCase().includes(q) ||
+        contract.clientName.toLowerCase().includes(q);
+      const matchesStatus = filters.status.length === 0 || contract.status === filters.status;
       return matchesSearch && matchesStatus;
-    });
-    return sortRows(rows, sort);
-  }, [contracts, search, filters, sort]);
-
-  const pageSize = 10;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+    },
+  });
 
   return (
     <CrudMainView
       title="Contracts"
       subtitle="Legal agreements, renewals, and clause libraries."
       icon={contractsPageIcon()}
-      search={search}
-      onSearchChange={(v) => {
-        setSearch(v);
-        setPage(1);
-      }}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
       searchPlaceholder="Search contract, client…"
       filters={[
         {
@@ -55,32 +44,22 @@ export function ContractsListPage() {
           ],
         },
       ]}
-      values={filters}
-      onFilterChange={(key, value) => {
-        setFilters((f) => ({ ...f, [key]: value }));
-        setPage(1);
-      }}
-      onReset={() => {
-        setSearch('');
-        setFilters({ status: '' });
-        setPage(1);
-      }}
-      rows={paged}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      rows={list.paged}
       columns={contractColumns}
-      allRows={filtered}
+      allRows={list.filtered}
       emptyTitle="No contracts found"
       entityLabel="contract"
       getRowHref={(c) => `/contracts/${c.id}`}
-      sort={sort}
-      onSortChange={(s) => {
-        setSort(s);
-        setPage(1);
-      }}
-      page={safePage}
-      pageSize={pageSize}
-      total={filtered.length}
-      totalPages={totalPages}
-      onPageChange={setPage}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
     />
   );
 }

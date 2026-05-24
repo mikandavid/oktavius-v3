@@ -8,7 +8,11 @@ export interface CalendarSourceLegendProps {
 }
 
 /** Optional sidebar legend — calendar visibility toggles with color dots */
-export function CalendarSourceLegend({ calendars, onToggle, className }: CalendarSourceLegendProps) {
+export function CalendarSourceLegend({
+  calendars,
+  onToggle,
+  className,
+}: CalendarSourceLegendProps) {
   return (
     <div className={cn('space-y-1', className)}>
       {calendars.map((calendar) => {
@@ -27,11 +31,7 @@ export function CalendarSourceLegend({ calendars, onToggle, className }: Calenda
               type="checkbox"
               checked={visible}
               disabled={!onToggle}
-              onChange={
-                onToggle
-                  ? (e) => onToggle(calendar.id, e.target.checked)
-                  : undefined
-              }
+              onChange={onToggle ? (e) => onToggle(calendar.id, e.target.checked) : undefined}
               className="h-3.5 w-3.5 rounded border-border/70 accent-cta"
             />
             <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', dotClass)} aria-hidden />

@@ -5,7 +5,12 @@ import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
 
-import { clientFormDefaults, clientFormFields, clientsPageIcon, type ClientFormValues } from './shared';
+import {
+  clientFormDefaults,
+  clientFormFields,
+  clientsPageIcon,
+  type ClientFormValues,
+} from './shared';
 
 export function ClientCreatePage() {
   const navigate = useNavigate();
@@ -30,8 +35,8 @@ export function ClientCreatePage() {
             email: values.email,
             phone: values.phone,
             website: values.website,
-            country: values.country,
-            city: values.city,
+            country: values.address.country,
+            city: values.address.city,
             tags: Array.isArray(values.tags) ? values.tags : [],
             notes: values.notes,
             annualRevenue: values.annualRevenue,

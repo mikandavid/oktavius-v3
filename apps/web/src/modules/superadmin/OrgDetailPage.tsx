@@ -36,7 +36,7 @@ export function OrgDetailPage() {
       icon={organizationPageIcon()}
       backTo="/superadmin"
     >
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
         <StatCard label="Members" value={String(org.memberCount)} icon={<UsersIcon size={16} />} />
         <StatCard label="Plan" value={org.plan} />
         <StatCard label="Region" value={org.region} />

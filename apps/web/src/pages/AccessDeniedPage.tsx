@@ -13,7 +13,11 @@ type AccessDeniedPageProps = {
 
 export function AccessDeniedPage({ moduleName = 'this module' }: AccessDeniedPageProps) {
   return (
-    <ModulePage title="Access denied" subtitle="You do not have permission to view this area." icon={accessDeniedPageIcon()}>
+    <ModulePage
+      title="Access denied"
+      subtitle="You do not have permission to view this area."
+      icon={accessDeniedPageIcon()}
+    >
       <div className="mx-auto max-w-md pt-8">
         <EmptyState
           title="Insufficient permissions"

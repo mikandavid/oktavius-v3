@@ -4,7 +4,9 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 
-export interface CheckboxProps extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
+export interface CheckboxProps extends React.ComponentPropsWithoutRef<
+  typeof CheckboxPrimitive.Root
+> {
   ref?: React.Ref<React.ComponentRef<typeof CheckboxPrimitive.Root>>;
 }
 

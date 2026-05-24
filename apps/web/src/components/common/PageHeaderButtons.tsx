@@ -28,7 +28,11 @@ const pageHeaderButtonClass = 'shrink-0';
 
 type PageHeaderCtaButtonProps = ButtonProps;
 
-export function PageHeaderCtaButton({ className, size: _size, ...props }: PageHeaderCtaButtonProps) {
+export function PageHeaderCtaButton({
+  className,
+  size: _size,
+  ...props
+}: PageHeaderCtaButtonProps) {
   return (
     <Button
       variant="cta"
@@ -41,7 +45,11 @@ export function PageHeaderCtaButton({ className, size: _size, ...props }: PageHe
 
 type PageHeaderOutlineButtonProps = ButtonProps;
 
-export function PageHeaderOutlineButton({ className, size: _size, ...props }: PageHeaderOutlineButtonProps) {
+export function PageHeaderOutlineButton({
+  className,
+  size: _size,
+  ...props
+}: PageHeaderOutlineButtonProps) {
   return (
     <Button
       variant="outline"
@@ -79,7 +87,11 @@ type PageHeaderOutlineLinkProps = LinkProps & {
   className?: string;
 };
 
-export function PageHeaderOutlineLink({ className, children, ...props }: PageHeaderOutlineLinkProps) {
+export function PageHeaderOutlineLink({
+  className,
+  children,
+  ...props
+}: PageHeaderOutlineLinkProps) {
   return (
     <Link
       className={cn(
@@ -95,7 +107,13 @@ export function PageHeaderOutlineLink({ className, children, ...props }: PageHea
   );
 }
 
-export function PageHeaderActions({ children, className }: { children: ReactNode; className?: string }) {
+export function PageHeaderActions({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return <div className={cn(PAGE_HEADER_ACTIONS_ROW, className)}>{children}</div>;
 }
 
@@ -125,7 +143,11 @@ export function PageHeaderExportButton({
           disabled={disabled}
           onClick={onClick}
         >
-          {isLoading ? <SpinnerIcon size={14} className="animate-spin" /> : <ExportIcon size={14} />}
+          {isLoading ? (
+            <SpinnerIcon size={14} className="animate-spin" />
+          ) : (
+            <ExportIcon size={14} />
+          )}
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">{label}</TooltipContent>

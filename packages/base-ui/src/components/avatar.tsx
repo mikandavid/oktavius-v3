@@ -24,11 +24,13 @@ const TONE_CLASS: Record<AvatarTone, string> = {
 export function avatarInitials(label: string | null | undefined, maxLetters = 2): string {
   if (!label?.trim()) return '·';
   const tokens = label.trim().split(/\s+/);
-  return tokens
-    .filter(Boolean)
-    .slice(0, maxLetters)
-    .map((t) => t.charAt(0).toUpperCase())
-    .join('') || label.trim().charAt(0).toUpperCase();
+  return (
+    tokens
+      .filter(Boolean)
+      .slice(0, maxLetters)
+      .map((t) => t.charAt(0).toUpperCase())
+      .join('') || label.trim().charAt(0).toUpperCase()
+  );
 }
 
 export interface AvatarProps {
@@ -65,11 +67,7 @@ export function Avatar({
       aria-label={label?.trim() ?? text}
     >
       {src ? (
-        <AvatarPrimitive.Image
-          src={src}
-          alt=""
-          className="h-full w-full object-cover"
-        />
+        <AvatarPrimitive.Image src={src} alt="" className="h-full w-full object-cover" />
       ) : null}
       <AvatarPrimitive.Fallback delayMs={0}>
         <span aria-hidden>{text}</span>

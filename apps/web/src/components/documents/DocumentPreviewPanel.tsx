@@ -1,11 +1,4 @@
-import {
-  Button,
-  ListRow,
-  ScrollArea,
-  SectionCard,
-  SplitView,
-  cn,
-} from '@oktavius/base-ui';
+import { Button, ListRow, ScrollArea, SectionCard, SplitView, cn } from '@oktavius/base-ui';
 
 import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { DocumentIcon, DownloadIcon } from '@/lib/icons';

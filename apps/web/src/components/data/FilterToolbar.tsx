@@ -57,9 +57,7 @@ function FilterSlot({
         clearable={false}
         placeholder="All"
         searchPlaceholder={`Search ${filter.label.toLowerCase()}…`}
-        onChange={(next) =>
-          onFilterChange?.(filter.key, !next || next === '__all__' ? '' : next)
-        }
+        onChange={(next) => onFilterChange?.(filter.key, !next || next === '__all__' ? '' : next)}
       />
     </label>
   );
@@ -82,16 +80,14 @@ export function FilterToolbar({
   const hasActiveFilters =
     search.length > 0 || Object.values(values).some((value) => value.length > 0);
 
-  const slots = Array.from({ length: FILTER_TOOLBAR_SLOT_COUNT }, (_, index) => filters[index] ?? null);
+  const slots = Array.from(
+    { length: FILTER_TOOLBAR_SLOT_COUNT },
+    (_, index) => filters[index] ?? null,
+  );
 
   return (
-    <div
-      className="grid w-full min-w-0 items-center gap-2 px-5 py-3"
-      style={{
-        gridTemplateColumns: `minmax(8rem, 1.5fr) repeat(${FILTER_TOOLBAR_SLOT_COUNT}, minmax(6.5rem, 1fr)) auto`,
-      }}
-    >
-      <div className="relative min-w-0">
+    <div className="grid w-full min-w-0 gap-2 px-5 py-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(8rem,1.5fr)_repeat(3,minmax(6.5rem,1fr))_auto] xl:items-center">
+      <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
         <SearchIcon
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={16}
@@ -123,15 +119,11 @@ export function FilterToolbar({
             onFilterChange={onFilterChange}
           />
         ) : (
-          <div
-            key={`filter-slot-${index}`}
-            aria-hidden
-            className="h-9 min-w-0 rounded-control"
-          />
+          <div key={`filter-slot-${index}`} aria-hidden className="h-9 min-w-0 rounded-control" />
         ),
       )}
 
-      <div className="flex min-w-[5.75rem] shrink-0 items-center justify-end gap-2">
+      <div className="flex min-w-[5.75rem] shrink-0 items-center justify-end gap-2 sm:col-span-2 xl:col-span-1">
         {trailing}
         <Button
           variant="outline"

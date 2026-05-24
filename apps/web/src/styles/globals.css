@@ -138,6 +138,11 @@
     max-width: 100%;
     box-sizing: border-box;
   }
+
+  .crud-table-host .overflow-x-auto {
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

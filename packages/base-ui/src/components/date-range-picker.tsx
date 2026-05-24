@@ -38,26 +38,30 @@ export function DateRangePicker({
   separator = <span className="shrink-0 text-xs text-muted-foreground">→</span>,
 }: DateRangePickerProps) {
   return (
-    <div className="flex items-center gap-2">
-      <DatePicker
-        mode="date"
-        value={startValue}
-        placeholder={startPlaceholder}
-        disabled={disabled}
-        minDate={minDate}
-        maxDate={toDate(endValue) ?? maxDate}
-        onChange={onStartChange}
-      />
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="min-w-[11rem] flex-1">
+        <DatePicker
+          mode="date"
+          value={startValue}
+          placeholder={startPlaceholder}
+          disabled={disabled}
+          minDate={minDate}
+          maxDate={toDate(endValue) ?? maxDate}
+          onChange={onStartChange}
+        />
+      </div>
       {separator}
-      <DatePicker
-        mode="date"
-        value={endValue}
-        placeholder={endPlaceholder}
-        disabled={disabled}
-        minDate={toDate(startValue) ?? minDate}
-        maxDate={maxDate}
-        onChange={onEndChange}
-      />
+      <div className="min-w-[11rem] flex-1">
+        <DatePicker
+          mode="date"
+          value={endValue}
+          placeholder={endPlaceholder}
+          disabled={disabled}
+          minDate={toDate(startValue) ?? minDate}
+          maxDate={maxDate}
+          onChange={onEndChange}
+        />
+      </div>
     </div>
   );
 }

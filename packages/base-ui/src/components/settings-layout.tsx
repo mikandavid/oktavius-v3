@@ -91,19 +91,12 @@ export interface SettingsSectionProps {
 }
 
 /** Semantic wrapper for a settings section (title + description + controls). */
-export function SettingsSection({
-  title,
-  description,
-  children,
-  className,
-}: SettingsSectionProps) {
+export function SettingsSection({ title, description, children, className }: SettingsSectionProps) {
   return (
     <div className={cn('space-y-4', className)}>
       <div className="space-y-0.5">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        {description ? (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        ) : null}
+        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
       </div>
       <div className="space-y-4">{children}</div>
     </div>
@@ -118,12 +111,7 @@ export interface SettingsRowProps {
 }
 
 /** Single settings control row: label+description left, control right. */
-export function SettingsRow({
-  label,
-  description,
-  children,
-  className,
-}: SettingsRowProps) {
+export function SettingsRow({ label, description, children, className }: SettingsRowProps) {
   return (
     <div
       className={cn(
@@ -133,9 +121,7 @@ export function SettingsRow({
     >
       <div className="min-w-0">
         <p className="text-sm font-medium text-foreground">{label}</p>
-        {description ? (
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
-        ) : null}
+        {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
       </div>
       <div className="shrink-0">{children}</div>
     </div>

@@ -42,7 +42,7 @@ Never show full sub-entity lists on Overview.
 
 - Items: `<ListRow>` with `<Avatar leading>`, title, subtitle, trailing actions
 - Add/edit: `<SubEntityFormDialog>` from `@/components/common/SubEntityFormDialog` — never hand-roll dialog + form markup
-- Tick-off lists: `<ChecklistSection items onToggle>` — done = checkbox + **muted strikethrough label** + row opacity; `readOnly` for overview previews. See `checklist.mdc`.
+- Tick-off lists: `<ChecklistSection items onToggle>` — done = checkbox + **muted strikethrough label** + row opacity; `readOnly` for overview previews. See `docs/ui-rules/checklist.md`.
 - Empty sub-list: `<InlineEmptyState>` — not `<EmptyState>`
 
 ## Section titles

@@ -31,17 +31,11 @@ export function AgendaList({
   const groups = groupEventsByDay(events);
 
   if (groups.length === 0) {
-    const empty = (
-      <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>
-    );
+    const empty = <p className="py-8 text-center text-sm text-muted-foreground">{emptyMessage}</p>;
     if (embedded) {
       return <div className={cn(schedulingBodyClass, className)}>{empty}</div>;
     }
-    return (
-      <div className={cn(schedulingShellClass, schedulingBodyClass, className)}>
-        {empty}
-      </div>
-    );
+    return <div className={cn(schedulingShellClass, schedulingBodyClass, className)}>{empty}</div>;
   }
 
   const content = groups.map(({ day, events: dayEvents }) => (
@@ -61,12 +55,8 @@ export function AgendaList({
           {day.getDate()}
         </span>
         <div>
-          <h3 className="text-sm font-semibold text-foreground">
-            {formatAgendaDayHeading(day)}
-          </h3>
-          {isToday(day) ? (
-            <p className="text-xs text-muted-foreground">Today</p>
-          ) : null}
+          <h3 className="text-sm font-semibold text-foreground">{formatAgendaDayHeading(day)}</h3>
+          {isToday(day) ? <p className="text-xs text-muted-foreground">Today</p> : null}
         </div>
       </header>
       <div className={cn(schedulingBodyClass, 'space-y-2 pt-2')}>

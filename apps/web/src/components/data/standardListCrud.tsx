@@ -78,8 +78,7 @@ export function buildStandardListCrudActions<T extends { id: string }>({
       icon: <DeleteIcon size={14} />,
       destructive: true,
       confirm: {
-        title: (count) =>
-          `Delete ${count} ${count === 1 ? entityLabel : plural}?`,
+        title: (count) => `Delete ${count} ${count === 1 ? entityLabel : plural}?`,
         description: 'This action cannot be undone.',
         actionLabel: 'Delete',
       },
