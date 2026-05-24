@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react';
 
-import { Button, SectionCard, SettingsTable, type SettingsTableColumn } from '@oktavius/base-ui';
+import {
+  Button,
+  SectionCard,
+  SettingsTable,
+  applyOrderedIds,
+  nextSortOrder,
+  sortBySortOrder,
+  type SettingsTableColumn,
+} from '@oktavius/base-ui';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
@@ -14,22 +22,13 @@ export interface CatalogOption {
   label: string;
   code?: string;
   active: boolean;
+  /** Picker display order — set automatically when `orderable` is enabled. */
   sortOrder?: number;
-}
-
-export interface CatalogOptionsManagerProps {
-  title: string;
-  description?: string;
-  options: CatalogOption[];
-  onSave: (option: CatalogOption) => void;
-  onDelete: (id: string) => void;
-  className?: string;
 }
 
 type CatalogFormValues = {
   label: string;
   code: string;
-  sortOrder: string;
   active: boolean;
 };
 
@@ -53,13 +52,8 @@ const catalogFormFields: FormField[] = [
     placeholder: 'e.g. NET30',
   },
   {
-    name: 'sortOrder',
-    label: 'Sort order',
-    type: 'number',
-  },
-  {
     name: 'active',
-    label: 'Active',
+    label: 'Enabled',
     type: 'switch',
     description: 'Inactive options are hidden from pickers.',
   },
@@ -68,7 +62,6 @@ const catalogFormFields: FormField[] = [
 const emptyFormValues = (): CatalogFormValues => ({
   label: '',
   code: '',
-  sortOrder: '0',
   active: true,
 });
 
@@ -76,20 +69,50 @@ function toFormValues(option: CatalogOption): CatalogFormValues {
   return {
     label: option.label,
     code: option.code ?? '',
-    sortOrder: String(option.sortOrder ?? 0),
     active: option.active,
   };
 }
 
-function toCatalogOption(values: CatalogFormValues, id: string): CatalogOption {
+function toCatalogOption(
+  values: CatalogFormValues,
+  id: string,
+  options: CatalogOption[],
+  editingOption: CatalogOption | null,
+  orderable: boolean,
+): CatalogOption {
   return {
     id,
     label: values.label.trim(),
     code: values.code.trim() || undefined,
-    sortOrder: Number(values.sortOrder) || 0,
+    sortOrder: orderable ? (editingOption?.sortOrder ?? nextSortOrder(options)) : undefined,
     active: values.active,
   };
 }
+
+function sortCatalogOptions(options: CatalogOption[], orderable: boolean): CatalogOption[] {
+  if (orderable) return sortBySortOrder(options);
+  return [...options].sort((a, b) => a.label.localeCompare(b.label));
+}
+
+type CatalogOptionsManagerBaseProps = {
+  title: string;
+  description?: string;
+  options: CatalogOption[];
+  onSave: (option: CatalogOption) => void;
+  onDelete: (id: string) => void;
+  className?: string;
+};
+
+export type CatalogOptionsManagerProps =
+  | (CatalogOptionsManagerBaseProps & {
+      /** Drag-to-reorder for picker lists (payment terms, case types). Default: false. */
+      orderable: true;
+      onReorder: (options: CatalogOption[]) => void;
+    })
+  | (CatalogOptionsManagerBaseProps & {
+      orderable?: false;
+      onReorder?: never;
+    });
 
 /** Settings block for user-editable catalog values (payment terms, case types, etc.). */
 export function CatalogOptionsManager({
@@ -98,16 +121,15 @@ export function CatalogOptionsManager({
   options,
   onSave,
   onDelete,
+  orderable = false,
+  onReorder,
   className,
 }: CatalogOptionsManagerProps) {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingOption, setEditingOption] = useState<CatalogOption | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CatalogOption | null>(null);
 
-  const sorted = useMemo(
-    () => [...options].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-    [options],
-  );
+  const sorted = useMemo(() => sortCatalogOptions(options, orderable), [options, orderable]);
 
   const openCreate = () => {
     setEditingOption(null);
@@ -142,7 +164,10 @@ export function CatalogOptionsManager({
       header: '',
       headerClassName: 'w-24',
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
+        <div
+          className="flex items-center justify-end gap-1"
+          onClick={(event) => event.stopPropagation()}
+        >
           <IconEditButton label={`Edit ${row.label}`} onClick={() => openEdit(row)} />
           <IconDeleteButton label={`Delete ${row.label}`} onClick={() => setDeleteTarget(row)} />
         </div>
@@ -167,6 +192,11 @@ export function CatalogOptionsManager({
         rows={sorted}
         getRowId={(row) => row.id}
         onRowClick={openEdit}
+        onReorder={
+          orderable && onReorder
+            ? (orderedIds) => onReorder(applyOrderedIds(options, orderedIds))
+            : undefined
+        }
         emptyMessage="No catalog options yet. Add the first entry."
       />
 
@@ -179,7 +209,15 @@ export function CatalogOptionsManager({
         defaultValues={editingOption ? toFormValues(editingOption) : emptyFormValues()}
         submitLabel={editingOption ? 'Save' : 'Create'}
         onSubmit={(values) => {
-          onSave(toCatalogOption(values, editingOption?.id ?? `cat_${Date.now()}`));
+          onSave(
+            toCatalogOption(
+              values,
+              editingOption?.id ?? `cat_${Date.now()}`,
+              options,
+              editingOption,
+              orderable,
+            ),
+          );
           setEditingOption(null);
         }}
       />

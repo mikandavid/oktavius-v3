@@ -23,6 +23,9 @@ Use `<EntityForm>` for every create/edit form. Never hand-roll field grids.
 - Group with `section` — Identity, Contact, Contract, etc.
 - Wide fields: `colSpan: 2` (notes, textarea, tags)
 - Single-select: `type: 'combobox'` or `'select'` (both render Combobox)
+- ISO country code: `type: 'country'` — stores `AT`, `DE`, …; optional `countryMode: 'dach' | 'all'`
+- ISO currency code: `type: 'currencySelect'` — stores `EUR`, `USD`, … (distinct from `currency` amount input)
+- Domain enums: `type: 'vocabulary'` with `vocabulary: 'salutation' | 'clientStatus' | …`
 - Mutually exclusive visible options (2–4 choices): `type: 'radio'` with `options` and optional `radioOrientation`
 - Entity pickers: `type: 'relation'` with optional `asyncItems`, `onCreate`, `footerAction`
 - Phone numbers: `type: 'phone'` (country dial code + local number via `PhoneInput`)

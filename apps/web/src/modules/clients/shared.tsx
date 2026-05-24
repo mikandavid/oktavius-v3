@@ -1,17 +1,21 @@
+import type { ClientStatus, ClientType } from '@oktavius/reference-data';
+
 import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
 
 import type { ClientRecord } from '@/app/demo-data';
-import { statusColumn } from '@/components/data/columns';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FormField, AddressValue } from '@/components/forms/EntityForm';
 import { EMPTY_ADDRESS } from '@/components/forms/EntityForm';
+import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { VocabularyText } from '@/components/reference/VocabularyText';
 import { PlusIcon } from '@/lib/icons';
+import { CLIENT_STATUS_BADGE_LABEL } from '@/lib/reference-data';
 
 export const CLIENT_STATUS_MAP = {
-  Active: 'success',
-  Prospect: 'info',
-  Inactive: 'warning',
-  Churned: 'destructive',
+  active: 'success',
+  prospect: 'info',
+  inactive: 'warning',
+  churned: 'destructive',
 } as const;
 
 export const clientColumns: CrudColumn<ClientRecord>[] = [
@@ -25,9 +29,8 @@ export const clientColumns: CrudColumn<ClientRecord>[] = [
     key: 'type',
     header: 'Type',
     sortable: true,
-    type: 'badge',
     hideBelow: 'md',
-    render: (row) => row.type,
+    render: (row) => <VocabularyText vocabulary="clientType" code={row.type} />,
   },
   {
     key: 'industry',
@@ -35,7 +38,19 @@ export const clientColumns: CrudColumn<ClientRecord>[] = [
     sortable: true,
     hideBelow: 'lg',
   },
-  statusColumn<ClientRecord>('status', 'Status', CLIENT_STATUS_MAP),
+  {
+    key: 'status',
+    header: 'Status',
+    sortable: true,
+    hideBelow: 'md',
+    render: (row) => (
+      <StatusBadge
+        status={row.status}
+        label={CLIENT_STATUS_BADGE_LABEL[row.status]}
+        variantMap={CLIENT_STATUS_MAP}
+      />
+    ),
+  },
   {
     key: 'accountManager',
     header: 'Account Manager',
@@ -77,16 +92,15 @@ const INDUSTRIES = [
 
 const ACCOUNT_MANAGERS = ['Anna Hofer', 'Markus Leitner', 'Nina Weiss'];
 
-const COUNTRIES = ['Austria', 'Germany', 'Switzerland', 'Italy', 'France', 'Netherlands', 'Other'];
-
 export const clientFormFields: FormField[] = [
   // Identity
   { name: 'name', label: 'Client Name', type: 'text', required: true, section: 'Identity' },
   {
     name: 'type',
     label: 'Type',
-    type: 'radio',
-    options: ['Company', 'Individual'],
+    type: 'vocabulary',
+    vocabulary: 'clientType',
+    vocabularyDisplay: 'radio',
     required: true,
     section: 'Identity',
     radioOrientation: 'horizontal',
@@ -102,8 +116,8 @@ export const clientFormFields: FormField[] = [
   {
     name: 'status',
     label: 'Status',
-    type: 'select',
-    options: ['Active', 'Inactive', 'Prospect', 'Churned'],
+    type: 'vocabulary',
+    vocabulary: 'clientStatus',
     required: true,
     section: 'Identity',
   },
@@ -126,7 +140,6 @@ export const clientFormFields: FormField[] = [
     type: 'address',
     section: 'Contact',
     colSpan: 2,
-    countries: COUNTRIES,
   },
 
   // Contract
@@ -154,9 +167,9 @@ export const clientFormFields: FormField[] = [
 
 export type ClientFormValues = {
   name: string;
-  type: string;
+  type: ClientType;
   industry: string;
-  status: string;
+  status: ClientStatus;
   email: string;
   phone: string;
   website: string;
@@ -171,9 +184,9 @@ export type ClientFormValues = {
 
 export const clientFormDefaults: ClientFormValues = {
   name: '',
-  type: 'Company',
+  type: 'company',
   industry: '',
-  status: 'Prospect',
+  status: 'prospect',
   email: '',
   phone: '',
   website: '',
@@ -186,15 +199,20 @@ export const clientFormDefaults: ClientFormValues = {
   accountManager: '',
 };
 
-const PARTY_ROLES = ['Primary contact', 'Billing contact', 'Technical contact', 'Legal', 'Other'];
-
 export const partyFormFields: FormField[] = [
+  {
+    name: 'salutation',
+    label: 'Salutation',
+    type: 'vocabulary',
+    vocabulary: 'salutation',
+    section: 'Contact',
+  },
   { name: 'name', label: 'Name', type: 'text', required: true, section: 'Contact' },
   {
     name: 'role',
     label: 'Role',
-    type: 'combobox',
-    options: PARTY_ROLES,
+    type: 'vocabulary',
+    vocabulary: 'partyRole',
     required: true,
     section: 'Contact',
   },
@@ -202,12 +220,14 @@ export const partyFormFields: FormField[] = [
 ];
 
 export type PartyFormValues = {
+  salutation: string;
   name: string;
   role: string;
   email: string;
 };
 
 export const partyFormDefaults: PartyFormValues = {
+  salutation: '',
   name: '',
   role: '',
   email: '',

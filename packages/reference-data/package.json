@@ -1,0 +1,15 @@
+{
+  "name": "@oktavius/reference-data",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "countries-list": "^3.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

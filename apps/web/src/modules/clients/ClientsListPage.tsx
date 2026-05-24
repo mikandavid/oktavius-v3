@@ -2,12 +2,16 @@ import { useMemo } from 'react';
 
 import { CrudMainView } from '@/components/data/CrudMainView';
 import { useListPageState } from '@/lib/useListPageState';
+import { useVocabularyOptions } from '@/lib/reference-data';
 
 import type { ClientRecord } from '@/app/demo-data';
 import { useClientsList } from './clients-api';
 import { clientColumns, clientsPageIcon, ClientsHeaderAction } from './shared';
 
 export function ClientsListPage() {
+  const clientStatusOptions = useVocabularyOptions('clientStatus');
+  const clientTypeOptions = useVocabularyOptions('clientType');
+
   const list = useListPageState<ClientRecord>({
     rows: [],
     defaultSort: 'name',
@@ -45,20 +49,12 @@ export function ClientsListPage() {
         {
           key: 'status',
           label: 'Status',
-          options: [
-            { value: 'Active', label: 'Active' },
-            { value: 'Prospect', label: 'Prospect' },
-            { value: 'Inactive', label: 'Inactive' },
-            { value: 'Churned', label: 'Churned' },
-          ],
+          options: clientStatusOptions,
         },
         {
           key: 'type',
           label: 'Type',
-          options: [
-            { value: 'Company', label: 'Company' },
-            { value: 'Individual', label: 'Individual' },
-          ],
+          options: clientTypeOptions,
         },
       ]}
       values={list.values}
@@ -79,7 +75,8 @@ export function ClientsListPage() {
       total={total}
       totalPages={totalPages}
       onPageChange={list.onPageChange}
-      isLoading={isLoading || isFetching}
+      isLoading={isLoading}
+      isFetching={isFetching}
     />
   );
 }

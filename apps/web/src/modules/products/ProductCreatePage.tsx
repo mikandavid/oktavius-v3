@@ -32,6 +32,7 @@ export function ProductCreatePage() {
             name: values.name,
             category: values.category,
             status: values.status as 'Active' | 'Draft' | 'Discontinued',
+            currency: values.currency,
             price: values.price,
             stock: Number(values.stock) || 0,
             unit: values.unit,

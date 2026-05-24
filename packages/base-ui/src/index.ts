@@ -60,4 +60,5 @@ export * from './components/textarea';
 export * from './components/timeline';
 export * from './components/tooltip';
 export * from './lib/format-display-date';
+export * from './lib/sort-order';
 export * from './lib/utils';

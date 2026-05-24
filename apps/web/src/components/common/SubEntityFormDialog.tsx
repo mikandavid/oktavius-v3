@@ -46,8 +46,8 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="gap-5 sm:max-w-md">
+        <DialogHeader className="space-y-1 pr-6">
           <DialogTitle>{title}</DialogTitle>
           {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>

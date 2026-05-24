@@ -3,11 +3,9 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import {
   Avatar,
-  Badge,
   Button,
   InlineEmptyState,
   ListRow,
-  MoneyText,
   SectionCard,
   StatCard,
   Tabs,
@@ -24,9 +22,12 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { VocabularyText } from '@/components/reference/VocabularyText';
+import { PartyContactLine } from '@/components/reference/PartyContactLine';
 import { formatDisplayDate } from '@/lib/formatDate';
 import { PlusIcon, ProjectsIcon } from '@/lib/icons';
 import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
+import { CLIENT_STATUS_BADGE_LABEL } from '@/lib/reference-data';
 import { toast } from '@/lib/toast';
 
 import { useClientDetail, useDeleteClient } from './clients-api';
@@ -108,10 +109,13 @@ export function ClientDetailPage() {
       icon={clientsPageIcon()}
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
-          <span>
-            {client.type} · {client.industry}
-          </span>
-          <StatusBadge status={client.status} variantMap={CLIENT_STATUS_MAP} />
+          <VocabularyText vocabulary="clientType" code={client.type} />
+          <span>· {client.industry}</span>
+          <StatusBadge
+            status={client.status}
+            label={CLIENT_STATUS_BADGE_LABEL[client.status]}
+            variantMap={CLIENT_STATUS_MAP}
+          />
         </span>
       }
       backTo="/clients"
@@ -151,7 +155,7 @@ export function ClientDetailPage() {
               <ListRow
                 key={party.id}
                 title={party.name}
-                subtitle={`${party.role} · ${party.email}`}
+                subtitle={<PartyContactLine role={party.role} email={party.email} />}
                 leading={<Avatar label={party.name} size="sm" tone="accent" />}
               />
             ))}
@@ -165,8 +169,21 @@ export function ClientDetailPage() {
           <SectionCard title="Identity">
             <DetailFields
               fields={[
-                { label: 'Type', value: <Badge variant="outline">{client.type}</Badge> },
+                {
+                  label: 'Type',
+                  value: <VocabularyText vocabulary="clientType" code={client.type} />,
+                },
                 { label: 'Industry', value: client.industry || '—' },
+                {
+                  label: 'Status',
+                  value: (
+                    <StatusBadge
+                      status={client.status}
+                      label={CLIENT_STATUS_BADGE_LABEL[client.status]}
+                      variantMap={CLIENT_STATUS_MAP}
+                    />
+                  ),
+                },
               ]}
             />
           </SectionCard>
@@ -177,21 +194,6 @@ export function ClientDetailPage() {
                 { label: 'Phone', value: client.phone || '—' },
               ]}
             />
-          </SectionCard>
-          <SectionCard title="Contract">
-            <DetailFields
-              fields={[
-                {
-                  label: 'Annual revenue',
-                  value: client.annualRevenue ? <MoneyText value={client.annualRevenue} /> : '—',
-                },
-                { label: 'Account manager', value: client.accountManager || '—' },
-                { label: 'Contract end', value: formatDisplayDate(client.contractEnd) },
-              ]}
-            />
-          </SectionCard>
-          <SectionCard title="Notes">
-            <DetailFields fields={[{ label: 'Notes', value: client.notes || '—', colSpan: 2 }]} />
           </SectionCard>
         </TabsContent>
 
@@ -211,7 +213,7 @@ export function ClientDetailPage() {
                 <ListRow
                   key={party.id}
                   title={party.name}
-                  subtitle={`${party.role} · ${party.email}`}
+                  subtitle={<PartyContactLine role={party.role} email={party.email} />}
                   leading={<Avatar label={party.name} size="sm" tone="accent" />}
                 />
               ))
@@ -285,6 +287,7 @@ export function ClientDetailPage() {
         onSubmit={(values) => {
           createParty({
             clientId: client.id,
+            salutation: values.salutation || undefined,
             name: values.name,
             role: values.role,
             email: values.email,
@@ -297,12 +300,11 @@ export function ClientDetailPage() {
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title={`Delete ${client.name}?`}
-        description="This action cannot be undone. The client record will be permanently removed."
-        confirmLabel="Delete"
+        description="This will permanently remove the client record."
+        confirmLabel="Delete client"
         onConfirm={() => {
-          deleteClient.mutate(client.id, {
-            onSuccess: () => navigate('/clients'),
-          });
+          deleteClient.mutate(client.id);
+          navigate('/clients');
         }}
       />
     </ModulePage>

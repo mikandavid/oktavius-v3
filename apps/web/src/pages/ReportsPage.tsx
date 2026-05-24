@@ -8,7 +8,7 @@ import { SuccessIcon, WarningIcon } from '@/lib/icons';
 export function ReportsPage() {
   const { clients, orders, invoices } = useDemoData();
 
-  const activeClients = clients.filter((c) => c.status === 'Active').length;
+  const activeClients = clients.filter((c) => c.status === 'active').length;
   const openOrders = orders.filter(
     (o) => o.status !== 'Delivered' && o.status !== 'Cancelled',
   ).length;

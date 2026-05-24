@@ -1,6 +1,14 @@
 import type { ChangeEvent, FormEvent } from 'react';
 import { useState } from 'react';
 
+import type {
+  CountryOption,
+  CurrencyOption,
+  PhoneCountry,
+  ReferenceDataMode,
+  VocabularyKey,
+} from '@oktavius/reference-data';
+import { buildCountryOptions } from '@oktavius/reference-data';
 import {
   AddressField,
   type AddressValue,
@@ -20,10 +28,21 @@ import {
   PhoneInput,
   RadioGroupField,
   SectionCard,
+  SettingsRow,
   Switch,
   TagsInput,
   Textarea,
+  cn,
 } from '@oktavius/base-ui';
+
+import {
+  useCountryOptions,
+  useCurrencyOptions,
+  usePhoneCountries,
+  useVocabularyOptionsMap,
+  type VocabularyOptionsMap,
+} from '@/lib/reference-data';
+import { useUserPreferences } from '@/lib/userPreferences';
 
 export type { AddressValue };
 export { EMPTY_ADDRESS } from '@oktavius/base-ui';
@@ -49,8 +68,11 @@ export type FieldType =
   | 'time'
   | 'datetime'
   | 'currency'
+  | 'currencySelect'
+  | 'country'
   | 'file'
-  | 'address';
+  | 'address'
+  | 'vocabulary';
 
 export type FormFieldValue =
   | string
@@ -98,10 +120,20 @@ export type FormField = {
   };
   /** `file`: accepted MIME types / extensions e.g. ".pdf,image/*" */
   accept?: string;
-  /** `address`: country options — defaults to DACH-focused list */
-  countries?: string[];
+  /** `address` / `country`: ISO country options — defaults from reference-data */
+  countries?: CountryOption[];
+  /** `country`: list scope — default `all`; address blocks default to DACH-first */
+  countryMode?: ReferenceDataMode;
+  /** `phone`: dial-code options — defaults to reference-data list (DACH first) */
+  phoneCountries?: PhoneCountry[];
+  /** `currencySelect`: ISO 4217 options — defaults to reference-data list */
+  currencyOptions?: CurrencyOption[];
   /** `radio`: layout direction */
   radioOrientation?: 'horizontal' | 'vertical';
+  /** `vocabulary`: domain enum key from @oktavius/reference-data */
+  vocabulary?: VocabularyKey;
+  /** `vocabulary`: render as radio instead of combobox */
+  vocabularyDisplay?: 'combobox' | 'radio';
 };
 
 // ─── Form Props ───────────────────────────────────────────────────────────────
@@ -151,11 +183,21 @@ function FieldInput({
   value,
   onChange,
   inputId,
+  locale,
+  defaultCountryOptions,
+  defaultPhoneCountries,
+  defaultCurrencyOptions,
+  vocabularyOptions,
 }: {
   field: FormField;
   value: FormFieldValue;
   onChange: (value: FormFieldValue) => void;
   inputId: string;
+  locale: string;
+  defaultCountryOptions: CountryOption[];
+  defaultPhoneCountries: PhoneCountry[];
+  defaultCurrencyOptions: CurrencyOption[];
+  vocabularyOptions: VocabularyOptionsMap;
 }) {
   const strValue = String(value ?? '');
   const boolValue = Boolean(value);
@@ -244,6 +286,45 @@ function FieldInput({
       );
     }
 
+    case 'vocabulary': {
+      if (!field.vocabulary) {
+        return (
+          <Input
+            id={inputId}
+            value={strValue}
+            disabled={field.disabled}
+            placeholder={field.placeholder}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
+          />
+        );
+      }
+
+      const opts = vocabularyOptions[field.vocabulary];
+      if (field.vocabularyDisplay === 'radio') {
+        return (
+          <RadioGroupField
+            id={inputId}
+            options={opts}
+            value={strValue || undefined}
+            disabled={field.disabled}
+            orientation={field.radioOrientation}
+            onChange={(v) => onChange(v)}
+          />
+        );
+      }
+
+      return (
+        <Combobox
+          id={inputId}
+          options={opts}
+          value={strValue || undefined}
+          placeholder={field.placeholder ?? `Select ${field.label.toLowerCase()}`}
+          disabled={field.disabled}
+          onChange={(v) => onChange(v ?? '')}
+        />
+      );
+    }
+
     case 'phone':
       return (
         <PhoneInput
@@ -251,6 +332,7 @@ function FieldInput({
           value={strValue}
           disabled={field.disabled}
           placeholder={field.placeholder ?? 'Local number'}
+          countries={field.phoneCountries ?? defaultPhoneCountries}
           onChange={(v) => onChange(v)}
         />
       );
@@ -261,41 +343,62 @@ function FieldInput({
         <AddressField
           id={inputId}
           value={addressValue}
-          countries={field.countries}
+          countries={field.countries ?? defaultCountryOptions}
           disabled={field.disabled}
           onChange={(v) => onChange(v)}
         />
       );
     }
 
+    case 'country': {
+      const countryOptions: ComboboxOption[] =
+        field.countries ?? buildCountryOptions(locale, field.countryMode ?? 'all');
+      return (
+        <Combobox
+          id={inputId}
+          options={countryOptions}
+          value={strValue || undefined}
+          placeholder={field.placeholder ?? 'Select country…'}
+          searchPlaceholder="Search country…"
+          disabled={field.disabled}
+          onChange={(v) => onChange(v ?? '')}
+        />
+      );
+    }
+
+    case 'currencySelect': {
+      const currencyOpts = field.currencyOptions ?? defaultCurrencyOptions;
+      return (
+        <Combobox
+          id={inputId}
+          options={currencyOpts}
+          value={strValue || undefined}
+          placeholder={field.placeholder ?? 'Select currency…'}
+          searchPlaceholder="Search currency…"
+          disabled={field.disabled}
+          onChange={(v) => onChange(v ?? '')}
+        />
+      );
+    }
+
     case 'checkbox':
       return (
-        <div className="flex items-center gap-2 py-1">
-          <Checkbox
-            id={inputId}
-            checked={boolValue}
-            disabled={field.disabled}
-            onCheckedChange={(checked) => onChange(Boolean(checked))}
-          />
-          <Label htmlFor={inputId} className="text-sm font-medium text-foreground">
-            {field.placeholder ?? field.label}
-          </Label>
-        </div>
+        <Checkbox
+          id={inputId}
+          checked={boolValue}
+          disabled={field.disabled}
+          onCheckedChange={(checked) => onChange(Boolean(checked))}
+        />
       );
 
     case 'switch':
       return (
-        <div className="flex items-center gap-2 py-1">
-          <Switch
-            id={inputId}
-            checked={boolValue}
-            disabled={field.disabled}
-            onCheckedChange={(checked) => onChange(Boolean(checked))}
-          />
-          <Label htmlFor={inputId} className="text-sm text-muted-foreground">
-            {boolValue ? 'Enabled' : 'Disabled'}
-          </Label>
-        </div>
+        <Switch
+          id={inputId}
+          checked={boolValue}
+          disabled={field.disabled}
+          onCheckedChange={(checked) => onChange(Boolean(checked))}
+        />
       );
 
     case 'date':
@@ -380,27 +483,71 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
   values,
   errors,
   set,
+  locale,
+  defaultCountryOptions,
+  defaultPhoneCountries,
+  defaultCurrencyOptions,
+  vocabularyOptions,
+  surface = 'page',
 }: {
   groupedFields: Record<string, FormField[]>;
   values: T;
   errors?: Partial<Record<keyof T & string, string>>;
   set: (name: string, value: FormFieldValue) => void;
+  locale: string;
+  defaultCountryOptions: CountryOption[];
+  defaultPhoneCountries: PhoneCountry[];
+  defaultCurrencyOptions: CurrencyOption[];
+  vocabularyOptions: VocabularyOptionsMap;
+  surface?: 'page' | 'dialog';
 }) {
+  const sectionEntries = Object.entries(groupedFields);
+  const hideSectionHeading = surface === 'dialog' && sectionEntries.length === 1;
+
   return (
     <div className="space-y-4">
-      {Object.entries(groupedFields).map(([section, sectionFields], index) => (
+      {sectionEntries.map(([section, sectionFields], index) => (
         <section
           key={section}
           className={index === 0 ? 'space-y-3' : 'space-y-3 border-t border-border/70 pt-4'}
         >
-          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-            {section}
-          </h3>
-          <div className="grid gap-4 md:grid-cols-2">
+          {hideSectionHeading ? null : (
+            <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              {section}
+            </h3>
+          )}
+          <div
+            className={cn('grid gap-4', surface === 'dialog' ? 'grid-cols-1' : 'md:grid-cols-2')}
+          >
             {sectionFields.map((field) => {
               const isBoolean = field.type === 'checkbox' || field.type === 'switch';
               const inputId = `field-${field.name}`;
               const error = resolveFieldError(field, errors);
+
+              if (isBoolean && surface === 'dialog') {
+                return (
+                  <div key={field.name} className="space-y-1.5">
+                    <SettingsRow label={field.label} description={field.description}>
+                      <FieldInput
+                        field={field}
+                        value={values[field.name]}
+                        inputId={inputId}
+                        locale={locale}
+                        defaultCountryOptions={defaultCountryOptions}
+                        defaultPhoneCountries={defaultPhoneCountries}
+                        defaultCurrencyOptions={defaultCurrencyOptions}
+                        vocabularyOptions={vocabularyOptions}
+                        onChange={(v) => set(field.name, v)}
+                      />
+                    </SettingsRow>
+                    {error ? (
+                      <p role="alert" className="text-xs text-destructive">
+                        {error}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              }
 
               if (isBoolean) {
                 return (
@@ -408,12 +555,22 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
                     key={field.name}
                     className={field.colSpan === 2 ? 'space-y-1.5 md:col-span-2' : 'space-y-1.5'}
                   >
-                    <FieldInput
-                      field={field}
-                      value={values[field.name]}
-                      inputId={inputId}
-                      onChange={(v) => set(field.name, v)}
-                    />
+                    <div className="flex items-center gap-2 py-1">
+                      <FieldInput
+                        field={field}
+                        value={values[field.name]}
+                        inputId={inputId}
+                        locale={locale}
+                        defaultCountryOptions={defaultCountryOptions}
+                        defaultPhoneCountries={defaultPhoneCountries}
+                        defaultCurrencyOptions={defaultCurrencyOptions}
+                        vocabularyOptions={vocabularyOptions}
+                        onChange={(v) => set(field.name, v)}
+                      />
+                      <Label htmlFor={inputId} className="text-sm font-medium text-foreground">
+                        {field.placeholder ?? field.label}
+                      </Label>
+                    </div>
                     {field.description ? (
                       <p className="text-xs text-muted-foreground">{field.description}</p>
                     ) : null}
@@ -434,12 +591,20 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
                   required={field.required}
                   description={field.description}
                   error={error}
-                  className={field.colSpan === 2 ? 'md:col-span-2' : undefined}
+                  className={cn(
+                    field.colSpan === 2 && surface !== 'dialog' ? 'md:col-span-2' : undefined,
+                    surface === 'dialog' && field.type === 'number' ? 'max-w-[7rem]' : undefined,
+                  )}
                 >
                   <FieldInput
                     field={field}
                     value={values[field.name]}
                     inputId={inputId}
+                    locale={locale}
+                    defaultCountryOptions={defaultCountryOptions}
+                    defaultPhoneCountries={defaultPhoneCountries}
+                    defaultCurrencyOptions={defaultCurrencyOptions}
+                    vocabularyOptions={vocabularyOptions}
                     onChange={(v) => set(field.name, v)}
                   />
                 </FormFieldControl>
@@ -467,6 +632,11 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   showHeader,
 }: EntityFormProps<T>) {
   const [values, setValues] = useState<T>(defaultValues);
+  const { locale } = useUserPreferences();
+  const defaultCountryOptions = useCountryOptions();
+  const defaultPhoneCountries = usePhoneCountries();
+  const defaultCurrencyOptions = useCurrencyOptions();
+  const vocabularyOptions = useVocabularyOptionsMap();
 
   const groupedFields = fields.reduce(
     (sections, field) => {
@@ -498,11 +668,22 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
           {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
         </div>
       ) : null}
-      <EntityFormFields groupedFields={groupedFields} values={values} errors={errors} set={set} />
+      <EntityFormFields
+        groupedFields={groupedFields}
+        values={values}
+        errors={errors}
+        set={set}
+        locale={locale}
+        defaultCountryOptions={defaultCountryOptions}
+        defaultPhoneCountries={defaultPhoneCountries}
+        defaultCurrencyOptions={defaultCurrencyOptions}
+        vocabularyOptions={vocabularyOptions}
+        surface={surface}
+      />
       <div
         className={
           surface === 'dialog'
-            ? 'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'
+            ? 'flex flex-col-reverse gap-2 border-t border-border/70 pt-4 sm:flex-row sm:justify-end'
             : 'flex items-center justify-end gap-2 border-t border-border/70 pt-4'
         }
       >

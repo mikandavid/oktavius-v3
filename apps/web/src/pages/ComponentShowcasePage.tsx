@@ -324,6 +324,53 @@ const showcaseFields: FormField[] = [
     placeholder: 'Local number',
   },
   {
+    name: 'salutation',
+    label: 'Salutation',
+    type: 'vocabulary',
+    vocabulary: 'salutation',
+    section: 'Person',
+  },
+  {
+    name: 'maritalStatus',
+    label: 'Marital status',
+    type: 'vocabulary',
+    vocabulary: 'maritalStatus',
+    section: 'Person',
+  },
+  {
+    name: 'academicTitle',
+    label: 'Academic title',
+    type: 'vocabulary',
+    vocabulary: 'academicTitle',
+    section: 'Person',
+  },
+  {
+    name: 'religion',
+    label: 'Religion',
+    type: 'vocabulary',
+    vocabulary: 'religion',
+    section: 'Person',
+  },
+  {
+    name: 'nationality',
+    label: 'Nationality',
+    type: 'country',
+    section: 'Person',
+  },
+  {
+    name: 'invoiceCurrency',
+    label: 'Invoice currency',
+    type: 'currencySelect',
+    section: 'Billing',
+  },
+  {
+    name: 'paymentTerms',
+    label: 'Payment terms',
+    type: 'vocabulary',
+    vocabulary: 'paymentTerms',
+    section: 'Billing',
+  },
+  {
     name: 'team',
     label: 'Team (combobox)',
     type: 'combobox',
@@ -578,6 +625,12 @@ const SHOWCASE_CATALOG: CatalogOption[] = [
   { id: 'cat_3', label: 'Due on receipt', code: 'DOR', active: false, sortOrder: 3 },
 ];
 
+const SHOWCASE_CASE_TYPES: CatalogOption[] = [
+  { id: 'ct_1', label: 'Probate', code: 'PROBATE', active: true },
+  { id: 'ct_2', label: 'Family law', code: 'FAMILY', active: true },
+  { id: 'ct_3', label: 'Corporate', code: 'CORP', active: true },
+];
+
 const SHOWCASE_DOC_TEMPLATES = [
   {
     id: 'tpl_inv',
@@ -634,7 +687,7 @@ export function ComponentShowcasePage() {
   const [radioVal, setRadioVal] = useState('company');
   const [addressVal, setAddressVal] = useState<AddressValue>({
     ...EMPTY_ADDRESS,
-    country: 'Austria',
+    country: 'AT',
   });
   const [rangeStart, setRangeStart] = useState<string | undefined>();
   const [rangeEnd, setRangeEnd] = useState<string | undefined>();
@@ -647,6 +700,7 @@ export function ComponentShowcasePage() {
   const [approvalItems, setApprovalItems] = useState(SHOWCASE_APPROVALS);
   const [comments, setComments] = useState(SHOWCASE_COMMENTS);
   const [catalogOptions, setCatalogOptions] = useState(SHOWCASE_CATALOG);
+  const [caseTypeOptions, setCaseTypeOptions] = useState(SHOWCASE_CASE_TYPES);
   const [savedViewId, setSavedViewId] = useState('all');
   const [generateDocOpen, setGenerateDocOpen] = useState(false);
   const [sendDocOpen, setSendDocOpen] = useState(false);
@@ -2693,8 +2747,9 @@ export function ComponentShowcasePage() {
 
               <CatalogOptionsManager
                 title="Payment terms"
-                description="Used on invoices, orders, and vendor records."
+                description="Used on invoices, orders, and vendor records. Drag to set picker order."
                 options={catalogOptions}
+                orderable
                 onSave={(option) => {
                   setCatalogOptions((current) => {
                     const exists = current.some((row) => row.id === option.id);
@@ -2704,9 +2759,31 @@ export function ComponentShowcasePage() {
                   });
                   toast.success('Catalog saved.');
                 }}
+                onReorder={(nextOptions) => {
+                  setCatalogOptions(nextOptions);
+                }}
                 onDelete={(id) => {
                   setCatalogOptions((current) => current.filter((row) => row.id !== id));
                   toast.success('Option removed.');
+                }}
+              />
+
+              <CatalogOptionsManager
+                title="Case types"
+                description="Alphabetical by default — no drag reorder."
+                options={caseTypeOptions}
+                onSave={(option) => {
+                  setCaseTypeOptions((current) => {
+                    const exists = current.some((row) => row.id === option.id);
+                    return exists
+                      ? current.map((row) => (row.id === option.id ? option : row))
+                      : [...current, option];
+                  });
+                  toast.success('Case type saved.');
+                }}
+                onDelete={(id) => {
+                  setCaseTypeOptions((current) => current.filter((row) => row.id !== id));
+                  toast.success('Case type removed.');
                 }}
               />
             </div>

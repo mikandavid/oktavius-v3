@@ -1,3 +1,5 @@
+import { DEFAULT_ADDRESS_COUNTRY_OPTIONS, type CountryOption } from '@oktavius/reference-data';
+
 import { Combobox, type ComboboxOption } from './combobox';
 import { Input } from './input';
 import { cn } from '../lib/utils';
@@ -7,6 +9,7 @@ export interface AddressValue {
   line2: string;
   postalCode: string;
   city: string;
+  /** ISO 3166-1 alpha-2 country code (e.g. AT, DE). */
   country: string;
 }
 
@@ -18,21 +21,15 @@ export const EMPTY_ADDRESS: AddressValue = {
   country: '',
 };
 
-export const DEFAULT_ADDRESS_COUNTRIES = [
-  'Austria',
-  'Germany',
-  'Switzerland',
-  'Italy',
-  'France',
-  'Netherlands',
-  'Other',
-];
+export type { CountryOption };
+export { DEFAULT_ADDRESS_COUNTRY_OPTIONS as DEFAULT_ADDRESS_COUNTRIES };
 
 export interface AddressFieldProps {
   id?: string;
   value?: AddressValue;
   onChange?: (value: AddressValue) => void;
-  countries?: string[];
+  /** ISO country options — defaults to full list with DACH countries first. */
+  countries?: CountryOption[];
   disabled?: boolean;
   className?: string;
 }
@@ -48,14 +45,15 @@ export function AddressField({
   id,
   value = EMPTY_ADDRESS,
   onChange,
-  countries = DEFAULT_ADDRESS_COUNTRIES,
+  countries = DEFAULT_ADDRESS_COUNTRY_OPTIONS,
   disabled = false,
   className,
 }: AddressFieldProps) {
   const set = (patch: Partial<AddressValue>) => onChange?.({ ...value, ...patch });
   const countryOptions: ComboboxOption[] = countries.map((country) => ({
-    value: country,
-    label: country,
+    value: country.value,
+    label: country.label,
+    description: country.description,
   }));
 
   return (

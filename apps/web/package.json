@@ -12,6 +12,7 @@
   "dependencies": {
     "@1771technologies/lytenyte-core": "^2.0.2",
     "@oktavius/base-ui": "workspace:*",
+    "@oktavius/reference-data": "workspace:*",
     "@phosphor-icons/react": "^2.1.10",
     "@tanstack/react-query": "^5.90.2",
     "react": "^19.2.0",

@@ -64,6 +64,13 @@ export const productFormFields: FormField[] = [
     section: 'Product',
   },
   {
+    name: 'currency',
+    label: 'Currency',
+    type: 'currencySelect',
+    required: true,
+    section: 'Pricing',
+  },
+  {
     name: 'price',
     label: 'Price',
     type: 'currency',
@@ -86,6 +93,7 @@ export type ProductFormValues = {
   name: string;
   category: string;
   status: string;
+  currency: string;
   price: string;
   stock: string;
   unit: string;
@@ -96,6 +104,7 @@ export const productFormDefaults: ProductFormValues = {
   name: '',
   category: 'Licenses',
   status: 'Draft',
+  currency: 'EUR',
   price: '',
   stock: '0',
   unit: 'unit',

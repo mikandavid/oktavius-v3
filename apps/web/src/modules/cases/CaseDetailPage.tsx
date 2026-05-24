@@ -30,6 +30,7 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { PartyContactLine } from '@/components/reference/PartyContactLine';
 import { formatDisplayDate } from '@/lib/formatDate';
 import { InfoIcon, PlusIcon, WarningIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
@@ -256,7 +257,7 @@ export function CaseDetailPage() {
                 <ListRow
                   key={party.id}
                   title={party.name}
-                  subtitle={`${party.role} · ${party.email}`}
+                  subtitle={<PartyContactLine role={party.role} email={party.email} />}
                   leading={<Avatar label={party.name} size="sm" tone="accent" />}
                 />
               ))}

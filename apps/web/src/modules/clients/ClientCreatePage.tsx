@@ -29,9 +29,9 @@ export function ClientCreatePage() {
           setIsSubmitting(true);
           const next = createClient({
             name: values.name,
-            type: values.type as 'Company' | 'Individual',
+            type: values.type,
             industry: values.industry,
-            status: values.status as 'Active' | 'Inactive' | 'Prospect' | 'Churned',
+            status: values.status,
             email: values.email,
             phone: values.phone,
             website: values.website,

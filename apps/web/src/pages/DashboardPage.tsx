@@ -23,7 +23,7 @@ const QUICK_LINKS = [
 export function DashboardPage() {
   const { clients, orders, invoices, projects, cases } = useDemoData();
 
-  const activeClients = clients.filter((c) => c.status === 'Active').length;
+  const activeClients = clients.filter((c) => c.status === 'active').length;
   const openOrders = orders.filter((o) => !['Delivered', 'Cancelled'].includes(o.status)).length;
   const overdueInvoices = invoices.filter((i) => i.status === 'Overdue').length;
   const activeProjects = projects.filter((p) => p.status === 'Active').length;

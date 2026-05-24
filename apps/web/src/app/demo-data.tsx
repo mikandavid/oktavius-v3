@@ -1,5 +1,7 @@
 import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import type { ClientStatus, ClientType } from '@oktavius/reference-data';
+
 import { ApiProvider } from '@/api/ApiProvider';
 import type { DemoApiRegistry } from '@/api/demo-client';
 import { buildClientsDemoHandlers } from '@/modules/clients/clients-demo-handlers';
@@ -48,9 +50,9 @@ export type PlatformUserRow = UserRecord & {
 export type ClientRecord = {
   id: string;
   name: string;
-  type: 'Company' | 'Individual';
+  type: ClientType;
   industry: string;
-  status: 'Active' | 'Inactive' | 'Prospect' | 'Churned';
+  status: ClientStatus;
   email: string;
   phone: string;
   website: string;
@@ -104,6 +106,7 @@ export type ProductRecord = {
   name: string;
   category: string;
   status: 'Active' | 'Discontinued' | 'Draft';
+  currency: string;
   price: string;
   stock: number;
   unit: string;
@@ -135,6 +138,7 @@ export type PartyRecord = {
   id: string;
   clientId?: string;
   caseId?: string;
+  salutation?: string;
   name: string;
   role: string;
   email: string;
@@ -232,13 +236,13 @@ const INITIAL_CLIENTS: ClientRecord[] = [
   {
     id: 'cli_1001',
     name: 'Apex Technologies GmbH',
-    type: 'Company',
+    type: 'company',
     industry: 'Technology',
-    status: 'Active',
+    status: 'active',
     email: 'contact@apex-tech.test',
     phone: '+43 1 234 5678',
     website: 'https://apex-tech.test',
-    country: 'Austria',
+    country: 'AT',
     city: 'Vienna',
     tags: ['enterprise', 'priority'],
     notes: 'Key strategic account. Renewal due Q1.',
@@ -251,13 +255,13 @@ const INITIAL_CLIENTS: ClientRecord[] = [
   {
     id: 'cli_1002',
     name: 'Bruckner Consulting',
-    type: 'Company',
+    type: 'company',
     industry: 'Consulting',
-    status: 'Active',
+    status: 'active',
     email: 'office@bruckner.test',
     phone: '+43 732 987 654',
     website: 'https://bruckner.test',
-    country: 'Austria',
+    country: 'AT',
     city: 'Linz',
     tags: ['consulting', 'mid-market'],
     notes: '',
@@ -270,13 +274,13 @@ const INITIAL_CLIENTS: ClientRecord[] = [
   {
     id: 'cli_1003',
     name: 'Clara Sonnenschein',
-    type: 'Individual',
+    type: 'individual',
     industry: 'Freelance',
-    status: 'Prospect',
+    status: 'prospect',
     email: 'clara@sonnenschein.test',
     phone: '+43 699 111 2233',
     website: '',
-    country: 'Germany',
+    country: 'DE',
     city: 'Munich',
     tags: ['freelance'],
     notes: 'Interested in the starter plan. Follow up next week.',
@@ -289,13 +293,13 @@ const INITIAL_CLIENTS: ClientRecord[] = [
   {
     id: 'cli_1004',
     name: 'Donau Logistics AG',
-    type: 'Company',
+    type: 'company',
     industry: 'Logistics',
-    status: 'Inactive',
+    status: 'inactive',
     email: 'info@donau-logistics.test',
     phone: '+43 1 555 7890',
     website: 'https://donau-logistics.test',
-    country: 'Austria',
+    country: 'AT',
     city: 'Vienna',
     tags: ['logistics', 'enterprise'],
     notes: 'Contract expired. Re-engagement campaign scheduled.',
@@ -308,13 +312,13 @@ const INITIAL_CLIENTS: ClientRecord[] = [
   {
     id: 'cli_1005',
     name: 'Eiger Software Ltd',
-    type: 'Company',
+    type: 'company',
     industry: 'Technology',
-    status: 'Churned',
+    status: 'churned',
     email: 'hello@eiger.test',
     phone: '+41 44 300 1122',
     website: 'https://eiger.test',
-    country: 'Switzerland',
+    country: 'CH',
     city: 'Zurich',
     tags: ['saas', 'churned'],
     notes: 'Moved to competitor. Post-mortem completed.',
@@ -462,6 +466,7 @@ const INITIAL_PRODUCTS: ProductRecord[] = [
     name: 'Enterprise License',
     category: 'Licenses',
     status: 'Active',
+    currency: 'EUR',
     price: '22000',
     stock: 999,
     unit: 'seat',
@@ -472,6 +477,7 @@ const INITIAL_PRODUCTS: ProductRecord[] = [
     name: 'Onboarding Package',
     category: 'Services',
     status: 'Active',
+    currency: 'EUR',
     price: '4500',
     stock: 0,
     unit: 'package',
@@ -482,6 +488,7 @@ const INITIAL_PRODUCTS: ProductRecord[] = [
     name: 'Consulting Days',
     category: 'Services',
     status: 'Active',
+    currency: 'EUR',
     price: '1550',
     stock: 0,
     unit: 'day',
@@ -492,6 +499,7 @@ const INITIAL_PRODUCTS: ProductRecord[] = [
     name: 'Edge Router Pro',
     category: 'Hardware',
     status: 'Active',
+    currency: 'EUR',
     price: '1290',
     stock: 42,
     unit: 'unit',
@@ -502,6 +510,7 @@ const INITIAL_PRODUCTS: ProductRecord[] = [
     name: 'Standard License',
     category: 'Licenses',
     status: 'Discontinued',
+    currency: 'EUR',
     price: '8900',
     stock: 0,
     unit: 'seat',
@@ -739,43 +748,47 @@ const INITIAL_PARTIES: PartyRecord[] = [
   {
     id: 'pty_1',
     clientId: 'cli_1001',
+    salutation: 'mrs',
     name: 'Anna Hofer',
-    role: 'Account Manager',
+    role: 'account_manager',
     email: 'anna@apex.at',
   },
   {
     id: 'pty_2',
     clientId: 'cli_1001',
+    salutation: 'mr',
     name: 'Markus Leitner',
-    role: 'Billing Contact',
+    role: 'billing_contact',
     email: 'markus@apex.at',
   },
   {
     id: 'pty_3',
     clientId: 'cli_1001',
+    salutation: 'mr',
     name: 'Thomas Berger',
-    role: 'Technical Lead',
+    role: 'technical_contact',
     email: 'thomas@apex.at',
   },
   {
     id: 'pty_4',
     clientId: 'cli_1002',
+    salutation: 'mrs',
     name: 'Eva Bruckner',
-    role: 'Primary Contact',
+    role: 'primary_contact',
     email: 'eva@bruckner.test',
   },
   {
     id: 'pty_5',
     caseId: 'case_6001',
     name: 'Finance Team Apex',
-    role: 'Billing',
+    role: 'billing_contact',
     email: 'finance@apex.at',
   },
   {
     id: 'pty_6',
     caseId: 'case_6003',
     name: 'Ops Lead Donau',
-    role: 'Technical',
+    role: 'technical_contact',
     email: 'ops@donau-logistics.test',
   },
 ];
