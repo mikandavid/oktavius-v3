@@ -21,7 +21,7 @@
 />
 ```
 
-Cancel is always `outline`. Confirm is always `cta` unless destructive delete.
+Cancel is always `ghost`. Confirm is always `cta` unless destructive delete.
 
 ## ConfirmActionDialog (page delete)
 
@@ -41,6 +41,7 @@ Cancel is always `outline`. Confirm is always `cta` unless destructive delete.
 - `window.confirm()` or custom overlay divs
 - `variant="default"` on dialog Save buttons — use `cta`
 - `ConfirmActionDialog` for inline row deletes — too heavy; use `ConfirmPopover` or row action `confirm`
+- `variant="outline"` on dialog Cancel / Back / dismiss buttons — use `ghost`
 - Hand-roll `<DialogFooter>` with mismatched button sizes
 
 Transient success/error after dialog actions: `toast` from `@/lib/toast`.

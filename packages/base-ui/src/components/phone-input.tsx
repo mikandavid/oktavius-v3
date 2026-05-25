@@ -1,6 +1,7 @@
 import {
   DEFAULT_PHONE_COUNTRIES,
   formatPhoneValue,
+  sanitizePhoneLocalInput,
   splitPhoneValue,
   type PhoneCountry,
 } from '@oktavius/reference-data';
@@ -69,7 +70,7 @@ export function PhoneInput({
         disabled={disabled}
         placeholder={placeholder}
         className="min-w-0 flex-1"
-        onChange={(event) => emit(countryCode, event.target.value)}
+        onChange={(event) => emit(countryCode, sanitizePhoneLocalInput(event.target.value))}
       />
     </div>
   );

@@ -18,6 +18,9 @@ import {
   SuperadminIcon,
   UserCircleIcon,
   UsersIcon,
+  CalendarIcon,
+  DocumentIcon,
+  TasksIcon,
   type IconProps,
 } from '@/lib/icons';
 
@@ -43,3 +46,6 @@ export const superadminPageIcon = () => modulePageIcon(SuperadminIcon);
 export const organizationPageIcon = () => modulePageIcon(OrganizationIcon);
 export const showcasePageIcon = () => modulePageIcon(SlidersHorizontalIcon);
 export const accessDeniedPageIcon = () => modulePageIcon(LockIcon);
+export const documentsPageIcon = () => modulePageIcon(DocumentIcon);
+export const calendarPageIcon = () => modulePageIcon(CalendarIcon);
+export const tasksPageIcon = () => modulePageIcon(TasksIcon);

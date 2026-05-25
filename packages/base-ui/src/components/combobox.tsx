@@ -16,6 +16,14 @@ import * as React from 'react';
 import { Button } from './button';
 import { Input } from './input';
 import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import {
+  type ControlValidationState,
+  controlDisabledClasses,
+  controlHoverClasses,
+  controlValidationClasses,
+  filledControlSurfaceClasses,
+  resolveControlValidationState,
+} from '../lib/controlStates';
 import { cn } from '../lib/utils';
 
 export interface ComboboxOption {
@@ -50,6 +58,9 @@ export interface ComboboxProps {
     onClick: () => void | Promise<void>;
   };
   isLoading?: boolean;
+  validationState?: ControlValidationState;
+  valid?: boolean;
+  invalid?: boolean;
 }
 
 export function Combobox({
@@ -67,6 +78,9 @@ export function Combobox({
   onCreate,
   footerAction,
   isLoading = false,
+  validationState,
+  valid,
+  invalid,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
@@ -195,6 +209,12 @@ export function Combobox({
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 
+  const resolvedValidation = resolveControlValidationState({
+    validationState,
+    valid,
+    invalid,
+  });
+
   return (
     <Popover open={open} onOpenChange={handleOpen}>
       <PopoverTrigger asChild>
@@ -203,10 +223,15 @@ export function Combobox({
           type="button"
           disabled={disabled}
           aria-expanded={open}
+          aria-invalid={resolvedValidation === 'invalid' ? true : undefined}
+          data-valid={resolvedValidation === 'valid' ? 'true' : undefined}
           className={cn(
-            'flex h-9 w-full items-center justify-between rounded-control bg-muted/60 px-3 py-1 text-sm hover:bg-muted/80 transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-ring/40',
-            'disabled:cursor-not-allowed disabled:opacity-50',
+            'flex h-9 w-full items-center justify-between px-3 py-1 text-sm',
+            filledControlSurfaceClasses,
+            controlHoverClasses,
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+            controlDisabledClasses,
+            controlValidationClasses(resolvedValidation),
             !selectedOption && 'text-muted-foreground',
             className,
           )}
@@ -302,6 +327,7 @@ export function Combobox({
                     className="h-8 w-8 shrink-0"
                     disabled={!createLabel.trim() || isCreatingPending}
                     onClick={() => void handleCreate()}
+                    aria-label="Confirm create"
                   >
                     {isCreatingPending ? (
                       <SpinnerGap className="h-3.5 w-3.5 animate-spin" />
@@ -319,6 +345,7 @@ export function Combobox({
                       setIsCreating(false);
                       setCreateLabel('');
                     }}
+                    aria-label="Cancel create"
                   >
                     <X className="h-3.5 w-3.5" />
                   </Button>

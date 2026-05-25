@@ -33,6 +33,24 @@ Use `<EntityForm>` for every create/edit form. Never hand-roll field grids.
 - Booleans: `checkbox` or `switch` — label is inline, no outer `<Label>`
 - Dates stored as ISO strings — display handled by `DatePicker`
 - API / client errors: pass `errors={{ fieldName: 'Message' }}` to `EntityForm`, or set `error` on individual field defs
+- Validation chrome: `FormField` forwards invalid ring to child — see `interactive-states.md`
+- Confirmed valid values: `valid` on `FormField` only when explicitly verified (not every filled field)
+
+## Input restrictions (keystroke filtering)
+
+Field components strip invalid characters as the user types — do not rely on submit-time validation alone.
+
+| Field type           | Allowed input                                                              | Component / helper                         |
+| -------------------- | -------------------------------------------------------------------------- | ------------------------------------------ |
+| `number`             | Digits only (optional leading `-`)                                         | `NumberInput` with `decimals={0}`          |
+| `currency`           | Decimal numbers                                                            | `NumberInput` with `decimals={2}`          |
+| `phone`              | Digits and spaces in local part                                            | `PhoneInput` + `sanitizePhoneLocalInput`   |
+| `email`              | No whitespace                                                              | `sanitizeEmailInput`                       |
+| `url`                | No whitespace                                                              | `sanitizeUrlInput`                         |
+| `address.postalCode` | Country-aware: digits-only (AT, DE, CH, …) or alphanumeric (GB, US, NL, …) | `AddressField` + `sanitizePostalCodeInput` |
+| `address.city`       | Free text                                                                  | No filtering (names vary widely)           |
+
+Postal code rules follow the selected address country. When the country changes, the postal value is re-sanitized. Prefer `type: 'number'` / `type: 'currency'` over raw `<Input type="number">`.
 
 ## Don't
 

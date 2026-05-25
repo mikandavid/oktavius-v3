@@ -1,76 +1,55 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { StatCard, Tabs, TabsContent, TabsList, TabsTrigger } from '@oktavius/base-ui';
-
+import { CrudMainView } from '@/components/data/CrudMainView';
 import { useDemoData } from '@/app/demo-data';
-import { ModulePage } from '@/components/common/PageLayout';
-import { PageHeaderActions } from '@/components/common/PageHeaderButtons';
-import { OrganizationIcon, UsersIcon } from '@/lib/icons';
+import { useListPageState } from '@/lib/useListPageState';
 
-import { SuperadminOrgsPanel } from './SuperadminOrgsPanel';
-import { SuperadminUsersPanel } from './SuperadminUsersPanel';
-import { superadminHeaderAction, superadminPageIcon } from './shared';
+import { OrganizationsHeaderAction, orgColumns, orgFilters, superadminPageIcon } from './shared';
 
 export function SuperadminPage() {
-  const { organizations, platformUsers } = useDemoData();
-  const [tab, setTab] = useState('organizations');
+  const { organizations } = useDemoData();
+  const [rows, setRows] = useState(organizations);
 
-  const stats = useMemo(() => {
-    const activeOrgs = organizations.filter((org) => org.status === 'Active').length;
-    const trialOrgs = organizations.filter((org) => org.status === 'Trial').length;
-    const superadmins = platformUsers.filter((user) => user.isSuperadmin).length;
-    return {
-      totalOrgs: organizations.length,
-      activeOrgs,
-      trialOrgs,
-      totalUsers: platformUsers.length,
-      superadmins,
-    };
-  }, [organizations, platformUsers]);
+  useEffect(() => {
+    setRows(organizations);
+  }, [organizations]);
+
+  const list = useListPageState({
+    rows,
+    defaultSort: 'name',
+    filterKeys: ['plan', 'status', 'environment'],
+    searchKeys: ['name', 'slug', 'region', 'ownerName', 'billingEmail'],
+  });
 
   return (
-    <ModulePage
+    <CrudMainView
       title="Superadmin"
-      subtitle="Manage tenant organizations, memberships, and platform-wide access."
+      subtitle="Platform organizations and environments"
       icon={superadminPageIcon()}
-      actions={
-        <PageHeaderActions>
-          {tab === 'organizations' ? superadminHeaderAction() : null}
-        </PageHeaderActions>
-      }
-      layoutClassName="min-w-0 w-full max-w-full"
-    >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Organizations"
-          value={String(stats.totalOrgs)}
-          icon={<OrganizationIcon size={16} />}
-        />
-        <StatCard label="Active tenants" value={String(stats.activeOrgs)} />
-        <StatCard label="Trial tenants" value={String(stats.trialOrgs)} />
-        <StatCard
-          label="Platform users"
-          value={String(stats.totalUsers)}
-          icon={<UsersIcon size={16} />}
-        />
-      </div>
-
-      <Tabs value={tab} onValueChange={setTab} className="mt-6">
-        <TabsList>
-          <TabsTrigger value="organizations">Organizations</TabsTrigger>
-          <TabsTrigger value="users">Platform users</TabsTrigger>
-        </TabsList>
-        <TabsContent value="organizations" className="mt-4">
-          <SuperadminOrgsPanel />
-        </TabsContent>
-        <TabsContent value="users" className="mt-4">
-          <p className="mb-3 text-sm text-muted-foreground">
-            Cross-tenant users. {stats.superadmins} platform superadmin
-            {stats.superadmins === 1 ? '' : 's'}.
-          </p>
-          <SuperadminUsersPanel />
-        </TabsContent>
-      </Tabs>
-    </ModulePage>
+      headerActions={<OrganizationsHeaderAction />}
+      columns={orgColumns}
+      rows={list.paged}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
+      search={list.search}
+      onSearchChange={list.onSearchChange}
+      searchPlaceholder="Search organizations"
+      filters={orgFilters}
+      values={list.values}
+      onFilterChange={list.onFilterChange}
+      onReset={list.onReset}
+      page={list.page}
+      pageSize={list.pageSize}
+      total={list.total}
+      totalPages={list.totalPages}
+      onPageChange={list.onPageChange}
+      entityLabel="organization"
+      getRowHref={(row) => `/superadmin/orgs/${row.id}`}
+      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
+      exportOptions={{ fileName: 'organizations', label: 'Export' }}
+      allRows={list.filtered}
+      emptyTitle="No organizations found"
+      emptyDescription="Create an organization or adjust your filters."
+    />
   );
 }

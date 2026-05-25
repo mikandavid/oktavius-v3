@@ -13,7 +13,8 @@ Single source of truth for frontend UI conventions. For developers, designers, a
 | [`ui-system.md`](./ui-system.md)                   | Stack, shells, visual tokens, buttons, app shell — **always apply** |
 | [`component-registry.md`](./component-registry.md) | Full component catalog, imports, do/don't table                     |
 | [`visual-foundation.md`](./visual-foundation.md)   | Colors, typography, spacing, borders, shadows, radius               |
-| [`hierarchy-system.md`](./hierarchy-system.md)     | 6-level visual hierarchy — prevents cards-in-cards                  |
+| [`interactive-states.md`](./interactive-states.md) | Hover, focus, disabled, loading, invalid, valid — control state API |
+| [`hierarchy-system.md`](./hierarchy-system.md)     | 6-level visual hierarchy + 6 card content tiers                     |
 | [`component-guide.md`](./component-guide.md)       | Decision trees — which component for which need                     |
 | [`anti-patterns.md`](./anti-patterns.md)           | Common mistakes with code examples                                  |
 | [`agent-contract.md`](./agent-contract.md)         | Hard bans, page templates, pre-submit checklist                     |
@@ -33,8 +34,10 @@ Single source of truth for frontend UI conventions. For developers, designers, a
 | [`calendar-components.md`](./calendar-components.md)           | `CalendarView`, events, planner UX              |
 | [`split-view-master-detail.md`](./split-view-master-detail.md) | Master-detail layouts                           |
 | [`entity-form.md`](./entity-form.md)                           | Create/edit forms                               |
+| [`interactive-states.md`](./interactive-states.md)             | Control states (loading, invalid, disabled)     |
 | [`module-pattern.md`](./module-pattern.md)                     | ERP module file structure                       |
 | [`detail-pages.md`](./detail-pages.md)                         | DetailView vs Tabs, Overview tab                |
+| [`section-nav.md`](./section-nav.md)                           | Section nav layout, compact app sidebar         |
 | [`status-and-money.md`](./status-and-money.md)                 | StatusBadge, MoneyText                          |
 | [`dialogs.md`](./dialogs.md)                                   | Modals and confirms                             |
 | [`checklist.md`](./checklist.md)                               | ChecklistSection done-state                     |

@@ -1,13 +1,20 @@
 import type { ReactNode } from 'react';
 
 import { cn } from '../lib/utils';
+import { surfacePressMicroClasses } from '../lib/microInteractions';
+import { getSemanticToneClasses } from '../lib/semanticPalette';
+import { RecordVisual, type RecordVisualProps } from './record-visual';
 
 export type ListRowVariant = 'default' | 'muted' | 'warning' | 'dashed' | 'queue';
 
 export interface ListRowProps {
   title: ReactNode;
   subtitle?: ReactNode;
-  /** Left slot — avatar, icon, checkbox */
+  /** Tertiary line — IDs, timestamps, low-priority context (tier 6) */
+  meta?: ReactNode;
+  /** Shorthand for `leading={<RecordVisual … size="sm" />}` — logo, avatar, or icon */
+  visual?: RecordVisualProps;
+  /** Left slot — avatar, icon, checkbox (overrides `visual`) */
   leading?: ReactNode;
   /** Right slot — badge, actions, chevron */
   trailing?: ReactNode;
@@ -29,6 +36,8 @@ export interface ListRowProps {
 export function ListRow({
   title,
   subtitle,
+  meta,
+  visual,
   leading,
   trailing,
   variant = 'default',
@@ -37,13 +46,16 @@ export function ListRow({
   'aria-current': ariaCurrent,
   leadingIsInteractive = false,
 }: ListRowProps) {
+  const leadingNode = leading ?? (visual ? <RecordVisual {...visual} size="sm" /> : null);
+
   const shellClass = cn(
-    'flex w-full min-w-0 items-center gap-3 py-2.5 text-left transition-colors',
+    'flex w-full min-w-0 items-center gap-3 py-2.5 text-left',
+    onClick && cn('cursor-pointer', surfacePressMicroClasses),
     variant === 'default' &&
       'border-b border-border/50 last:border-b-0 hover:bg-muted/40 px-2 -mx-2',
     variant === 'muted' && 'border-b border-border/40 last:border-b-0 hover:bg-muted/30 px-2 -mx-2',
     variant === 'warning' &&
-      'rounded-control border border-warning/30 bg-warning/10 hover:bg-warning/15 px-3',
+      cn('rounded-control px-3', getSemanticToneClasses('warning', 'soft'), 'hover:bg-warning/15'),
     variant === 'dashed' &&
       'rounded-control border border-dashed border-border/60 hover:border-border/80 hover:bg-muted/20 px-3',
     variant === 'queue' &&
@@ -51,9 +63,14 @@ export function ListRow({
     className,
   );
 
+  const titleClass =
+    variant === 'queue'
+      ? 'truncate text-base font-semibold leading-snug text-foreground'
+      : 'truncate text-sm font-medium text-foreground';
+
   const textBlock = (
     <div className="min-w-0 flex-1">
-      <div className="truncate text-sm font-medium text-foreground">{title}</div>
+      <div className={titleClass}>{title}</div>
       {subtitle ? (
         <div
           className={cn(
@@ -64,13 +81,16 @@ export function ListRow({
           {subtitle}
         </div>
       ) : null}
+      {meta ? (
+        <div className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/80">{meta}</div>
+      ) : null}
     </div>
   );
 
   if (onClick && leadingIsInteractive) {
     return (
       <div className={shellClass}>
-        {leading ? <div className="shrink-0">{leading}</div> : null}
+        {leadingNode ? <div className="shrink-0">{leadingNode}</div> : null}
         <button
           type="button"
           onClick={onClick}
@@ -92,7 +112,7 @@ export function ListRow({
       aria-current={ariaCurrent}
       className={shellClass}
     >
-      {leading ? <div className="shrink-0">{leading}</div> : null}
+      {leadingNode ? <div className="shrink-0">{leadingNode}</div> : null}
       {textBlock}
       {trailing ? <div className="shrink-0">{trailing}</div> : null}
     </Comp>

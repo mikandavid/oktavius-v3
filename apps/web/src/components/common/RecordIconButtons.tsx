@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { Button, buttonVariants, cn } from '@oktavius/base-ui';
+import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 import { DeleteIcon, EditIcon } from '@/lib/icons';
 
 import { PAGE_HEADER_ICON_BUTTON_CLASS } from './PageHeaderButtons';
@@ -18,17 +18,19 @@ type IconEditButtonProps = {
 export function IconEditButton({ to, onClick, label = 'Edit', className }: IconEditButtonProps) {
   if (to) {
     return (
-      <Link
-        to={to}
-        className={cn(
-          buttonVariants({ variant: 'outline', size: 'icon' }),
-          iconButtonClass,
-          className,
-        )}
-        aria-label={label}
-      >
-        <EditIcon size={14} />
-      </Link>
+      <MouseTooltip content={label}>
+        <Link
+          to={to}
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'icon' }),
+            iconButtonClass,
+            className,
+          )}
+          aria-label={label}
+        >
+          <EditIcon size={14} />
+        </Link>
+      </MouseTooltip>
     );
   }
 

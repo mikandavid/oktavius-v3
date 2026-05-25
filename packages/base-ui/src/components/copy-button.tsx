@@ -2,9 +2,9 @@ import * as React from 'react';
 
 import { Check, Copy } from '@phosphor-icons/react';
 
+import { successFeedbackClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';
 import { Button, type ButtonProps } from './button';
-import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 export interface CopyButtonProps extends Omit<
   ButtonProps,
@@ -15,6 +15,8 @@ export interface CopyButtonProps extends Omit<
   /** Optional visible label. Without it, renders icon-only. */
   children?: React.ReactNode;
   label?: string;
+  /** Tooltip / inline label shown after a successful copy. */
+  copiedLabel?: string;
   /** Duration of "copied" state in ms. */
   durationMs?: number;
 }
@@ -27,6 +29,7 @@ export function CopyButton({
   value,
   children,
   label = 'Copy',
+  copiedLabel = 'Copied!',
   durationMs = 1500,
   variant = 'ghost',
   size,
@@ -53,33 +56,35 @@ export function CopyButton({
   };
 
   const icon = copied ? (
-    <Check className="h-3.5 w-3.5 shrink-0 text-success" aria-hidden />
+    <Check
+      className="h-3.5 w-3.5 shrink-0 text-success animate-in zoom-in-75 duration-150"
+      aria-hidden
+    />
   ) : (
     <Copy className="h-3.5 w-3.5 shrink-0" aria-hidden />
   );
 
-  const button = (
+  return (
     <Button
       type="button"
       variant={variant}
       size={finalSize}
-      aria-label={label}
+      aria-label={copied ? copiedLabel : label}
+      aria-live="polite"
+      tooltip={copied ? copiedLabel : iconOnly ? label : false}
       disabled={disabled}
       onClick={handleClick}
-      className={cn(iconOnly && 'h-7 w-7', !iconOnly && 'gap-1.5', className)}
+      data-copied={copied ? 'true' : undefined}
+      className={cn(
+        iconOnly && 'h-7 w-7',
+        !iconOnly && 'gap-1.5',
+        copied && successFeedbackClasses,
+        className,
+      )}
       {...props}
     >
       {icon}
-      {children}
+      {children ? (copied ? copiedLabel : children) : null}
     </Button>
-  );
-
-  if (!iconOnly) return button;
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent>{copied ? 'Copied!' : label}</TooltipContent>
-    </Tooltip>
   );
 }

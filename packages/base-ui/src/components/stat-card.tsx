@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react';
 
+import { getSemanticToneClasses } from '../lib/semanticPalette';
 import { cn } from '../lib/utils';
+
+/** Responsive grid for StatCard rows — 2 → 3 → 6 columns, max 6 cards per row. */
+export const STAT_CARD_GRID_CLASS = 'grid gap-3 grid-cols-2 sm:grid-cols-3 xl:grid-cols-6';
 
 export type StatCardTrend = 'up' | 'down' | 'neutral';
 
@@ -29,13 +33,18 @@ export function StatCard({
 }: StatCardProps) {
   const deltaClass =
     trend === 'up'
-      ? 'text-success'
+      ? getSemanticToneClasses('success', 'text')
       : trend === 'down'
-        ? 'text-destructive'
-        : 'text-muted-foreground';
+        ? getSemanticToneClasses('destructive', 'text')
+        : getSemanticToneClasses('neutral', 'text');
 
   return (
-    <div className={cn('min-w-0 rounded-card bg-card p-4 space-y-1', className)}>
+    <div
+      className={cn(
+        'flex min-h-[6.75rem] min-w-0 flex-col justify-between rounded-card bg-card p-4 space-y-1',
+        className,
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         {icon ? <div className="shrink-0 text-muted-foreground/60">{icon}</div> : null}

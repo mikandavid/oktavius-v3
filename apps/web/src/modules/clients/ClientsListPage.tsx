@@ -1,82 +1,70 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CrudMainView } from '@/components/data/CrudMainView';
+import { useListSavedViews } from '@/components/data/useListSavedViews';
+import { useDemoData } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
-import { useVocabularyOptions } from '@/lib/reference-data';
 
-import type { ClientRecord } from '@/app/demo-data';
-import { useClientsList } from './clients-api';
-import { clientColumns, clientsPageIcon, ClientsHeaderAction } from './shared';
+import {
+  CLIENT_SAVED_VIEWS,
+  ClientsListHeaderActions,
+  clientColumns,
+  clientFilters,
+  clientsPageIcon,
+} from './shared';
 
 export function ClientsListPage() {
-  const clientStatusOptions = useVocabularyOptions('clientStatus');
-  const clientTypeOptions = useVocabularyOptions('clientType');
+  const { clients } = useDemoData();
+  const [rows, setRows] = useState(clients);
 
-  const list = useListPageState<ClientRecord>({
-    rows: [],
+  useEffect(() => {
+    setRows(clients);
+  }, [clients]);
+
+  const list = useListPageState({
+    rows,
     defaultSort: 'name',
-    pageSize: 10,
     filterKeys: ['status', 'type'],
+    searchKeys: ['name', 'email', 'industry', 'city', 'accountManager'],
   });
 
-  const listParams = useMemo(
-    () => ({
-      page: String(list.page),
-      pageSize: String(list.pageSize),
-      sort: list.sort,
-      search: list.search,
-      status: list.filters.status,
-      type: list.filters.type,
-    }),
-    [list.page, list.pageSize, list.sort, list.search, list.filters.status, list.filters.type],
-  );
-
-  const { data, isLoading, isFetching } = useClientsList(listParams);
-  const rows = data?.data ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? 1;
+  const { toolbarTrailing } = useListSavedViews({
+    views: CLIENT_SAVED_VIEWS,
+    filterKeys: ['status', 'type'],
+    onFilterChange: list.onFilterChange,
+    onReset: list.onReset,
+  });
 
   return (
     <CrudMainView
       title="Clients"
-      subtitle="Manage client accounts, contracts, and relationships."
+      subtitle="Customer accounts and relationships"
       icon={clientsPageIcon()}
-      headerActions={<ClientsHeaderAction />}
+      headerActions={<ClientsListHeaderActions />}
+      toolbarTrailing={toolbarTrailing}
+      columns={clientColumns}
+      rows={list.paged}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
       search={list.search}
       onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search by name, email, industry…"
-      filters={[
-        {
-          key: 'status',
-          label: 'Status',
-          options: clientStatusOptions,
-        },
-        {
-          key: 'type',
-          label: 'Type',
-          options: clientTypeOptions,
-        },
-      ]}
+      searchPlaceholder="Search clients"
+      filters={clientFilters}
       values={list.values}
       onFilterChange={list.onFilterChange}
       onReset={list.onReset}
-      rows={rows}
-      columns={clientColumns}
-      allRows={rows}
-      exportOptions={{ fileName: 'clients', label: 'Export' }}
-      emptyTitle="No clients found"
-      emptyDescription="Try adjusting filters or create a new client."
-      entityLabel="client"
-      getRowHref={(c) => `/clients/${c.id}`}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
       page={list.page}
       pageSize={list.pageSize}
-      total={total}
-      totalPages={totalPages}
+      total={list.total}
+      totalPages={list.totalPages}
       onPageChange={list.onPageChange}
-      isLoading={isLoading}
-      isFetching={isFetching}
+      entityLabel="client"
+      getRowHref={(row) => `/clients/${row.id}`}
+      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
+      exportOptions={{ fileName: 'clients', label: 'Export' }}
+      allRows={list.filtered}
+      emptyTitle="No clients found"
+      emptyDescription="Create a client or adjust your filters."
     />
   );
 }

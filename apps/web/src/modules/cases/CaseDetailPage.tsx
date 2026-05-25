@@ -1,340 +1,253 @@
-import { useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import {
-  AlertBanner,
   Avatar,
-  Badge,
   Button,
-  CalendarView,
-  type CalendarEvent,
-  type CalendarViewMode,
   InlineEmptyState,
   ListRow,
-  RichTextEditor,
+  STAT_CARD_GRID_CLASS,
   SectionCard,
   StatCard,
-  Stepper,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
   Timeline,
-  type TimelineEvent,
+  formatDisplayDate,
 } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
-import { ChecklistSection } from '@/components/common/ChecklistSection';
-import { InfoBox } from '@/components/common/InfoBox';
 import { ModulePage } from '@/components/common/PageLayout';
+import { ChecklistSection } from '@/components/common/ChecklistSection';
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
-import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { PartyContactLine } from '@/components/reference/PartyContactLine';
-import { formatDisplayDate } from '@/lib/formatDate';
-import { InfoIcon, PlusIcon, WarningIcon } from '@/lib/icons';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { CommentsPanel, type CommentItem } from '@/components/workflow/CommentsPanel';
+import { useDemoData } from '@/app/demo-data';
+import { PlusIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
 import {
-  CASE_PRIORITY_MAP,
-  CASE_STAGES,
-  CASE_STATUS_MAP,
+  casePriorityBadge,
+  caseSlaBadge,
+  caseStageBadge,
+  caseTypeBadge,
   casesPageIcon,
-  checklistFormDefaults,
-  checklistFormFields,
-  type ChecklistFormValues,
 } from './shared';
 
-const WORKFLOW_STEPS = CASE_STAGES.map((stage) => ({ key: stage.toLowerCase(), label: stage }));
+const checklistFormFields = [
+  { name: 'label', label: 'Item', type: 'text' as const, required: true },
+];
 
 export function CaseDetailPage() {
   const { caseId } = useParams();
-  const { cases, parties, tasks, caseChecklists, toggleChecklistItem, createChecklistItem } =
+  const navigate = useNavigate();
+  const { cases, parties, caseChecklists, toggleChecklistItem, createChecklistItem } =
     useDemoData();
-  const [tab, setTab] = useState('overview');
-  const [docId, setDocId] = useState('f1');
-  const [addChecklistOpen, setAddChecklistOpen] = useState(false);
-  const [notes, setNotes] = useState(
-    '<p>Internal case notes — visible to the assigned team only.</p>',
+  const [activeTab, setActiveTab] = useState('overview');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [checklistDialogOpen, setChecklistDialogOpen] = useState(false);
+  const [comments, setComments] = useState<CommentItem[]>([]);
+
+  const caseRecord = useMemo(() => cases.find((entry) => entry.id === caseId), [cases, caseId]);
+
+  const caseParties = useMemo(
+    () => parties.filter((party) => party.caseId === caseId),
+    [parties, caseId],
   );
 
-  const [calendarAnchor, setCalendarAnchor] = useState(() => new Date());
-  const [calendarView, setCalendarView] = useState<CalendarViewMode>('month');
+  const checklistItems = useMemo(
+    () => caseChecklists.filter((item) => item.caseId === caseId),
+    [caseChecklists, caseId],
+  );
 
-  const caseRecord = cases.find((c) => c.id === caseId);
-  if (!caseRecord) return <Navigate to="/cases" replace />;
+  const checklistDone = checklistItems.filter((item) => item.done).length;
+  const openTasks = checklistItems.filter((item) => !item.done).length;
 
-  const caseParties = parties.filter((p) => p.caseId === caseRecord.id);
-  const clientParties = parties.filter((p) => p.clientId === caseRecord.clientId);
-  const allParties = [...caseParties, ...clientParties.slice(0, 2)];
-  const caseTasks = tasks.filter((t) => t.parentId === caseRecord.id && t.parentType === 'case');
-  const checklist = caseChecklists.filter((c) => c.caseId === caseRecord.id);
-  const stageIndex = CASE_STAGES.indexOf(caseRecord.stage);
-  const incompleteRequired = checklist.filter((item) => item.required && !item.done).length;
+  if (!caseRecord) {
+    return (
+      <ModulePage title="Case not found" icon={casesPageIcon()} backTo="/cases">
+        <p className="text-sm text-muted-foreground">This case may have been removed.</p>
+      </ModulePage>
+    );
+  }
 
-  const caseCalendarEvents: CalendarEvent[] = [
+  const timelineEvents = [
     {
-      id: 'hearing',
-      title: 'Preliminary hearing',
-      start: `${caseRecord.dueAt.slice(0, 10)}T10:00`,
-      end: `${caseRecord.dueAt.slice(0, 10)}T11:30`,
-      calendarId: 'legal',
-      colorKey: 'blue',
+      id: 'opened',
+      label: 'Case opened',
+      description: `${caseRecord.caseNumber} · ${caseRecord.type}`,
+      timestamp: caseRecord.openedAt,
+      tone: 'info' as const,
     },
     {
-      id: 'deadline',
-      title: 'Filing deadline',
-      start: caseRecord.dueAt.slice(0, 10),
-      end: caseRecord.dueAt.slice(0, 10),
-      allDay: true,
-      calendarId: 'legal',
-      colorKey: 'red',
+      id: 'due',
+      label: 'Due date',
+      description: `Assigned to ${caseRecord.assignee || 'Unassigned'}`,
+      timestamp: caseRecord.dueAt,
+      tone: caseRecord.slaStatus === 'breach' ? ('destructive' as const) : ('default' as const),
     },
-    {
-      id: 'review',
-      title: 'Team review',
-      start: `${caseRecord.openedAt.slice(0, 10)}T14:00`,
-      end: `${caseRecord.openedAt.slice(0, 10)}T15:00`,
-      calendarId: 'legal',
-      colorKey: 'violet',
-    },
+    ...(caseRecord.stage === 'Closed'
+      ? [
+          {
+            id: 'closed',
+            label: 'Case closed',
+            description: caseRecord.summary,
+            timestamp: caseRecord.dueAt,
+            tone: 'success' as const,
+          },
+        ]
+      : []),
   ];
 
-  const activity: TimelineEvent[] = [
-    { id: '1', label: 'Case opened', timestamp: `${caseRecord.openedAt}T09:00:00Z`, tone: 'info' },
-    {
-      id: '2',
-      label: 'Assigned to ' + caseRecord.assignee,
-      timestamp: `${caseRecord.openedAt}T11:00:00Z`,
-      tone: 'info',
-    },
-    {
-      id: '3',
-      label: 'Stage changed to ' + caseRecord.stage,
-      timestamp: '2024-12-01T15:30:00Z',
-      tone: caseRecord.slaStatus === 'breach' ? 'destructive' : 'success',
-    },
-  ];
-
-  const slaBanner =
-    caseRecord.slaStatus === 'breach' ? (
-      <AlertBanner tone="destructive" flush>
-        SLA breached — due {formatDisplayDate(caseRecord.dueAt)}. Escalate immediately.
-      </AlertBanner>
-    ) : caseRecord.slaStatus === 'warning' ? (
-      <AlertBanner tone="warning" flush>
-        SLA at risk — resolution due {formatDisplayDate(caseRecord.dueAt)}.
-      </AlertBanner>
-    ) : null;
+  const workflowAttention = checklistItems.some((item) => item.required && !item.done);
 
   return (
     <>
-      {slaBanner}
       <ModulePage
-        title={caseRecord.caseNumber}
+        title={caseRecord.title}
         subtitle={
-          <span className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-            <span>{caseRecord.title}</span>
-            <span className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={caseRecord.priority} variantMap={CASE_PRIORITY_MAP} />
-              <StatusBadge status={caseRecord.stage} variantMap={CASE_STATUS_MAP} />
-              <Badge variant="outline">{caseRecord.type}</Badge>
-            </span>
+          <span className="flex flex-wrap items-center gap-2">
+            <span>{caseRecord.clientName}</span>
+            {caseTypeBadge(caseRecord.type)}
+            {caseStageBadge(caseRecord.stage)}
+            {casePriorityBadge(caseRecord.priority)}
+            {caseSlaBadge(caseRecord.slaStatus)}
           </span>
         }
         icon={casesPageIcon()}
         backTo="/cases"
+        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete case" />}
       >
-        <InfoBox tone="info" icon={<InfoIcon size={18} weight="fill" />} title="Case summary">
-          {caseRecord.summary}
-          <span className="mt-2 block text-xs text-muted-foreground">
-            Client:{' '}
-            <Link to={`/clients/${caseRecord.clientId}`} className="underline underline-offset-2">
-              {caseRecord.clientName}
-            </Link>
-            {' · Owner: '}
-            {caseRecord.assignee}
-          </span>
-        </InfoBox>
-
-        <Tabs value={tab} onValueChange={setTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger
-              value="workflow"
-              attention={incompleteRequired > 0 && caseRecord.stage !== 'Closed'}
-            >
+            <TabsTrigger value="workflow" attention={workflowAttention}>
               Workflow
             </TabsTrigger>
-            <TabsTrigger value="parties">Parties</TabsTrigger>
-            <TabsTrigger value="tasks" attention={caseTasks.some((t) => t.status === 'Pending')}>
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="comments">Comments</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 pt-4">
-            <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
+            <div className={STAT_CARD_GRID_CLASS}>
               <StatCard label="Stage" value={caseRecord.stage} />
-              <StatCard label="Parties" value={String(allParties.length)} />
               <StatCard
-                label="Open tasks"
-                value={String(caseTasks.filter((t) => t.status !== 'Completed').length)}
-                icon={
-                  caseTasks.some((t) => t.status === 'Pending') ? (
-                    <WarningIcon size={16} />
-                  ) : undefined
+                label="SLA"
+                value={
+                  caseRecord.slaStatus === 'ok'
+                    ? 'On track'
+                    : caseRecord.slaStatus === 'warning'
+                      ? 'At risk'
+                      : 'Breached'
                 }
               />
+              <StatCard
+                label="Checklist"
+                value={`${checklistDone}/${checklistItems.length || 0}`}
+              />
+              <StatCard label="Parties" value={String(caseParties.length)} />
+              <StatCard label="Open items" value={String(openTasks)} />
               <StatCard label="Due" value={formatDisplayDate(caseRecord.dueAt)} />
             </div>
-            <SectionCard title="Workflow progress">
-              <Stepper steps={WORKFLOW_STEPS} currentStep={Math.max(0, stageIndex)} />
+
+            <SectionCard title="Timeline">
+              <Timeline events={timelineEvents} />
             </SectionCard>
-            <SectionCard title="Recent activity">
-              <Timeline events={activity} />
+
+            <SectionCard title="Summary">
+              <p className="text-sm text-foreground">{caseRecord.summary || '—'}</p>
             </SectionCard>
-            <div className="space-y-2">
-              <ChecklistSection
-                title="Checklist preview"
-                items={checklist.slice(0, 3)}
-                readOnly
-                onToggle={toggleChecklistItem}
-              />
-              <Button variant="ghost" size="sm" onClick={() => setTab('workflow')}>
-                Open workflow tab
-              </Button>
-            </div>
+
+            <SectionCard
+              title="Parties"
+              meta={`${caseParties.length} contacts`}
+              actions={
+                caseParties.length > 0 ? (
+                  <Button size="sm" variant="ghost" onClick={() => setActiveTab('workflow')}>
+                    View workflow
+                  </Button>
+                ) : undefined
+              }
+            >
+              {caseParties.slice(0, 4).map((party) => (
+                <ListRow
+                  key={party.id}
+                  leading={<Avatar label={party.name} size="sm" />}
+                  title={party.name}
+                  subtitle={party.role.replace(/_/g, ' ')}
+                  meta={party.email}
+                />
+              ))}
+              {caseParties.length === 0 ? (
+                <InlineEmptyState text="No parties linked to this case." centered />
+              ) : null}
+            </SectionCard>
           </TabsContent>
 
           <TabsContent value="workflow" className="space-y-4 pt-4">
-            <SectionCard title="Case stages">
-              <Stepper steps={WORKFLOW_STEPS} currentStep={Math.max(0, stageIndex)} />
-              <div className="mt-4 flex flex-wrap gap-2">
-                {CASE_STAGES.map((stage) => (
-                  <Button
-                    key={stage}
-                    variant={stage === caseRecord.stage ? 'cta' : 'outline'}
-                    size="sm"
-                    type="button"
-                  >
-                    {stage}
-                  </Button>
-                ))}
-              </div>
-            </SectionCard>
             <ChecklistSection
               title="Resolution checklist"
-              meta={
-                checklist.length
-                  ? `${checklist.filter((item) => item.done).length}/${checklist.length} done · Required items before close`
-                  : 'Required items before close'
-              }
-              items={checklist}
+              items={checklistItems}
               onToggle={toggleChecklistItem}
               actions={
-                <Button variant="outline" size="sm" onClick={() => setAddChecklistOpen(true)}>
-                  <PlusIcon size={14} className="mr-1.5" />
+                <Button size="sm" variant="outline" onClick={() => setChecklistDialogOpen(true)}>
+                  <PlusIcon size={14} />
                   Add item
                 </Button>
               }
             />
           </TabsContent>
 
-          <TabsContent value="parties" className="pt-4">
-            <SectionCard
-              title="Parties"
-              meta={`${allParties.length} linked`}
-              actions={
-                <Button variant="outline" size="sm">
-                  Add party
-                </Button>
-              }
-            >
-              {allParties.map((party) => (
-                <ListRow
-                  key={party.id}
-                  title={party.name}
-                  subtitle={<PartyContactLine role={party.role} email={party.email} />}
-                  leading={<Avatar label={party.name} size="sm" tone="accent" />}
-                />
-              ))}
-            </SectionCard>
-          </TabsContent>
-
-          <TabsContent value="tasks" className="pt-4">
-            <SectionCard
-              title="Tasks"
-              actions={
-                <Button variant="outline" size="sm">
-                  Add task
-                </Button>
-              }
-            >
-              {caseTasks.length ? (
-                caseTasks.map((task) => (
-                  <ListRow
-                    key={task.id}
-                    title={task.title}
-                    subtitle={`Due ${formatDisplayDate(task.dueDate)} · ${task.assignee}`}
-                    trailing={<StatusBadge status={task.status} />}
-                  />
-                ))
-              ) : (
-                <InlineEmptyState text="No tasks on this case." centered />
-              )}
-            </SectionCard>
-          </TabsContent>
-
-          <TabsContent value="documents" className="pt-4">
-            <SectionCard title="Case file">
-              <DocumentPreviewPanel selectedId={docId} onSelect={setDocId} />
-            </SectionCard>
-          </TabsContent>
-
-          <TabsContent value="notes" className="pt-4">
-            <SectionCard title="Internal notes" meta="Rich text">
-              <RichTextEditor
-                value={notes}
-                onChange={setNotes}
-                placeholder="Add investigation notes…"
-              />
-            </SectionCard>
-          </TabsContent>
-
-          <TabsContent value="calendar" className="pt-4">
-            <CalendarView
-              anchor={calendarAnchor}
-              onAnchorChange={setCalendarAnchor}
-              view={calendarView}
-              onViewChange={setCalendarView}
-              events={caseCalendarEvents}
-              calendars={[{ id: 'legal', label: 'Case schedule', color: 'blue' }]}
-              onEventClick={(event) => toast.info(event.title)}
+          <TabsContent value="comments" className="space-y-4 pt-4">
+            <CommentsPanel
+              comments={comments}
+              onSubmit={(body, internal) => {
+                setComments((current) => [
+                  {
+                    id: `cmt_${Date.now()}`,
+                    author: caseRecord.assignee || 'Team member',
+                    body,
+                    createdAt: new Date().toISOString(),
+                    internal,
+                  },
+                  ...current,
+                ]);
+                toast.success(internal ? 'Internal note posted.' : 'Comment posted.');
+              }}
+              placeholder="Add a note about this case…"
             />
           </TabsContent>
         </Tabs>
-
-        <SubEntityFormDialog<ChecklistFormValues>
-          open={addChecklistOpen}
-          onOpenChange={setAddChecklistOpen}
-          title="Add checklist item"
-          description="Track resolution steps required before closing this case."
-          fields={checklistFormFields}
-          defaultValues={checklistFormDefaults}
-          submitLabel="Add item"
-          onSubmit={(values) => {
-            createChecklistItem({
-              caseId: caseRecord.id,
-              label: values.label,
-              required: Boolean(values.required),
-            });
-            toast.success('Checklist item added.');
-          }}
-        />
       </ModulePage>
+
+      <SubEntityFormDialog
+        open={checklistDialogOpen}
+        onOpenChange={setChecklistDialogOpen}
+        title="Add checklist item"
+        fields={checklistFormFields}
+        defaultValues={{ label: '' }}
+        submitLabel="Add item"
+        onSubmit={(values) => {
+          createChecklistItem({
+            caseId: caseRecord.id,
+            label: String(values.label),
+            required: true,
+          });
+          toast.success('Checklist item added.');
+        }}
+      />
+
+      <ConfirmActionDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this case?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          toast.success('Case deleted.');
+          navigate('/cases');
+        }}
+      />
     </>
   );
 }

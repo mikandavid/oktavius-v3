@@ -2,6 +2,7 @@ import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
 import * as React from 'react';
 
 import { Label } from './label';
+import { pressableMicroClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';
 
 export const RadioGroup = React.forwardRef<
@@ -23,10 +24,12 @@ export function RadioGroupItem({ className, ref, ...props }: RadioGroupItemProps
     <RadioGroupPrimitive.Item
       ref={ref}
       className={cn(
-        'aspect-square h-4 w-4 shrink-0 rounded-full border border-border bg-muted/60',
+        'aspect-square h-4 w-4 shrink-0 cursor-pointer rounded-full border border-border bg-muted/60',
+        pressableMicroClasses,
+        'hover:bg-muted/80',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'data-[state=checked]:border-cta',
+        'data-[state=checked]:border-cta data-[state=checked]:hover:border-cta/90',
         className,
       )}
       {...props}

@@ -1,6 +1,7 @@
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 import * as React from 'react';
 
+import { pressableMicroClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';
 
 export interface SwitchProps extends React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root> {
@@ -13,8 +14,11 @@ export function Switch({ className, ref, ...props }: SwitchProps) {
       ref={ref}
       className={cn(
         'peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent',
-        'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        pressableMicroClasses,
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'hover:data-[state=unchecked]:bg-muted/80 data-[state=checked]:hover:bg-cta/90',
         'disabled:cursor-not-allowed disabled:opacity-50',
+        'aria-invalid:ring-2 aria-invalid:ring-destructive',
         'data-[state=checked]:bg-cta data-[state=unchecked]:bg-muted',
         className,
       )}

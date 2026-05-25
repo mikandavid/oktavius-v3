@@ -221,6 +221,88 @@ or it has too much visual weight and should be quieted.
 
 ---
 
+## Card Content Tiers (6 fixed sizes)
+
+Inside any card surface (`Card`, `StatCard`, `DetailView`, `ListRow`), content uses exactly
+**six fixed typography tiers** — never ad-hoc font sizes. This prevents spreadsheet-style layouts
+where every label and value looks equally important.
+
+| Tier          | Token                          | Use                                                     |
+| ------------- | ------------------------------ | ------------------------------------------------------- |
+| 1 — Hero      | `CARD_CONTENT_TIERS.hero`      | Record identity, primary metric — max 6 per card region |
+| 2 — Highlight | `CARD_CONTENT_TIERS.highlight` | Important values with iconography                       |
+| 3 — Body      | `CARD_CONTENT_TIERS.body`      | Default field values, row titles                        |
+| 4 — Label     | `CARD_CONTENT_TIERS.label`     | Field labels — sentence case, never uppercase           |
+| 5 — Meta      | `CARD_CONTENT_TIERS.meta`      | Subtitles, secondary context, timestamps                |
+| 6 — Micro     | `CARD_CONTENT_TIERS.micro`     | IDs, codes, audit footnotes                             |
+
+Import from `@oktavius/base-ui`: `CARD_CONTENT_TIERS`, `RecordInfoHero`, `RecordInfoMeta`, `DetailFieldGrid`.
+
+### DetailView field importance
+
+Set `importance` on each field:
+
+- **`primary`** — rendered in `RecordInfoHero` at the top (large value + optional `icon`). Use for the 2–6 facts a user must see first.
+- **`default`** — standard two-column grid (omit `importance` or set explicitly).
+- **`meta`** — compact footer strip via `RecordInfoMeta`. Use for IDs, revision numbers, audit timestamps.
+
+```
+❌ Wrong — every field same size, uppercase labels, excel grid
+<dt className="text-xs uppercase">RECORD ID</dt>
+<dd className="text-sm">dbg_001</dd>
+
+✅ Correct — hierarchy with tiers
+importance="primary" + icon  →  hero tier at top
+default fields               →  body tier in grid
+importance="meta"            →  micro tier in footer strip
+```
+
+### StatCard rows
+
+Use `STAT_CARD_GRID_CLASS` (`grid-cols-2 sm:grid-cols-3 xl:grid-cols-6`). Maximum **6 StatCards per row**.
+Each card has fixed min-height for grid alignment.
+
+### ListRow hierarchy
+
+- **Title** — tier 3 (`text-sm font-medium`; `text-base font-semibold` for `variant="queue"`)
+- **Subtitle** — tier 5 (`text-xs text-muted-foreground`)
+- **`meta` prop** — tier 6 (mono micro line for IDs, timestamps)
+
+Never render three text lines at the same size.
+
+### Record visuals (logo · avatar · icon)
+
+Every record card should have a **visual anchor** so users recognize the entity before reading text.
+Use `RecordVisual` / `RecordIdentity` — never raw `<img>` tags in modules.
+
+| Kind     | Shape                                | When                                                                        |
+| -------- | ------------------------------------ | --------------------------------------------------------------------------- |
+| `image`  | Rounded square (`rounded-control`)   | Client logo, product photo, vendor brand when `logoUrl` / `imageUrl` exists |
+| `avatar` | Circle photo, else rounded icon tile | People (`UserIcon`), companies (`OrganizationIcon`) when no `logoUrl`       |
+| `icon`   | Rounded square + muted fill          | Module/entity type fallback (product, case, order) when no photo            |
+
+Fixed sizes: `sm` (list rows) · `md` · `lg` (identity band) · `xl` (hero panels).
+
+```tsx
+// Card top — like a branded order summary
+<RecordIdentity
+  visual={{ kind: 'image', src: vendor.logoUrl, alt: vendor.name }}
+  title="Catering order #4821"
+  subtitle="Due today 12:30"
+  meta="ord_4821"
+/>
+
+// List row shorthand
+<ListRow title={client.name} visual={{ kind: 'avatar', label: client.name }} … />
+
+// DetailView
+<DetailView visual={{ kind: 'icon', icon: <ProductIcon /> }} title={product.name} … />
+```
+
+Pick the most specific kind available: **image → avatar (with icon) → icon**. Never show initials as a fallback.
+
+---
+
 ## Hierarchy Violations to Watch For
 
 ### Cards Inside Cards

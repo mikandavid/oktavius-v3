@@ -35,6 +35,8 @@ Use `<EntityForm>` for every create/edit form. Never hand-roll field grids.
 - Entity pickers: `type: 'relation'` with optional `asyncItems`, `onCreate`, `footerAction`
 - Booleans: `checkbox` or `switch` — label is inline, no outer `<Label>`
 - Dates stored as ISO strings — display handled by `DatePicker`
+- API / client errors: pass `errors={{ fieldName: 'Message' }}` to `EntityForm`
+- Validation: `FormField` forwards invalid ring — see `interactive-states.md`
 
 ## Don't
 

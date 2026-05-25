@@ -19,6 +19,8 @@ export const CHART_SERIES_COLORS = [
   'hsl(var(--info))',
   'hsl(var(--success))',
   'hsl(var(--warning))',
+  'hsl(var(--teal))',
+  'hsl(var(--orange))',
   'hsl(var(--destructive))',
 ] as const;
 

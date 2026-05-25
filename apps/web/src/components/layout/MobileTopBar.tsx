@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import { Button, buttonVariants, cn } from '@oktavius/base-ui';
+import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 
 import { BotIcon, ListIcon } from '@/lib/icons';
 
@@ -25,13 +25,15 @@ export function MobileTopBar({ onToggleSidebar, showChatLink = true }: MobileTop
       </div>
       <div className="ml-auto flex items-center gap-1">
         {showChatLink ? (
-          <Link
-            to="/ai-chat"
-            aria-label="Open agent chat"
-            className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-          >
-            <BotIcon size={18} />
-          </Link>
+          <MouseTooltip content="Open agent chat">
+            <Link
+              to="/ai-chat"
+              aria-label="Open agent chat"
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+            >
+              <BotIcon size={18} />
+            </Link>
+          </MouseTooltip>
         ) : null}
         <HeaderAccountMenu compact />
       </div>

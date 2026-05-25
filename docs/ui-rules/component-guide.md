@@ -27,7 +27,7 @@ What am I building?
 │   └── Complex (multi-step, multi-domain) → ModulePage + StepperLayout
 │
 ├── A settings page
-│   └── ModulePage + SettingsLayout + SettingsSection + SettingsRow
+│   └── ModulePage + AppSectionNavLayout + SettingsSection + SettingsRow
 │
 ├── A dashboard
 │   └── ModulePage + StatCard row + SectionCard(s) with charts/lists
@@ -68,18 +68,18 @@ What am I building?
 
 ## Card vs SectionCard vs ListRow vs DetailView
 
-| Need                                          | Use                                                  | Don't Use                        |
-| --------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
-| Content surface floating on page body         | `Card` (Level 2)                                     | Raw `div` with manual border     |
-| Content section inside a detail page or modal | `SectionCard` (Level 3)                              | `Card` inside `Card`             |
-| Sub-entity items (parties, tasks, events)     | `ListRow` inside `SectionCard`                       | `Card` per item                  |
-| Read-only field display for a record          | `DetailView`                                         | Custom field-row divs            |
-| KPI metric                                    | `StatCard`                                           | Custom `Card` with manual layout |
-| "No items" inside a SectionCard               | `InlineEmptyState`                                   | Custom styled paragraph          |
-| "No records" for a whole list page            | `EmptyState`                                         | `InlineEmptyState` at page level |
-| Long/optional form field groups               | `CollapsibleSection`                                 | Always-expanded accordion        |
-| List left + detail right layout               | `SplitView`                                          | Custom flex layout per module    |
-| Settings page navigation                      | `SettingsLayout` + `SettingsSection` + `SettingsRow` | Custom layout per settings page  |
+| Need                                          | Use                                                       | Don't Use                        |
+| --------------------------------------------- | --------------------------------------------------------- | -------------------------------- |
+| Content surface floating on page body         | `Card` (Level 2)                                          | Raw `div` with manual border     |
+| Content section inside a detail page or modal | `SectionCard` (Level 3)                                   | `Card` inside `Card`             |
+| Sub-entity items (parties, tasks, events)     | `ListRow` inside `SectionCard`                            | `Card` per item                  |
+| Read-only field display for a record          | `DetailView`                                              | Custom field-row divs            |
+| KPI metric                                    | `StatCard`                                                | Custom `Card` with manual layout |
+| "No items" inside a SectionCard               | `InlineEmptyState`                                        | Custom styled paragraph          |
+| "No records" for a whole list page            | `EmptyState`                                              | `InlineEmptyState` at page level |
+| Long/optional form field groups               | `CollapsibleSection`                                      | Always-expanded accordion        |
+| List left + detail right layout               | `SplitView`                                               | Custom flex layout per module    |
+| Settings page navigation                      | `AppSectionNavLayout` + `SettingsSection` + `SettingsRow` | Raw `SettingsLayout` in apps/web |
 
 ---
 
@@ -160,7 +160,7 @@ Use multi-step wizard (StepperLayout) when:
 Do not use StepperLayout for:
 
 - Simple records with many fields (use one EntityForm with sections)
-- Settings configuration (use SettingsLayout)
+- Settings configuration (use `AppSectionNavLayout` — see `section-nav.md`)
 - Filtering or search (use FilterToolbar)
 
 ---
@@ -172,6 +172,7 @@ What action is this?
 │
 ├── List header “New X” → PageHeaderCtaLink / PageHeaderCtaButton — variant="cta" size="sm" (one per page header)
 ├── Dialog Save / Create → variant="cta" (EntityForm surface="dialog" or DialogFormFooter)
+├── Dialog Cancel / Back / dismiss → variant="ghost"
 ├── Full-page form submit → variant="default"
 ├── Secondary action (export, filter, secondary navigation) → variant="outline" size="sm"
 ├── Toolbar / icon action → variant="ghost"
@@ -242,7 +243,7 @@ What navigation element is this?
 │
 ├── Current location in a hierarchy → Breadcrumb (above page title on detail pages)
 ├── Major sections within a detail workspace → Tabs + TabsList + TabsTrigger
-├── Settings categories → SettingsLayout (handles nav sidebar + content panel)
+├── Settings categories → AppSectionNavLayout (section nav + content panel; compacts app sidebar)
 ├── Related entity quick-switch → SplitView sidebar
 └── Global module navigation → Sidebar (do not rebuild this per module)
 ```
@@ -266,7 +267,7 @@ What overlay is this?
 ### Dialog Rules
 
 - Dialog title must be present and describe the action.
-- Primary confirm in footer: `variant="cta"` (Save / Create) — Cancel stays `outline`.
+- Primary confirm in footer: `variant="cta"` (Save / Create) — Cancel stays `ghost`.
 - Destructive action in the footer must be `variant="destructive"` and separated.
 - Do not put a full module page inside a Dialog. Large workflows get a route.
 

@@ -1,62 +1,89 @@
-import { useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { useDemoData } from '@/app/demo-data';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
-import { ModulePage } from '@/components/common/PageLayout';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { useDemoData } from '@/app/demo-data';
+import { userRecordPageIcon } from '@/lib/modulePageIcons';
+import { toast } from '@/lib/toast';
 
-import { userRecordPageIcon } from './shared';
+import { USER_ROLE_VARIANT, USER_STATUS_VARIANT } from './shared';
 
 export function UserDetailPage() {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const { users } = useDemoData();
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const user = users.find((entry) => entry.id === userId);
+  const user = useMemo(() => users.find((entry) => entry.id === userId), [users, userId]);
+
   if (!user) {
-    return <Navigate to="/users" replace />;
+    return (
+      <ModulePage title="User not found" icon={userRecordPageIcon()} backTo="/users">
+        <p className="text-sm text-muted-foreground">This user may have been removed.</p>
+      </ModulePage>
+    );
   }
 
   return (
-    <ModulePage
-      title={user.name}
-      subtitle="Detail screens should reuse a standard sectioned record view."
-      icon={userRecordPageIcon()}
-      backTo="/users"
-      actions={<IconDeleteButton onClick={() => setConfirmDeleteOpen(true)} />}
-    >
-      <DetailView
-        title="User record"
-        subtitle="Sectioned detail groups should follow the same information hierarchy across modules."
-        fields={[
-          {
-            key: 'id',
-            label: 'User ID',
-            value: <span className="font-mono text-xs">{user.id}</span>,
-            section: 'Identity',
-          },
-          { key: 'email', label: 'Email', value: user.email, section: 'Identity' },
-          { key: 'role', label: 'Role', value: user.role, section: 'Assignment' },
-          {
-            key: 'status',
-            label: 'Status',
-            value: <StatusBadge status={user.status} />,
-            section: 'Assignment',
-          },
-          { key: 'team', label: 'Team', value: user.team, section: 'Assignment' },
-        ]}
-      />
+    <>
+      <ModulePage
+        title={user.name}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>{user.email}</span>
+            <StatusBadge status={user.role} variantMap={USER_ROLE_VARIANT} />
+            <StatusBadge status={user.status} variantMap={USER_STATUS_VARIANT} />
+          </span>
+        }
+        icon={userRecordPageIcon()}
+        backTo="/users"
+        actions={
+          <>
+            <IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete user" />
+          </>
+        }
+      >
+        <DetailView
+          title="User details"
+          fields={[
+            { label: 'Full name', value: user.name, importance: 'primary' },
+            { label: 'Email', value: user.email, section: 'Contact' },
+            { label: 'Team', value: user.team || '—', section: 'Organization' },
+            {
+              label: 'Role',
+              value: <StatusBadge status={user.role} variantMap={USER_ROLE_VARIANT} />,
+              section: 'Access',
+            },
+            {
+              label: 'Status',
+              value: <StatusBadge status={user.status} variantMap={USER_STATUS_VARIANT} />,
+              section: 'Access',
+            },
+            {
+              label: 'Platform admin',
+              value: user.isSuperadmin ? 'Yes' : 'No',
+              section: 'Access',
+              importance: 'meta',
+            },
+          ]}
+        />
+      </ModulePage>
+
       <ConfirmActionDialog
-        open={confirmDeleteOpen}
-        onOpenChange={setConfirmDeleteOpen}
-        title="Delete sample user?"
-        description="This is a temporary confirm dialog pattern for extraction-phase destructive actions."
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this user?"
+        description="This action cannot be undone."
         confirmLabel="Delete"
-        onConfirm={() => undefined}
+        onConfirm={() => {
+          toast.success('User deleted.');
+          navigate('/users');
+        }}
       />
-    </ModulePage>
+    </>
   );
 }

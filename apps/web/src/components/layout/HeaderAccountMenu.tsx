@@ -12,7 +12,7 @@ import {
 } from '@oktavius/base-ui';
 
 import { useDemoData } from '@/app/demo-data';
-import { ChevronDownIcon, SettingsIcon, SignOutIcon } from '@/lib/icons';
+import { ChevronDownIcon, SettingsIcon, SignOutIcon, UserIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
 import {
@@ -58,7 +58,12 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
           )}
           aria-label="Open account menu"
         >
-          <Avatar label={currentUser.name} size="sm" tone="muted" />
+          <Avatar
+            label={currentUser.name}
+            size="sm"
+            tone="muted"
+            icon={<UserIcon size={14} weight="duotone" />}
+          />
           {!compact ? (
             <>
               <span className="max-w-[8rem] truncate text-sm font-medium text-foreground">

@@ -1,18 +1,10 @@
 import type { ReactNode } from 'react';
 
+import { getSemanticToneClasses, resolveStatusDotTone } from '../lib/semanticPalette';
 import { cn } from '../lib/utils';
 
 export type StatusDotTone = 'neutral' | 'success' | 'info' | 'warning' | 'destructive' | 'muted';
 export type StatusDotSize = 'xs' | 'sm' | 'md';
-
-const TONE_CLASS: Record<StatusDotTone, string> = {
-  neutral: 'bg-muted-foreground',
-  success: 'bg-success',
-  info: 'bg-info',
-  warning: 'bg-warning',
-  destructive: 'bg-destructive',
-  muted: 'bg-muted-foreground/40',
-};
 
 const SIZE_CLASS: Record<StatusDotSize, string> = {
   xs: 'h-1.5 w-1.5',
@@ -30,12 +22,14 @@ export interface StatusDotProps {
 
 /** Colored inline dot for status indicators, legend items, presence. */
 export function StatusDot({ tone, size = 'sm', color, className }: StatusDotProps) {
+  const resolved = resolveStatusDotTone(tone);
+
   return (
     <span
       className={cn(
         'inline-block shrink-0 rounded-full',
         SIZE_CLASS[size],
-        !color && TONE_CLASS[tone],
+        !color && getSemanticToneClasses(resolved.tone, resolved.variant),
         className,
       )}
       style={color ? { backgroundColor: color } : undefined}

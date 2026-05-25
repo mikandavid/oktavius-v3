@@ -1,4 +1,9 @@
 /** @type {import('eslint').Rule.RuleModule} */
+
+/** Tailwind default palette scales (numbered steps) — not our semantic `neutral-*` ramp. */
+const FORBIDDEN_NUMBERED_PALETTE =
+  'slate|gray|zinc|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose';
+
 const FORBIDDEN = [
   {
     pattern: /\btext-gray-\d+\b/,
@@ -7,6 +12,18 @@ const FORBIDDEN = [
   {
     pattern: /\bbg-white\b/,
     message: 'Use bg-card or bg-background instead of bg-white.',
+  },
+  {
+    pattern: /\btext-white\b/,
+    message:
+      'Use text-foreground or a semantic *-foreground token (e.g. text-cta-foreground) instead of text-white.',
+  },
+  {
+    pattern: new RegExp(
+      `\\b(text|bg|border|ring|from|to|via)-(?:${FORBIDDEN_NUMBERED_PALETTE})-\\d+\\b`,
+    ),
+    message:
+      'Use semantic design tokens (success, warning, info, teal, orange, cta, neutral-*) instead of raw Tailwind palette scales.',
   },
   {
     pattern: /\brounded-lg\b/,

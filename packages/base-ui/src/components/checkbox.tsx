@@ -2,6 +2,7 @@ import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { Check } from '@phosphor-icons/react';
 import * as React from 'react';
 
+import { pressableMicroClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';
 
 export interface CheckboxProps extends React.ComponentPropsWithoutRef<
@@ -15,10 +16,13 @@ export function Checkbox({ className, ref, ...props }: CheckboxProps) {
     <CheckboxPrimitive.Root
       ref={ref}
       className={cn(
-        'peer h-4 w-4 shrink-0 rounded-sm bg-muted/60 ring-offset-background',
+        'peer h-4 w-4 shrink-0 cursor-pointer rounded-sm bg-muted/60 ring-offset-background',
+        pressableMicroClasses,
+        'hover:bg-muted/80',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'data-[state=checked]:bg-cta data-[state=checked]:text-cta-foreground',
+        'aria-invalid:ring-2 aria-invalid:ring-destructive',
+        'data-[state=checked]:bg-cta data-[state=checked]:text-cta-foreground data-[state=checked]:hover:bg-cta/90',
         className,
       )}
       {...props}

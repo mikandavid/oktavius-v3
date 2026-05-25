@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { cn } from '../lib/utils';
+import { sanitizeEmailInput, sanitizeIntegerInput } from '../lib/input-sanitize';
 import { Input } from './input';
 
 export interface InlineEditProps {
@@ -37,6 +38,15 @@ export function InlineEdit({
   React.useEffect(() => {
     if (!editing) setDraft(value);
   }, [editing, value]);
+
+  const sanitizeDraft = React.useCallback(
+    (next: string) => {
+      if (type === 'email') return sanitizeEmailInput(next);
+      if (type === 'number') return sanitizeIntegerInput(next);
+      return next;
+    },
+    [type],
+  );
 
   const commit = async () => {
     if (draft === value) {
@@ -82,10 +92,11 @@ export function InlineEdit({
     <div className={cn('flex items-center gap-1', className)}>
       <Input
         ref={inputRef}
-        type={type}
+        type={type === 'number' ? 'text' : type}
+        inputMode={type === 'number' ? 'numeric' : undefined}
         value={draft}
         disabled={saving}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={(e) => setDraft(sanitizeDraft(e.target.value))}
         onBlur={() => void commit()}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {

@@ -1,4 +1,9 @@
-import { DEFAULT_ADDRESS_COUNTRY_OPTIONS, type CountryOption } from '@oktavius/reference-data';
+import {
+  DEFAULT_ADDRESS_COUNTRY_OPTIONS,
+  getPostalCodeInputMode,
+  sanitizePostalCodeInput,
+  type CountryOption,
+} from '@oktavius/reference-data';
 
 import { Combobox, type ComboboxOption } from './combobox';
 import { Input } from './input';
@@ -80,8 +85,13 @@ export function AddressField({
           value={value.postalCode}
           disabled={disabled}
           autoComplete="postal-code"
+          inputMode={getPostalCodeInputMode(value.country)}
           placeholder="Postal code"
-          onChange={(event) => set({ postalCode: event.target.value })}
+          onChange={(event) =>
+            set({
+              postalCode: sanitizePostalCodeInput(event.target.value, value.country),
+            })
+          }
         />
         <Input
           id={fieldId(id, 'city')}
@@ -99,7 +109,13 @@ export function AddressField({
         disabled={disabled}
         placeholder="Country"
         searchPlaceholder="Search country…"
-        onChange={(next) => set({ country: next ?? '' })}
+        onChange={(next) => {
+          const country = next ?? '';
+          set({
+            country,
+            postalCode: sanitizePostalCodeInput(value.postalCode, country),
+          });
+        }}
       />
     </div>
   );

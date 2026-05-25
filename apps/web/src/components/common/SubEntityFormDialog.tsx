@@ -24,7 +24,7 @@ type SubEntityFormDialogProps<T extends Record<string, FormFieldValue>> = {
   onSubmit: (values: T) => void;
 };
 
-/** Standard add/edit dialog — Dialog shell + EntityForm (dialog surface) + Cancel outline + cta Save. */
+/** Standard add/edit dialog — Dialog shell + EntityForm (dialog surface) + ghost Cancel + cta Save. */
 export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
   open,
   onOpenChange,
@@ -66,7 +66,7 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
           }}
           footerActions={
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button type="button" variant="ghost">
                 Cancel
               </Button>
             </DialogClose>

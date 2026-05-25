@@ -19,7 +19,7 @@ export interface SettingsLayoutProps {
 
 /**
  * Two-column settings layout: nav sidebar on left, content on right.
- * Collapses to stacked tabs on small screens.
+ * Desktop: each column scrolls independently. Mobile: horizontal section tabs + scrolling content.
  */
 export function SettingsLayout({
   items,
@@ -29,9 +29,12 @@ export function SettingsLayout({
   className,
 }: SettingsLayoutProps) {
   return (
-    <div className={cn('flex min-h-0 gap-6 md:gap-8', className)}>
-      {/* Nav */}
-      <nav className="hidden w-52 shrink-0 space-y-1 md:block">
+    <div className={cn('flex min-h-0 flex-1 flex-col gap-4 md:flex-row md:gap-8', className)}>
+      {/* Desktop section nav — stays in place; scrolls on its own when items overflow */}
+      <nav
+        aria-label="Section navigation"
+        className="hidden min-h-0 w-52 shrink-0 space-y-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable] md:block"
+      >
         {items.map((item) => {
           const isActive = item.key === activeKey;
           return (
@@ -42,12 +45,19 @@ export function SettingsLayout({
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm transition-colors',
                 isActive
-                  ? 'bg-muted font-medium text-foreground'
+                  ? 'bg-sidebar-primary/10 font-medium text-sidebar-primary'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
               )}
             >
               {item.icon ? (
-                <span className="shrink-0 text-muted-foreground">{item.icon}</span>
+                <span
+                  className={cn(
+                    'shrink-0',
+                    isActive ? 'text-sidebar-primary' : 'text-muted-foreground',
+                  )}
+                >
+                  {item.icon}
+                </span>
               ) : null}
               <span className="truncate">{item.label}</span>
             </button>
@@ -55,30 +65,34 @@ export function SettingsLayout({
         })}
       </nav>
 
-      {/* Mobile nav */}
-      <div className="flex gap-1 overflow-x-auto pb-1 md:hidden">
-        {items.map((item) => {
-          const isActive = item.key === activeKey;
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => onSelect(item.key)}
-              className={cn(
-                'shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors',
-                isActive
-                  ? 'bg-muted font-medium text-foreground'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-              )}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+        {/* Mobile section nav */}
+        <div className="flex shrink-0 gap-1 overflow-x-auto pb-1 md:hidden">
+          {items.map((item) => {
+            const isActive = item.key === activeKey;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => onSelect(item.key)}
+                className={cn(
+                  'shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors',
+                  isActive
+                    ? 'bg-sidebar-primary/10 font-medium text-sidebar-primary'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                )}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Content */}
-      <div className="min-w-0 flex-1 rounded-card bg-card p-5">{children}</div>
+        {/* Content — scrolls independently from section nav */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-card bg-card p-5 [scrollbar-gutter:stable]">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }

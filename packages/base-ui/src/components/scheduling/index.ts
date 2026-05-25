@@ -1,4 +1,5 @@
 export * from './agenda-list';
+export * from './calendar-dnd';
 export * from './calendar-colors';
 export * from './calendar-event-chip';
 export * from './calendar-shared';

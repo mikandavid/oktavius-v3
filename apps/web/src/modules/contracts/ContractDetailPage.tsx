@@ -1,128 +1,99 @@
-import { useState } from 'react';
-import { Navigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import {
-  AlertBanner,
-  Badge,
-  CollapsibleSection,
-  MoneyText,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@oktavius/base-ui';
+import { MoneyText, formatDisplayDate } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
-import { DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
-import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { formatDisplayDate } from '@/lib/formatDate';
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { DetailView } from '@/components/common/DetailView';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { useDemoData } from '@/app/demo-data';
+import { contractsPageIcon } from '@/lib/modulePageIcons';
+import { toast } from '@/lib/toast';
 
-import { CONTRACT_STATUS_MAP, contractsPageIcon } from './shared';
+import { contractStatusBadge } from './shared';
 
 export function ContractDetailPage() {
   const { contractId } = useParams();
+  const navigate = useNavigate();
   const { contracts } = useDemoData();
-  const [tab, setTab] = useState('terms');
-  const [docId, setDocId] = useState('f2');
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const contract = contracts.find((c) => c.id === contractId);
-  if (!contract) return <Navigate to="/contracts" replace />;
+  const contract = useMemo(
+    () => contracts.find((entry) => entry.id === contractId),
+    [contracts, contractId],
+  );
+
+  if (!contract) {
+    return (
+      <ModulePage title="Contract not found" icon={contractsPageIcon()} backTo="/contracts">
+        <p className="text-sm text-muted-foreground">This contract may have been removed.</p>
+      </ModulePage>
+    );
+  }
 
   return (
     <>
-      {contract.status === 'Expiring' ? (
-        <AlertBanner tone="warning" flush>
-          Contract expires on {formatDisplayDate(contract.endDate)} — renewal notice in{' '}
-          {contract.renewalNoticeDays} days.
-        </AlertBanner>
-      ) : null}
       <ModulePage
-        title={contract.contractNumber}
+        title={contract.title}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
-            <span>{contract.title}</span>
-            <StatusBadge status={contract.status} variantMap={CONTRACT_STATUS_MAP} />
+            <span>{contract.contractNumber}</span>
+            {contractStatusBadge(contract.status)}
           </span>
         }
         icon={contractsPageIcon()}
         backTo="/contracts"
+        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete contract" />}
       >
         <DetailView
-          title="Agreement summary"
+          title="Contract details"
           fields={[
-            { key: 'client', label: 'Client', value: contract.clientName, section: 'Terms' },
+            { label: 'Title', value: contract.title, importance: 'primary' },
+            { label: 'Contract number', value: contract.contractNumber, section: 'Identification' },
+            { label: 'Client', value: contract.clientName, section: 'Parties' },
+            { label: 'Owner', value: contract.owner, section: 'Parties' },
             {
-              key: 'value',
-              label: 'Contract value',
-              value: <MoneyText value={contract.value} />,
+              label: 'Status',
+              value: contractStatusBadge(contract.status),
               section: 'Terms',
             },
-            { key: 'owner', label: 'Owner', value: contract.owner, section: 'Terms' },
             {
-              key: 'start',
-              label: 'Start',
-              value: formatDisplayDate(contract.startDate),
-              section: 'Dates',
+              label: 'Contract value',
+              value: <MoneyText value={Number(contract.value)} currency="EUR" />,
+              section: 'Terms',
             },
             {
-              key: 'end',
-              label: 'End',
+              label: 'Start date',
+              value: formatDisplayDate(contract.startDate),
+              section: 'Timeline',
+            },
+            {
+              label: 'End date',
               value: formatDisplayDate(contract.endDate),
-              section: 'Dates',
+              section: 'Timeline',
+            },
+            {
+              label: 'Renewal notice',
+              value: `${contract.renewalNoticeDays} days`,
+              section: 'Terms',
+              importance: 'meta',
             },
           ]}
         />
-
-        <Tabs value={tab} onValueChange={setTab} className="mt-4">
-          <TabsList>
-            <TabsTrigger value="terms">Clauses</TabsTrigger>
-            <TabsTrigger value="document">Signed document</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="terms" className="space-y-3 pt-4">
-            <CollapsibleSection
-              title="1. Scope of services"
-              defaultOpen
-              badge={<Badge variant="secondary">Core</Badge>}
-            >
-              <p className="text-sm text-muted-foreground">
-                Provider delivers the subscribed modules, support tiers, and SLA commitments as
-                defined in Annex A. Change requests require written approval.
-              </p>
-            </CollapsibleSection>
-            <CollapsibleSection
-              title="2. Fees & payment"
-              badge={<Badge variant="outline">Billing</Badge>}
-            >
-              <p className="text-sm text-muted-foreground">
-                Annual fees invoiced quarterly in advance. Late payment interest applies after 14
-                days. Price adjustments capped at 5% YoY with 60-day notice.
-              </p>
-            </CollapsibleSection>
-            <CollapsibleSection
-              title="3. Liability & indemnity"
-              badge={<Badge variant="warning">Legal</Badge>}
-            >
-              <p className="text-sm text-muted-foreground">
-                Liability capped at 12 months of fees except for gross negligence, data breaches, or
-                IP infringement. Mutual indemnification for third-party claims arising from misuse.
-              </p>
-            </CollapsibleSection>
-            <CollapsibleSection title="4. Termination & renewal">
-              <p className="text-sm text-muted-foreground">
-                {contract.renewalNoticeDays}-day notice prior to end date. Auto-renewal unless
-                either party opts out. Data export window of 30 days post-termination.
-              </p>
-            </CollapsibleSection>
-          </TabsContent>
-
-          <TabsContent value="document" className="pt-4">
-            <DocumentPreviewPanel selectedId={docId} onSelect={setDocId} />
-          </TabsContent>
-        </Tabs>
       </ModulePage>
+
+      <ConfirmActionDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this contract?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          toast.success('Contract deleted.');
+          navigate('/contracts');
+        }}
+      />
     </>
   );
 }

@@ -1,77 +1,70 @@
-import { useDemoData } from '@/app/demo-data';
+import { useEffect, useState } from 'react';
+
 import { CrudMainView } from '@/components/data/CrudMainView';
+import { useListSavedViews } from '@/components/data/useListSavedViews';
+import { useDemoData } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
 
-import { productColumns, productsPageIcon, ProductsHeaderAction } from './shared';
+import {
+  PRODUCT_SAVED_VIEWS,
+  ProductsListHeaderActions,
+  productColumns,
+  productFilters,
+  productsPageIcon,
+} from './shared';
 
 export function ProductsListPage() {
   const { products } = useDemoData();
+  const [rows, setRows] = useState(products);
+
+  useEffect(() => {
+    setRows(products);
+  }, [products]);
 
   const list = useListPageState({
-    rows: products,
+    rows,
     defaultSort: 'name',
-    pageSize: 10,
     filterKeys: ['status', 'category'],
-    filterFn: (product, { search, filters }) => {
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        q.length === 0 ||
-        product.name.toLowerCase().includes(q) ||
-        product.sku.toLowerCase().includes(q) ||
-        product.category.toLowerCase().includes(q);
-      const matchesStatus = filters.status.length === 0 || product.status === filters.status;
-      const matchesCategory =
-        filters.category.length === 0 || product.category === filters.category;
-      return matchesSearch && matchesStatus && matchesCategory;
-    },
+    searchKeys: ['sku', 'name', 'category', 'unit'],
+  });
+
+  const { toolbarTrailing } = useListSavedViews({
+    views: PRODUCT_SAVED_VIEWS,
+    filterKeys: ['status', 'category'],
+    onFilterChange: list.onFilterChange,
+    onReset: list.onReset,
   });
 
   return (
     <CrudMainView
       title="Products"
-      subtitle="Catalog of sellable items, licenses, and services."
+      subtitle="Catalog items, pricing, and stock levels"
       icon={productsPageIcon()}
-      headerActions={<ProductsHeaderAction />}
+      headerActions={<ProductsListHeaderActions />}
+      toolbarTrailing={toolbarTrailing}
+      columns={productColumns}
+      rows={list.paged}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
       search={list.search}
       onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search SKU, name, category…"
-      filters={[
-        {
-          key: 'status',
-          label: 'Status',
-          options: [
-            { value: 'Active', label: 'Active' },
-            { value: 'Draft', label: 'Draft' },
-            { value: 'Discontinued', label: 'Discontinued' },
-          ],
-        },
-        {
-          key: 'category',
-          label: 'Category',
-          options: [
-            { value: 'Licenses', label: 'Licenses' },
-            { value: 'Services', label: 'Services' },
-            { value: 'Hardware', label: 'Hardware' },
-          ],
-        },
-      ]}
+      searchPlaceholder="Search products"
+      filters={productFilters}
       values={list.values}
       onFilterChange={list.onFilterChange}
       onReset={list.onReset}
-      rows={list.paged}
-      columns={productColumns}
-      allRows={list.filtered}
-      exportOptions={{ fileName: 'products', label: 'Export' }}
-      emptyTitle="No products found"
-      entityLabel="product"
-      getRowHref={(p) => `/products/${p.id}`}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
       page={list.page}
       pageSize={list.pageSize}
       total={list.total}
       totalPages={list.totalPages}
       onPageChange={list.onPageChange}
+      entityLabel="product"
+      getRowHref={(row) => `/products/${row.id}`}
+      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
+      exportOptions={{ fileName: 'products', label: 'Export' }}
+      allRows={list.filtered}
+      emptyTitle="No products found"
+      emptyDescription="Add a product or adjust your filters."
     />
   );
 }

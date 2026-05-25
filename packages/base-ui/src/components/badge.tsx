@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as React from 'react';
 
+import { getSemanticToneClasses } from '../lib/semanticPalette';
 import { cn } from '../lib/utils';
 
 export const badgeVariants = cva(
@@ -10,11 +11,11 @@ export const badgeVariants = cva(
       variant: {
         default: 'border-transparent bg-primary text-primary-foreground',
         secondary: 'border-transparent bg-secondary text-secondary-foreground',
-        destructive: 'border-transparent bg-destructive text-destructive-foreground',
+        destructive: cn('border-transparent', getSemanticToneClasses('destructive', 'solid')),
         outline: 'text-foreground',
-        info: 'border-info/20 bg-info/10 text-info',
-        success: 'border-success/20 bg-success/10 text-success',
-        warning: 'border-warning/20 bg-warning/10 text-warning',
+        info: getSemanticToneClasses('info', 'softEmphasis'),
+        success: getSemanticToneClasses('success', 'softEmphasis'),
+        warning: getSemanticToneClasses('warning', 'softEmphasis'),
       },
     },
     defaultVariants: {

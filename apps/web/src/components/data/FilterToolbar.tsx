@@ -41,7 +41,7 @@ function FilterSlot({
 }) {
   return (
     <label className="flex h-9 min-w-0 items-center gap-2 rounded-control bg-muted/60 px-3 transition-colors hover:bg-muted/80 focus-within:ring-2 focus-within:ring-ring/40">
-      <span className="w-[4.75rem] shrink-0 text-xs font-medium text-muted-foreground">
+      <span className="w-[4.75rem] shrink-0 truncate text-xs font-medium text-muted-foreground">
         {filter.label}
       </span>
       <Combobox
@@ -86,8 +86,8 @@ export function FilterToolbar({
   );
 
   return (
-    <div className="grid w-full min-w-0 gap-2 px-5 py-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(8rem,1.5fr)_repeat(3,minmax(6.5rem,1fr))_auto] xl:items-center">
-      <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
+    <div className="grid w-full min-w-0 grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(0,1fr))_auto] items-center gap-2 px-5 py-3">
+      <div className="relative min-w-0">
         <SearchIcon
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           size={16}
@@ -123,7 +123,7 @@ export function FilterToolbar({
         ),
       )}
 
-      <div className="flex min-w-[5.75rem] shrink-0 items-center justify-end gap-2 sm:col-span-2 xl:col-span-1">
+      <div className="flex min-w-[5.75rem] shrink-0 items-center justify-end gap-2">
         {trailing}
         <Button
           variant="outline"

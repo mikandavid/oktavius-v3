@@ -2,6 +2,7 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 import * as React from 'react';
 
 import { cn } from '../lib/utils';
+import { pressableMicroClasses } from '../lib/microInteractions';
 
 export const Tabs = TabsPrimitive.Root;
 
@@ -30,9 +31,11 @@ export const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      'relative inline-flex items-center justify-center whitespace-nowrap rounded-control px-3 py-1 text-sm font-medium ring-offset-background transition-colors',
+      'relative inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-control px-3 py-1 text-sm font-medium ring-offset-background',
+      pressableMicroClasses,
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-      'disabled:pointer-events-none disabled:opacity-50',
+      'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+      'data-[state=inactive]:hover:bg-muted/60 data-[state=inactive]:hover:text-foreground data-[state=inactive]:active:bg-muted/80',
       'data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
       className,
     )}

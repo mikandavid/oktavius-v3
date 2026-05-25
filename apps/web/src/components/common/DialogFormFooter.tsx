@@ -8,6 +8,8 @@ type DialogFormFooterProps = {
   confirmLabel: string;
   onConfirm?: () => void;
   confirmDisabled?: boolean;
+  /** Shows spinner on confirm and blocks repeat submit. */
+  confirmLoading?: boolean;
   /** When the confirm button submits a form, pass the form id. */
   confirmForm?: string;
   confirmType?: 'button' | 'submit';
@@ -15,13 +17,14 @@ type DialogFormFooterProps = {
   leading?: ReactNode;
 };
 
-/** Standard Dialog footer: outline Cancel + purple primary (Save / Create). */
+/** Standard Dialog footer: ghost Cancel + purple primary (Save / Create). */
 export function DialogFormFooter({
   cancelLabel = 'Cancel',
   onCancel,
   confirmLabel,
   onConfirm,
   confirmDisabled = false,
+  confirmLoading = false,
   confirmForm,
   confirmType = 'button',
   confirmVariant = 'cta',
@@ -31,12 +34,12 @@ export function DialogFormFooter({
     <DialogFooter>
       {leading}
       {onCancel ? (
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="ghost" onClick={onCancel}>
           {cancelLabel}
         </Button>
       ) : (
         <DialogClose asChild>
-          <Button type="button" variant="outline">
+          <Button type="button" variant="ghost">
             {cancelLabel}
           </Button>
         </DialogClose>
@@ -47,6 +50,7 @@ export function DialogFormFooter({
           variant={confirmVariant}
           form={confirmForm}
           disabled={confirmDisabled}
+          loading={confirmLoading}
           onClick={onConfirm}
         >
           {confirmLabel}
@@ -58,6 +62,7 @@ export function DialogFormFooter({
             variant={confirmVariant}
             form={confirmForm}
             disabled={confirmDisabled}
+            loading={confirmLoading}
           >
             {confirmLabel}
           </Button>

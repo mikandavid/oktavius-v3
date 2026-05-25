@@ -1,5 +1,7 @@
 import type { CalendarColorKey, CalendarEvent, CalendarEventTone } from './calendar-shared';
 
+import { getSemanticToneClasses, type SemanticTone } from '../../lib/semanticPalette';
+
 export interface CalendarSource {
   id: string;
   label: string;
@@ -15,47 +17,28 @@ export interface CalendarColorStyle {
   dot: string;
 }
 
+function calendarSolid(tone: SemanticTone): CalendarColorStyle {
+  const solid = getSemanticToneClasses(tone, 'solid');
+  return {
+    chip: solid,
+    block: solid,
+    dot: getSemanticToneClasses(tone, 'dot'),
+  };
+}
+
 /** Google Calendar–style solid fills — full background, no side accent only */
 export const CALENDAR_COLOR_STYLES: Record<CalendarColorKey, CalendarColorStyle> = {
-  violet: {
-    chip: 'bg-cta text-cta-foreground hover:brightness-95',
-    block: 'bg-cta text-cta-foreground hover:brightness-95',
-    dot: 'bg-cta',
-  },
-  blue: {
-    chip: 'bg-info text-info-foreground hover:brightness-95',
-    block: 'bg-info text-info-foreground hover:brightness-95',
-    dot: 'bg-info',
-  },
-  teal: {
-    chip: 'bg-teal-500 text-white hover:bg-teal-600',
-    block: 'bg-teal-500 text-white hover:bg-teal-600',
-    dot: 'bg-teal-500',
-  },
-  green: {
-    chip: 'bg-success text-success-foreground hover:brightness-95',
-    block: 'bg-success text-success-foreground hover:brightness-95',
-    dot: 'bg-success',
-  },
-  yellow: {
-    chip: 'bg-warning text-warning-foreground hover:brightness-95',
-    block: 'bg-warning text-warning-foreground hover:brightness-95',
-    dot: 'bg-warning',
-  },
-  orange: {
-    chip: 'bg-orange-500 text-white hover:bg-orange-600',
-    block: 'bg-orange-500 text-white hover:bg-orange-600',
-    dot: 'bg-orange-500',
-  },
-  red: {
-    chip: 'bg-destructive text-destructive-foreground hover:brightness-95',
-    block: 'bg-destructive text-destructive-foreground hover:brightness-95',
-    dot: 'bg-destructive',
-  },
+  violet: calendarSolid('cta'),
+  blue: calendarSolid('info'),
+  teal: calendarSolid('teal'),
+  green: calendarSolid('success'),
+  yellow: calendarSolid('warning'),
+  orange: calendarSolid('orange'),
+  red: calendarSolid('destructive'),
   gray: {
-    chip: 'bg-muted-foreground/75 text-white hover:bg-muted-foreground/85',
-    block: 'bg-muted-foreground/75 text-white hover:bg-muted-foreground/85',
-    dot: 'bg-muted-foreground/75',
+    chip: 'bg-neutral-500 text-neutral-50 hover:brightness-95',
+    block: 'bg-neutral-500 text-neutral-50 hover:brightness-95',
+    dot: 'bg-neutral-500',
   },
 };
 

@@ -13,6 +13,8 @@ import {
   Textarea,
 } from '@oktavius/base-ui';
 
+import { UserIcon } from '@/lib/icons';
+
 export interface CommentItem {
   id: string;
   author: string;
@@ -61,7 +63,13 @@ export function CommentsPanel({
             {comments.map((comment) => (
               <ListRow
                 key={comment.id}
-                leading={<Avatar label={comment.author} size="sm" />}
+                leading={
+                  <Avatar
+                    label={comment.author}
+                    size="sm"
+                    icon={<UserIcon size={14} weight="duotone" />}
+                  />
+                }
                 title={
                   <span className="flex items-center gap-2">
                     <span>{comment.author}</span>

@@ -1,98 +1,69 @@
-import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
+import type { BadgeProps } from '@oktavius/base-ui';
 
-import type { ProductRecord } from '@/app/demo-data';
+import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
+import { BulkImportTrigger } from '@/components/data/BulkImportWizard';
+import type { SavedViewPreset } from '@/components/data/useListSavedViews';
 import type { CrudColumn } from '@/components/data/CrudTable';
+import { statusColumn } from '@/components/data/columns';
+import type { FilterDef } from '@/components/data/FilterToolbar';
 import type { FormField } from '@/components/forms/EntityForm';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+import type { ProductRecord } from '@/app/demo-data';
 import { PlusIcon } from '@/lib/icons';
+import { productsPageIcon } from '@/lib/modulePageIcons';
 
-const PRODUCT_STATUS_MAP = {
+export { productsPageIcon };
+
+export const PRODUCT_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
   Active: 'success',
-  Draft: 'warning',
   Discontinued: 'destructive',
-} as const;
+  Draft: 'secondary',
+};
+
+export const PRODUCT_CATEGORIES = ['Licenses', 'Services', 'Hardware'] as const;
 
 export const productColumns: CrudColumn<ProductRecord>[] = [
-  {
-    key: 'sku',
-    header: 'SKU',
-    sortable: true,
-    render: (row) => <span className="font-mono text-xs">{row.sku}</span>,
-  },
-  {
-    key: 'name',
-    header: 'Product',
-    sortable: true,
-    render: (row) => <span className="font-medium text-foreground">{row.name}</span>,
-  },
-  { key: 'category', header: 'Category', sortable: true, hideBelow: 'md' },
-  {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    render: (row) => <StatusBadge status={row.status} variantMap={PRODUCT_STATUS_MAP} />,
-  },
+  { key: 'sku', header: 'SKU', sortable: true },
+  { key: 'name', header: 'Name', sortable: true },
+  { key: 'category', header: 'Category', sortable: true, type: 'badge' },
+  statusColumn('status', 'Status', PRODUCT_STATUS_VARIANT),
   {
     key: 'price',
     header: 'Price',
     sortable: true,
     type: 'currency',
-    align: 'right',
     meta: { currencySymbol: '€' },
-    render: (row) => row.price,
+    align: 'right',
   },
-  { key: 'stock', header: 'Stock', sortable: true, align: 'right', hideBelow: 'lg' },
+  { key: 'stock', header: 'Stock', sortable: true, align: 'right' },
+  { key: 'unit', header: 'Unit', sortable: true },
 ];
 
-export const productFormFields: FormField[] = [
-  { name: 'sku', label: 'SKU', type: 'text', required: true, section: 'Product' },
-  { name: 'name', label: 'Name', type: 'text', required: true, section: 'Product' },
+export const productFilters: FilterDef[] = [
   {
-    name: 'category',
-    label: 'Category',
-    type: 'select',
-    options: ['Licenses', 'Services', 'Hardware', 'Subscriptions'],
-    required: true,
-    section: 'Product',
-  },
-  {
-    name: 'status',
+    key: 'status',
     label: 'Status',
-    type: 'select',
-    options: ['Active', 'Draft', 'Discontinued'],
-    required: true,
-    section: 'Product',
+    options: [
+      { value: 'Active', label: 'Active' },
+      { value: 'Discontinued', label: 'Discontinued' },
+      { value: 'Draft', label: 'Draft' },
+    ],
   },
   {
-    name: 'currency',
-    label: 'Currency',
-    type: 'currencySelect',
-    required: true,
-    section: 'Pricing',
-  },
-  {
-    name: 'price',
-    label: 'Price',
-    type: 'currency',
-    currencySymbol: '€',
-    required: true,
-    section: 'Pricing',
-  },
-  { name: 'stock', label: 'Stock on hand', type: 'number', section: 'Pricing' },
-  {
-    name: 'unit',
-    label: 'Unit',
-    type: 'text',
-    section: 'Pricing',
-    placeholder: 'seat, day, unit…',
+    key: 'category',
+    label: 'Category',
+    options: PRODUCT_CATEGORIES.map((category) => ({
+      value: category,
+      label: category,
+    })),
   },
 ];
 
 export type ProductFormValues = {
   sku: string;
   name: string;
-  category: string;
-  status: string;
+  category: ProductRecord['category'];
+  status: ProductRecord['status'];
   currency: string;
   price: string;
   stock: string;
@@ -110,6 +81,36 @@ export const productFormDefaults: ProductFormValues = {
   unit: 'unit',
 };
 
+export const productFormFields: FormField[] = [
+  { name: 'sku', label: 'SKU', type: 'text', required: true, section: 'Product' },
+  { name: 'name', label: 'Name', type: 'text', required: true, section: 'Product' },
+  {
+    name: 'category',
+    label: 'Category',
+    type: 'combobox',
+    options: [...PRODUCT_CATEGORIES],
+    section: 'Product',
+  },
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'combobox',
+    options: ['Active', 'Discontinued', 'Draft'],
+    section: 'Product',
+  },
+  { name: 'unit', label: 'Unit', type: 'text', section: 'Inventory' },
+  { name: 'stock', label: 'Stock', type: 'number', section: 'Inventory' },
+  { name: 'price', label: 'Price', type: 'currency', currencySymbol: '€', section: 'Pricing' },
+  { name: 'currency', label: 'Currency', type: 'text', section: 'Pricing' },
+];
+
+export const PRODUCT_SAVED_VIEWS: SavedViewPreset[] = [
+  { id: 'all', label: 'All products', isDefault: true, filters: { status: '', category: '' } },
+  { id: 'active', label: 'Active', filters: { status: 'Active', category: '' } },
+  { id: 'licenses', label: 'Licenses', filters: { status: '', category: 'Licenses' } },
+  { id: 'services', label: 'Services', filters: { status: '', category: 'Services' } },
+];
+
 export function ProductsHeaderAction() {
   return (
     <PageHeaderCtaLink to="/products/new">
@@ -119,6 +120,15 @@ export function ProductsHeaderAction() {
   );
 }
 
-export { PRODUCT_STATUS_MAP };
+export function ProductsListHeaderActions() {
+  return (
+    <>
+      <BulkImportTrigger entityLabel="products" />
+      <ProductsHeaderAction />
+    </>
+  );
+}
 
-export { productsPageIcon } from '@/lib/modulePageIcons';
+export function productStatusBadge(status: ProductRecord['status']) {
+  return <StatusBadge status={status} variantMap={PRODUCT_STATUS_VARIANT} />;
+}

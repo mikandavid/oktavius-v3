@@ -25,6 +25,7 @@ import {
   Label,
   MultiSelect,
   type MultiSelectOption,
+  NumberInput,
   PhoneInput,
   RadioGroupField,
   SectionCard,
@@ -33,6 +34,8 @@ import {
   TagsInput,
   Textarea,
   cn,
+  sanitizeEmailInput,
+  sanitizeUrlInput,
 } from '@oktavius/base-ui';
 
 import {
@@ -177,6 +180,12 @@ function resolveFieldError<T extends Record<string, FormFieldValue>>(
 }
 
 // ─── Field Renderer ───────────────────────────────────────────────────────────
+
+function parseNumericBound(value?: string): number | undefined {
+  if (value == null || value === '') return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
 
 function FieldInput({
   field,
@@ -429,21 +438,36 @@ function FieldInput({
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
             {symbol}
           </span>
-          <Input
-            type="number"
+          <NumberInput
             id={inputId}
-            name={field.name}
             value={strValue}
+            locale={locale}
+            decimals={2}
             placeholder={field.placeholder ?? '0.00'}
             disabled={field.disabled}
-            autoComplete={textLikeAutoComplete}
+            min={parseNumericBound(field.min)}
+            max={parseNumericBound(field.max)}
             className="pl-7"
-            step="0.01"
-            onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+            onChange={(v) => onChange(v)}
           />
         </div>
       );
     }
+
+    case 'number':
+      return (
+        <NumberInput
+          id={inputId}
+          value={strValue}
+          locale={locale}
+          decimals={0}
+          placeholder={field.placeholder}
+          disabled={field.disabled}
+          min={parseNumericBound(field.min)}
+          max={parseNumericBound(field.max)}
+          onChange={(v) => onChange(v)}
+        />
+      );
 
     case 'file': {
       const fileValue = value instanceof File ? value : null;
@@ -459,10 +483,11 @@ function FieldInput({
       );
     }
 
-    default:
+    default: {
+      const inputType = field.type === 'email' || field.type === 'url' ? field.type : 'text';
       return (
         <Input
-          type={field.type === 'number' ? 'number' : field.type}
+          type={inputType}
           id={inputId}
           name={field.name}
           value={strValue}
@@ -470,9 +495,21 @@ function FieldInput({
           autoComplete={textLikeAutoComplete}
           spellCheck={shouldDisableSpellcheck ? false : undefined}
           disabled={field.disabled}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            const raw = e.target.value;
+            if (field.type === 'email') {
+              onChange(sanitizeEmailInput(raw));
+              return;
+            }
+            if (field.type === 'url') {
+              onChange(sanitizeUrlInput(raw));
+              return;
+            }
+            onChange(raw);
+          }}
         />
       );
+    }
   }
 }
 

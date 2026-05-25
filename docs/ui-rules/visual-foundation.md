@@ -26,7 +26,7 @@ Do not use color to make a plain layout feel more interesting.
 
 ### Semantic Tokens
 
-Always use these tokens. Never hard-code hex or Tailwind color scales.
+Always use these tokens. Never hard-code hex or Tailwind default palette scales (`blue-500`, `rose-200`, etc.).
 
 ```
 text-foreground           Primary text
@@ -35,6 +35,7 @@ text-destructive          Errors, delete actions
 text-success              Confirmed, approved, healthy
 text-warning              Pending, needs attention
 text-info                 In progress, informational
+text-teal / text-orange   Categorical accents (calendar, charts)
 
 bg-background             Body / page canvas (100% white)
 bg-card                   Card surfaces — Card, StatCard, CrudMainView (100% white, no border)
@@ -49,6 +50,36 @@ border-border/50          SectionCard heading rule · SettingsRow row separator 
 border-dashed border-border/60   InlineEmptyState, dashed ListRow variant
 ring-ring                 Focus rings
 ```
+
+### Neutral ramp
+
+Theme-aware surface scale exposed as `neutral-50` … `neutral-950` (CSS variables in `globals.css`). Use for data visualization and calendar gray fills — **not** for general UI text or borders (prefer `muted`, `border`, `foreground` roles).
+
+### Semantic palette helper
+
+Components must not define inline tone class maps. Use `@oktavius/base-ui`:
+
+```typescript
+import { getSemanticToneClasses, pickSemanticToneBySeed } from '@oktavius/base-ui';
+
+getSemanticToneClasses('success', 'soft'); // AlertBanner, ListRow warning
+getSemanticToneClasses('info', 'softEmphasis'); // Badge, InfoBox
+getSemanticToneClasses('warning', 'solid'); // Calendar solid fills
+getSemanticToneClasses('neutral', 'dot'); // StatusDot
+pickSemanticToneBySeed(userId); // Categorical assignment (avatars, tags)
+```
+
+Variants: `soft` · `softEmphasis` · `solid` · `dot` · `dotMuted` · `text` · `ring`
+
+Tones: `neutral` · `primary` · `cta` · `info` · `success` · `warning` · `destructive` · `highlight` · `teal` · `orange`
+
+### Categorical colors
+
+| Token             | Use                                                         |
+| ----------------- | ----------------------------------------------------------- |
+| `cta`             | Brand violet — primary CTA, sidebar active, calendar violet |
+| `teal` / `orange` | Calendar category fills, multi-series charts                |
+| `highlight`       | Selected rows, contextual emphasis backgrounds              |
 
 ### Semantic State Mapping
 
@@ -65,7 +96,8 @@ selected / contextual emphasis            → highlight
 
 - Never use the primary color as a generic selection highlight everywhere. It loses meaning.
 - Never invent local module status colors. Use the semantic tokens above.
-- Never use random Tailwind palette colors (e.g. `text-blue-500`, `bg-rose-200`).
+- Never use random Tailwind palette colors (e.g. `text-blue-500`, `bg-rose-200`, `bg-teal-500`).
+- Never duplicate tone class strings in components — use `getSemanticToneClasses()` from `@oktavius/base-ui`.
 - Status must never rely on color alone. Pair with text, icon, or label.
 - Do not tint entire page backgrounds with accent color.
 - Dark mode: keep surfaces especially border-led; avoid bright containers entirely.
@@ -124,7 +156,15 @@ Used in: `CardTitle`, `SectionCard` title prop, `DetailView` section titles.
 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground
 ```
 
-Used in: Showcase section dividers, tab content field group headers, StatCard labels.
+Used in: Showcase section dividers, tab content field group headers.
+
+**DetailView / field label** (inside cards):
+
+```
+text-xs font-medium text-muted-foreground   (sentence case — CARD_CONTENT_TIERS.label)
+```
+
+Used in: DetailView, DetailFieldGrid, RecordInfoHero labels. Never uppercase spreadsheet-style headers.
 
 **StatCard label** (compact KPI context only):
 
@@ -260,6 +300,75 @@ Shadow exists to lift things **above** the page. Never to outline things **on** 
 - Never apply shadow to anchored page surfaces (Card, SectionCard, ListRow, table rows, sidebar, header).
 - Never apply shadow to form fields.
 - Do not stack shadow + heavy tint on the same surface.
+
+---
+
+## Interactive Affordances
+
+Every clickable or pressable control must **look interactive before the user clicks**.
+Hover, active (press), and focus-visible states are required — not optional polish.
+
+### Required signals
+
+| Signal  | When                     | Classes / pattern                                                            |
+| ------- | ------------------------ | ---------------------------------------------------------------------------- |
+| Pointer | Mouse-targetable control | `cursor-pointer` (or `cursor-grab` for drag handles)                         |
+| Hover   | All pressable surfaces   | Background or text shift — e.g. `hover:bg-muted/50`, `hover:text-foreground` |
+| Active  | Buttons and primary taps | Slightly stronger fill — e.g. `active:bg-muted/80`, `active:bg-cta/80`       |
+| Focus   | Keyboard navigation      | `focus-visible:ring-2 focus-visible:ring-ring/40`                            |
+| Motion  | State changes            | `transition-colors` (150–200ms) on interactive surfaces                      |
+
+### Patterns by control type
+
+**Buttons (`Button`)** — variants ship hover + active. Do not strip them with `className`.
+
+**Filled inputs / triggers (Combobox, DatePicker, Select)** — `hover:bg-muted/80` on the trigger.
+
+**Ghost / text actions** — at minimum `hover:text-foreground` or `hover:bg-muted/50`.
+
+**Clickable rows (ListRow, TableRow, SettingsTable)** — row background on hover + `cursor-pointer` when `onClick` / `href` is set.
+
+**Tabs** — inactive triggers get `hover:bg-muted/60 hover:text-foreground`.
+
+**Toggles (Checkbox, Switch, Radio)** — `cursor-pointer` + hover fill on the control surface.
+
+**Custom click targets** — use shared helpers from `@oktavius/base-ui` `interactiveSurfaceClasses` / `interactiveTextClasses` in `lib/utils.ts`.
+
+```tsx
+// ✅ Clickable row — hover + pointer
+<ListRow title="Acme GmbH" onClick={() => open(row)} />
+
+// ✅ Custom div acting as button
+<div
+  role="button"
+  tabIndex={0}
+  className={cn(interactiveSurfaceClasses, 'rounded-control px-2 py-1.5')}
+  onClick={handleClick}
+>
+
+// ❌ Click handler with no affordance
+<div onClick={handleClick}>Edit</div>
+```
+
+### Hard rules
+
+- Never attach `onClick` to a plain element without hover/active/focus styles.
+- Never use `cursor-pointer` alone — pair it with a visible hover change.
+- Disabled controls: `disabled:cursor-not-allowed disabled:opacity-50` and **no** hover state.
+- Non-interactive surfaces must not look clickable (no pointer, no hover fill on static text/cards).
+
+### Validation and async states
+
+Full matrix and APIs: [`interactive-states.md`](./interactive-states.md).
+
+| State                  | Filled inputs / triggers                                           | Buttons                                             |
+| ---------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
+| Invalid                | `ring-2 ring-destructive` via `FormField error` or `aria-invalid`  | —                                                   |
+| Valid (confirmed only) | `ring-2 ring-success` via `valid` prop — not on every filled field | —                                                   |
+| Loading                | Combobox `isLoading`                                               | `Button loading` — spinner + `aria-busy` + disabled |
+| Disabled / blocked     | `disabled:` — suppress hover fill                                  | same                                                |
+
+Use shared helpers from `controlStates.ts` (`filledControlClasses`, `controlValidationClasses`) — do not duplicate strings in new primitives.
 
 ---
 

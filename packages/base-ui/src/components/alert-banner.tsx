@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { CheckCircle, Info, Warning, WarningCircle, X } from '@phosphor-icons/react';
 
+import { getSemanticToneClasses, type SemanticTone } from '../lib/semanticPalette';
 import { cn } from '../lib/utils';
 
-export type AlertBannerTone = 'info' | 'success' | 'warning' | 'destructive';
+export type AlertBannerTone = Extract<SemanticTone, 'info' | 'success' | 'warning' | 'destructive'>;
 
 const TONE_ICON: Record<
   AlertBannerTone,
@@ -13,20 +14,6 @@ const TONE_ICON: Record<
   success: CheckCircle,
   warning: Warning,
   destructive: WarningCircle,
-};
-
-const TONE: Record<AlertBannerTone, string> = {
-  info: 'border-info/25 bg-info/10',
-  success: 'border-success/25 bg-success/10',
-  warning: 'border-warning/25 bg-warning/10',
-  destructive: 'border-destructive/25 bg-destructive/10',
-};
-
-const TONE_ICON_CLASS: Record<AlertBannerTone, string> = {
-  info: 'text-info',
-  success: 'text-success',
-  warning: 'text-warning',
-  destructive: 'text-destructive',
 };
 
 export interface AlertBannerProps {
@@ -62,12 +49,15 @@ export function AlertBanner({
       className={cn(
         'flex w-full items-center gap-3 border px-4 py-3 text-sm',
         flush ? '-mx-3 rounded-none border-x-0 md:-mx-6' : 'rounded-card',
-        TONE[tone],
+        getSemanticToneClasses(tone, 'soft'),
         className,
       )}
       role="alert"
     >
-      <Icon className={cn('h-[18px] w-[18px] shrink-0', TONE_ICON_CLASS[tone])} weight="fill" />
+      <Icon
+        className={cn('h-[18px] w-[18px] shrink-0', getSemanticToneClasses(tone, 'text'))}
+        weight="fill"
+      />
       <div className="min-w-0 flex-1 text-foreground/90 [&_a]:font-medium [&_a]:text-foreground [&_a]:underline [&_a]:underline-offset-2 [&_a]:transition-colors hover:[&_a]:text-foreground">
         {children}
       </div>

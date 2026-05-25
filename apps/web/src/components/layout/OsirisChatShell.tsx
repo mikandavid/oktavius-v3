@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 
-import { Button, ScrollArea, cn } from '@oktavius/base-ui';
+import { Button, MouseTooltip, ScrollArea, cn } from '@oktavius/base-ui';
 
 import { CloseIcon, HistoryIcon, MicIcon, PaperclipIcon, PlusIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
@@ -257,7 +257,6 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
               className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => setShowHistory((current) => !current)}
               aria-label={showHistory ? 'Hide history' : 'Show history'}
-              title="Conversation history"
             >
               <HistoryIcon size={16} />
             </Button>
@@ -272,7 +271,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                 size="icon"
                 className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={startNewConversation}
-                title="New chat"
+                aria-label="New chat"
               >
                 <PlusIcon size={14} />
               </Button>
@@ -360,29 +359,35 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
               placeholder="Ask Oktavius anything about the current workspace."
               leftControls={
                 <>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    tabIndex={-1}
-                    title="Attach file"
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  <MouseTooltip content="Attach file">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      tabIndex={-1}
+                      aria-label="Attach file"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      <PaperclipIcon size={14} />
+                    </button>
+                  </MouseTooltip>
+                  <MouseTooltip
+                    content={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
                   >
-                    <PaperclipIcon size={14} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={toggleVoiceInput}
-                    tabIndex={-1}
-                    title={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
-                    className={cn(
-                      'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
-                      isVoiceRecording
-                        ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                    )}
-                  >
-                    <MicIcon size={14} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      tabIndex={-1}
+                      aria-label={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
+                      className={cn(
+                        'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
+                        isVoiceRecording
+                          ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )}
+                    >
+                      <MicIcon size={14} />
+                    </button>
+                  </MouseTooltip>
                 </>
               }
             />

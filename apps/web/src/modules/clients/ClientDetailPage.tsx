@@ -1,11 +1,14 @@
-import { useState, type ReactNode } from 'react';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import {
   Avatar,
+  Badge,
   Button,
   InlineEmptyState,
   ListRow,
+  MoneyText,
+  STAT_CARD_GRID_CLASS,
   SectionCard,
   StatCard,
   Tabs,
@@ -13,300 +16,314 @@ import {
   TabsList,
   TabsTrigger,
   Timeline,
-  type TimelineEvent,
+  formatDisplayDate,
 } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
-import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { ModulePage } from '@/components/common/PageLayout';
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
-import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { VocabularyText } from '@/components/reference/VocabularyText';
-import { PartyContactLine } from '@/components/reference/PartyContactLine';
-import { formatDisplayDate } from '@/lib/formatDate';
-import { PlusIcon, ProjectsIcon } from '@/lib/icons';
-import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
-import { CLIENT_STATUS_BADGE_LABEL } from '@/lib/reference-data';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { useDemoData } from '@/app/demo-data';
+import { PlusIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
-import { useClientDetail, useDeleteClient } from './clients-api';
+import { clientStatusBadge, clientsPageIcon } from './shared';
 
-import {
-  CLIENT_STATUS_MAP,
-  clientsPageIcon,
-  partyFormDefaults,
-  partyFormFields,
-  type PartyFormValues,
-} from './shared';
-
-function formatStatMoney(value: string) {
-  if (!value) return '—';
-  return new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' }).format(
-    Number(value),
-  );
-}
-
-function DetailFields({
-  fields,
-}: {
-  fields: Array<{ label: string; value: ReactNode; colSpan?: 1 | 2 }>;
-}) {
-  return (
-    <dl className="grid gap-4 md:grid-cols-2">
-      {fields.map((field) => (
-        <div
-          key={field.label}
-          className={field.colSpan === 2 ? 'space-y-1 md:col-span-2' : 'space-y-1'}
-        >
-          <dt className="text-xs font-medium text-muted-foreground">{field.label}</dt>
-          <dd className="text-sm text-foreground">{field.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
+const partyFormFields = [
+  { name: 'name', label: 'Name', type: 'text' as const, required: true },
+  { name: 'role', label: 'Role', type: 'text' as const, required: true },
+  { name: 'email', label: 'Email', type: 'email' as const },
+];
 
 export function ClientDetailPage() {
   const { clientId } = useParams();
-  const { parties, tasks, orders, createParty } = useDemoData();
-  const { data: client, isLoading } = useClientDetail(clientId);
-  const deleteClient = useDeleteClient();
   const navigate = useNavigate();
-  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [addPartyOpen, setAddPartyOpen] = useState(false);
-  const [tab, setTab] = useState('overview');
-  const [docId, setDocId] = useState('f1');
+  const { clients, parties, tasks, orders, contracts, createParty } = useDemoData();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [partyDialogOpen, setPartyDialogOpen] = useState(false);
 
-  if (isLoading) {
+  const client = useMemo(() => clients.find((entry) => entry.id === clientId), [clients, clientId]);
+
+  const clientParties = useMemo(
+    () => parties.filter((party) => party.clientId === clientId),
+    [parties, clientId],
+  );
+
+  const clientTasks = useMemo(
+    () => tasks.filter((task) => task.parentId === clientId && task.parentType === 'client'),
+    [tasks, clientId],
+  );
+
+  const clientOrders = useMemo(
+    () => orders.filter((order) => order.clientId === clientId),
+    [orders, clientId],
+  );
+
+  const clientContracts = useMemo(
+    () => contracts.filter((contract) => contract.clientName === client?.name),
+    [contracts, client],
+  );
+
+  if (!client) {
     return (
-      <ModulePage title="Client" backTo="/clients" icon={clientsPageIcon()}>
-        <p className="text-sm text-muted-foreground">Loading client…</p>
+      <ModulePage title="Client not found" icon={clientsPageIcon()} backTo="/clients">
+        <p className="text-sm text-muted-foreground">This client may have been removed.</p>
       </ModulePage>
     );
   }
 
-  if (!client) return <Navigate to="/clients" replace />;
-
-  const clientParties = parties.filter((p) => p.clientId === client.id);
-  const clientTasks = tasks.filter((t) => t.parentId === client.id && t.parentType === 'client');
-  const clientOrders = orders.filter((o) => o.clientId === client.id);
-
-  const activity: TimelineEvent[] = [
-    { id: '1', label: 'Contract renewed', timestamp: '2024-10-15T10:00:00Z', tone: 'success' },
-    { id: '2', label: 'QBR completed', timestamp: '2024-09-20T14:00:00Z', tone: 'info' },
+  const recentActivity = [
     {
-      id: '3',
-      label: 'Support ticket escalated',
-      timestamp: '2024-08-02T09:30:00Z',
-      tone: 'warning',
+      id: '1',
+      label: 'Client record updated',
+      description: 'Account details synced from CRM',
+      timestamp: client.createdAt,
+      tone: 'info' as const,
     },
+    ...clientOrders.slice(0, 2).map((order) => ({
+      id: order.id,
+      label: `Order ${order.orderNumber}`,
+      description: `${order.status} · ${order.owner}`,
+      timestamp: order.orderDate,
+      tone: 'default' as const,
+    })),
   ];
 
   return (
-    <ModulePage
-      title={client.name}
-      icon={clientsPageIcon()}
-      subtitle={
-        <span className="flex flex-wrap items-center gap-2">
-          <VocabularyText vocabulary="clientType" code={client.type} />
-          <span>· {client.industry}</span>
-          <StatusBadge
-            status={client.status}
-            label={CLIENT_STATUS_BADGE_LABEL[client.status]}
-            variantMap={CLIENT_STATUS_MAP}
-          />
-        </span>
-      }
-      backTo="/clients"
-      actions={
-        <div className="flex items-center gap-2">
-          <IconEditButton to={`/clients/${client.id}/edit`} />
-          <IconDeleteButton onClick={() => setConfirmDeleteOpen(true)} />
-        </div>
-      }
-    >
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="parties">Parties</TabsTrigger>
-          <TabsTrigger value="tasks" attention={clientTasks.some((t) => t.status === 'Pending')}>
-            Tasks
-          </TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-        </TabsList>
+    <>
+      <ModulePage
+        title={client.name}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>
+              {client.city}, {client.country}
+            </span>
+            {clientStatusBadge(client.status)}
+            <Badge variant="outline">{client.type}</Badge>
+          </span>
+        }
+        icon={clientsPageIcon()}
+        backTo="/clients"
+        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete client" />}
+      >
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="contacts">Contacts</TabsTrigger>
+            <TabsTrigger value="commercial">Commercial</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-4 pt-4">
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
-            <StatCard
-              label="Parties"
-              value={String(clientParties.length)}
-              icon={<ProjectsIcon size={16} />}
-            />
-            <StatCard label="Open orders" value={String(clientOrders.length)} />
-            <StatCard label="Annual revenue" value={formatStatMoney(client.annualRevenue)} />
-          </div>
-          <SectionCard title="Recent activity">
-            <Timeline events={activity} />
-          </SectionCard>
-          <SectionCard title="Parties" meta="Top contacts">
-            {clientParties.slice(0, 3).map((party) => (
-              <ListRow
-                key={party.id}
-                title={party.name}
-                subtitle={<PartyContactLine role={party.role} email={party.email} />}
-                leading={<Avatar label={party.name} size="sm" tone="accent" />}
+          <TabsContent value="overview" className="space-y-4 pt-4">
+            <div className={STAT_CARD_GRID_CLASS}>
+              <StatCard label="Contacts" value={String(clientParties.length)} />
+              <StatCard
+                label="Open orders"
+                value={String(
+                  clientOrders.filter((o) => o.status !== 'Delivered' && o.status !== 'Cancelled')
+                    .length,
+                )}
               />
-            ))}
-            <Button variant="ghost" size="sm" className="mt-2" onClick={() => setTab('parties')}>
-              View all parties
-            </Button>
-          </SectionCard>
-        </TabsContent>
+              <StatCard label="Contracts" value={String(clientContracts.length)} />
+              <StatCard
+                label="Open tasks"
+                value={String(clientTasks.filter((t) => t.status !== 'Completed').length)}
+              />
+            </div>
 
-        <TabsContent value="details" className="space-y-4 pt-4">
-          <SectionCard title="Identity">
-            <DetailFields
-              fields={[
-                {
-                  label: 'Type',
-                  value: <VocabularyText vocabulary="clientType" code={client.type} />,
-                },
-                { label: 'Industry', value: client.industry || '—' },
-                {
-                  label: 'Status',
-                  value: (
-                    <StatusBadge
-                      status={client.status}
-                      label={CLIENT_STATUS_BADGE_LABEL[client.status]}
-                      variantMap={CLIENT_STATUS_MAP}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </SectionCard>
-          <SectionCard title="Contact">
-            <DetailFields
-              fields={[
-                { label: 'Email', value: client.email || '—' },
-                { label: 'Phone', value: client.phone || '—' },
-              ]}
-            />
-          </SectionCard>
-        </TabsContent>
+            <SectionCard title="Account summary">
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Industry</dt>
+                  <dd className="text-sm">{client.industry || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Account manager</dt>
+                  <dd className="text-sm">{client.accountManager || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Email</dt>
+                  <dd className="text-sm">{client.email || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Phone</dt>
+                  <dd className="text-sm">{client.phone || '—'}</dd>
+                </div>
+              </dl>
+            </SectionCard>
 
-        <TabsContent value="parties" className="pt-4">
-          <SectionCard
-            title="Parties"
-            meta={`${clientParties.length} linked`}
-            actions={
-              <Button variant="outline" size="sm" onClick={() => setAddPartyOpen(true)}>
-                <PlusIcon size={14} className="mr-1.5" />
-                Add
-              </Button>
-            }
-          >
-            {clientParties.length ? (
-              clientParties.map((party) => (
+            <SectionCard
+              title="Key contacts"
+              actions={
+                <Button size="sm" variant="outline" onClick={() => setPartyDialogOpen(true)}>
+                  <PlusIcon size={14} />
+                  Add
+                </Button>
+              }
+            >
+              {clientParties.slice(0, 3).map((party) => (
                 <ListRow
                   key={party.id}
+                  leading={<Avatar label={party.name} size="sm" />}
                   title={party.name}
-                  subtitle={<PartyContactLine role={party.role} email={party.email} />}
-                  leading={<Avatar label={party.name} size="sm" tone="accent" />}
+                  subtitle={party.role.replace(/_/g, ' ')}
+                  meta={party.email}
                 />
-              ))
-            ) : (
-              <InlineEmptyState text="No parties linked yet." centered />
-            )}
-          </SectionCard>
-        </TabsContent>
+              ))}
+              {clientParties.length === 0 ? (
+                <InlineEmptyState text="No contacts yet." centered />
+              ) : clientParties.length > 3 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => setActiveTab('contacts')}
+                >
+                  View all contacts
+                </Button>
+              ) : null}
+            </SectionCard>
+          </TabsContent>
 
-        <TabsContent value="tasks" className="pt-4">
-          <SectionCard
-            title="Tasks"
-            actions={
-              <Button variant="outline" size="sm">
-                <PlusIcon size={14} className="mr-1.5" />
-                Add
-              </Button>
-            }
-          >
-            {clientTasks.length ? (
-              clientTasks.map((task) => (
+          <TabsContent value="contacts" className="space-y-4 pt-4">
+            <SectionCard
+              title="Contacts"
+              meta={`${clientParties.length} people`}
+              actions={
+                <Button size="sm" variant="outline" onClick={() => setPartyDialogOpen(true)}>
+                  <PlusIcon size={14} />
+                  Add contact
+                </Button>
+              }
+            >
+              {clientParties.map((party) => (
+                <ListRow
+                  key={party.id}
+                  leading={<Avatar label={party.name} size="sm" />}
+                  title={party.name}
+                  subtitle={party.role.replace(/_/g, ' ')}
+                  meta={party.email}
+                />
+              ))}
+              {clientParties.length === 0 ? (
+                <InlineEmptyState text="No contacts linked to this client." centered />
+              ) : null}
+            </SectionCard>
+          </TabsContent>
+
+          <TabsContent value="commercial" className="space-y-4 pt-4">
+            <SectionCard title="Commercial terms">
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Annual revenue</dt>
+                  <dd className="text-sm">
+                    {client.annualRevenue ? (
+                      <MoneyText value={Number(client.annualRevenue)} currency="EUR" />
+                    ) : (
+                      '—'
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Contract period</dt>
+                  <dd className="text-sm">
+                    {client.contractStart
+                      ? `${formatDisplayDate(client.contractStart)} – ${client.contractEnd ? formatDisplayDate(client.contractEnd) : 'open'}`
+                      : '—'}
+                  </dd>
+                </div>
+              </dl>
+            </SectionCard>
+
+            <SectionCard title="Contracts" meta={`${clientContracts.length} records`}>
+              {clientContracts.map((contract) => (
+                <ListRow
+                  key={contract.id}
+                  title={contract.title}
+                  subtitle={contract.contractNumber}
+                  meta={formatDisplayDate(contract.endDate)}
+                  trailing={
+                    <Link to={`/contracts/${contract.id}`} className="text-xs text-primary">
+                      View
+                    </Link>
+                  }
+                  onClick={() => navigate(`/contracts/${contract.id}`)}
+                />
+              ))}
+              {clientContracts.length === 0 ? (
+                <InlineEmptyState text="No contracts for this client." centered />
+              ) : null}
+            </SectionCard>
+
+            <SectionCard title="Orders" meta={`${clientOrders.length} records`}>
+              {clientOrders.map((order) => (
+                <ListRow
+                  key={order.id}
+                  title={order.orderNumber}
+                  subtitle={order.status}
+                  meta={formatDisplayDate(order.orderDate)}
+                  onClick={() => navigate(`/orders/${order.id}`)}
+                />
+              ))}
+              {clientOrders.length === 0 ? (
+                <InlineEmptyState text="No orders yet." centered />
+              ) : null}
+            </SectionCard>
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-4 pt-4">
+            <SectionCard title="Recent activity">
+              <Timeline events={recentActivity} />
+            </SectionCard>
+
+            <SectionCard title="Tasks">
+              {clientTasks.map((task) => (
                 <ListRow
                   key={task.id}
                   title={task.title}
-                  subtitle={`Due ${formatDisplayDate(task.dueDate)} · ${task.assignee}`}
-                  trailing={<StatusBadge status={task.status} />}
+                  subtitle={task.assignee}
+                  meta={formatDisplayDate(task.dueDate)}
+                  trailing={<Badge variant="outline">{task.status}</Badge>}
                 />
-              ))
-            ) : (
-              <InlineEmptyState text="No tasks for this client." centered />
-            )}
-          </SectionCard>
-        </TabsContent>
+              ))}
+              {clientTasks.length === 0 ? (
+                <InlineEmptyState text="No tasks assigned." centered />
+              ) : null}
+            </SectionCard>
+          </TabsContent>
+        </Tabs>
+      </ModulePage>
 
-        <TabsContent value="documents" className="pt-4">
-          <SectionCard title="Documents">
-            <DocumentPreviewPanel selectedId={docId} onSelect={setDocId} />
-          </SectionCard>
-        </TabsContent>
-      </Tabs>
-
-      {clientOrders.length > 0 ? (
-        <SectionCard title="Recent orders" className="mt-4">
-          {clientOrders.slice(0, 3).map((order) => (
-            <ListRow
-              key={order.id}
-              title={order.orderNumber}
-              subtitle={formatDisplayDate(order.orderDate)}
-              trailing={
-                <Link
-                  to={`/orders/${order.id}`}
-                  className="text-xs font-medium text-cta hover:underline"
-                >
-                  Open
-                </Link>
-              }
-              onClick={() => navigate(`/orders/${order.id}`)}
-            />
-          ))}
-        </SectionCard>
-      ) : null}
-
-      <SubEntityFormDialog<PartyFormValues>
-        open={addPartyOpen}
-        onOpenChange={setAddPartyOpen}
-        title="Add party"
-        description="Link a contact to this client account."
+      <SubEntityFormDialog
+        open={partyDialogOpen}
+        onOpenChange={setPartyDialogOpen}
+        title="Add contact"
         fields={partyFormFields}
-        defaultValues={partyFormDefaults}
-        submitLabel="Add party"
+        defaultValues={{ name: '', role: 'primary_contact', email: '' }}
+        submitLabel="Add contact"
         onSubmit={(values) => {
           createParty({
             clientId: client.id,
-            salutation: values.salutation || undefined,
-            name: values.name,
-            role: values.role,
-            email: values.email,
+            name: String(values.name),
+            role: String(values.role),
+            email: String(values.email ?? ''),
           });
-          toast.success('Party added.');
+          toast.success('Contact added.');
         }}
       />
 
       <ConfirmActionDialog
-        open={confirmDeleteOpen}
-        onOpenChange={setConfirmDeleteOpen}
-        title={`Delete ${client.name}?`}
-        description="This will permanently remove the client record."
-        confirmLabel="Delete client"
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this client?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
         onConfirm={() => {
-          deleteClient.mutate(client.id);
+          toast.success('Client deleted.');
           navigate('/clients');
         }}
       />
-    </ModulePage>
+    </>
   );
 }

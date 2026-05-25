@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { formatDisplayDateTime } from '../lib/format-display-date';
+import { getSemanticToneClasses, type SemanticTone } from '../lib/semanticPalette';
 import { cn } from '../lib/utils';
 
 function formatTimelineTimestamp(value?: string) {
@@ -21,18 +22,8 @@ export interface TimelineEvent {
 }
 
 function dotClass(tone: TimelineEventTone) {
-  switch (tone) {
-    case 'success':
-      return 'bg-success border-success/30';
-    case 'warning':
-      return 'bg-warning border-warning/30';
-    case 'destructive':
-      return 'bg-destructive border-destructive/30';
-    case 'info':
-      return 'bg-info border-info/30';
-    default:
-      return 'bg-border border-border/60';
-  }
+  if (tone === 'default') return getSemanticToneClasses('neutral', 'ring');
+  return getSemanticToneClasses(tone as SemanticTone, 'ring');
 }
 
 export interface TimelineProps {

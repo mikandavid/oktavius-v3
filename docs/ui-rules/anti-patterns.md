@@ -363,7 +363,34 @@ destroys grouping signals and makes the UI hard to scan.
 
 ---
 
-## 16. TooltipProvider Duplication
+## 16. Clickable Without Hover / Press Feedback
+
+If something handles clicks, it must look clickable on hover (and show press/focus states).
+`cursor-pointer` alone is not enough.
+
+```tsx
+// ❌ Wrong — looks like static text
+<span onClick={openEdit}>Edit</span>
+<div role="button" className="cursor-pointer" onClick={onSelect}>…</div>
+
+// ✅ Correct — use Button or shared affordance classes
+<Button variant="ghost" size="sm" onClick={openEdit}>Edit</Button>
+
+<div
+  role="button"
+  tabIndex={0}
+  className={cn(interactiveSurfaceClasses, 'rounded-control px-2 py-1.5')}
+  onClick={onSelect}
+>
+  …
+</div>
+```
+
+Shared primitives (`Button`, `ListRow`, `Combobox`, `TabsTrigger`, etc.) already include affordances — prefer them over raw click handlers.
+
+---
+
+## 17. TooltipProvider Duplication
 
 `TooltipProvider` is already mounted once in `AppLayout`. Never add another one
 inside a component, page, or module.

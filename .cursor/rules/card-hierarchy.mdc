@@ -1,0 +1,78 @@
+---
+description: Card content hierarchy — six fixed tiers, DetailView importance, StatCard grid
+globs: apps/web/src/**/*.{tsx,ts},packages/base-ui/src/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Card hierarchy
+
+Cards must have clear visual hierarchy — not uniform label/value grids that look like spreadsheets.
+
+## Six content tiers
+
+Use `CARD_CONTENT_TIERS` from `@oktavius/base-ui` — never ad-hoc font sizes inside cards.
+
+| Tier | Use |
+|---|---|
+| 1 Hero | Record identity, primary metric |
+| 2 Highlight | Important values with icon |
+| 3 Body | Default field values |
+| 4 Label | Field labels (sentence case) |
+| 5 Meta | Subtitles, secondary context |
+| 6 Micro | IDs, codes, audit footnotes |
+
+Full reference: `docs/ui-rules/hierarchy-system.md` § Card Content Tiers.
+
+## DetailView
+
+```tsx
+<DetailView
+  title="Client record"
+  fields={[
+    { importance: 'primary', label: 'Email', value: client.email, icon: <EmailIcon size={20} weight="duotone" /> },
+    { label: 'Industry', value: client.industry },
+    { importance: 'meta', label: 'Client ID', value: client.id },
+  ]}
+/>
+```
+
+- **`primary`** — max 6 items, hero row with icons
+- **`default`** — two-column grid
+- **`meta`** — compact footer strip
+
+## StatCard rows
+
+```tsx
+import { STAT_CARD_GRID_CLASS, StatCard } from '@oktavius/base-ui';
+
+<div className={STAT_CARD_GRID_CLASS}>
+  <StatCard label="Open cases" value="37" icon={<CaseIcon size={16} />} />
+</div>
+```
+
+Max **6** StatCards per row. Fixed min-height for grid alignment.
+
+## ListRow
+
+- `title` — primary line (larger on `variant="queue"`)
+- `subtitle` — secondary context
+- `meta` — tertiary IDs/timestamps (mono micro tier)
+- `visual` — shorthand for `RecordVisual` at `size="sm"` (logo, avatar, or icon)
+
+## Record visuals
+
+Use `RecordVisual` / `RecordIdentity` for the left-side anchor on cards and rows.
+
+| Kind | Use |
+|---|---|
+| `image` | Logo or product photo when URL exists |
+| `avatar` | Photo when `src` exists; otherwise required `icon` (people, orgs) |
+| `icon` | Module/entity fallback when no photo |
+
+```tsx
+<RecordIdentity
+  visual={{ kind: 'avatar', label: client.name, icon: <OrganizationIcon size={20} weight="duotone" /> }}
+  title={client.name}
+  subtitle={<StatusBadge … />}
+/>
+```

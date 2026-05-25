@@ -4,7 +4,7 @@ import type { ClientStatus, ClientType } from '@oktavius/reference-data';
 
 import { ApiProvider } from '@/api/ApiProvider';
 import type { DemoApiRegistry } from '@/api/demo-client';
-import { buildClientsDemoHandlers } from '@/modules/clients/clients-demo-handlers';
+import { buildClientsDemoHandlers } from '@/api/demo-handlers/clients';
 
 export type UserRecord = {
   id: string;
@@ -196,6 +196,7 @@ export type ContractRecord = {
 type CreateUserInput = Omit<UserRecord, 'id'>;
 type CreateClientInput = Omit<ClientRecord, 'id' | 'createdAt'>;
 type CreateProductInput = Omit<ProductRecord, 'id'>;
+type CreateCaseInput = Omit<CaseRecord, 'id' | 'caseNumber' | 'openedAt' | 'slaStatus'>;
 type CreateOrganizationInput = Omit<OrganizationRecord, 'id' | 'memberCount' | 'createdAt'>;
 type CreatePartyInput = Omit<PartyRecord, 'id'>;
 type CreateChecklistItemInput = Omit<CaseChecklistItem, 'id' | 'done'>;
@@ -223,6 +224,8 @@ type DemoDataContextValue = {
   parties: PartyRecord[];
   createParty: (input: CreatePartyInput) => PartyRecord;
   cases: CaseRecord[];
+  createCase: (input: CreateCaseInput) => CaseRecord;
+  updateCaseStage: (caseId: string, stage: CaseRecord['stage']) => void;
   caseChecklists: CaseChecklistItem[];
   toggleChecklistItem: (id: string, done: boolean) => void;
   createChecklistItem: (input: CreateChecklistItemInput) => CaseChecklistItem;
@@ -984,6 +987,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   const clientsRef = useRef(clients);
   clientsRef.current = clients;
   const [products, setProducts] = useState<ProductRecord[]>(INITIAL_PRODUCTS);
+  const [cases, setCases] = useState<CaseRecord[]>(INITIAL_CASES);
   const [parties, setParties] = useState<PartyRecord[]>(INITIAL_PARTIES);
   const [caseChecklists, setCaseChecklists] =
     useState<CaseChecklistItem[]>(INITIAL_CASE_CHECKLISTS);
@@ -1072,7 +1076,23 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         setParties((current) => [...current, next]);
         return next;
       },
-      cases: INITIAL_CASES,
+      cases,
+      createCase: (input) => {
+        const next: CaseRecord = {
+          id: `case_${Date.now()}`,
+          caseNumber: `CASE-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+          openedAt: new Date().toISOString().slice(0, 10),
+          slaStatus: 'ok',
+          ...input,
+        };
+        setCases((current) => [next, ...current]);
+        return next;
+      },
+      updateCaseStage: (caseId, stage) => {
+        setCases((current) =>
+          current.map((entry) => (entry.id === caseId ? { ...entry, stage } : entry)),
+        );
+      },
       caseChecklists,
       toggleChecklistItem: (id, done) => {
         setCaseChecklists((current) =>
@@ -1098,6 +1118,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
     activeOrgId,
     clients,
     products,
+    cases,
     parties,
     caseChecklists,
   ]);

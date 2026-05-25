@@ -1,0 +1,42 @@
+---
+description: Section nav pages — AppSectionNavLayout, compact app sidebar, independent scroll
+globs: apps/web/src/modules/**/*.{tsx,ts},apps/web/src/components/layout/**/*.{tsx,ts},packages/base-ui/src/components/settings-layout.tsx
+alwaysApply: false
+---
+
+# Section navigation layout
+
+Use when a page has its own **left section nav** (settings, record sections).
+
+## Required wiring
+
+```tsx
+import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
+import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
+
+<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS} …>
+  <AppSectionNavLayout items={…} activeKey={…} onSelect={…}>
+    …
+  </AppSectionNavLayout>
+</ModulePage>
+```
+
+**Always `<AppSectionNavLayout>`** in `apps/web` — not raw `<SettingsLayout>`.
+
+## Scroll
+
+- Section nav and content **each scroll independently** on desktop — never one shared page scroll
+- Main workspace uses `APP_MAIN_FIT_CLASS` while section nav is mounted (no double scroll)
+
+## Visual
+
+- No border/outline on nav container
+- Active: `bg-sidebar-primary/10` + `text-sidebar-primary`
+- Inactive: `text-muted-foreground`, hover `bg-muted/50`
+- No left accent bars or card wrapper around nav
+
+## App sidebar
+
+Auto-compacts to icon rail while section nav is visible. User preference restores on list routes.
+
+Full rules: `docs/ui-rules/section-nav.md`

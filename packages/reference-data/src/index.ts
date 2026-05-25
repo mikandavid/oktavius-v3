@@ -18,9 +18,18 @@ export {
   findPhoneCountryByCode,
   findPhoneCountryByDialCode,
   formatPhoneValue,
+  sanitizePhoneLocalInput,
   splitPhoneValue,
   type PhoneCountry,
 } from './phone';
+
+export {
+  getPostalCodeFormat,
+  getPostalCodeInputMode,
+  getPostalCodeMaxLength,
+  sanitizePostalCodeInput,
+  type PostalCodeFormat,
+} from './postal-code';
 
 export {
   CURRENCY_CODES,

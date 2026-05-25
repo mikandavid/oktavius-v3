@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Tooltip, TooltipContent, TooltipTrigger, cn } from '@oktavius/base-ui';
+import { MouseTooltip, cn } from '@oktavius/base-ui';
 
 import { BotIcon, ChevronLeftIcon } from '@/lib/icons';
 
@@ -119,17 +119,16 @@ export function AIChatSidebar() {
     >
       {collapsed ? (
         <div className="flex h-full w-full flex-col items-center">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className="h-12 w-full shrink-0 border-b border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                onClick={() => setCollapsedState(false)}
-              >
-                <BotIcon size={16} className="mx-auto" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="left">Expand AI chat</TooltipContent>
-          </Tooltip>
+          <MouseTooltip content="Expand AI chat">
+            <button
+              type="button"
+              className="h-12 w-full shrink-0 border-b border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={() => setCollapsedState(false)}
+              aria-label="Expand AI chat"
+            >
+              <BotIcon size={16} className="mx-auto" />
+            </button>
+          </MouseTooltip>
 
           <button
             className="group flex w-full flex-1 items-center justify-center overflow-hidden py-4 transition-colors hover:bg-muted/50"
@@ -146,22 +145,24 @@ export function AIChatSidebar() {
       ) : (
         <>
           <div className="absolute inset-y-0 left-0 z-20 flex w-4 -translate-x-1/2 items-center justify-center group/resize">
-            <button
-              type="button"
-              className={cn(
-                'absolute z-10 h-6 w-6 rounded-full border border-border bg-background text-muted-foreground transition-opacity',
-                'pointer-events-none opacity-0 group-hover/resize:pointer-events-auto group-hover/resize:opacity-100 hover:text-foreground',
-                isResizing && 'pointer-events-none opacity-0',
-              )}
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-              onClick={() => setCollapsedState(true)}
-              title="Collapse AI chat"
-            >
-              <ChevronLeftIcon size={12} className="mx-auto rotate-180" />
-            </button>
+            <MouseTooltip content="Collapse AI chat">
+              <button
+                type="button"
+                className={cn(
+                  'absolute z-10 h-6 w-6 rounded-full border border-border bg-background text-muted-foreground transition-opacity',
+                  'pointer-events-none opacity-0 group-hover/resize:pointer-events-auto group-hover/resize:opacity-100 hover:text-foreground',
+                  isResizing && 'pointer-events-none opacity-0',
+                )}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+                onClick={() => setCollapsedState(true)}
+                aria-label="Collapse AI chat"
+              >
+                <ChevronLeftIcon size={12} className="mx-auto rotate-180" />
+              </button>
+            </MouseTooltip>
             <div
               className={cn(
                 'absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 cursor-col-resize transition-colors',

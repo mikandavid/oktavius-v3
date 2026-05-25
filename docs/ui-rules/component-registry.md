@@ -57,6 +57,7 @@ Desktop layout is always **nav left · workspace center · agent chat right**:
 Rules:
 
 - **Never** hide the left nav on desktop — `Sidebar` is `md:flex`; mobile uses a drawer overlay.
+- **Section-nav pages** — app sidebar auto-compacts to icon rail while `<AppSectionNavLayout>` is mounted; section nav and content scroll independently; main uses `APP_MAIN_FIT_CLASS`. See [`section-nav.md`](./section-nav.md).
 - **Sidebar active item** — `bg-sidebar-primary/10` + `text-sidebar-primary`. Never use `bg-accent` on nav rows (Showcase Token Editor can set `--accent` to solid purple).
 - **Chat rail** mounts on every route except `/ai-chat` (that route uses the full center column for chat).
 - **Center column** scrolls (`APP_MAIN_SCROLL_CLASS` + gutter); fitted routes like `/ai-chat` use `APP_MAIN_FIT_CLASS` (no double scroll).
@@ -106,7 +107,7 @@ Common aliases: `PlusIcon` `EditIcon` `DeleteIcon` `BackIcon` `SearchIcon` `More
 | Destructive confirm                  | `<ConfirmActionDialog>`                                                    | `@/components/common/ConfirmActionDialog`                                                                                            |
 | Sub-entity add/edit dialog           | `<SubEntityFormDialog>`                                                    | `@/components/common/SubEntityFormDialog` — Dialog + EntityForm `surface="dialog"`                                                   |
 | Tick-off checklist                   | `<ChecklistSection>`                                                       | `@/components/common/ChecklistSection` — checkbox + muted strikethrough label when done; `onToggle`; `readOnly` for overview preview |
-| Dialog Cancel + Save footer          | `<DialogFormFooter>`                                                       | `@/components/common/DialogFormFooter` — outline Cancel + purple confirm                                                             |
+| Dialog Cancel + Save footer          | `<DialogFormFooter>`                                                       | `@/components/common/DialogFormFooter` — ghost Cancel + purple confirm                                                               |
 
 ### Data / Tables
 
@@ -198,8 +199,7 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 
 | Component                                                          | When to use                                                                                                                          |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `<Avatar label src size tone overlay>`                             | User/entity initials orb with optional image. sizes: `xs sm md lg`. tones: `muted accent primary`                                    |
-| `avatarInitials(label)`                                            | Derive initials string from display name — use to keep display consistent                                                            |
+| `<Avatar label src size tone icon overlay>`                        | User/entity orb — photo when `src` set; `icon` fallback (default person silhouette). Never initials                                  |
 | `<StatusDot tone size color>`                                      | Colored dot for inline status, legend, presence                                                                                      |
 | `<StatusDotLabel tone value>`                                      | Dot + label, with optional bold leading value (counts)                                                                               |
 | `<CountBadge count hideZero max>`                                  | Count chip for tab triggers, section headings, filter labels                                                                         |
@@ -216,38 +216,40 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 
 ### Input Primitives (base-ui)
 
-| Component                                      | When to use                                                                                                |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `<Input>`                                      | Single-line text, email, number, url, phone                                                                |
-| `<Textarea>`                                   | Multi-line text                                                                                            |
-| `<NumberInput value onChange decimals locale>` | Numeric input — thousands-separator formatting on blur, raw value to onChange. Use for amounts, quantities |
-| `<Combobox>`                                   | **All** single-select dropdowns (search built in). Async, create-new, footer actions                       |
-| ~~`<Select>`~~                                 | **Do not use in `apps/web`** — legacy Radix select only                                                    |
-| `<MultiSelect>`                                | Multiple choice with checkbox list and badge display                                                       |
-| `<TagsInput>`                                  | Free-form chip entry (Enter/comma adds, Backspace removes)                                                 |
-| `<Checkbox>`                                   | Binary field, form or table selection                                                                      |
-| `<Switch>`                                     | Enabled/disabled toggle, settings panels                                                                   |
-| `<DatePicker mode="date">`                     | Date only                                                                                                  |
-| `<DatePicker mode="time">`                     | Time spinner                                                                                               |
-| `<DatePicker mode="datetime">`                 | Date + time, `minuteStep` prop                                                                             |
-| `<Badge>`                                      | Status chip, label                                                                                         |
-| `<Button>`                                     | All actions                                                                                                |
-| `<Skeleton>`                                   | Loading placeholder                                                                                        |
+| Component                                      | When to use                                                                                                                 |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `<Input>`                                      | Single-line text, email, number, url, phone — states via `FormField error`, optional `valid`                                |
+| `<Textarea>`                                   | Multi-line text — same validation states as Input                                                                           |
+| `<NumberInput value onChange decimals locale>` | Numeric input — thousands-separator formatting on blur, raw value to onChange. Validation via `invalid` / `validationState` |
+| `<Combobox>`                                   | **All** single-select dropdowns. `isLoading`, `invalid`, optional `valid`                                                   |
+| `<FormField id label error valid>`             | Label + control wrapper — forwards invalid/valid chrome to child                                                            |
+| `<Button loading>`                             | Actions — `loading` sets spinner, disabled, `aria-busy`                                                                     |
+| ~~`<Select>`~~                                 | **Do not use in `apps/web`** — legacy Radix select only                                                                     |
+| `<MultiSelect>`                                | Multiple choice with checkbox list and badge display                                                                        |
+| `<TagsInput>`                                  | Free-form chip entry (Enter/comma adds, Backspace removes)                                                                  |
+| `<Checkbox>`                                   | Binary field, form or table selection                                                                                       |
+| `<Switch>`                                     | Enabled/disabled toggle, settings panels                                                                                    |
+| `<DatePicker mode="date">`                     | Date only                                                                                                                   |
+| `<DatePicker mode="time">`                     | Time spinner                                                                                                                |
+| `<DatePicker mode="datetime">`                 | Date + time, `minuteStep` prop                                                                                              |
+| `<Badge>`                                      | Status chip, label                                                                                                          |
+| `<Button>`                                     | All actions — use `loading` for async, not manual spinners                                                                  |
+| `<Skeleton>`                                   | Loading placeholder                                                                                                         |
 
 ### Section / Layout Primitives (base-ui)
 
-| Component                                                       | When to use                                                                                    |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `<SectionCard title actions meta>`                              | Borderless content section inside a module detail page — heading + bottom rule, no card chrome |
-| `<ListRow title subtitle leading trailing variant onClick>`     | Item rows within a section (parties, tasks, events) — NOT a data table                         |
-| `<InlineEmptyState text centered>`                              | Dashed-border "no items yet" inside a SectionCard                                              |
-| `<CollapsibleSection title badge actions>`                      | Long workspace forms, optional field groups                                                    |
-| `<Tabs>` `<TabsList>` `<TabsTrigger attention>` `<TabsContent>` | Complex entity detail pages with multiple workspace sections                                   |
-| `<SplitView sidebar sidebarWidth>`                              | Master-detail layout (list left, detail right) — always `w-full` on the split container        |
-| `<SplitViewQueue>` + `ListRow variant="queue"`                  | Spaced sidebar queue (`gap-2 p-3`), not stacked `border-b` rows                                |
-| `<SettingsLayout items activeKey onSelect>`                     | Settings page: nav sidebar + content panel                                                     |
-| `<SettingsSection title description>`                           | Group of settings controls with heading                                                        |
-| `<SettingsRow label description>`                               | Single settings control (label left, control right)                                            |
+| Component                                                        | When to use                                                                                                                 |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `<SectionCard title actions meta>`                               | Borderless content section inside a module detail page — heading + bottom rule, no card chrome                              |
+| `<ListRow title subtitle meta leading trailing variant onClick>` | Item rows within a section (parties, tasks, events) — NOT a data table. `meta` = tier-6 IDs/timestamps                      |
+| `<InlineEmptyState text centered>`                               | Dashed-border "no items yet" inside a SectionCard                                                                           |
+| `<CollapsibleSection title badge actions>`                       | Long workspace forms, optional field groups                                                                                 |
+| `<Tabs>` `<TabsList>` `<TabsTrigger attention>` `<TabsContent>`  | Complex entity detail pages with multiple workspace sections                                                                |
+| `<SplitView sidebar sidebarWidth>`                               | Master-detail layout (list left, detail right) — always `w-full` on the split container                                     |
+| `<SplitViewQueue>` + `ListRow variant="queue"`                   | Spaced sidebar queue (`gap-2 p-3`), not stacked `border-b` rows                                                             |
+| `<SettingsLayout items activeKey onSelect>`                      | Section nav + content panel (base-ui). In `apps/web` use `<AppSectionNavLayout>` — compacts app sidebar, independent scroll |
+| `<SettingsSection title description>`                            | Group of settings controls with heading                                                                                     |
+| `<SettingsRow label description>`                                | Single settings control (label left, control right)                                                                         |
 
 **ListRow variants:** `default` · `muted` · `warning` · `dashed` · `queue` (master-detail sidebar cards — use inside `<SplitViewQueue>`)
 
@@ -263,15 +265,20 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 
 ### Data Display (base-ui)
 
-| Component                                 | When to use                                                               |
-| ----------------------------------------- | ------------------------------------------------------------------------- |
-| `<StatCard label value delta trend icon>` | KPI / metric card on dashboards. `trend="up\|down\|neutral"` colors delta |
-| `<ChartCard title type data>`             | SectionCard + line/bar chart for module dashboards                        |
-| `<KanbanBoard columns renderCard>`        | Pipeline boards — CRM stages, procurement, cases                          |
-| `<SettingsTable columns rows>`            | Compact admin/catalog rows (lighter than CrudTable)                       |
-| `<Timeline events>`                       | Audit trail, activity feed, history on detail pages                       |
-| `<Breadcrumb items>`                      | Navigation hierarchy above page title                                     |
-| `<InlineEdit value onSave>`               | Click-to-edit single field in a DetailView row                            |
+| Component                                 | When to use                                                                            |
+| ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| `<StatCard label value delta trend icon>` | KPI / metric card. Use inside `STAT_CARD_GRID_CLASS` — max 6 per row, fixed min-height |
+| `STAT_CARD_GRID_CLASS`                    | Responsive grid: `grid-cols-2 sm:grid-cols-3 xl:grid-cols-6`                           |
+| `CARD_CONTENT_TIERS`                      | Six fixed typography tiers for card interiors — import from `@oktavius/base-ui`        |
+| `RecordInfoHero` / `RecordInfoMeta`       | Primary hero row + meta footer strip for detail fields                                 |
+| `RecordVisual` / `RecordIdentity`         | Logo, avatar, or icon anchor + hero title band on record cards                         |
+| `DetailFieldGrid`                         | Default two-column field grid with tier-3/4 typography                                 |
+| `<ChartCard title type data>`             | SectionCard + line/bar chart for module dashboards                                     |
+| `<KanbanBoard columns renderCard>`        | Pipeline boards — CRM stages, procurement, cases                                       |
+| `<SettingsTable columns rows>`            | Compact admin/catalog rows (lighter than CrudTable)                                    |
+| `<Timeline events>`                       | Audit trail, activity feed, history on detail pages                                    |
+| `<Breadcrumb items>`                      | Navigation hierarchy above page title                                                  |
+| `<InlineEdit value onSave>`               | Click-to-edit single field in a DetailView row                                         |
 
 ### Wizard / Multi-step (base-ui)
 
@@ -306,17 +313,17 @@ Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use 
 | ⌘K / header search       | `CommandPaletteProvider` + `useCommandPalette`                | `@/components/command/CommandPalette`                                         |
 | Org switcher             | `<OrganizationMenuSection>`                                   | Inside profile dropdown (`HeaderAccountMenu`) — not a separate header control |
 | Notifications            | `<NotificationPanel>`                                         | Header popover with `ListRow` items                                           |
-| Bulk CSV import          | `<BulkImportWizard>`                                          | Dialog + `StepperLayout`; final step uses `DialogFormFooter` + `cta`          |
+| Bulk CSV import          | `<BulkImportWizard>` / `<BulkImportTrigger>`                  | List page header — e.g. `/clients`, `/products`                               |
 | Folder tree              | `<TreeList nodes>`                                            | `CollapsibleSection` branches                                                 |
-| Document list + preview  | `<DocumentPreviewPanel>`                                      | `SplitView` master-detail                                                     |
-| Generate / send document | `<DocumentGenerateDialog>` `<DocumentSendDialog>`             | Template pickers + `DialogFormFooter`                                         |
-| Template pickers         | `<TemplatePicker>` `<EmailTemplatePicker>`                    | ListRow selection inside SectionCard                                          |
+| Document list + preview  | `<DocumentPreviewPanel>`                                      | `/documents` module · entity document tabs                                    |
+| Generate / send document | `<DocumentGenerateDialog>` `<DocumentSendDialog>`             | `/documents` module · template pickers + `DialogFormFooter`                   |
+| Template pickers         | `<TemplatePicker>` `<EmailTemplatePicker>`                    | `/documents` → Templates tab                                                  |
 | Approvals                | `<ApprovalPanel>` `<ApprovalHistory>` `<ApproveRejectDialog>` | PO/invoice/leave sign-off flows                                               |
-| Task queue               | `<TaskInbox>`                                                 | Cross-module assigned work                                                    |
+| Task queue               | `<TaskInbox>`                                                 | `/tasks` module                                                               |
 | Comments                 | `<CommentsPanel>`                                             | Record thread + internal notes                                                |
 | Catalog settings         | `<CatalogOptionsManager>`                                     | Payment terms, case types, etc.                                               |
-| Saved list views         | `<SavedViewSelector>`                                         | FilterToolbar companion dropdown                                              |
-| RBAC blocked module      | `<AccessDeniedPage>`                                          | Route `/access-denied` sample                                                 |
+| Saved list views         | `<SavedViewSelector>` + `useListSavedViews()`                 | `CrudMainView` `toolbarTrailing` — `/clients`, `/products`                    |
+| RBAC blocked module      | `<AccessDeniedPage>`                                          | `@/components/common/AccessDeniedPage` — `/access-denied`                     |
 
 ### Toast
 
@@ -358,10 +365,10 @@ Toaster is mounted in `AppLayout` — never add it yourself.
 | `cta`         | Brand violet         | **Primary action in the current context.** Page header "New X", and Save/Create in dialogs (`EntityForm surface="dialog"`). Purple signals the recommended confirm action. |
 | `default`     | White + light border | Full-page form Save/Create on dedicated routes, wizard steps, toolbar actions.                                                                                             |
 | `outline`     | Bordered, white bg   | Toolbar actions, export, filters, secondary action next to a primary                                                                                                       |
-| `ghost`       | No bg                | Icon buttons, inline controls, low-emphasis actions                                                                                                                        |
+| `ghost`       | No bg                | Cancel / Back / dismiss in dialog footers, icon buttons, inline controls, low-emphasis actions                                                                             |
 | `destructive` | Red                  | Delete, irreversible actions                                                                                                                                               |
 
-**CTA usage:** Use `variant="cta"` for (1) the page-header entry action ("New client"), and (2) the primary confirm in a dialog (Save, Create) — Cancel stays `outline`. Full-page create/edit routes keep `variant="default"` on submit. Use `<EntityForm surface="dialog">` in modals; it defaults submit to `cta` and skips the nested card.
+**CTA usage:** Use `variant="cta"` for (1) the page-header entry action ("New client"), and (2) the primary confirm in a dialog (Save, Create) — Cancel stays `ghost`. Full-page create/edit routes keep `variant="default"` on submit. Use `<EntityForm surface="dialog">` in modals; it defaults submit to `cta` and skips the nested card.
 
 Hierarchy (strongest → weakest): `cta` → `default` → `outline` → `ghost`.
 
@@ -570,7 +577,7 @@ For managing sub-entity lists (parties, tasks, checklist items) inside a detail 
 
 - Page title: `text-xl font-semibold` (via `ModulePage`)
 - Section heading (`SectionCard`, tab content): `text-sm font-semibold text-foreground` — sentence case, no ALL-CAPS
-- DetailView field labels (simple pages only): `text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground`
+- DetailView field labels: `CARD_CONTENT_TIERS.label` — sentence case, never uppercase spreadsheet headers
 - Card title: `CardTitle` component
 - Body: `text-sm`
 - Muted/meta: `text-xs text-muted-foreground`
@@ -589,9 +596,13 @@ For managing sub-entity lists (parties, tasks, checklist items) inside a detail 
 | `border-border/70`                            | Section dividers                         |
 | `text-destructive`                            | Errors, delete                           |
 | `text-success` / `text-warning` / `text-info` | Status colors                            |
+| `bg-teal` / `bg-orange`                       | Calendar categories, chart series        |
+| `neutral-50` … `neutral-950`                  | Theme ramp — calendar gray, viz only     |
 | `bg-primary text-primary-foreground`          | Default button (near-black / near-white) |
 | `bg-cta text-cta-foreground`                  | CTA button (brand violet)                |
 | `bg-accent text-accent-foreground`            | Accent backgrounds (light violet tint)   |
+
+**Tone helper:** `getSemanticToneClasses(tone, variant)` from `@oktavius/base-ui` — used by Badge, AlertBanner, StatusDot, Timeline, InfoBox, calendar fills. Do not invent local tone maps.
 
 ---
 
@@ -650,6 +661,7 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Use `bg-muted/60` + `hover:bg-muted/80` on input surfaces                                                                | `border border-input bg-background` on inputs (retired)                                             |
 | Use `rounded-card` on all named surfaces (cards, list rows, panels)                                                      | `rounded-lg` on named surfaces                                                                      |
 | Use `variant="cta"` for page-header "New X" and dialog Save/Create                                                       | Use `variant="cta"` on full-page form submit (use `default`)                                        |
+| Use `variant="ghost"` for dialog Cancel / Back / dismiss actions                                                         | Use `outline` for Cancel in dialog footers                                                          |
 | Use `<EntityForm surface="dialog">` or `<DialogFormFooter>` inside Dialog — purple Save/Create                           | Hand-roll dialog footers with `variant="default"` on confirm                                        |
 | Pass `variant="destructive"` on `AlertDialogAction` / `ConfirmActionDialog` for deletes                                  | Use purple CTA on delete confirms                                                                   |
 | Use `variant="outline" size="sm"` for toolbar/filter reset buttons                                                       | Use default-size outline button next to compact controls                                            |
@@ -678,14 +690,15 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Use `file` field type for document attachment                                                                            | Raw `<input type="file">` per module                                                                |
 | Use `Dialog` for form modals + large confirms                                                                            | `window.confirm()` or custom overlay                                                                |
 | Use `Tooltip` on all icon-only buttons                                                                                   | `title` attribute                                                                                   |
-| Use `Avatar` for all user/entity initials                                                                                | Ad-hoc `rounded-full bg-muted` divs per module                                                      |
+| Use `Avatar` / `RecordVisual` with icon fallbacks for people and entities                                                | Ad-hoc `rounded-full bg-muted` divs or letter initials per module                                   |
 | Use `StatusDot` / `StatusDotLabel` for inline status                                                                     | Inline colored spans per module                                                                     |
 | Use `CountBadge` beside section titles and tab triggers                                                                  | Raw `<Badge>{count}</Badge>` per module                                                             |
 | Use `CopyButton` for clipboard actions                                                                                   | Custom copy logic per module                                                                        |
 | Use `ConfirmPopover` for row-level destructive actions                                                                   | `ConfirmActionDialog` for inline deletes                                                            |
 | Use `DateRangePicker` for start+end date fields                                                                          | Two unconnected DatePicker instances                                                                |
 | Use `ScrollArea` for bounded-height panels                                                                               | `overflow-y-auto` without styled scrollbar                                                          |
-| Use `NumberInput` for numeric fields needing thousands formatting                                                        | `<Input type="number">` for display-formatted amounts                                               |
+| Use `NumberInput` for numeric fields needing thousands formatting                                                        | `<Input type="number">` for display-formatted amounts or integer counts                             |
+| Filter keystrokes in specialized fields (phone, postal, email, url)                                                      | Accept any characters and validate only on submit                                                   |
 | Use `MoneyText` for all currency display                                                                                 | Ad-hoc `Intl.NumberFormat` calls per component                                                      |
 | Use `formatDisplayDate` / `formatDisplayDateTime` from `@oktavius/base-ui` (or `@/lib/formatDate`) for all visible dates | `toLocaleDateString()`, `MMM d yyyy`, or per-module date helpers                                    |
 | Use `RelativeTime` for timestamps in feeds and detail views                                                              | Raw ISO or US date strings in UI                                                                    |

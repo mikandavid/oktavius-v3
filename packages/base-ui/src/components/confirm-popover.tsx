@@ -60,7 +60,7 @@ export function ConfirmPopover({
             {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
           </div>
           <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setOpen(false)}>
               {cancelLabel}
             </Button>
             <Button type="button" size="sm" variant={confirmVariant} onClick={handleConfirm}>

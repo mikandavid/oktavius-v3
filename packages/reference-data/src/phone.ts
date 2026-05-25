@@ -88,8 +88,13 @@ export function splitPhoneValue(value: string, countries: PhoneCountry[]) {
   };
 }
 
+/** Keep only digits and spacing in the local phone number part. */
+export function sanitizePhoneLocalInput(local: string): string {
+  return local.replace(/[^\d\s]/g, '');
+}
+
 export function formatPhoneValue(dialCode: string, local: string): string {
-  const formattedLocal = local.replace(/[^\d\s]/g, '').replace(/\s+/g, ' ').trim();
+  const formattedLocal = sanitizePhoneLocalInput(local).replace(/\s+/g, ' ').trim();
   if (!formattedLocal) return '';
   return `${dialCode} ${formattedLocal}`.trim();
 }

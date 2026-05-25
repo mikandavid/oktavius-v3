@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 
-import { Button, buttonVariants, cn } from '@oktavius/base-ui';
+import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 import { BackIcon } from '@/lib/icons';
 
 type BackButtonProps = {
@@ -20,9 +20,11 @@ export function BackButton({ to, label = 'Back', className }: BackButtonProps) {
 
   if (to) {
     return (
-      <Link to={to} className={buttonClass} aria-label={label}>
-        <BackIcon size={16} weight="bold" />
-      </Link>
+      <MouseTooltip content={label}>
+        <Link to={to} className={buttonClass} aria-label={label}>
+          <BackIcon size={16} weight="bold" />
+        </Link>
+      </MouseTooltip>
     );
   }
 

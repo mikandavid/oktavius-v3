@@ -101,7 +101,7 @@ Spatial distance implies logical distance.
   ```tsx
   // ✅ Destructive separated
   <div className="flex items-center gap-2">
-    <Button variant="outline">Cancel</Button>
+    <Button variant="ghost">Cancel</Button>
     <Button variant="cta">Save</Button>
   </div>
   <Button variant="destructive" className="mt-4">Delete record</Button>
@@ -173,7 +173,7 @@ Chunk information into groups of 5–9.
 **ERP application:**
 
 - Sidebar sections: maximum 7 items per section. If more, add a section break.
-- `StatCard` dashboard rows: 3–5 cards maximum per row.
+- `StatCard` dashboard rows: 3–6 cards maximum per row (`STAT_CARD_GRID_CLASS`).
 - Form sections: 4–6 fields per section. More than 6 → use a new section or `CollapsibleSection`.
 - `Tabs`: maximum 6 tabs. More than 6 → rethink information architecture.
 - Table visible columns: 5–7. Additional columns behind column visibility toggle.

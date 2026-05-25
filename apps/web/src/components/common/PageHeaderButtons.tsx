@@ -1,16 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
 
-import {
-  Button,
-  buttonVariants,
-  cn,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  type ButtonProps,
-} from '@oktavius/base-ui';
-import { ExportIcon, SpinnerIcon } from '@/lib/icons';
+import { Button, buttonVariants, cn, type ButtonProps } from '@oktavius/base-ui';
+import { ExportIcon } from '@/lib/icons';
 
 import { PAGE_HEADER_ACTIONS_ROW } from './pageChrome';
 
@@ -132,25 +124,17 @@ export function PageHeaderExportButton({
   onClick,
 }: PageHeaderExportButtonProps) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className={PAGE_HEADER_ICON_BUTTON_CLASS}
-          aria-label={label}
-          disabled={disabled}
-          onClick={onClick}
-        >
-          {isLoading ? (
-            <SpinnerIcon size={14} className="animate-spin" />
-          ) : (
-            <ExportIcon size={14} />
-          )}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom">{label}</TooltipContent>
-    </Tooltip>
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      className={PAGE_HEADER_ICON_BUTTON_CLASS}
+      aria-label={label}
+      disabled={disabled}
+      loading={isLoading}
+      onClick={onClick}
+    >
+      {!isLoading ? <ExportIcon size={14} /> : null}
+    </Button>
   );
 }

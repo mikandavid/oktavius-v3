@@ -1,107 +1,129 @@
-import { Badge } from '@oktavius/base-ui';
+import type { BadgeProps } from '@oktavius/base-ui';
 
-import type { OrganizationRecord, PlatformUserRow } from '@/app/demo-data';
 import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
 import type { CrudColumn } from '@/components/data/CrudTable';
-import { formatDisplayDate } from '@/lib/formatDate';
+import { statusColumn } from '@/components/data/columns';
+import type { FilterDef } from '@/components/data/FilterToolbar';
+import type { FormField } from '@/components/forms/EntityForm';
+import type { OrganizationRecord } from '@/app/demo-data';
 import { PlusIcon } from '@/lib/icons';
+import { organizationPageIcon, superadminPageIcon } from '@/lib/modulePageIcons';
 
-const ORG_STATUS_MAP = {
+export { superadminPageIcon, organizationPageIcon };
+
+export const ORG_PLAN_VARIANT: Record<string, BadgeProps['variant']> = {
+  Starter: 'secondary',
+  Professional: 'info',
+  Enterprise: 'success',
+};
+
+export const ORG_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
   Active: 'success',
   Trial: 'info',
   Suspended: 'warning',
   Churned: 'destructive',
-} as const;
-
-const PLAN_VARIANT: Record<OrganizationRecord['plan'], 'secondary' | 'info' | 'default'> = {
-  Starter: 'secondary',
-  Professional: 'info',
-  Enterprise: 'default',
 };
 
-export const organizationColumns: CrudColumn<OrganizationRecord>[] = [
-  {
-    key: 'name',
-    header: 'Organization',
-    sortable: true,
-    render: (row) => (
-      <div className="min-w-0">
-        <p className="font-medium text-foreground">{row.name}</p>
-        <p className="truncate text-xs text-muted-foreground">{row.slug}</p>
-      </div>
-    ),
-  },
+export const ORG_ENV_VARIANT: Record<string, BadgeProps['variant']> = {
+  Production: 'success',
+  Sandbox: 'info',
+  Trial: 'warning',
+};
+
+export const orgColumns: CrudColumn<OrganizationRecord>[] = [
+  { key: 'name', header: 'Organization', sortable: true },
+  { key: 'slug', header: 'Slug', sortable: true },
+  statusColumn('plan', 'Plan', ORG_PLAN_VARIANT),
+  statusColumn('status', 'Status', ORG_STATUS_VARIANT),
+  statusColumn('environment', 'Environment', ORG_ENV_VARIANT),
+  { key: 'region', header: 'Region', sortable: true },
+  { key: 'memberCount', header: 'Members', sortable: true },
+  { key: 'createdAt', header: 'Created', sortable: true, type: 'date' },
+];
+
+export const orgFilters: FilterDef[] = [
   {
     key: 'plan',
-    header: 'Plan',
-    sortable: true,
-    hideBelow: 'md',
-    render: (row) => <Badge variant={PLAN_VARIANT[row.plan]}>{row.plan}</Badge>,
+    label: 'Plan',
+    options: [
+      { value: 'Starter', label: 'Starter' },
+      { value: 'Professional', label: 'Professional' },
+      { value: 'Enterprise', label: 'Enterprise' },
+    ],
   },
   {
     key: 'status',
-    header: 'Status',
-    sortable: true,
-    type: 'status',
-    meta: { variantMap: ORG_STATUS_MAP },
+    label: 'Status',
+    options: [
+      { value: 'Active', label: 'Active' },
+      { value: 'Trial', label: 'Trial' },
+      { value: 'Suspended', label: 'Suspended' },
+      { value: 'Churned', label: 'Churned' },
+    ],
   },
   {
     key: 'environment',
-    header: 'Environment',
-    sortable: true,
-    hideBelow: 'lg',
-    render: (row) => <Badge variant="outline">{row.environment}</Badge>,
-  },
-  { key: 'region', header: 'Region', sortable: true, hideBelow: 'lg' },
-  { key: 'memberCount', header: 'Members', sortable: true, align: 'right', hideBelow: 'sm' },
-  {
-    key: 'createdAt',
-    header: 'Created',
-    sortable: true,
-    hideBelow: 'md',
-    render: (row) => formatDisplayDate(row.createdAt),
+    label: 'Environment',
+    options: [
+      { value: 'Production', label: 'Production' },
+      { value: 'Sandbox', label: 'Sandbox' },
+      { value: 'Trial', label: 'Trial' },
+    ],
   },
 ];
 
-export const platformUserColumns: CrudColumn<PlatformUserRow>[] = [
-  { key: 'name', header: 'User', sortable: true },
-  { key: 'email', header: 'Email', sortable: true, hideBelow: 'md' },
+export type OrganizationFormValues = {
+  name: string;
+  slug: string;
+  plan: OrganizationRecord['plan'];
+  status: OrganizationRecord['status'];
+  environment: OrganizationRecord['environment'];
+  region: string;
+  billingEmail: string;
+  ownerName: string;
+};
+
+export const organizationFormDefaults: OrganizationFormValues = {
+  name: '',
+  slug: '',
+  plan: 'Professional',
+  status: 'Trial',
+  environment: 'Sandbox',
+  region: 'EU · Vienna',
+  billingEmail: '',
+  ownerName: '',
+};
+
+export const organizationFormFields: FormField[] = [
+  { name: 'name', label: 'Organization name', type: 'text', required: true, section: 'Profile' },
+  { name: 'slug', label: 'Slug', type: 'text', required: true, section: 'Profile' },
   {
-    key: 'status',
-    header: 'Status',
-    sortable: true,
-    type: 'status',
+    name: 'plan',
+    label: 'Plan',
+    type: 'combobox',
+    options: ['Starter', 'Professional', 'Enterprise'],
+    section: 'Subscription',
   },
   {
-    key: 'isSuperadmin',
-    header: 'Platform',
-    sortable: true,
-    hideBelow: 'sm',
-    render: (row) =>
-      row.isSuperadmin ? (
-        <Badge variant="default">Superadmin</Badge>
-      ) : (
-        <span className="text-muted-foreground">—</span>
-      ),
+    name: 'status',
+    label: 'Status',
+    type: 'combobox',
+    options: ['Active', 'Trial', 'Suspended', 'Churned'],
+    section: 'Subscription',
   },
   {
-    key: 'organizationCount',
-    header: 'Orgs',
-    sortable: true,
-    align: 'right',
-    hideBelow: 'lg',
+    name: 'environment',
+    label: 'Environment',
+    type: 'combobox',
+    options: ['Production', 'Sandbox', 'Trial'],
+    section: 'Subscription',
   },
-  {
-    key: 'organizationNames',
-    header: 'Organizations',
-    hideBelow: 'md',
-    render: (row) => (
-      <span className="line-clamp-2 text-sm text-muted-foreground">{row.organizationNames}</span>
-    ),
-  },
+  { name: 'region', label: 'Region', type: 'text', section: 'Operations' },
+  { name: 'billingEmail', label: 'Billing email', type: 'email', section: 'Billing' },
+  { name: 'ownerName', label: 'Owner', type: 'text', section: 'Ownership' },
 ];
 
-export function superadminHeaderAction() {
+export function OrganizationsHeaderAction() {
   return (
     <PageHeaderCtaLink to="/superadmin/orgs/new">
       <PlusIcon size={14} />
@@ -109,7 +131,3 @@ export function superadminHeaderAction() {
     </PageHeaderCtaLink>
   );
 }
-
-export { ORG_STATUS_MAP };
-
-export { organizationPageIcon, superadminPageIcon } from '@/lib/modulePageIcons';

@@ -8,7 +8,11 @@ Use **`<CalendarView>`** as the Google Calendar–style planner. It includes:
 
 - Toolbar: Create (optional) · Today · prev/next · period title · **Day | Week | Month | Schedule** switcher
 - **Month** — colored event pills with time prefix, click day → day view
-- **Week / Day** — time grid, all-day row, current-time indicator, click slot → create
+- **Week / Day** — time grid, all-day row, current-time indicator
+  - **Click** empty slot → create (via `onSlotClick`)
+  - **Drag** empty slot range → create block (via `onSlotRangeSelect`)
+  - **Drag** event → reschedule (`onEventMove`)
+  - **Resize** event top/bottom edges (`onEventResize`)
 - **Schedule** — agenda list grouped by day with color stripe
 - Optional **calendar legend sidebar** (`showCalendarLegend` + `calendars` prop)
 
@@ -58,7 +62,10 @@ calendar/
   showCalendarLegend
   leadingAction={<PageHeaderCtaLink …>Create</PageHeaderCtaLink>}
   onEventClick={openEvent}
+  onEventMove={moveEvent}
+  onEventResize={resizeEvent}
   onSlotClick={openCreateAt}
+  onSlotRangeSelect={openCreateRange}
 />
 ```
 

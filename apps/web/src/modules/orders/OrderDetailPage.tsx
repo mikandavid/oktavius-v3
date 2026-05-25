@@ -1,162 +1,158 @@
-import { useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import {
-  Button,
+  Badge,
   InlineEmptyState,
   ListRow,
   MoneyText,
   SectionCard,
-  StatCard,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  Timeline,
-  type TimelineEvent,
+  formatDisplayDate,
 } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
-import { CrudTable, type CrudColumn } from '@/components/data/CrudTable';
 import { ModulePage } from '@/components/common/PageLayout';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { formatDisplayDate } from '@/lib/formatDate';
-import { OrderIcon } from '@/lib/icons';
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { useDemoData } from '@/app/demo-data';
+import { ordersPageIcon } from '@/lib/modulePageIcons';
+import { toast } from '@/lib/toast';
 
-import { ORDER_STATUS_MAP, ordersPageIcon } from './shared';
-import type { OrderLineRecord } from '@/app/demo-data';
-
-const lineColumns: CrudColumn<OrderLineRecord>[] = [
-  { key: 'sku', header: 'SKU', render: (r) => <span className="font-mono text-xs">{r.sku}</span> },
-  { key: 'productName', header: 'Product', sortable: true },
-  { key: 'quantity', header: 'Qty', align: 'right', sortable: true },
-  {
-    key: 'unitPrice',
-    header: 'Unit price',
-    align: 'right',
-    type: 'currency',
-    meta: { currencySymbol: '€' },
-    render: (r) => r.unitPrice,
-  },
-];
+import { orderStatusBadge } from './shared';
 
 export function OrderDetailPage() {
   const { orderId } = useParams();
+  const navigate = useNavigate();
   const { orders, orderLines, tasks } = useDemoData();
-  const [tab, setTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const order = orders.find((o) => o.id === orderId);
-  if (!order) return <Navigate to="/orders" replace />;
+  const order = useMemo(() => orders.find((entry) => entry.id === orderId), [orders, orderId]);
 
-  const lines = orderLines.filter((l) => l.orderId === order.id);
-  const orderTasks = tasks.filter((t) => t.parentId === order.id && t.parentType === 'order');
+  const lines = useMemo(
+    () => orderLines.filter((line) => line.orderId === orderId),
+    [orderLines, orderId],
+  );
 
-  const activity: TimelineEvent[] = [
-    {
-      id: '1',
-      label: 'Order confirmed',
-      timestamp: `${order.orderDate}T10:00:00Z`,
-      tone: 'success',
-    },
-    {
-      id: '2',
-      label: 'Invoice generated',
-      timestamp: `${order.orderDate}T14:30:00Z`,
-      tone: 'info',
-    },
-    { id: '3', label: 'Fulfillment started', timestamp: '2024-11-12T09:00:00Z', tone: 'info' },
-  ];
+  const orderTasks = useMemo(
+    () => tasks.filter((task) => task.parentId === orderId && task.parentType === 'order'),
+    [tasks, orderId],
+  );
+
+  if (!order) {
+    return (
+      <ModulePage title="Order not found" icon={ordersPageIcon()} backTo="/orders">
+        <p className="text-sm text-muted-foreground">This order may have been removed.</p>
+      </ModulePage>
+    );
+  }
 
   return (
-    <ModulePage
-      title={order.orderNumber}
-      subtitle={
-        <span className="flex flex-wrap items-center gap-2">
-          <Link
-            to={`/clients/${order.clientId}`}
-            className="underline underline-offset-2 hover:text-foreground"
-          >
-            {order.clientName}
-          </Link>
-          <span className="text-muted-foreground">· {order.owner}</span>
-          <StatusBadge status={order.status} variantMap={ORDER_STATUS_MAP} />
-        </span>
-      }
-      icon={ordersPageIcon()}
-      backTo="/orders"
-    >
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="lines">Line items</TabsTrigger>
-          <TabsTrigger value="tasks" attention={orderTasks.some((t) => t.status === 'Pending')}>
-            Tasks
-          </TabsTrigger>
-        </TabsList>
+    <>
+      <ModulePage
+        title={order.orderNumber}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>{order.clientName}</span>
+            {orderStatusBadge(order.status)}
+          </span>
+        }
+        icon={ordersPageIcon()}
+        backTo="/orders"
+        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete order" />}
+      >
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="lines">Line items</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-4 pt-4">
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-3">
-            <StatCard
-              label="Order total"
-              value={<MoneyText value={order.total} />}
-              icon={<OrderIcon size={16} />}
-            />
-            <StatCard label="Line items" value={String(order.lineCount)} />
-            <StatCard label="Due date" value={formatDisplayDate(order.dueDate)} />
-          </div>
-          <SectionCard title="Recent activity">
-            <Timeline events={activity} />
-          </SectionCard>
-          <SectionCard title="Open tasks" meta={`${orderTasks.length} total`}>
-            {orderTasks.length ? (
-              orderTasks.map((task) => (
+          <TabsContent value="overview" className="space-y-4 pt-4">
+            <SectionCard title="Order summary">
+              <dl className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Client</dt>
+                  <dd className="text-sm">{order.clientName}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Owner</dt>
+                  <dd className="text-sm">{order.owner}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Status</dt>
+                  <dd className="text-sm">{orderStatusBadge(order.status)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Total</dt>
+                  <dd className="text-sm">
+                    <MoneyText value={Number(order.total)} currency="EUR" />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Order date</dt>
+                  <dd className="text-sm">{formatDisplayDate(order.orderDate)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">Due date</dt>
+                  <dd className="text-sm">{formatDisplayDate(order.dueDate)}</dd>
+                </div>
+              </dl>
+            </SectionCard>
+          </TabsContent>
+
+          <TabsContent value="lines" className="space-y-4 pt-4">
+            <SectionCard title="Line items" meta={`${lines.length} items`}>
+              {lines.map((line) => (
+                <ListRow
+                  key={line.id}
+                  title={line.productName}
+                  subtitle={line.sku}
+                  meta={`Qty ${line.quantity}`}
+                  trailing={
+                    <MoneyText value={Number(line.unitPrice) * line.quantity} currency="EUR" />
+                  }
+                />
+              ))}
+              {lines.length === 0 ? (
+                <InlineEmptyState text="No line items on this order." centered />
+              ) : null}
+            </SectionCard>
+          </TabsContent>
+
+          <TabsContent value="tasks" className="space-y-4 pt-4">
+            <SectionCard title="Tasks" meta={`${orderTasks.length} open items`}>
+              {orderTasks.map((task) => (
                 <ListRow
                   key={task.id}
                   title={task.title}
-                  subtitle={`Due ${formatDisplayDate(task.dueDate)} · ${task.assignee}`}
-                  trailing={<StatusBadge status={task.status} />}
+                  subtitle={task.assignee}
+                  meta={formatDisplayDate(task.dueDate)}
+                  trailing={<Badge variant="outline">{task.status}</Badge>}
                 />
-              ))
-            ) : (
-              <InlineEmptyState text="No tasks on this order." />
-            )}
-          </SectionCard>
-        </TabsContent>
+              ))}
+              {orderTasks.length === 0 ? (
+                <InlineEmptyState text="No tasks linked to this order." centered />
+              ) : null}
+            </SectionCard>
+          </TabsContent>
+        </Tabs>
+      </ModulePage>
 
-        <TabsContent value="lines" className="pt-4">
-          <SectionCard title="Line items" meta={<MoneyText value={order.total} />}>
-            {lines.length ? (
-              <CrudTable data={lines} columns={lineColumns} emptyTitle="No lines" compact />
-            ) : (
-              <InlineEmptyState text="No line items." />
-            )}
-          </SectionCard>
-        </TabsContent>
-
-        <TabsContent value="tasks" className="pt-4">
-          <SectionCard
-            title="Tasks"
-            actions={
-              <Button variant="outline" size="sm">
-                Add task
-              </Button>
-            }
-          >
-            {orderTasks.length ? (
-              orderTasks.map((task) => (
-                <ListRow
-                  key={task.id}
-                  title={task.title}
-                  subtitle={`${task.assignee} · due ${formatDisplayDate(task.dueDate)}`}
-                  trailing={<StatusBadge status={task.status} />}
-                />
-              ))
-            ) : (
-              <InlineEmptyState text="No tasks yet." centered />
-            )}
-          </SectionCard>
-        </TabsContent>
-      </Tabs>
-    </ModulePage>
+      <ConfirmActionDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this order?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          toast.success('Order deleted.');
+          navigate('/orders');
+        }}
+      />
+    </>
   );
 }

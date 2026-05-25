@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
+import { useDemoData } from '@/app/demo-data';
+import { toast } from '@/lib/toast';
 
 import {
   clientFormDefaults,
@@ -15,38 +15,21 @@ import {
 export function ClientCreatePage() {
   const navigate = useNavigate();
   const { createClient } = useDemoData();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (values: ClientFormValues) => {
+    const created = createClient(values);
+    toast.success('Client created.');
+    navigate(`/clients/${created.id}`);
+  };
 
   return (
-    <ModulePage title="New Client" backTo="/clients" icon={clientsPageIcon()}>
-      <EntityForm<ClientFormValues>
+    <ModulePage title="New client" icon={clientsPageIcon()} backTo="/clients">
+      <EntityForm
         title="Client details"
         fields={clientFormFields}
         defaultValues={clientFormDefaults}
         submitLabel="Create client"
-        isSubmitting={isSubmitting}
-        onSubmit={(values) => {
-          setIsSubmitting(true);
-          const next = createClient({
-            name: values.name,
-            type: values.type,
-            industry: values.industry,
-            status: values.status,
-            email: values.email,
-            phone: values.phone,
-            website: values.website,
-            country: values.address.country,
-            city: values.address.city,
-            tags: Array.isArray(values.tags) ? values.tags : [],
-            notes: values.notes,
-            annualRevenue: values.annualRevenue,
-            contractStart: values.contractStart,
-            contractEnd: values.contractEnd,
-            accountManager: values.accountManager,
-          });
-          setIsSubmitting(false);
-          navigate(`/clients/${next.id}`);
-        }}
+        onSubmit={handleSubmit}
       />
     </ModulePage>
   );

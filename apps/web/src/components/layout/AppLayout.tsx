@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import { TooltipProvider, cn } from '@oktavius/base-ui';
+import { cn } from '@oktavius/base-ui';
 
 import {
   APP_MAIN_FIT_CLASS,
@@ -10,10 +10,27 @@ import {
   APP_MAIN_SCROLL_CLASS,
   APP_WORKSPACE_COLUMN_CLASS,
 } from '@/components/common/pageChrome';
+import { AppShellLayoutProvider, useAppShellLayout } from './AppShellLayoutContext';
 import { AIChatSidebar } from './AIChatSidebar';
 import { Header } from './Header';
 import { MobileTopBar } from './MobileTopBar';
 import { Sidebar } from './Sidebar';
+
+function AppLayoutMain({ isAgentChatRoute }: { isAgentChatRoute: boolean }) {
+  const { hasSecondaryNav } = useAppShellLayout();
+
+  return (
+    <main
+      id="app-main-content"
+      className={cn(
+        isAgentChatRoute || hasSecondaryNav ? APP_MAIN_FIT_CLASS : APP_MAIN_SCROLL_CLASS,
+        APP_MAIN_GUTTER_CLASS,
+      )}
+    >
+      <Outlet />
+    </main>
+  );
+}
 
 export function AppLayout() {
   const { pathname } = useLocation();
@@ -27,7 +44,7 @@ export function AppLayout() {
   const showDesktopChatRail = !isAgentChatRoute;
 
   return (
-    <TooltipProvider delayDuration={200}>
+    <AppShellLayoutProvider>
       <div className="flex h-dvh max-h-dvh min-w-0 overflow-hidden bg-muted/40">
         <a
           href="#app-main-content"
@@ -37,7 +54,7 @@ export function AppLayout() {
         </a>
 
         {/* Left: navigation (desktop rail always visible from md up) */}
-        <div className="hidden shrink-0 md:flex" aria-label="Application navigation">
+        <div className="relative z-40 hidden shrink-0 md:flex" aria-label="Application navigation">
           <Sidebar />
         </div>
 
@@ -64,15 +81,7 @@ export function AppLayout() {
             <div className="hidden md:block">
               <Header />
             </div>
-            <main
-              id="app-main-content"
-              className={cn(
-                isAgentChatRoute ? APP_MAIN_FIT_CLASS : APP_MAIN_SCROLL_CLASS,
-                !isAgentChatRoute && APP_MAIN_GUTTER_CLASS,
-              )}
-            >
-              <Outlet />
-            </main>
+            <AppLayoutMain isAgentChatRoute={isAgentChatRoute} />
           </div>
 
           {showDesktopChatRail ? (
@@ -88,6 +97,6 @@ export function AppLayout() {
 
         <Toaster position="top-right" richColors closeButton />
       </div>
-    </TooltipProvider>
+    </AppShellLayoutProvider>
   );
 }

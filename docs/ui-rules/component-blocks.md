@@ -14,7 +14,7 @@ Use the simplest correct block.
 - Events / scheduling: `CalendarView`.
 - Files/documents: `DocumentPreviewPanel` / `AttachmentList`.
 - Metrics: `StatCard`, `ChartCard` (not `MetricCard`).
-- Settings / catalogs: `SettingsLayout` + `SettingsSection` + `SettingsRow`; config tables use `SettingsTable` (not `CrudTable`).
+- Settings / catalogs: `AppSectionNavLayout` + `SettingsSection` + `SettingsRow`; config tables use `SettingsTable` (not `CrudTable`). See [`section-nav.md`](./section-nav.md).
 - Status display: `StatusBadge` (not ad-hoc colored `Badge`).
 - Empty sub-lists: `InlineEmptyState` (not raw `<p>` placeholders).
 - Icons: `@/lib/icons` only in `apps/web`.
@@ -227,7 +227,7 @@ Purpose:
 
 Includes:
 
-- `SettingsLayout` + `SettingsSection` + `SettingsRow`
+- `AppSectionNavLayout` + `SettingsSection` + `SettingsRow` (apps/web); base-ui provides `SettingsLayout` primitives
 - `SettingsTable` — compact config rows
 - `CatalogOptionsManager` — add/edit catalog entries
 - editor dialog

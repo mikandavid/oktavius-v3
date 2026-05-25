@@ -1,75 +1,55 @@
-import { useDemoData } from '@/app/demo-data';
+import { useEffect, useState } from 'react';
+
 import { CrudMainView } from '@/components/data/CrudMainView';
+import { useDemoData } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
 
-import { userColumns, usersHeaderAction, usersPageIcon } from './shared';
+import { UsersHeaderAction, userColumns, userFilters, usersPageIcon } from './shared';
 
 export function UsersListPage() {
   const { users } = useDemoData();
+  const [rows, setRows] = useState(users);
+
+  useEffect(() => {
+    setRows(users);
+  }, [users]);
 
   const list = useListPageState({
-    rows: users,
+    rows,
     defaultSort: 'name',
-    pageSize: 5,
-    filterKeys: ['status', 'role'],
-    filterFn: (user, { search, filters }) => {
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        q.length === 0 ||
-        user.name.toLowerCase().includes(q) ||
-        user.email.toLowerCase().includes(q) ||
-        user.team.toLowerCase().includes(q);
-      const matchesStatus = filters.status.length === 0 || user.status === filters.status;
-      const matchesRole = filters.role.length === 0 || user.role === filters.role;
-      return matchesSearch && matchesStatus && matchesRole;
-    },
+    filterKeys: ['role', 'status'],
+    searchKeys: ['name', 'email', 'team'],
   });
 
   return (
     <CrudMainView
       title="Users"
-      subtitle="Simple entity lists should use the shared table system."
+      subtitle="Team members and access roles"
       icon={usersPageIcon()}
-      headerActions={usersHeaderAction()}
+      headerActions={<UsersHeaderAction />}
+      columns={userColumns}
+      rows={list.paged}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
       search={list.search}
       onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search users, teams, or email"
-      filters={[
-        {
-          key: 'status',
-          label: 'Status',
-          options: [
-            { value: 'Active', label: 'Active' },
-            { value: 'Pending', label: 'Pending' },
-            { value: 'Suspended', label: 'Suspended' },
-          ],
-        },
-        {
-          key: 'role',
-          label: 'Role',
-          options: [
-            { value: 'Admin', label: 'Admin' },
-            { value: 'Manager', label: 'Manager' },
-            { value: 'Member', label: 'Member' },
-          ],
-        },
-      ]}
+      searchPlaceholder="Search users"
+      filters={userFilters}
       values={list.values}
       onFilterChange={list.onFilterChange}
       onReset={list.onReset}
-      rows={list.paged}
-      columns={userColumns}
-      emptyTitle="No users found"
-      emptyDescription="This module should default to a dense shared CRUD list view instead of a custom layout."
-      entityLabel="user"
-      getRowHref={(user) => `/users/${user.id}`}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
       page={list.page}
       pageSize={list.pageSize}
       total={list.total}
       totalPages={list.totalPages}
       onPageChange={list.onPageChange}
+      entityLabel="user"
+      getRowHref={(row) => `/users/${row.id}`}
+      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
+      exportOptions={{ fileName: 'users', label: 'Export' }}
+      allRows={list.filtered}
+      emptyTitle="No users found"
+      emptyDescription="Invite team members or adjust your filters."
     />
   );
 }

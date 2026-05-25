@@ -17,3 +17,6 @@ export const APP_MAIN_SCROLL_CLASS =
 
 /** Full-height module routes (e.g. /ai-chat) — no outer scroll; inner panel scrolls. */
 export const APP_MAIN_FIT_CLASS = 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden';
+
+/** ModulePage wrapper when the route uses a left section nav (`AppSectionNavLayout`). */
+export const MODULE_PAGE_SECTION_NAV_CLASS = 'flex min-h-0 flex-1 flex-col gap-4';

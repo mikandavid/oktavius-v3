@@ -1,60 +1,84 @@
-import { Navigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-import { Badge } from '@oktavius/base-ui';
+import { MoneyText } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
-import { DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
-import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { PRODUCT_STATUS_MAP, productsPageIcon } from './shared';
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { DetailView } from '@/components/common/DetailView';
+import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { useDemoData } from '@/app/demo-data';
+import { toast } from '@/lib/toast';
+
+import { productStatusBadge, productsPageIcon } from './shared';
 
 export function ProductDetailPage() {
   const { productId } = useParams();
+  const navigate = useNavigate();
   const { products } = useDemoData();
-  const product = products.find((p) => p.id === productId);
-  if (!product) return <Navigate to="/products" replace />;
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const price = `€ ${Number(product.price).toLocaleString('de-AT', { minimumFractionDigits: 2 })}`;
+  const product = useMemo(
+    () => products.find((entry) => entry.id === productId),
+    [products, productId],
+  );
+
+  if (!product) {
+    return (
+      <ModulePage title="Product not found" icon={productsPageIcon()} backTo="/products">
+        <p className="text-sm text-muted-foreground">This product may have been removed.</p>
+      </ModulePage>
+    );
+  }
 
   return (
-    <ModulePage
-      title={product.name}
-      subtitle={
-        <span className="flex flex-wrap items-center gap-2">
-          <span>
-            {product.sku} · {product.category}
+    <>
+      <ModulePage
+        title={product.name}
+        subtitle={
+          <span className="flex flex-wrap items-center gap-2">
+            <span>{product.sku}</span>
+            {productStatusBadge(product.status)}
           </span>
-          <StatusBadge status={product.status} variantMap={PRODUCT_STATUS_MAP} />
-        </span>
-      }
-      icon={productsPageIcon()}
-      backTo="/products"
-    >
-      <DetailView
-        title="Product record"
-        fields={[
-          {
-            key: 'sku',
-            label: 'SKU',
-            value: <span className="font-mono text-sm">{product.sku}</span>,
-            section: 'Catalog',
-          },
-          {
-            key: 'category',
-            label: 'Category',
-            value: <Badge variant="outline">{product.category}</Badge>,
-            section: 'Catalog',
-          },
-          { key: 'unit', label: 'Unit', value: product.unit, section: 'Catalog' },
-          { key: 'price', label: 'List price', value: price, section: 'Inventory' },
-          {
-            key: 'stock',
-            label: 'Stock on hand',
-            value: String(product.stock),
-            section: 'Inventory',
-          },
-        ]}
+        }
+        icon={productsPageIcon()}
+        backTo="/products"
+        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete product" />}
+      >
+        <DetailView
+          title="Product details"
+          fields={[
+            { label: 'Name', value: product.name, importance: 'primary' },
+            { label: 'SKU', value: product.sku, section: 'Product' },
+            { label: 'Category', value: product.category, section: 'Product' },
+            {
+              label: 'Status',
+              value: productStatusBadge(product.status),
+              section: 'Product',
+            },
+            {
+              label: 'Price',
+              value: <MoneyText value={Number(product.price)} currency={product.currency} />,
+              section: 'Pricing',
+            },
+            { label: 'Currency', value: product.currency, section: 'Pricing' },
+            { label: 'Stock', value: String(product.stock), section: 'Inventory' },
+            { label: 'Unit', value: product.unit, section: 'Inventory' },
+          ]}
+        />
+      </ModulePage>
+
+      <ConfirmActionDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete this product?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => {
+          toast.success('Product deleted.');
+          navigate('/products');
+        }}
       />
-    </ModulePage>
+    </>
   );
 }

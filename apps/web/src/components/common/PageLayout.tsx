@@ -23,7 +23,7 @@ export function ModulePage({
   ...headerProps
 }: PageHeaderProps & { children: ReactNode; layoutClassName?: string }) {
   return (
-    <PageLayout className={layoutClassName}>
+    <PageLayout className={cn(!layoutClassName && 'space-y-4', layoutClassName)}>
       <PageHeader {...headerProps} />
       {children}
     </PageLayout>
@@ -32,7 +32,7 @@ export function ModulePage({
 
 export function PageHeader({ title, subtitle, actions, icon, backTo }: PageHeaderProps) {
   return (
-    <div className="grid grid-cols-1 items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-4">
+    <div className="grid shrink-0 grid-cols-1 items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:gap-4">
       <div className="flex min-w-0 items-center gap-3">
         {backTo ? <BackButton to={backTo} label="Back" /> : null}
         {icon ? (

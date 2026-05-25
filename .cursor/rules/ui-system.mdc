@@ -24,8 +24,11 @@ Canonical references: `docs/ui-rules/README.md` (index) and `docs/ui-rules/compo
 | Create/edit | `<ModulePage>` + `<EntityForm>` |
 | Detail (simple) | `<ModulePage>` + `<DetailView>` |
 | Detail (complex) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` |
+| Section nav (settings, multi-section record) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` |
 
 Every route uses `<ModulePage>`. Never build custom page headers or shells.
+
+For section-nav pages see `docs/ui-rules/section-nav.md` — use `AppSectionNavLayout`, not raw `SettingsLayout`.
 
 **Module icon (required):** pass `icon={modulePageIcon()}` on every `ModulePage` and `CrudMainView`. Use helpers from `@/lib/modulePageIcons` or re-export in module `shared.tsx`. Standard: `size={20} weight="duotone"`, match sidebar nav icon.
 
@@ -36,6 +39,9 @@ Every route uses `<ModulePage>`. Never build custom page headers or shells.
 - Page wash: `bg-muted/40` canvas; modules render white tiles on top
 - No `text-gray-*`, `bg-white`, or `rounded-lg` on named surfaces
 - No cards-in-cards — use `<SectionCard>` inside pages, not nested `<Card>`
+- **Card content hierarchy:** six fixed typography tiers via `CARD_CONTENT_TIERS` — primary record info large with icons, meta fields quiet. See `card-hierarchy` rule.
+- **Interactive affordances:** every pressable control needs hover + active/focus feedback and `cursor-pointer` — see `docs/ui-rules/visual-foundation.md` § Interactive Affordances
+- **Control states:** use primitive APIs for disabled, loading, invalid, valid — see `docs/ui-rules/interactive-states.md` and `interactive-states` rule
 
 ## Button hierarchy
 
@@ -43,6 +49,7 @@ Every route uses `<ModulePage>`. Never build custom page headers or shells.
 |---|---|
 | List header “New X” | `cta` via `PageHeaderCtaLink` |
 | Dialog Save / Create | `cta` via `EntityForm surface="dialog"` or `DialogFormFooter` |
+| Dialog Cancel / Back / dismiss | `ghost` |
 | Full-page form submit | `default` |
 | Delete confirm | `destructive` on `ConfirmActionDialog` / `AlertDialogAction` |
 | Toolbar / secondary | `outline` `size="sm"` |
@@ -50,6 +57,7 @@ Every route uses `<ModulePage>`. Never build custom page headers or shells.
 ## App shell
 
 - Desktop: nav left · workspace center · chat right — never hide sidebar on desktop
+- **Section-nav pages:** app sidebar auto-compacts to icon rail; section nav + content scroll independently — see `docs/ui-rules/section-nav.md`
 - Import layout classes from `@/components/common/pageChrome`
 - Toasts: `@/lib/toast` — Toaster already in `AppLayout`
 
@@ -57,7 +65,7 @@ Every route uses `<ModulePage>`. Never build custom page headers or shells.
 
 Full index: `docs/ui-rules/README.md`
 
-`page-header` · `crud-table` · `filter-toolbar` · `combobox` · `date-format` · `calendar-components` · `split-view-master-detail` · `entity-form` · `module-pattern` · `detail-pages` · `status-and-money` · `dialogs` · `checklist`
+`page-header` · `crud-table` · `filter-toolbar` · `combobox` · `date-format` · `calendar-components` · `split-view-master-detail` · `entity-form` · `module-pattern` · `detail-pages` · `section-nav` · `status-and-money` · `dialogs` · `checklist` · `card-hierarchy` · `interactive-states`
 
 ## Lint (`pnpm lint`)
 
@@ -65,4 +73,4 @@ Enforced in `apps/web/eslint.config.js`:
 
 - `@phosphor-icons/react` — only allowed in `src/lib/icons.ts`
 - `Select` / Radix select exports from `@oktavius/base-ui` — use `Combobox`
-- Forbidden Tailwind: `text-gray-*`, `bg-white`, `rounded-lg` — use semantic tokens (`rounded-card`, `rounded-control`)
+- Forbidden Tailwind: `text-gray-*`, `bg-white`, `text-white`, raw palette scales (`blue-500`, `teal-600`, etc.), `rounded-lg` — use semantic tokens (`rounded-card`, `rounded-control`, `getSemanticToneClasses`)

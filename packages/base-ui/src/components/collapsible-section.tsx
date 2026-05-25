@@ -51,10 +51,10 @@ export function CollapsibleSection({
           <button
             type="button"
             className={cn(
-              'flex min-w-0 flex-1 items-center gap-2 rounded-md text-left transition-colors py-3',
+              'flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md py-3 text-left transition-colors',
               isPlain
-                ? 'text-muted-foreground hover:text-foreground'
-                : 'text-foreground hover:text-foreground',
+                ? 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                : 'text-foreground hover:bg-muted/40 hover:text-foreground',
             )}
           >
             <CaretRight

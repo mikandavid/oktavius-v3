@@ -93,7 +93,7 @@ export function DocumentGenerateDialog({
             handleOpenChange(false);
           }}
           footerActions={
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>
               Cancel
             </Button>
           }

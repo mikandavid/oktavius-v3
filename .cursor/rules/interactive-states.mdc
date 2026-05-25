@@ -1,0 +1,35 @@
+---
+description: Interactive control states — hover, focus, disabled, loading, invalid, valid
+globs: packages/base-ui/**/*.{tsx,ts},apps/web/src/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Interactive control states
+
+Canonical doc: `docs/ui-rules/interactive-states.md`  
+Shared classes: `packages/base-ui/src/lib/controlStates.ts`
+
+## Required props (use primitives — do not hand-roll)
+
+| Need | API |
+|------|-----|
+| Button async | `<Button loading={…}>` |
+| Combobox fetch | `<Combobox isLoading={…}>` |
+| Field error | `<FormField error={…}>` → forwards ring to child |
+| Form errors | `<EntityForm errors={{ field: 'msg' }}>` |
+| Dialog save | `<DialogFormFooter confirmLoading={…}>` |
+| Confirmed valid | `valid` on `FormField` / input — **only** when explicitly verified |
+
+## Bans
+
+```
+❌ Manual spinner + disabled on Button — use loading
+❌ Error text without invalid ring on the control
+❌ valid on every non-empty field
+❌ hover styles on disabled controls
+❌ Custom red border classes — use FormField / aria-invalid + controlStates
+```
+
+## Backend → frontend
+
+Return field-keyed validation messages. Frontend maps to `EntityForm errors` — plain strings, not HTML.

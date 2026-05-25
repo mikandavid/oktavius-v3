@@ -40,6 +40,10 @@ Read [`ui-system.md`](./ui-system.md) before writing any component, page, or mod
 ❌ Manually constructed alert / notice divs (use InfoBox)
 ❌ Icon-only buttons without a Tooltip
 ❌ Status colors invented per-module (use StatusBadge + variantMap)
+❌ onClick / role="button" on elements without hover + active/focus affordance (see visual-foundation.md § Interactive Affordances)
+❌ Manual Button spinners — use `<Button loading>`
+❌ Field error text without invalid ring on the control (use FormField / EntityForm errors)
+❌ valid / success ring on every non-empty input — only explicit confirmation
 ```
 
 ---
@@ -127,11 +131,24 @@ Loading: pass `isLoading` to `CrudMainView` or use `PageSkeleton` at page level 
 
 Submit on full-page routes: `variant="default"`. In dialogs: `<EntityForm surface="dialog">` → submit `variant="cta"`.
 
+### Backend validation → form states
+
+Return field-keyed plain-text messages. Frontend maps to `EntityForm errors`:
+
+```tsx
+<EntityForm errors={{ email: 'Already registered', vatId: 'Invalid VAT number' }} … />
+```
+
+`FormField` applies invalid ring + `aria-invalid` on the control. Do not return HTML error snippets.
+
 ### Settings Page
 
 ```tsx
-<ModulePage title="Settings">
-  <SettingsLayout items={settingsNav} activeKey={activeSection} onSelect={setActiveSection}>
+import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
+import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
+
+<ModulePage title="Settings" layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>
+  <AppSectionNavLayout items={settingsNav} activeKey={activeSection} onSelect={setActiveSection}>
     {activeSection === 'general' && (
       <SettingsSection title="General" description="...">
         <SettingsRow label="[Setting name]" description="[Why this setting exists]">
@@ -139,9 +156,11 @@ Submit on full-page routes: `variant="default"`. In dialogs: `<EntityForm surfac
         </SettingsRow>
       </SettingsSection>
     )}
-  </SettingsLayout>
-</ModulePage>
+  </AppSectionNavLayout>
+</ModulePage>;
 ```
+
+See [`section-nav.md`](./section-nav.md) for scroll behavior, purple active state, and app sidebar compact rules.
 
 ---
 
@@ -368,6 +387,8 @@ Run through this list. If any item fails, fix it before considering the task com
 14. Dates display as `DD.MM.YYYY` to the user
 15. Columns, form fields, and row actions defined in `shared.tsx`, not inline in page
 16. Every `ModulePage` / `CrudMainView` passes `icon={*PageIcon()}`
+17. Every pressable control has hover + active/focus feedback (`cursor-pointer` is not sufficient alone)
+18. Async buttons use `Button loading`; form errors use `EntityForm errors` / `FormField error` with invalid ring on controls (see `interactive-states.md`)
 
 ---
 

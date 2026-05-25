@@ -14,8 +14,10 @@ import {
 
 import {
   BotIcon,
+  CalendarIcon,
   CaseIcon,
   ContractIcon,
+  DocumentIcon,
   HomeIcon,
   IncidentIcon,
   InvoiceIcon,
@@ -27,6 +29,7 @@ import {
   SearchIcon,
   Settings2Icon,
   SuperadminIcon,
+  TasksIcon,
   UsersIcon,
 } from '@/lib/icons';
 
@@ -58,6 +61,10 @@ const NAV_ITEMS = [
   { label: 'Products', path: '/products', icon: ProductIcon, group: 'Modules' },
   { label: 'Projects', path: '/projects', icon: ProjectIcon, group: 'Modules' },
   { label: 'Users', path: '/users', icon: UsersIcon, group: 'Modules' },
+  { label: 'Tasks', path: '/tasks', icon: TasksIcon, group: 'Modules' },
+  { label: 'Documents', path: '/documents', icon: DocumentIcon, group: 'Modules' },
+  { label: 'Calendar', path: '/calendar', icon: CalendarIcon, group: 'Modules' },
+  { label: 'Client onboarding', path: '/clients/onboarding', icon: ProjectsIcon, group: 'Modules' },
   { label: 'AI Chat', path: '/ai-chat', icon: BotIcon, group: 'Modules' },
   { label: 'Superadmin', path: '/superadmin', icon: SuperadminIcon, group: 'Admin' },
   { label: 'Component Showcase', path: '/showcase', icon: Settings2Icon, group: 'Admin' },

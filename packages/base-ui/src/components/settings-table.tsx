@@ -19,6 +19,7 @@ import { DotsSixVertical } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 
 import { cn } from '../lib/utils';
+import { MouseTooltip } from './mouse-tooltip';
 import { InlineEmptyState } from './inline-empty-state';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 
@@ -74,17 +75,18 @@ function SortableSettingsRow<T>({
       onClick={onRowClick ? () => onRowClick(row) : undefined}
     >
       <TableCell className="w-10 px-2">
-        <button
-          type="button"
-          className="flex h-8 w-8 cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
-          aria-label={reorderHandleLabel}
-          title={reorderHandleLabel}
-          onClick={(event) => event.stopPropagation()}
-          {...attributes}
-          {...listeners}
-        >
-          <DotsSixVertical size={16} aria-hidden />
-        </button>
+        <MouseTooltip content={reorderHandleLabel}>
+          <button
+            type="button"
+            className="flex h-8 w-8 cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:cursor-grabbing"
+            aria-label={reorderHandleLabel}
+            onClick={(event) => event.stopPropagation()}
+            {...attributes}
+            {...listeners}
+          >
+            <DotsSixVertical size={16} aria-hidden />
+          </button>
+        </MouseTooltip>
       </TableCell>
       {columns.map((column) => (
         <TableCell key={column.key} className={column.className}>

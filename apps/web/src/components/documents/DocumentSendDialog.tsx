@@ -132,7 +132,7 @@ export function DocumentSendDialog({
             onOpenChange(false);
           }}
           footerActions={
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
           }

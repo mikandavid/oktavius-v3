@@ -1,68 +1,54 @@
-import { useDemoData } from '@/app/demo-data';
+import { useEffect, useState } from 'react';
+
 import { CrudMainView } from '@/components/data/CrudMainView';
+import { useDemoData } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
 
-import { orderColumns, ordersPageIcon } from './shared';
+import { orderColumns, orderFilters, ordersPageIcon } from './shared';
 
 export function OrdersListPage() {
   const { orders } = useDemoData();
+  const [rows, setRows] = useState(orders);
+
+  useEffect(() => {
+    setRows(orders);
+  }, [orders]);
 
   const list = useListPageState({
-    rows: orders,
-    defaultSort: '-orderDate',
-    pageSize: 10,
-    filterKeys: ['status'],
-    filterFn: (order, { search, filters }) => {
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        q.length === 0 ||
-        order.orderNumber.toLowerCase().includes(q) ||
-        order.clientName.toLowerCase().includes(q) ||
-        order.owner.toLowerCase().includes(q);
-      const matchesStatus = filters.status.length === 0 || order.status === filters.status;
-      return matchesSearch && matchesStatus;
-    },
+    rows,
+    defaultSort: 'orderDate',
+    filterKeys: ['status', 'owner', 'clientName'],
+    searchKeys: ['orderNumber', 'clientName', 'owner'],
   });
 
   return (
     <CrudMainView
-      title="Sales orders"
-      subtitle="Track quotes, confirmations, fulfillment, and delivery."
+      title="Orders"
+      subtitle="Sales orders and fulfillment"
       icon={ordersPageIcon()}
+      columns={orderColumns}
+      rows={list.paged}
+      sort={list.sort}
+      onSortChange={list.onSortChange}
       search={list.search}
       onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search order, client, owner…"
-      filters={[
-        {
-          key: 'status',
-          label: 'Status',
-          options: [
-            { value: 'Draft', label: 'Draft' },
-            { value: 'Confirmed', label: 'Confirmed' },
-            { value: 'Shipped', label: 'Shipped' },
-            { value: 'Delivered', label: 'Delivered' },
-            { value: 'Cancelled', label: 'Cancelled' },
-          ],
-        },
-      ]}
+      searchPlaceholder="Search orders"
+      filters={orderFilters}
       values={list.values}
       onFilterChange={list.onFilterChange}
       onReset={list.onReset}
-      rows={list.paged}
-      columns={orderColumns}
-      allRows={list.filtered}
-      exportOptions={{ fileName: 'orders', label: 'Export' }}
-      emptyTitle="No orders found"
-      emptyDescription="Adjust filters or create a new sales order."
-      entityLabel="order"
-      getRowHref={(o) => `/orders/${o.id}`}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
       page={list.page}
       pageSize={list.pageSize}
       total={list.total}
       totalPages={list.totalPages}
       onPageChange={list.onPageChange}
+      entityLabel="order"
+      getRowHref={(row) => `/orders/${row.id}`}
+      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
+      exportOptions={{ fileName: 'orders', label: 'Export' }}
+      allRows={list.filtered}
+      emptyTitle="No orders found"
+      emptyDescription="Adjust your filters or search terms."
     />
   );
 }

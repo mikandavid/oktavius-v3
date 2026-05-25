@@ -63,7 +63,7 @@ export function BulkImportWizard({
                   step > 0 ? (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => setStep((current) => current - 1)}
                     >
                       Back
@@ -82,7 +82,7 @@ export function BulkImportWizard({
                 leading={
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => setStep((current) => current - 1)}
                   >
                     Back

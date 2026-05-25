@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 
-import { Tooltip, TooltipContent, TooltipTrigger, cn } from '@oktavius/base-ui';
+import { MouseTooltip, cn } from '@oktavius/base-ui';
 import type { IconProps } from '@/lib/icons';
 
 import {
@@ -25,8 +26,12 @@ import {
   SlidersHorizontalIcon,
   SuperadminIcon,
   UsersIcon,
+  CalendarIcon,
+  DocumentIcon,
+  TasksIcon,
 } from '@/lib/icons';
 
+import { useAppShellLayout } from './AppShellLayoutContext';
 import { BrandMark } from './BrandMark';
 
 type SidebarProps = {
@@ -42,9 +47,9 @@ type NavItem = {
   icon: React.ComponentType<IconProps>;
 };
 
-const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
 const MODULE_ORDER_STORAGE_KEY = 'sidebar-modules-order-v1';
 const LABELS_VISIBLE_DELAY_MS = 80;
+const COLLAPSED_PILL_GAP_PX = 10;
 const ORG_HOME_PATH = '/dashboard';
 
 const PRIMARY_ITEMS: NavItem[] = [
@@ -62,6 +67,9 @@ const MODULE_ITEMS: NavItem[] = [
   { id: 'products', path: '/products', label: 'Products', icon: ProductIcon },
   { id: 'projects', path: '/projects', label: 'Projects', icon: ProjectIcon },
   { id: 'users', path: '/users', label: 'Users', icon: UsersIcon },
+  { id: 'tasks', path: '/tasks', label: 'Tasks', icon: TasksIcon },
+  { id: 'documents', path: '/documents', label: 'Documents', icon: DocumentIcon },
+  { id: 'calendar', path: '/calendar', label: 'Calendar', icon: CalendarIcon },
   { id: 'reports', path: '/reports', label: 'Reports', icon: ReportsIcon },
 ];
 
@@ -76,11 +84,6 @@ const SIDEBAR_SECTIONS = [
   { title: 'Modules', items: MODULE_ITEMS },
   { title: 'Admin', items: ADMIN_ITEMS },
 ] as const;
-
-function readStoredCollapsedState() {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
-}
 
 function readStoredModuleOrder() {
   if (typeof window === 'undefined') return [];
@@ -114,6 +117,114 @@ function orderItems(items: NavItem[], preferredOrder: string[]) {
   });
 }
 
+function isNavItemActive(pathname: string, itemPath: string) {
+  if (itemPath === '/dashboard') return pathname === '/dashboard';
+  return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
+}
+
+function useAnchorRect(anchorRef: React.RefObject<HTMLElement | null>, open: boolean) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current) {
+      setRect(null);
+      return;
+    }
+
+    const update = () => {
+      if (anchorRef.current) setRect(anchorRef.current.getBoundingClientRect());
+    };
+
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [anchorRef, open]);
+
+  return rect;
+}
+
+function useHoverFlyout() {
+  const [open, setOpen] = useState(false);
+  const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  const show = useCallback(() => {
+    clearTimeout(hideTimeoutRef.current);
+    setOpen(true);
+  }, []);
+
+  const hide = useCallback(() => {
+    hideTimeoutRef.current = setTimeout(() => setOpen(false), 120);
+  }, []);
+
+  useEffect(() => () => clearTimeout(hideTimeoutRef.current), []);
+
+  return { open, show, hide };
+}
+
+function SidebarNavPill({
+  anchorRef,
+  open,
+  label,
+  isActive,
+  href,
+  onNavigate,
+  onClick,
+  onPointerEnter,
+  onPointerLeave,
+}: {
+  anchorRef: React.RefObject<HTMLElement | null>;
+  open: boolean;
+  label: string;
+  isActive?: boolean;
+  href?: string;
+  onNavigate?: () => void;
+  onClick?: () => void;
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
+}) {
+  const rect = useAnchorRect(anchorRef, open);
+
+  if (!open || !rect || typeof document === 'undefined') return null;
+
+  const pillClass = cn(
+    'flex h-8 max-w-[14rem] items-center truncate rounded-full border px-3 text-sm shadow-elevated transition-transform duration-150 active:scale-[0.98]',
+    isActive
+      ? 'border-sidebar-primary bg-sidebar font-medium text-sidebar-primary shadow-md'
+      : 'border-sidebar-border bg-sidebar text-foreground',
+  );
+
+  const labelNode = href ? (
+    <Link to={href} onClick={onNavigate} className="truncate">
+      {label}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} className="truncate text-left">
+      {label}
+    </button>
+  );
+
+  return createPortal(
+    <div
+      className="fixed z-[100] flex items-center animate-in fade-in-0 slide-in-from-left-2 duration-150"
+      style={{
+        top: rect.top,
+        left: rect.right,
+        height: rect.height,
+        paddingLeft: COLLAPSED_PILL_GAP_PX,
+      }}
+      onMouseEnter={onPointerEnter}
+      onMouseLeave={onPointerLeave}
+    >
+      <div className={pillClass}>{labelNode}</div>
+    </div>,
+    document.body,
+  );
+}
+
 function NavItemRow({
   item,
   expanded,
@@ -138,86 +249,122 @@ function NavItemRow({
   dragHandleTitle?: string;
 }) {
   const Icon = item.icon;
+  const { pathname } = useLocation();
+  const rowRef = useRef<HTMLDivElement>(null);
+  const flyout = useHoverFlyout();
+  const isActiveRoute = isNavItemActive(pathname, item.path);
 
-  const content = (
-    <NavLink
-      to={item.path}
-      onClick={onNavigate}
-      draggable={draggable}
-      onDragStart={draggable ? () => onDragStart?.(item.id) : undefined}
-      onDragOver={
-        draggable
-          ? (event) => {
-              event.preventDefault();
-              onDragOver?.(item.id);
-            }
-          : undefined
-      }
-      onDrop={
-        draggable
-          ? (event) => {
-              event.preventDefault();
-              onDrop?.();
-            }
-          : undefined
-      }
-      onDragEnd={draggable ? () => onDrop?.() : undefined}
-      className={({ isActive }) =>
-        cn(
-          'relative flex h-8 items-center rounded-md py-1.5 transition-colors',
-          isActive
-            ? 'bg-sidebar-primary/10 font-medium text-sidebar-primary'
-            : 'text-muted-foreground hover:bg-sidebar-primary/5 hover:text-foreground',
-          expanded ? 'gap-3 px-2' : 'mx-auto w-8 justify-center px-0',
-          isDragging && 'opacity-60',
-        )
-      }
-      title={!expanded ? item.label : undefined}
-    >
-      {draggable && expanded ? (
-        <span
-          className="flex h-4 w-4 shrink-0 items-center justify-center text-sidebar-foreground/40"
-          title={dragHandleTitle}
-        >
-          <SortIcon size={12} />
-        </span>
-      ) : null}
-      <Icon size={16} className="h-4 w-4 shrink-0" />
-      <span
-        className={cn(
-          'truncate text-sm transition-opacity duration-150',
-          labelsVisible ? 'opacity-100' : 'pointer-events-none absolute select-none opacity-0',
-        )}
+  if (expanded) {
+    return (
+      <NavLink
+        to={item.path}
+        onClick={onNavigate}
+        draggable={draggable}
+        onDragStart={draggable ? () => onDragStart?.(item.id) : undefined}
+        onDragOver={
+          draggable
+            ? (event) => {
+                event.preventDefault();
+                onDragOver?.(item.id);
+              }
+            : undefined
+        }
+        onDrop={
+          draggable
+            ? (event) => {
+                event.preventDefault();
+                onDrop?.();
+              }
+            : undefined
+        }
+        onDragEnd={draggable ? () => onDrop?.() : undefined}
+        className={({ isActive }) =>
+          cn(
+            'relative flex h-8 w-full items-center rounded-md py-1.5 transition-colors duration-150',
+            isActive
+              ? 'bg-sidebar-primary/10 font-medium text-sidebar-primary'
+              : 'text-muted-foreground hover:bg-sidebar-primary/5 hover:text-foreground active:bg-sidebar-primary/10',
+            'gap-3 px-3',
+            isDragging && 'opacity-60',
+          )
+        }
       >
-        {item.label}
-      </span>
-    </NavLink>
-  );
-
-  if (expanded) return content;
+        {draggable ? (
+          <MouseTooltip content={dragHandleTitle}>
+            <span
+              className="flex h-4 w-4 shrink-0 items-center justify-center text-sidebar-foreground/40"
+              aria-label={dragHandleTitle}
+            >
+              <SortIcon size={12} />
+            </span>
+          </MouseTooltip>
+        ) : null}
+        <Icon size={16} className="h-4 w-4 shrink-0" />
+        <span
+          className={cn(
+            'truncate text-sm transition-opacity duration-150',
+            labelsVisible ? 'opacity-100' : 'pointer-events-none absolute select-none opacity-0',
+          )}
+        >
+          {item.label}
+        </span>
+      </NavLink>
+    );
+  }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{content}</TooltipTrigger>
-      <TooltipContent side="right" sideOffset={8}>
-        {item.label}
-      </TooltipContent>
-    </Tooltip>
+    <div
+      ref={rowRef}
+      className="relative h-8 w-full"
+      onMouseEnter={flyout.show}
+      onMouseLeave={flyout.hide}
+    >
+      <NavLink
+        to={item.path}
+        onClick={onNavigate}
+        aria-label={item.label}
+        className={({ isActive }) =>
+          cn(
+            'mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-150',
+            (flyout.open || isActive) && 'bg-sidebar-primary/10 text-sidebar-primary',
+            !flyout.open &&
+              !isActive &&
+              'text-muted-foreground hover:bg-sidebar-primary/5 hover:text-foreground',
+          )
+        }
+      >
+        <Icon size={16} className="h-4 w-4 shrink-0" />
+      </NavLink>
+      <SidebarNavPill
+        anchorRef={rowRef}
+        open={flyout.open}
+        label={item.label}
+        isActive={isActiveRoute}
+        href={item.path}
+        onNavigate={onNavigate}
+        onPointerEnter={flyout.show}
+        onPointerLeave={flyout.hide}
+      />
+    </div>
   );
 }
 
 export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(readStoredCollapsedState);
+  const { pathname } = useLocation();
+  const { isSidebarCompact, toggleSidebarCollapsed } = useAppShellLayout();
   const [preferredModuleOrder, setPreferredModuleOrder] = useState<string[]>(readStoredModuleOrder);
   const [isEditingModules, setIsEditingModules] = useState(false);
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const [isLabelsVisible, setIsLabelsVisible] = useState(false);
-  const isExpanded = mobile ? true : !isCollapsed;
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isCollapsed));
-  }, [isCollapsed]);
+  const [isHovered, setIsHovered] = useState(false);
+  const suppressHoverExpandUntilLeaveRef = useRef(false);
+  const brandRowRef = useRef<HTMLDivElement>(null);
+  const collapseRowRef = useRef<HTMLDivElement>(null);
+  const brandFlyout = useHoverFlyout();
+  const collapseFlyout = useHoverFlyout();
+  const isExpanded = mobile
+    ? true
+    : !isSidebarCompact || (isHovered && !suppressHoverExpandUntilLeaveRef.current);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -236,8 +383,9 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
   }, [preferredModuleOrder]);
 
   const toggleCollapsed = useCallback(() => {
-    setIsCollapsed((current) => !current);
-  }, []);
+    suppressHoverExpandUntilLeaveRef.current = !isSidebarCompact;
+    toggleSidebarCollapsed();
+  }, [isSidebarCompact, toggleSidebarCollapsed]);
 
   const orderedModuleItems = orderItems(MODULE_ITEMS, preferredModuleOrder);
 
@@ -257,40 +405,78 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
     [draggingItemId, orderedModuleItems],
   );
 
+  const brandIsActive = pathname === ORG_HOME_PATH;
+
   return (
     <aside
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        suppressHoverExpandUntilLeaveRef.current = false;
+      }}
       className={cn(
-        'relative z-40 flex shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar transition-[width,transform] duration-200 ease-out',
+        'relative z-40 flex shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out',
         mobile
           ? cn(
-              'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh shadow-elevated',
+              'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh overflow-x-hidden shadow-elevated transition-[width,transform]',
               open ? 'translate-x-0' : '-translate-x-full',
             )
           : isExpanded
             ? 'h-dvh w-52 max-h-dvh'
             : 'h-dvh w-12 max-h-dvh',
-        !mobile && 'translate-x-0',
       )}
     >
-      <Link
-        to={ORG_HOME_PATH}
-        onClick={onNavigate}
-        className="flex h-12 shrink-0 items-center gap-2 border-b border-sidebar-border px-2.5 transition-colors hover:bg-sidebar-foreground/[0.05]"
-      >
-        <BrandMark />
-        <span
-          className={cn(
-            'truncate text-sm font-semibold text-sidebar-foreground transition-opacity duration-150',
-            isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-          )}
+      {isExpanded ? (
+        <Link
+          to={ORG_HOME_PATH}
+          onClick={onNavigate}
+          className="flex h-12 w-full shrink-0 items-center gap-2 border-b border-sidebar-border px-3 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] active:bg-sidebar-foreground/[0.08]"
         >
-          Oktavius ERP
-        </span>
-      </Link>
+          <BrandMark />
+          <span
+            className={cn(
+              'truncate text-sm font-semibold text-sidebar-foreground transition-opacity duration-150',
+              isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
+            )}
+          >
+            Oktavius ERP
+          </span>
+        </Link>
+      ) : (
+        <div
+          ref={brandRowRef}
+          className="relative flex h-12 w-full shrink-0 items-center justify-center border-b border-sidebar-border"
+          onMouseEnter={brandFlyout.show}
+          onMouseLeave={brandFlyout.hide}
+        >
+          <Link
+            to={ORG_HOME_PATH}
+            onClick={onNavigate}
+            aria-label="Oktavius ERP"
+            className={cn(
+              'mx-auto flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150',
+              (brandFlyout.open || brandIsActive) && 'bg-sidebar-primary/10',
+              !brandFlyout.open && !brandIsActive && 'hover:bg-sidebar-foreground/[0.05]',
+            )}
+          >
+            <BrandMark />
+          </Link>
+          <SidebarNavPill
+            anchorRef={brandRowRef}
+            open={brandFlyout.open}
+            label="Oktavius ERP"
+            isActive={brandIsActive}
+            href={ORG_HOME_PATH}
+            onNavigate={onNavigate}
+            onPointerEnter={brandFlyout.show}
+            onPointerLeave={brandFlyout.hide}
+          />
+        </div>
+      )}
 
-      <nav className="flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
+      <nav className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain py-3">
         <div>
-          <div className="mb-1.5 h-5 px-2">
+          <div className="mb-1.5 h-5 px-3">
             <span
               className={cn(
                 'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
@@ -314,7 +500,7 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
         </div>
 
         <div className="mt-4">
-          <div className="group/module-header mb-1.5 flex h-5 items-center justify-between px-2">
+          <div className="group/module-header mb-1.5 flex h-5 items-center justify-between px-3">
             <span
               className={cn(
                 'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
@@ -323,24 +509,26 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
             >
               Modules
             </span>
-            <button
-              type="button"
-              className={cn(
-                'h-5 w-5 rounded-full text-sidebar-foreground/45 transition-opacity duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
-                !isExpanded && 'pointer-events-none opacity-0',
-                isExpanded &&
-                  !isEditingModules &&
-                  'pointer-events-none opacity-0 group-hover/module-header:pointer-events-auto group-hover/module-header:opacity-100',
-              )}
-              onClick={() => setIsEditingModules((current) => !current)}
-              title={isEditingModules ? 'Save order' : 'Edit order'}
-            >
-              {isEditingModules ? (
-                <CheckIcon size={12} className="mx-auto" />
-              ) : (
-                <EditIcon size={12} className="mx-auto" />
-              )}
-            </button>
+            <MouseTooltip content={isEditingModules ? 'Save order' : 'Edit order'}>
+              <button
+                type="button"
+                className={cn(
+                  'h-5 w-5 rounded-full text-sidebar-foreground/45 transition-opacity duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
+                  !isExpanded && 'pointer-events-none opacity-0',
+                  isExpanded &&
+                    !isEditingModules &&
+                    'pointer-events-none opacity-0 group-hover/module-header:pointer-events-auto group-hover/module-header:opacity-100',
+                )}
+                onClick={() => setIsEditingModules((current) => !current)}
+                aria-label={isEditingModules ? 'Save order' : 'Edit order'}
+              >
+                {isEditingModules ? (
+                  <CheckIcon size={12} className="mx-auto" />
+                ) : (
+                  <EditIcon size={12} className="mx-auto" />
+                )}
+              </button>
+            </MouseTooltip>
           </div>
           <div className="space-y-0.5">
             {orderedModuleItems.map((item) => (
@@ -362,7 +550,7 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
         </div>
 
         <div className="mt-4">
-          <div className="mb-1.5 h-5 px-2">
+          <div className="mb-1.5 h-5 px-3">
             <span
               className={cn(
                 'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
@@ -387,38 +575,65 @@ export function Sidebar({ mobile = false, open = false, onNavigate }: SidebarPro
       </nav>
 
       {!mobile ? (
-        <div className="shrink-0 border-t border-sidebar-border p-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <div className="shrink-0 border-t border-sidebar-border px-0 py-2">
+          {isExpanded ? (
+            <button
+              type="button"
+              className="flex h-8 w-full items-center gap-3 rounded-md px-3 py-1.5 text-sidebar-foreground/40 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground active:bg-sidebar-foreground/[0.08] active:scale-[0.98]"
+              onClick={toggleCollapsed}
+              aria-label={isSidebarCompact ? 'Expand sidebar' : 'Compact sidebar'}
+            >
+              {isSidebarCompact ? (
+                <PanelLeftIcon className="h-4 w-4 shrink-0" />
+              ) : (
+                <PanelLeftCloseIcon className="h-4 w-4 shrink-0" />
+              )}
+              <span
+                className={cn(
+                  'text-sm transition-[width,opacity] duration-150',
+                  isLabelsVisible
+                    ? 'w-auto opacity-100'
+                    : 'pointer-events-none w-0 select-none opacity-0',
+                )}
+              >
+                {isSidebarCompact ? 'Expand' : 'Compact'}
+              </span>
+            </button>
+          ) : (
+            <div
+              ref={collapseRowRef}
+              className="relative flex h-8 w-full items-center justify-center"
+              onMouseEnter={collapseFlyout.show}
+              onMouseLeave={collapseFlyout.hide}
+            >
               <button
                 type="button"
+                aria-label={isSidebarCompact ? 'Expand sidebar' : 'Compact sidebar'}
                 className={cn(
-                  'flex h-8 items-center rounded-md py-1.5 text-sidebar-foreground/40 transition-colors hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
-                  isExpanded ? 'w-full gap-3 px-2' : 'mx-auto w-8 justify-center px-0',
+                  'mx-auto flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-150',
+                  collapseFlyout.open && 'bg-sidebar-foreground/[0.08] text-sidebar-foreground',
+                  !collapseFlyout.open &&
+                    'text-sidebar-foreground/40 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
                 )}
                 onClick={toggleCollapsed}
               >
-                {isCollapsed ? (
+                {isSidebarCompact ? (
                   <PanelLeftIcon className="h-4 w-4 shrink-0" />
                 ) : (
                   <PanelLeftCloseIcon className="h-4 w-4 shrink-0" />
                 )}
-                <span
-                  className={cn(
-                    'text-sm transition-[width,opacity] duration-150',
-                    isLabelsVisible
-                      ? 'w-auto opacity-100'
-                      : 'pointer-events-none w-0 select-none opacity-0',
-                  )}
-                >
-                  {isCollapsed ? 'Expand' : 'Compact'}
-                </span>
               </button>
-            </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8}>
-              Toggle sidebar
-            </TooltipContent>
-          </Tooltip>
+              <SidebarNavPill
+                anchorRef={collapseRowRef}
+                open={collapseFlyout.open}
+                label={isSidebarCompact ? 'Expand sidebar' : 'Compact sidebar'}
+                isActive={false}
+                onClick={toggleCollapsed}
+                onPointerEnter={collapseFlyout.show}
+                onPointerLeave={collapseFlyout.hide}
+              />
+            </div>
+          )}
         </div>
       ) : null}
     </aside>

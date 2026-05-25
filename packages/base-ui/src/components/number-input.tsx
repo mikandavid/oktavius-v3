@@ -1,5 +1,11 @@
 import * as React from 'react';
 
+import {
+  type ControlValidationState,
+  filledControlStateClasses,
+  resolveControlValidationState,
+} from '../lib/controlStates';
+import { sanitizeDecimalInput, sanitizeIntegerInput } from '../lib/input-sanitize';
 import { cn } from '../lib/utils';
 
 export interface NumberInputProps {
@@ -16,6 +22,10 @@ export interface NumberInputProps {
   min?: number;
   max?: number;
   step?: number;
+  validationState?: ControlValidationState;
+  valid?: boolean;
+  invalid?: boolean;
+  'aria-invalid'?: boolean | 'false' | 'grammar' | 'spelling';
 }
 
 /**
@@ -34,6 +44,10 @@ export function NumberInput({
   min,
   max,
   step,
+  validationState,
+  valid,
+  invalid,
+  'aria-invalid': ariaInvalid,
 }: NumberInputProps) {
   const rawValue = value != null ? String(value) : '';
   const [focused, setFocused] = React.useState(false);
@@ -42,6 +56,8 @@ export function NumberInput({
   React.useEffect(() => {
     if (!focused) setDraft(rawValue);
   }, [rawValue, focused]);
+
+  const isInteger = decimals === 0;
 
   const formatted = React.useMemo(() => {
     const num = parseFloat(rawValue.replace(/,/g, ''));
@@ -52,35 +68,52 @@ export function NumberInput({
     }).format(num);
   }, [rawValue, locale, decimals]);
 
+  const sanitize = React.useCallback(
+    (next: string) => (isInteger ? sanitizeIntegerInput(next) : sanitizeDecimalInput(next)),
+    [isInteger],
+  );
+
+  const resolvedState = resolveControlValidationState({
+    validationState,
+    valid,
+    invalid,
+    'aria-invalid': ariaInvalid,
+  });
+
   return (
     <input
       id={id}
       type="text"
-      inputMode="decimal"
+      inputMode={isInteger ? 'numeric' : 'decimal'}
       value={focused ? draft : formatted || rawValue}
       placeholder={placeholder}
       disabled={disabled}
       min={min}
       max={max}
       step={step}
+      aria-invalid={resolvedState === 'invalid' ? true : ariaInvalid}
+      data-valid={resolvedState === 'valid' ? 'true' : undefined}
       onFocus={() => {
         setFocused(true);
         setDraft(rawValue);
       }}
       onChange={(e) => {
-        const v = e.target.value.replace(/[^\d.,-]/g, '');
+        const v = sanitize(e.target.value);
         setDraft(v);
-        onChange?.(v.replace(/,/g, ''));
+        onChange?.(v);
       }}
       onBlur={() => {
         setFocused(false);
-        onChange?.(draft.replace(/,/g, ''));
+        onChange?.(sanitize(draft));
       }}
       className={cn(
-        'flex h-9 w-full rounded-control bg-muted/60 px-3 py-1 text-sm tabular-nums hover:bg-muted/80 transition-colors',
-        'placeholder:text-muted-foreground',
-        'focus:outline-none focus:ring-2 focus:ring-ring/40',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'flex h-9 w-full px-3 py-1 text-sm tabular-nums placeholder:text-muted-foreground',
+        filledControlStateClasses({
+          validationState: resolvedState,
+          valid,
+          invalid,
+          'aria-invalid': ariaInvalid,
+        }),
         className,
       )}
     />

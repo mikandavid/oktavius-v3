@@ -12,6 +12,7 @@ alwaysApply: false
 |---|---|
 | Simple (users, single record) | `<ModulePage>` + `<DetailView>` — one scroll, no tabs |
 | Complex (clients, cases, projects) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` per tab |
+| Multi-section (settings, profile sections) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` — see `docs/ui-rules/section-nav.md` |
 
 **Never put `<DetailView>` inside `<Tabs>`** — it nests a Card inside tab content. Use `SectionCard` + field rows, or a dedicated Details tab with inline `<dl>` layout.
 
@@ -23,11 +24,15 @@ alwaysApply: false
 
 ## Complex entity — Overview tab (first tab)
 
-1. `StatCard` row (3–5 KPIs)
+1. `StatCard` row — `STAT_CARD_GRID_CLASS`, max 6 KPIs
 2. `SectionCard` “Recent activity” — `<Timeline>`
 3. `SectionCard` per sub-entity — top 3–5 `<ListRow>` items + “View all” ghost button to dedicated tab
 
 Never show full sub-entity lists on Overview.
+
+## DetailView field hierarchy
+
+Use `importance: 'primary' | 'default' | 'meta'` on fields — not uniform grids. Primary facts get large hero treatment + `icon`; meta fields (IDs, audit) go in a quiet footer strip. See `docs/ui-rules/hierarchy-system.md` § Card Content Tiers.
 
 ## Sub-entity lists (Parties, Tasks, …)
 

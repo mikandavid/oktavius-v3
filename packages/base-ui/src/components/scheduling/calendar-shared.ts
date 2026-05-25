@@ -15,6 +15,9 @@ import {
   startOfWeek,
 } from 'date-fns';
 
+import { getSemanticToneClasses } from '../../lib/semanticPalette';
+import { cn } from '../../lib/utils';
+
 export type CalendarViewMode = 'day' | 'week' | 'month' | 'agenda';
 
 export const CALENDAR_VIEW_OPTIONS: Array<{ id: CalendarViewMode; label: string }> = [
@@ -185,15 +188,18 @@ export function groupEventsByDay(
 export function eventToneClass(tone: CalendarEventTone = 'default'): string {
   switch (tone) {
     case 'primary':
-      return 'bg-cta/15 text-cta hover:bg-cta/20';
+      return cn(getSemanticToneClasses('cta', 'soft'), 'text-cta hover:bg-cta/20');
     case 'warning':
-      return 'bg-warning/15 text-warning-foreground hover:bg-warning/25';
+      return cn(getSemanticToneClasses('warning', 'soft'), 'text-warning hover:bg-warning/20');
     case 'success':
-      return 'bg-success/15 text-success hover:bg-success/25';
+      return cn(getSemanticToneClasses('success', 'soft'), 'text-success hover:bg-success/20');
     case 'destructive':
-      return 'bg-destructive/15 text-destructive hover:bg-destructive/25';
+      return cn(
+        getSemanticToneClasses('destructive', 'soft'),
+        'text-destructive hover:bg-destructive/20',
+      );
     default:
-      return 'bg-muted text-foreground hover:bg-muted/80';
+      return cn(getSemanticToneClasses('neutral', 'solid'), 'hover:bg-muted/80');
   }
 }
 

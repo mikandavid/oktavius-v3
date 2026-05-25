@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Button, Input, RelativeTime, ScrollArea, Skeleton, cn } from '@oktavius/base-ui';
+import {
+  Button,
+  Input,
+  MouseTooltip,
+  RelativeTime,
+  ScrollArea,
+  Skeleton,
+  cn,
+} from '@oktavius/base-ui';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { BackIcon, CloseIcon, DeleteIcon, EditIcon, PlusIcon, SearchIcon } from '@/lib/icons';
@@ -143,14 +151,16 @@ export function ConversationHistoryPanel({
             className="h-8 rounded-control border-border/40 bg-muted/30 pl-8 pr-8 text-[13px] placeholder:text-muted-foreground/50 focus:border-primary/30 focus:bg-background"
           />
           {searchQuery ? (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors hover:text-foreground"
-              aria-label="Clear search"
-            >
-              <CloseIcon size={14} />
-            </button>
+            <MouseTooltip content="Clear search">
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 transition-colors hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <CloseIcon size={14} />
+              </button>
+            </MouseTooltip>
           ) : null}
         </div>
       </div>

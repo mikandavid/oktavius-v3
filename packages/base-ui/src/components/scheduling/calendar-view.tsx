@@ -1,8 +1,18 @@
+import { DndContext, DragOverlay, useDroppable, type DragEndEvent } from '@dnd-kit/core';
 import { startOfDay } from 'date-fns';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { type CalendarSource, visibleEvents } from './calendar-colors';
+import {
+  calendarDayDropId,
+  parseCalendarDayDropId,
+  parseCalendarEventDragId,
+  parseCalendarSlotDropId,
+  useCalendarDndSensors,
+  type CalendarEventMoveTarget,
+  type CalendarEventResizeTarget,
+} from './calendar-dnd';
 import { CalendarEventChip } from './calendar-event-chip';
 import { CalendarSourceLegend } from './calendar-source-legend';
 import { CalendarTimeGrid } from './calendar-time-grid';
@@ -41,21 +51,101 @@ export interface CalendarViewProps {
   endHour?: number;
   slotMinutes?: number;
   onEventClick?: (event: CalendarEvent) => void;
+  /** Drag event chips / time blocks to another day or slot. */
+  onEventMove?: (event: CalendarEvent, target: CalendarEventMoveTarget) => void;
+  /** Drag top/bottom edge of timed events in day/week grid. */
+  onEventResize?: (event: CalendarEvent, target: CalendarEventResizeTarget) => void;
   onDayClick?: (day: Date) => void;
   onSlotClick?: (day: Date, time: string) => void;
+  /** Click-drag on empty grid to select a time range (day/week). */
+  onSlotRangeSelect?: (day: Date, startTime: string, endTime: string) => void;
   className?: string;
+}
+
+function MonthDayCell({
+  day,
+  anchor,
+  events,
+  calendars,
+  draggable,
+  onEventClick,
+  onDayClick,
+}: {
+  day: Date;
+  anchor: Date;
+  events: CalendarEvent[];
+  calendars?: CalendarSource[];
+  draggable: boolean;
+  onEventClick?: (event: CalendarEvent) => void;
+  onDayClick?: (day: Date) => void;
+}) {
+  const dayEvents = eventsForDay(events, day);
+  const visible = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
+  const overflow = dayEvents.length - visible.length;
+  const { setNodeRef, isOver } = useDroppable({
+    id: calendarDayDropId(day),
+    disabled: !draggable,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'flex min-h-[7.5rem] flex-col bg-card p-1.5',
+        isOutsideMonth(day, anchor) && 'bg-muted/15 text-muted-foreground/60',
+        draggable && isOver && 'bg-muted/30 ring-2 ring-inset ring-ring/20',
+      )}
+    >
+      <button
+        type="button"
+        onClick={onDayClick ? () => onDayClick(day) : undefined}
+        disabled={!onDayClick}
+        className={cn(
+          'inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
+          isToday(day) && 'bg-cta text-cta-foreground',
+          !isToday(day) && 'text-foreground hover:bg-muted/60',
+          !onDayClick && 'cursor-default hover:bg-transparent',
+        )}
+      >
+        {day.getDate()}
+      </button>
+      <div className="mt-1 flex min-h-0 flex-1 flex-col gap-0.5">
+        {visible.map((event) => (
+          <CalendarEventChip
+            key={event.id}
+            event={event}
+            calendars={calendars}
+            compact
+            draggable={draggable}
+            onClick={onEventClick}
+          />
+        ))}
+        {overflow > 0 ? (
+          <button
+            type="button"
+            className="px-1 text-left text-[10px] font-medium text-muted-foreground hover:text-foreground"
+            onClick={onDayClick ? () => onDayClick(day) : undefined}
+          >
+            +{overflow} more
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 function MonthGrid({
   anchor,
   events,
   calendars,
+  draggable,
   onEventClick,
   onDayClick,
 }: {
   anchor: Date;
   events: CalendarEvent[];
   calendars?: CalendarSource[];
+  draggable: boolean;
   onEventClick?: (event: CalendarEvent) => void;
   onDayClick?: (day: Date) => void;
 }) {
@@ -74,55 +164,18 @@ function MonthGrid({
         ))}
       </div>
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-control bg-border/40">
-        {days.map((day) => {
-          const dayEvents = eventsForDay(events, day);
-          const visible = dayEvents.slice(0, MAX_VISIBLE_EVENTS);
-          const overflow = dayEvents.length - visible.length;
-
-          return (
-            <div
-              key={day.toISOString()}
-              className={cn(
-                'flex min-h-[7.5rem] flex-col bg-card p-1.5',
-                isOutsideMonth(day, anchor) && 'bg-muted/15 text-muted-foreground/60',
-              )}
-            >
-              <button
-                type="button"
-                onClick={onDayClick ? () => onDayClick(day) : undefined}
-                disabled={!onDayClick}
-                className={cn(
-                  'inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium',
-                  isToday(day) && 'bg-cta text-cta-foreground',
-                  !isToday(day) && 'text-foreground hover:bg-muted/60',
-                  !onDayClick && 'cursor-default hover:bg-transparent',
-                )}
-              >
-                {day.getDate()}
-              </button>
-              <div className="mt-1 flex min-h-0 flex-1 flex-col gap-0.5">
-                {visible.map((event) => (
-                  <CalendarEventChip
-                    key={event.id}
-                    event={event}
-                    calendars={calendars}
-                    compact
-                    onClick={onEventClick}
-                  />
-                ))}
-                {overflow > 0 ? (
-                  <button
-                    type="button"
-                    className="px-1 text-left text-[10px] font-medium text-muted-foreground hover:text-foreground"
-                    onClick={onDayClick ? () => onDayClick(day) : undefined}
-                  >
-                    +{overflow} more
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
+        {days.map((day) => (
+          <MonthDayCell
+            key={day.toISOString()}
+            day={day}
+            anchor={anchor}
+            events={events}
+            calendars={calendars}
+            draggable={draggable}
+            onEventClick={onEventClick}
+            onDayClick={onDayClick}
+          />
+        ))}
       </div>
     </>
   );
@@ -142,13 +195,23 @@ export function CalendarView({
   endHour = DEFAULT_SCHEDULER_END_HOUR,
   slotMinutes = DEFAULT_SLOT_MINUTES,
   onEventClick,
+  onEventMove,
+  onEventResize,
   onDayClick,
   onSlotClick,
+  onSlotRangeSelect,
   className,
 }: CalendarViewProps) {
+  const draggable = Boolean(onEventMove);
+  const resizable = Boolean(onEventResize);
+  const sensors = useCalendarDndSensors();
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const filteredEvents = visibleEvents(events, calendars);
   const weekDays = getWeekDays(anchor);
   const dayAnchor = startOfDay(anchor);
+  const activeEvent = activeEventId
+    ? filteredEvents.find((event) => event.id === activeEventId)
+    : null;
 
   const handleDayClick = onDayClick
     ? onDayClick
@@ -159,8 +222,34 @@ export function CalendarView({
         }
       : undefined;
 
-  return (
-    <div className={cn(schedulingShellClass, className)}>
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveEventId(null);
+    if (!onEventMove) return;
+
+    const { active, over } = event;
+    if (!over) return;
+
+    const eventId = parseCalendarEventDragId(String(active.id));
+    if (!eventId) return;
+
+    const moving = filteredEvents.find((entry) => entry.id === eventId);
+    if (!moving) return;
+
+    const overId = String(over.id);
+    const slotTarget = parseCalendarSlotDropId(overId);
+    if (slotTarget) {
+      onEventMove(moving, { day: slotTarget.day, time: slotTarget.time });
+      return;
+    }
+
+    const dayTarget = parseCalendarDayDropId(overId);
+    if (dayTarget) {
+      onEventMove(moving, { day: dayTarget });
+    }
+  };
+
+  const calendarBody = (
+    <>
       <CalendarToolbar
         anchor={anchor}
         view={view}
@@ -190,6 +279,7 @@ export function CalendarView({
               anchor={anchor}
               events={filteredEvents}
               calendars={calendars}
+              draggable={draggable}
               onEventClick={onEventClick}
               onDayClick={handleDayClick}
             />
@@ -204,8 +294,12 @@ export function CalendarView({
                 startHour={startHour}
                 endHour={endHour}
                 slotMinutes={slotMinutes}
+                draggable={draggable}
+                resizable={resizable}
                 onEventClick={onEventClick}
+                onEventResize={onEventResize}
                 onSlotClick={onSlotClick}
+                onSlotRangeSelect={onSlotRangeSelect}
               />
             </div>
           ) : null}
@@ -218,8 +312,12 @@ export function CalendarView({
               startHour={startHour}
               endHour={endHour}
               slotMinutes={slotMinutes}
+              draggable={draggable}
+              resizable={resizable}
               onEventClick={onEventClick}
+              onEventResize={onEventResize}
               onSlotClick={onSlotClick}
+              onSlotRangeSelect={onSlotRangeSelect}
             />
           ) : null}
 
@@ -233,6 +331,30 @@ export function CalendarView({
           ) : null}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div className={cn(schedulingShellClass, className)}>
+      {draggable ? (
+        <DndContext
+          sensors={sensors}
+          onDragStart={(event) => {
+            const eventId = parseCalendarEventDragId(String(event.active.id));
+            setActiveEventId(eventId);
+          }}
+          onDragEnd={handleDragEnd}
+        >
+          {calendarBody}
+          <DragOverlay dropAnimation={{ duration: 180, easing: 'ease-out' }}>
+            {activeEvent ? (
+              <CalendarEventChip event={activeEvent} calendars={calendars} compact />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      ) : (
+        calendarBody
+      )}
     </div>
   );
 }

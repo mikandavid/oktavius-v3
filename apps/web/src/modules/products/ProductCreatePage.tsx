@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useDemoData } from '@/app/demo-data';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
+import { useDemoData } from '@/app/demo-data';
+import { toast } from '@/lib/toast';
 
 import {
   productFormDefaults,
@@ -15,31 +15,30 @@ import {
 export function ProductCreatePage() {
   const navigate = useNavigate();
   const { createProduct } = useDemoData();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (values: ProductFormValues) => {
+    const created = createProduct({
+      sku: values.sku,
+      name: values.name,
+      category: values.category,
+      status: values.status,
+      currency: values.currency || 'EUR',
+      price: values.price,
+      stock: Number(values.stock) || 0,
+      unit: values.unit,
+    });
+    toast.success('Product created.');
+    navigate(`/products/${created.id}`);
+  };
 
   return (
-    <ModulePage title="New product" backTo="/products" icon={productsPageIcon()}>
-      <EntityForm<ProductFormValues>
+    <ModulePage title="New product" icon={productsPageIcon()} backTo="/products">
+      <EntityForm
         title="Product details"
         fields={productFormFields}
         defaultValues={productFormDefaults}
         submitLabel="Create product"
-        isSubmitting={isSubmitting}
-        onSubmit={(values) => {
-          setIsSubmitting(true);
-          const next = createProduct({
-            sku: values.sku,
-            name: values.name,
-            category: values.category,
-            status: values.status as 'Active' | 'Draft' | 'Discontinued',
-            currency: values.currency,
-            price: values.price,
-            stock: Number(values.stock) || 0,
-            unit: values.unit,
-          });
-          setIsSubmitting(false);
-          navigate(`/products/${next.id}`);
-        }}
+        onSubmit={handleSubmit}
       />
     </ModulePage>
   );

@@ -2,10 +2,11 @@
 
 ## Choose the pattern
 
-| Entity                             | Pattern                                               |
-| ---------------------------------- | ----------------------------------------------------- |
-| Simple (users, single record)      | `<ModulePage>` + `<DetailView>` — one scroll, no tabs |
-| Complex (clients, cases, projects) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` per tab   |
+| Entity                                     | Pattern                                                                                                                             |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Simple (users, single record)              | `<ModulePage>` + `<DetailView>` — one scroll, no tabs                                                                               |
+| Complex (clients, cases, projects)         | `<ModulePage>` + `<Tabs>` + `<SectionCard>` per tab                                                                                 |
+| Multi-section (settings, profile sections) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` — see [`section-nav.md`](./section-nav.md) |
 
 **Never put `<DetailView>` inside `<Tabs>`** — it nests a Card inside tab content. Use `SectionCard` + field rows, or a dedicated Details tab with inline `<dl>` layout.
 
@@ -17,11 +18,25 @@
 
 ## Complex entity — Overview tab (first tab)
 
-1. `StatCard` row (3–5 KPIs)
+1. `StatCard` row — use `STAT_CARD_GRID_CLASS`, max 6 KPIs
 2. `SectionCard` “Recent activity” — `<Timeline>`
 3. `SectionCard` per sub-entity — top 3–5 `<ListRow>` items + “View all” ghost button to dedicated tab
 
 Never show full sub-entity lists on Overview.
+
+## DetailView field hierarchy
+
+Cards must not look like spreadsheets. Use `importance` on each field:
+
+| Importance | Layout                                           | When                                    |
+| ---------- | ------------------------------------------------ | --------------------------------------- |
+| `primary`  | `RecordInfoHero` — large value + optional `icon` | 2–6 key facts (status, contact, amount) |
+| `default`  | Two-column grid                                  | Supporting fields                       |
+| `meta`     | `RecordInfoMeta` footer strip                    | IDs, revision, audit timestamps         |
+
+Field labels: sentence case via `CARD_CONTENT_TIERS.label` — never uppercase column headers.
+
+See `docs/ui-rules/hierarchy-system.md` § Card Content Tiers for the six fixed typography sizes.
 
 ## Sub-entity lists (Parties, Tasks, …)
 

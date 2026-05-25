@@ -18,6 +18,7 @@ Tracks what is still missing before the extracted frontend base can reliably **g
 - `CommandPalette` (⌘K)
 - `NotificationPanel`, `HeaderAccountMenu`
 - `pageChrome` layout classes
+- `AccessDeniedPage` — `@/components/common/AccessDeniedPage`
 
 ### Page chrome
 
@@ -33,11 +34,11 @@ Tracks what is still missing before the extracted frontend base can reliably **g
 
 - `CrudMainView`, `CrudTable` (Lytenyte)
 - `FilterToolbar`, `Pagination`, `useListPageState`
-- `SavedViewSelector` — saved filter/column views dropdown for list pages
+- `SavedViewSelector` + `useListSavedViews()` — wired on `/clients` and `/products` list pages
 - Sort, column visibility, resize, stretch-to-fit, export (XLSX)
 - Row actions, bulk select, bulk delete/edit bar
 - `statusColumn`, typed columns (status, date, currency)
-- `TreeList`, `BulkImportWizard`, `exportGrid`
+- `TreeList`, `BulkImportWizard`, `BulkImportTrigger`, `exportGrid`
 
 ### Forms
 
@@ -150,7 +151,7 @@ For auto-generated ERP modules, build next in this order:
 4. Mentions + agent approval cards
 5. Advanced reporting builder
 
-Calendar/planning UI is **done** in `@oktavius/base-ui`. Workflow, document, catalog, kanban, and chart blocks are **done** — wire into ERP modules as needed. See `/showcase` → Patterns → ERP blocks.
+Calendar/planning UI is **done** in `@oktavius/base-ui`. Workflow, document, catalog, kanban, and chart blocks are **wired** into ERP modules — see `/showcase` and live routes `/documents`, `/tasks`, `/calendar`, `/clients/onboarding`.
 
 ---
 
