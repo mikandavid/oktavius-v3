@@ -39,7 +39,6 @@ import {
   resolveCrudColumnAlign,
 } from './crudTableDensity';
 import {
-  computeMinTableWidth,
   nextSortValue,
   parseCssSizeToPx,
   resolveEffectiveTableWidth,
@@ -62,19 +61,20 @@ type CrudGridColumnState = {
 export type CrudGridSpec<T> = Grid.GridSpec<T, CrudGridColumnState>;
 export type CrudGridApi<T> = Grid.API<CrudGridSpec<T>>;
 
-const DEFAULT_RESIZE_MIN_WIDTH_PX = 80;
+const DEFAULT_RESIZE_MIN_WIDTH_PX = 56;
+const STRETCH_FLOOR_MIN_WIDTH_PX = 48;
 const DEFAULT_RESIZE_MAX_WIDTH_PX = 1200;
 const DEFAULT_TRUNCATE_MAX_REM = '36rem';
 const TABLE_SELECTION_CHECKBOX_CLASS =
   'border-border/80 data-[state=checked]:border-sidebar-primary data-[state=checked]:bg-sidebar-primary data-[state=checked]:text-sidebar-primary-foreground data-[state=indeterminate]:border-sidebar-primary data-[state=indeterminate]:bg-sidebar-primary/80 data-[state=indeterminate]:text-sidebar-primary-foreground';
 
 const DEFAULT_WIDTH_BY_TYPE: Record<ColumnType, string> = {
-  text: '18rem',
-  status: '9rem',
-  date: '11rem',
-  currency: '11rem',
-  boolean: '6rem',
-  badge: '9rem',
+  text: '10rem',
+  status: '7rem',
+  date: '8rem',
+  currency: '8rem',
+  boolean: '4rem',
+  badge: '7rem',
 };
 
 const SKELETON_WIDTHS: Record<ColumnType, string> = {
@@ -495,16 +495,7 @@ export function CrudTable<T extends { id: string }>({
 
   const effectiveTableWidth = resolveEffectiveTableWidth(containerWidth, viewportWidth);
   const useMobileLayout = effectiveTableWidth > 0 && effectiveTableWidth < BREAKPOINT_MIN_WIDTHS.sm;
-  const minTableWidth = useMemo(
-    () => computeMinTableWidth(visibleColumns, { selectable, hasActions }),
-    [visibleColumns, selectable, hasActions],
-  );
-  const useScrollLayout =
-    columnStretch === 'all' &&
-    effectiveTableWidth > 0 &&
-    minTableWidth > effectiveTableWidth &&
-    !useMobileLayout;
-  const resolvedColumnStretch = useScrollLayout ? 'none' : columnStretch;
+  const resolvedColumnStretch = columnStretch;
 
   const structuralColumns = useMemo(() => {
     const builtColumns: Grid.Column<CrudGridSpec<T>>[] = [];
@@ -570,7 +561,10 @@ export function CrudTable<T extends { id: string }>({
         DEFAULT_RESIZE_MIN_WIDTH_PX,
       );
       const width = parseCssSizeToPx(column.width, defaultWidth);
-      const widthMin = parseCssSizeToPx(column.minWidth, DEFAULT_RESIZE_MIN_WIDTH_PX);
+      const widthMin =
+        resolvedColumnStretch === 'all'
+          ? STRETCH_FLOOR_MIN_WIDTH_PX
+          : parseCssSizeToPx(column.minWidth, DEFAULT_RESIZE_MIN_WIDTH_PX);
       const widthMax = parseCssSizeToPx(column.maxWidth, DEFAULT_RESIZE_MAX_WIDTH_PX);
       const textAlign = resolveCrudColumnAlign(column);
       const isLastColumn = colIndex === visibleColumns.length - 1 && !hasActions;
@@ -841,20 +835,6 @@ export function CrudTable<T extends { id: string }>({
     return Math.min(640, Math.max(220, target));
   }, [compact, rows.length]);
 
-  const horizontalScrollMinWidth = useMemo(() => {
-    if (resolvedColumnStretch !== 'none') return undefined;
-    return gridColumns.reduce((sum, column) => {
-      if (column.hide) return sum;
-      const width =
-        typeof column.width === 'number'
-          ? column.width
-          : typeof column.widthMin === 'number'
-            ? column.widthMin
-            : DEFAULT_RESIZE_MIN_WIDTH_PX;
-      return sum + width;
-    }, 0);
-  }, [resolvedColumnStretch, gridColumns]);
-
   const shouldVirtualize = useMemo(() => {
     if (isPrinting) return false;
     if (virtualizationMode === 'always') return true;
@@ -949,10 +929,9 @@ export function CrudTable<T extends { id: string }>({
   }
 
   const gridReady = resolvedColumnStretch === 'none' || containerWidth > 0;
-  const scrollMinWidth = useScrollLayout ? minTableWidth : horizontalScrollMinWidth;
 
   return (
-    <div className="crud-table-host flex w-full max-w-full min-w-0 flex-col">
+    <div className="crud-table-host flex w-full max-w-full min-w-0 flex-col overflow-x-hidden">
       <BulkActionBar
         selectedCount={selectedIds.length}
         actions={bulkActions}
@@ -978,18 +957,9 @@ export function CrudTable<T extends { id: string }>({
       ) : (
         <div
           ref={gridContainerRef}
-          className={cn(
-            'relative w-full max-w-full min-w-0 bg-background',
-            useScrollLayout && 'overflow-x-auto',
-          )}
+          className="relative w-full max-w-full min-w-0 overflow-x-hidden bg-background"
         >
-          <div
-            style={{
-              height: gridHeight,
-              width: scrollMinWidth ? `${scrollMinWidth}px` : '100%',
-              minWidth: scrollMinWidth ? `${scrollMinWidth}px` : undefined,
-            }}
-          >
+          <div style={{ height: gridHeight, width: '100%' }}>
             {isFetching ? (
               <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-0.5 overflow-hidden">
                 <div className="h-full w-full animate-[progress-slide_1.2s_ease-in-out_infinite] bg-primary/60" />

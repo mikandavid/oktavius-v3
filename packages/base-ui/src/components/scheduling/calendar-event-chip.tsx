@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { cn } from '../../lib/utils';
 import { type CalendarSource, eventChipClasses } from './calendar-colors';
 import { calendarEventDragId } from './calendar-dnd';
-import { type CalendarEvent, eventStartDate } from './calendar-shared';
+import { type CalendarEvent, eventClickAnchor, eventStartDate } from './calendar-shared';
 
 export interface CalendarEventChipProps {
   event: CalendarEvent;
@@ -13,7 +13,7 @@ export interface CalendarEventChipProps {
   showTime?: boolean;
   draggable?: boolean;
   className?: string;
-  onClick?: (event: CalendarEvent) => void;
+  onClick?: (event: CalendarEvent, anchor: { x: number; y: number }) => void;
 }
 
 export function CalendarEventChip({
@@ -40,7 +40,11 @@ export function CalendarEventChip({
     <button
       ref={draggable ? setNodeRef : undefined}
       type="button"
-      onClick={onClick ? () => onClick(event) : undefined}
+      onClick={
+        onClick
+          ? (clickEvent) => onClick(event, eventClickAnchor(clickEvent.currentTarget))
+          : undefined
+      }
       disabled={!interactive && !draggable}
       {...(draggable ? { ...attributes, ...listeners } : {})}
       className={cn(

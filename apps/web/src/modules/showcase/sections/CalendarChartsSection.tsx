@@ -1,20 +1,29 @@
 import { useState } from 'react';
 
-import { CalendarView, ChartCard } from '@oktavius/base-ui';
+import {
+  CalendarEventQuickCreate,
+  CalendarView,
+  ChartCard,
+  SimpleSparklineChart,
+} from '@oktavius/base-ui';
+
+import {
+  COMBO_DATA,
+  MULTI_LINE_REVENUE,
+  ORDER_STATUS_DATA,
+  PIPELINE_FUNNEL,
+  RADAR_KPIS,
+  RADAR_SERIES,
+  ReportBuilderPanel,
+  REVENUE_DATA,
+  REVENUE_SERIES,
+  STACKED_PIPELINE,
+  TOP_CLIENTS,
+} from '@/components/reports/ReportBuilderPanel';
 
 import { useInteractiveCalendarDemo } from '@/modules/calendar/shared';
-import { toast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
-
-const REVENUE_DATA = [
-  { label: 'Jul', value: 32000 },
-  { label: 'Aug', value: 38500 },
-  { label: 'Sep', value: 41200 },
-  { label: 'Oct', value: 39800 },
-  { label: 'Nov', value: 45100 },
-  { label: 'Dec', value: 51340 },
-];
 
 const ORDERS_DATA = [
   { label: 'Licenses', value: 18 },
@@ -32,7 +41,7 @@ export function CalendarChartsSection() {
     <div className="space-y-4">
       <ShowcaseBlock
         title="CalendarView"
-        meta="Week/day: drag events · resize edges · click or drag empty slots to create"
+        meta="Week/day: drag events · resize edges · click or drag empty slots to open create editor"
       >
         <CalendarView
           anchor={anchor}
@@ -43,30 +52,98 @@ export function CalendarChartsSection() {
           calendars={calendar.calendars}
           onCalendarVisibilityChange={calendar.onCalendarVisibilityChange}
           showCalendarLegend
-          onEventClick={(event) => toast.info(`Event: ${event.title}`)}
+          onEventClick={calendar.onEventClick}
           onEventMove={calendar.onEventMove}
           onEventResize={calendar.onEventResize}
           onSlotClick={calendar.onSlotClick}
           onSlotRangeSelect={calendar.onSlotRangeSelect}
           className="min-h-[420px]"
         />
+        <CalendarEventQuickCreate
+          draft={calendar.editorDraft}
+          calendars={calendar.calendars}
+          onOpenChange={(open) => {
+            if (!open) calendar.cancelEditor();
+          }}
+          onSave={calendar.confirmSave}
+        />
       </ShowcaseBlock>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <ShowcaseBlock title="Sparkline" meta="Inline trend · StatCard companion">
+        <div className="flex max-w-xs items-end justify-between rounded-card border border-border/60 bg-card px-4 py-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Revenue (6 mo)</p>
+            <p className="text-xl font-semibold text-foreground">€ 51.3k</p>
+          </div>
+          <SimpleSparklineChart data={REVENUE_DATA} height={44} className="w-28" />
+        </div>
+      </ShowcaseBlock>
+
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <ChartCard
           title="Revenue trend"
-          meta="Last 6 months"
-          type="line"
+          meta="Gradient area"
+          type="area"
           data={REVENUE_DATA}
           valueFormatter={(v) => `€${(v / 1000).toFixed(0)}k`}
         />
         <ChartCard
-          title="Orders by category"
-          meta="Current quarter"
-          type="bar"
-          data={ORDERS_DATA}
+          title="Revenue vs margin"
+          meta="Multi-line"
+          type="multi-line"
+          multiSeriesData={MULTI_LINE_REVENUE}
+          series={REVENUE_SERIES}
+          valueFormatter={(v) => `€${(v / 1000).toFixed(0)}k`}
+        />
+        <ChartCard
+          title="Orders + revenue"
+          meta="Bar + line combo"
+          type="combo"
+          comboData={COMBO_DATA}
+          barLabel="Orders"
+          lineLabel="Revenue"
+          valueFormatter={(v) => (v > 200 ? `€${(v / 1000).toFixed(0)}k` : String(v))}
+        />
+        <ChartCard title="Orders by category" meta="Vertical bars" type="bar" data={ORDERS_DATA} />
+        <ChartCard
+          title="Top clients"
+          meta="Horizontal bars"
+          type="horizontal-bar"
+          data={TOP_CLIENTS}
+          valueFormatter={(v) => `€${v}k`}
+        />
+        <ChartCard title="Status mix" meta="Donut + legend" type="pie" data={ORDER_STATUS_DATA} />
+        <ChartCard
+          title="Team KPIs"
+          meta="Radar · actual vs target"
+          type="radar"
+          radarData={RADAR_KPIS}
+          series={RADAR_SERIES}
+        />
+        <ChartCard
+          title="Sales funnel"
+          meta="Gradient stages"
+          type="funnel"
+          funnelData={PIPELINE_FUNNEL}
+        />
+        <ChartCard
+          title="Pipeline by quarter"
+          meta="Stacked new / active / won"
+          type="stacked-bar"
+          stackedData={STACKED_PIPELINE}
+        />
+        <ChartCard
+          title="Target attainment"
+          meta="Semantic gauge"
+          type="gauge"
+          gaugeValue={72}
+          gaugeLabel="Quota"
         />
       </div>
+
+      <ShowcaseBlock title="ReportBuilderPanel" meta="Saved report configs · live chart preview">
+        <ReportBuilderPanel />
+      </ShowcaseBlock>
     </div>
   );
 }

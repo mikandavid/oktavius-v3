@@ -5,6 +5,7 @@ import type { ClientStatus, ClientType } from '@oktavius/reference-data';
 import { ApiProvider } from '@/api/ApiProvider';
 import type { DemoApiRegistry } from '@/api/demo-client';
 import { buildClientsDemoHandlers } from '@/api/demo-handlers/clients';
+import type { CustomFieldValues } from '@/lib/custom-fields';
 
 export type UserRecord = {
   id: string;
@@ -65,6 +66,7 @@ export type ClientRecord = {
   contractEnd: string;
   accountManager: string;
   createdAt: string;
+  customFields?: CustomFieldValues;
 };
 
 export type OrderRecord = {
@@ -254,6 +256,12 @@ const INITIAL_CLIENTS: ClientRecord[] = [
     contractEnd: '2025-01-14',
     accountManager: 'Anna Hofer',
     createdAt: '2024-01-10',
+    customFields: {
+      vipTier: 'gold',
+      referralSource: 'Partner summit 2023',
+      newsletterOptIn: true,
+      internalNotes: 'Executive sponsor engaged. Review expansion in Q4.',
+    },
   },
   {
     id: 'cli_1002',

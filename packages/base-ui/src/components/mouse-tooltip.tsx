@@ -3,17 +3,12 @@ import { createPortal } from 'react-dom';
 
 import { cn } from '../lib/utils';
 
-interface MouseTooltipState {
-  x: number;
-  y: number;
-}
-
 export type MouseTooltipOffset = { x?: number; y?: number };
 
 const DEFAULT_OFFSET: MouseTooltipOffset = { x: 12, y: 12 };
 
 const tooltipSurfaceClass =
-  'pointer-events-none fixed z-[100] rounded-md border border-border/70 bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-sm';
+  'pointer-events-none fixed top-0 left-0 z-[100] rounded-md border border-border/70 bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-sm';
 
 type UseMouseTooltipOptions = {
   className?: string;
@@ -24,31 +19,49 @@ export function useMouseTooltip(
   content: React.ReactNode | undefined | false | null,
   { className, offset = DEFAULT_OFFSET }: UseMouseTooltipOptions = {},
 ) {
-  const [pos, setPos] = React.useState<MouseTooltipState | null>(null);
+  const [visible, setVisible] = React.useState(false);
+  const tooltipRef = React.useRef<HTMLDivElement>(null);
+  const offsetRef = React.useRef(offset);
+  offsetRef.current = offset;
   const enabled = Boolean(content);
+
+  const applyPosition = React.useCallback((x: number, y: number) => {
+    const el = tooltipRef.current;
+    if (!el) return;
+    const { x: offsetX = 12, y: offsetY = 12 } = offsetRef.current;
+    el.style.transform = `translate3d(${x + offsetX}px, ${y + offsetY}px, 0)`;
+  }, []);
 
   const handlers = React.useMemo(() => {
     if (!enabled) return {};
 
     return {
       onMouseEnter: (event: React.MouseEvent) => {
-        setPos({ x: event.clientX, y: event.clientY });
+        applyPosition(event.clientX, event.clientY);
+        setVisible(true);
       },
       onMouseMove: (event: React.MouseEvent) => {
-        setPos({ x: event.clientX, y: event.clientY });
+        applyPosition(event.clientX, event.clientY);
       },
       onMouseLeave: () => {
-        setPos(null);
+        setVisible(false);
       },
     };
-  }, [enabled]);
+  }, [applyPosition, enabled]);
 
   const node =
-    enabled && pos && typeof document !== 'undefined'
+    enabled && typeof document !== 'undefined'
       ? createPortal(
           <div
-            className={cn(tooltipSurfaceClass, className)}
-            style={{ left: pos.x + (offset.x ?? 12), top: pos.y + (offset.y ?? 12) }}
+            ref={tooltipRef}
+            aria-hidden={!visible}
+            className={cn(
+              tooltipSurfaceClass,
+              '!transition-none',
+              visible ? 'opacity-100' : 'opacity-0',
+              className,
+            )}
+            style={{ transition: 'none' }}
           >
             {content}
           </div>,

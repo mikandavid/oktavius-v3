@@ -3,8 +3,9 @@
 ## List views (`CrudMainView`)
 
 - Pass `columnStretch="all"` (default on `CrudMainView`).
-- Host uses `.crud-table-host` — `contain: inline-size`, `max-width: 100%`.
-- `columnSizeToFit={true}` — columns shrink/grow to viewport width.
+- Host uses `.crud-table-host` — `contain: inline-size`, `max-width: 100%`, `overflow-x: hidden`.
+- `columnSizeToFit={true}` — columns shrink/grow to viewport width; **no horizontal scroll**.
+- Secondary columns use `hideBelow: 'md' | 'lg'` so list pages show the most important fields first.
 
 ## Do not persist column pixel widths when stretching
 

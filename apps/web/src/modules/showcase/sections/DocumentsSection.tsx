@@ -2,8 +2,10 @@ import { useState } from 'react';
 
 import { AttachmentList, Button, type Attachment } from '@oktavius/base-ui';
 
+import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import { DocumentGenerateDialog } from '@/components/documents/DocumentGenerateDialog';
 import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
+import { PdfPreviewPanel } from '@/components/documents/PdfPreviewPanel';
 import { DocumentSendDialog } from '@/components/documents/DocumentSendDialog';
 import { EmailTemplatePicker } from '@/components/documents/EmailTemplatePicker';
 import { TemplatePicker } from '@/components/documents/TemplatePicker';
@@ -62,6 +64,8 @@ const INITIAL_ATTACHMENTS: Attachment[] = [
   },
 ];
 
+const DEMO_PDF_URL = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
+
 export function DocumentsSection() {
   const [attachments, setAttachments] = useState(INITIAL_ATTACHMENTS);
   const [deletingId, setDeletingId] = useState<string | undefined>();
@@ -73,6 +77,29 @@ export function DocumentsSection() {
 
   return (
     <div className="space-y-4">
+      <ShowcaseBlock title="DocumentPreview" meta="PDF · CSV · image · text inline renderer">
+        <DocumentPreview
+          document={{
+            name: 'sample_report.pdf',
+            mimeType: 'application/pdf',
+            sourceUrl: DEMO_PDF_URL,
+            downloadUrl: DEMO_PDF_URL,
+          }}
+          bodyClassName="min-h-[280px]"
+        />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock title="PdfPreviewPanel" meta="Toolbar + embedded preview">
+        <PdfPreviewPanel
+          document={{
+            name: 'contract_signed.pdf',
+            mimeType: 'application/pdf',
+            sourceUrl: DEMO_PDF_URL,
+            downloadUrl: DEMO_PDF_URL,
+          }}
+        />
+      </ShowcaseBlock>
+
       <ShowcaseBlock title="DocumentPreviewPanel" meta="SplitView master-detail · file queue">
         <DocumentPreviewPanel selectedId={previewId} onSelect={setPreviewId} />
       </ShowcaseBlock>

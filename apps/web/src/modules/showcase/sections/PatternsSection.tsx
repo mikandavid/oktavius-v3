@@ -2,16 +2,20 @@ import { useState } from 'react';
 
 import { Button, RichTextEditor, Stepper, StepperLayout } from '@oktavius/base-ui';
 
+import { DialogFormFooter } from '@/components/common/DialogFormFooter';
+import { TreeList, type TreeNode } from '@/components/data/TreeList';
+import { GoogleMapsPreview, GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
 import {
   CatalogOptionsManager,
   type CatalogOption,
 } from '@/components/settings/CatalogOptionsManager';
-import { TreeList, type TreeNode } from '@/components/data/TreeList';
-import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { UploadIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
+
+const DEMO_ROUTE_URL = 'https://www.google.com/maps/dir/Vienna/Salzburg';
+const DEMO_PLACE_URL = 'https://www.google.com/maps/search/?api=1&query=Stephansplatz+Vienna';
 
 const TREE_NODES: TreeNode[] = [
   {
@@ -118,6 +122,22 @@ export function PatternsSection() {
 
       <ShowcaseBlock title="TreeList" meta="Folder tree · CollapsibleSection branches">
         <TreeList nodes={TREE_NODES} defaultExpandedIds={['root', 'contracts']} />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock title="GoogleMapsPreview" meta="Inline map · no dialog required">
+        <div className="space-y-4">
+          <GoogleMapsPreview url={DEMO_ROUTE_URL} title="Vienna → Salzburg" height={280} />
+          <GoogleMapsPreview
+            url={DEMO_PLACE_URL}
+            title="Stephansplatz, Vienna"
+            height={240}
+            showHeader={false}
+          />
+        </div>
+      </ShowcaseBlock>
+
+      <ShowcaseBlock title="GoogleMapsDialog" meta="Route preview · dialog expand">
+        <GoogleMapsPreviewButton url={DEMO_ROUTE_URL} label="Open route dialog" />
       </ShowcaseBlock>
 
       <ShowcaseBlock title="RichTextEditor" meta="Internal notes in detail tabs">

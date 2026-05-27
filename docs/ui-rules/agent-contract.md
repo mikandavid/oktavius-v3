@@ -347,6 +347,16 @@ Never build:
 
 ---
 
+## Agent chat (summary)
+
+For agent UI, use blocks from `@/components/agent/` — see [`agent-components.md`](./agent-components.md).
+
+- Message thread: `AgentMessageList` inside `OsirisChatShell`
+- Never nest `SectionCard` inside agent result cards
+- Map links in messages: `GoogleMapsPreviewButton` (compact) or `GoogleMapsPreview` (inline on detail pages) — see [`maps-components.md`](./maps-components.md)
+
+---
+
 ## Date Formatting
 
 All user-visible dates must display as `DD.MM.YYYY`.

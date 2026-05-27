@@ -1,26 +1,50 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 
-import { Button, MouseTooltip, ScrollArea, cn } from '@oktavius/base-ui';
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+  MouseTooltip,
+  ScrollArea,
+  cn,
+} from '@oktavius/base-ui';
 
-import { CloseIcon, HistoryIcon, MicIcon, PaperclipIcon, PlusIcon } from '@/lib/icons';
+import { AgentMessageList } from '@/components/agent/AgentMessageList';
+import { ChatFilePreviewDialog } from '@/components/agent/ChatFilePreviewDialog';
+import { EditableConversationTitle } from '@/components/agent/EditableConversationTitle';
+import { RecordingBar } from '@/components/agent/VoiceRecorder';
+import { getAttachmentIcon } from '@/components/agent/agentHelpers';
+import { buildDemoAgentFollowUp } from '@/components/agent/agentDemoResponses';
+import { useAgentPageContext } from '@/components/agent/page-context';
+import { captureAgentPageContext } from '@/components/agent/page-routing';
+import { ContextUsageIndicator, TokenBadge } from '@/components/agent/ContextUsageIndicator';
+import { AgentThinkingIndicator } from '@/components/agent/AgentThinkingIndicator';
+import { AgentWelcomeScreen } from '@/components/agent/AgentWelcomeScreen';
+import type { AgentMessage, AgentModelMode, AgentTokenStats } from '@/components/agent/types';
+import {
+  BrainIcon,
+  ChevronDownIcon,
+  CloseIcon,
+  GlobeIcon,
+  HistoryIcon,
+  MicIcon,
+  PaperclipIcon,
+  PlusIcon,
+} from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
-import { BrandMark } from './BrandMark';
 import { ChatComposer } from './ChatComposer';
 import { ConversationHistoryPanel, type ConversationHistoryItem } from './ConversationHistoryPanel';
-
-type ShellMessage = {
-  id: string;
-  role: 'user';
-  content: string;
-  createdAt: string;
-};
+import { MobileAgentLayout } from './MobileAgentLayout';
 
 type ShellConversation = {
   id: string;
   title: string;
   updatedAt: string;
-  messages: ShellMessage[];
+  messages: AgentMessage[];
 };
 
 type OsirisChatShellProps = {
@@ -33,16 +57,20 @@ type SpeechRecognitionResultEvent = {
   results?: ArrayLike<ArrayLike<{ transcript?: string }>>;
 };
 
-function formatTimestamp(value: string) {
-  return new Intl.DateTimeFormat('de-AT', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value));
-}
+const DEMO_TOKEN_STATS: AgentTokenStats = {
+  inputTokens: 18_400,
+  outputTokens: 2_150,
+  contextWindowTokens: 200_000,
+};
+
+const MODEL_MODE_LABEL: Record<AgentModelMode, string> = {
+  default: 'Default',
+  thinking: 'Thinking',
+  fast: 'Blitz',
+};
 
 export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatShellProps) {
+  const pageContext = useAgentPageContext();
   const [conversations, setConversations] = useState<ShellConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -50,6 +78,12 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const [showHistory, setShowHistory] = useState(mode === 'page');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isVoiceRecording, setIsVoiceRecording] = useState(false);
+  const [isAssistantPending, setIsAssistantPending] = useState(false);
+  const [modelMode, setModelMode] = useState<AgentModelMode>('default');
+  const [webSearchMode, setWebSearchMode] = useState(false);
+  const [instructionUpdateMode, setInstructionUpdateMode] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [isMobilePageLayout, setIsMobilePageLayout] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -58,6 +92,24 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const activeConversation =
     conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
   const hasComposerContent = draft.trim().length > 0 || selectedFiles.length > 0;
+  const contextTokens = DEMO_TOKEN_STATS.inputTokens + DEMO_TOKEN_STATS.outputTokens;
+  const composerPlaceholder = pageContext.primaryEntity?.displayLabel
+    ? `Ask about ${pageContext.primaryEntity.displayLabel}…`
+    : pageContext.moduleLabel
+      ? `Ask about ${pageContext.moduleLabel.toLowerCase()}…`
+      : 'Ask Oktavius anything about the current workspace.';
+
+  useEffect(() => {
+    if (mode !== 'page') {
+      setIsMobilePageLayout(false);
+      return;
+    }
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobilePageLayout(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, [mode]);
 
   const filteredConversations = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -94,18 +146,35 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
         ? `Attached files: ${selectedFiles.map((file) => file.name).join(', ')}`
         : '';
     const content = [trimmedDraft, attachmentSummary].filter(Boolean).join('\n\n').trim();
-    if (!content) return;
+    if (!content || isAssistantPending) return;
 
     const now = new Date().toISOString();
-    const message: ShellMessage = {
+    const message: AgentMessage = {
       id: `message_${Date.now()}`,
       role: 'user',
       content,
       createdAt: now,
     };
 
-    if (!activeConversationId) {
+    const appendToConversation = (conversationId: string, nextMessages: AgentMessage[]) => {
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                updatedAt: now,
+                messages: [...conversation.messages, ...nextMessages],
+              }
+            : conversation,
+        ),
+      );
+    };
+
+    let targetConversationId = activeConversationId;
+
+    if (!targetConversationId) {
       const id = `chat_${Date.now()}`;
+      targetConversationId = id;
       setConversations([
         {
           id,
@@ -118,7 +187,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     } else {
       setConversations((current) =>
         current.map((conversation) =>
-          conversation.id === activeConversationId
+          conversation.id === targetConversationId
             ? {
                 ...conversation,
                 title:
@@ -136,6 +205,28 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     setDraft('');
     setSelectedFiles([]);
     setIsVoiceRecording(false);
+    setIsAssistantPending(true);
+
+    window.setTimeout(() => {
+      const followUp = buildDemoAgentFollowUp(content, new Date().toISOString());
+      const pageSnapshot = captureAgentPageContext(document, window.location.href, pageContext);
+      if (pageSnapshot.moduleLabel && followUp[0]?.role === 'assistant') {
+        followUp[0] = {
+          ...followUp[0],
+          content: `${followUp[0].content ?? ''}\n\n_Context: ${pageSnapshot.moduleLabel}${
+            pageSnapshot.routeLabel ? ` · ${pageSnapshot.routeLabel}` : ''
+          }_`.trim(),
+        };
+      }
+      if (targetConversationId) {
+        appendToConversation(targetConversationId, followUp);
+      }
+      setIsAssistantPending(false);
+      const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+      if (viewport instanceof HTMLDivElement) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    }, 900);
 
     window.setTimeout(() => {
       const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
@@ -143,6 +234,26 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
         viewport.scrollTop = viewport.scrollHeight;
       }
     }, 0);
+  };
+
+  const handleConfirmationRespond = (messageId: string, approved: boolean) => {
+    setConversations((current) =>
+      current.map((conversation) => ({
+        ...conversation,
+        messages: conversation.messages.map((message) =>
+          message.id === messageId && message.confirmation
+            ? {
+                ...message,
+                confirmation: {
+                  ...message.confirmation,
+                  status: approved ? 'approved' : 'rejected',
+                },
+              }
+            : message,
+        ),
+      })),
+    );
+    toast.success(approved ? 'Action approved.' : 'Action rejected.');
   };
 
   const renameConversation = (conversationId: string, title: string) => {
@@ -213,187 +324,316 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     recognition.start();
   };
 
-  return (
-    <div className={cn('flex h-full min-h-0 max-h-full flex-1 overflow-hidden bg-card', className)}>
-      {showHistory ? (
-        <div
-          className={cn(
-            'flex min-h-0 flex-col border-r bg-sidebar/60',
-            mode === 'page' ? 'w-[320px]' : 'w-full border-r-0 border-b',
-          )}
-        >
-          <ConversationHistoryPanel
-            items={historyItems}
-            activeItemId={activeConversationId}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onSelectItem={(conversationId) => {
-              setActiveConversationId(conversationId);
-              if (mode === 'sidebar') setShowHistory(false);
-            }}
-            onCreateItem={startNewConversation}
-            onBack={() => {
-              setShowHistory(false);
-              onCloseHistory?.();
-            }}
-            onDeleteItem={deleteConversation}
-            onRenameItem={renameConversation}
-            title="Conversations"
-            placeholder="Search threads"
-            closeLabel="Close history"
-            fullWidth={false}
-          />
-        </div>
-      ) : null}
+  const historyPanel = (
+    <ConversationHistoryPanel
+      items={historyItems}
+      activeItemId={activeConversationId}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      onSelectItem={(conversationId) => {
+        setActiveConversationId(conversationId);
+        if (mode === 'sidebar' || isMobilePageLayout) setShowHistory(false);
+      }}
+      onCreateItem={startNewConversation}
+      onBack={() => {
+        setShowHistory(false);
+        onCloseHistory?.();
+      }}
+      onDeleteItem={deleteConversation}
+      onRenameItem={renameConversation}
+      title="Conversations"
+      placeholder="Search threads"
+      closeLabel="Close history"
+      fullWidth={false}
+    />
+  );
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="h-12 shrink-0 border-b border-border">
-          <div
-            className={cn('flex h-full w-full items-center gap-1.5 px-2', fullWidthContentClass)}
+  const chatColumn = (
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="h-12 shrink-0 border-b border-border">
+        <div className={cn('flex h-full w-full items-center gap-1.5 px-2', fullWidthContentClass)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+            onClick={() => setShowHistory((current) => !current)}
+            aria-label={showHistory ? 'Hide history' : 'Show history'}
           >
+            <HistoryIcon size={16} />
+          </Button>
+          <div className="min-w-0 flex-1 px-1.5">
+            <EditableConversationTitle
+              conversationId={activeConversationId}
+              title={activeConversation?.title ?? null}
+              fallbackTitle="Agent chat"
+              onRename={renameConversation}
+            />
+          </div>
+          <div className="flex shrink-0 items-center gap-0.5">
+            {(activeConversation?.messages.length ?? 0) > 0 ? (
+              <TokenBadge stats={DEMO_TOKEN_STATS} />
+            ) : null}
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
-              onClick={() => setShowHistory((current) => !current)}
-              aria-label={showHistory ? 'Hide history' : 'Show history'}
+              className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
+              onClick={startNewConversation}
+              aria-label="New chat"
             >
-              <HistoryIcon size={16} />
+              <PlusIcon size={14} />
             </Button>
-            <div className="min-w-0 flex-1 px-1.5">
-              <h2 className="truncate text-[13px] font-semibold text-foreground/90">
-                {activeConversation?.title ?? 'Agent chat'}
-              </h2>
-            </div>
-            <div className="flex shrink-0 items-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground"
-                onClick={startNewConversation}
-                aria-label="New chat"
-              >
-                <PlusIcon size={14} />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
-          <div
-            className={cn('flex w-full flex-col gap-4 px-3 py-4 md:px-5', fullWidthContentClass)}
-          >
-            {activeConversation?.messages.length ? (
-              activeConversation.messages.map((message) => (
-                <div
-                  key={message.id}
-                  className="ml-auto max-w-[92%] rounded-card border border-foreground/10 bg-muted px-4 py-3"
-                >
-                  <div className="mb-1 flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                    <span>You</span>
-                    <span>{formatTimestamp(message.createdAt)}</span>
-                  </div>
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
-                    {message.content}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-card border border-dashed bg-card/70 px-5 py-8 text-center">
-                <div className="mx-auto flex w-fit items-center justify-center rounded-card border bg-muted/50 px-3 py-2">
-                  <BrandMark />
-                </div>
-                <div className="mt-4 text-base font-semibold text-foreground">
-                  Start an Oktavius thread
-                </div>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  The Osiris chat shell is in place. Connect an agent runtime here when ready.
-                </p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-
-        <div className="shrink-0 bg-background px-3 pb-3 pt-2 md:px-4">
-          <div className={cn('flex w-full flex-col gap-2', fullWidthContentClass)}>
-            {selectedFiles.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {selectedFiles.map((file, index) => (
-                  <div
-                    key={`${file.name}-${index}`}
-                    className="group flex items-center gap-1.5 rounded-md bg-muted/40 py-0.5 pl-2 pr-1 text-xs text-foreground/80 transition-colors hover:bg-muted/60"
-                  >
-                    <PaperclipIcon size={12} className="shrink-0 text-muted-foreground" />
-                    <span className="max-w-[140px] truncate">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeSelectedFile(index)}
-                      className="rounded-md p-0.5 text-muted-foreground/50 transition-colors hover:text-foreground"
-                    >
-                      <CloseIcon size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,.pdf,.xlsx,.xls,.csv,.json,.txt,.docx,.doc"
-              className="hidden"
-              onChange={handleFileSelection}
-            />
-
-            <ChatComposer
-              value={draft}
-              onValueChange={setDraft}
-              onSubmit={submitDraft}
-              onStop={() => {
-                recognitionRef.current?.stop();
-                setIsVoiceRecording(false);
-              }}
-              isLoading={false}
-              submitDisabled={!hasComposerContent}
-              placeholder="Ask Oktavius anything about the current workspace."
-              leftControls={
-                <>
-                  <MouseTooltip content="Attach file">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      tabIndex={-1}
-                      aria-label="Attach file"
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      <PaperclipIcon size={14} />
-                    </button>
-                  </MouseTooltip>
-                  <MouseTooltip
-                    content={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
-                  >
-                    <button
-                      type="button"
-                      onClick={toggleVoiceInput}
-                      tabIndex={-1}
-                      aria-label={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
-                      className={cn(
-                        'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
-                        isVoiceRecording
-                          ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                      )}
-                    >
-                      <MicIcon size={14} />
-                    </button>
-                  </MouseTooltip>
-                </>
-              }
-            />
           </div>
         </div>
       </div>
+
+      <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
+        <div className={cn('flex w-full flex-col gap-4 px-4 py-4 md:px-6', fullWidthContentClass)}>
+          {activeConversation?.messages.length ? (
+            <AgentMessageList
+              messages={activeConversation.messages}
+              onConfirmationRespond={handleConfirmationRespond}
+            />
+          ) : (
+            <AgentWelcomeScreen
+              title="How can I help?"
+              subtitle='Ask about clients, tasks, or try "delete client" to see a confirmation card.'
+              latestConversationTitle={conversations[0]?.title}
+              latestConversationTime={
+                conversations[0]?.updatedAt
+                  ? new Intl.DateTimeFormat('de-AT', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    }).format(new Date(conversations[0].updatedAt))
+                  : undefined
+              }
+              onOpenLatestConversation={
+                conversations[0]
+                  ? () => {
+                      setActiveConversationId(conversations[0].id);
+                    }
+                  : undefined
+              }
+            />
+          )}
+          {isAssistantPending ? <AgentThinkingIndicator /> : null}
+        </div>
+      </ScrollArea>
+
+      {selectedFiles.length > 0 ? (
+        <div className="shrink-0 border-t border-border px-3 py-1.5">
+          <div className={cn('flex flex-wrap gap-1.5', fullWidthContentClass)}>
+            {selectedFiles.map((file, index) => {
+              const FileIcon = getAttachmentIcon(file.name, file.type);
+              return (
+                <button
+                  key={`${file.name}-${index}`}
+                  type="button"
+                  onClick={() => setPreviewFile(file)}
+                  className="group flex items-center gap-1.5 rounded-md bg-muted/40 py-0.5 pl-2 pr-1 text-xs text-foreground/80 transition-colors hover:bg-muted/60"
+                >
+                  <FileIcon size={14} className="shrink-0 text-muted-foreground" />
+                  <span className="max-w-[110px] truncate">{file.name}</span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      removeSelectedFile(index);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        removeSelectedFile(index);
+                      }
+                    }}
+                    className="ml-0.5 shrink-0 rounded-md p-0.5 text-muted-foreground/50 transition-colors hover:text-foreground"
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    <CloseIcon size={12} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {isVoiceRecording ? (
+        <div className={cn('shrink-0 px-3 pb-1', fullWidthContentClass)}>
+          <RecordingBar isRecording={isVoiceRecording} />
+        </div>
+      ) : null}
+
+      <div className="shrink-0 px-3 pb-3 pt-2">
+        <div className={cn('flex w-full flex-col gap-2', fullWidthContentClass)}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.xlsx,.xls,.csv,.json,.txt,.docx,.doc"
+            className="hidden"
+            onChange={handleFileSelection}
+          />
+
+          <ChatComposer
+            value={draft}
+            onValueChange={setDraft}
+            onSubmit={submitDraft}
+            onStop={() => {
+              recognitionRef.current?.stop();
+              setIsVoiceRecording(false);
+            }}
+            isLoading={isAssistantPending}
+            submitDisabled={!hasComposerContent || isAssistantPending}
+            placeholder={composerPlaceholder}
+            rightControls={
+              <MouseTooltip content={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}>
+                <button
+                  type="button"
+                  onClick={toggleVoiceInput}
+                  tabIndex={-1}
+                  aria-label={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
+                    isVoiceRecording
+                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <MicIcon size={14} />
+                </button>
+              </MouseTooltip>
+            }
+            bottomControls={
+              <>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isAssistantPending}
+                  tabIndex={-1}
+                  title="Attach file"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                >
+                  <PaperclipIcon size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWebSearchMode((current) => !current)}
+                  disabled={isAssistantPending}
+                  aria-pressed={webSearchMode}
+                  aria-label="Web search mode"
+                  title="Web search mode"
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-40',
+                    webSearchMode
+                      ? 'border-info bg-info/10 text-info hover:bg-info/15 hover:text-info'
+                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <GlobeIcon size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInstructionUpdateMode((current) => !current)}
+                  disabled={isAssistantPending}
+                  aria-pressed={instructionUpdateMode}
+                  title="Instruction update mode"
+                  className={cn(
+                    'flex h-7 w-7 items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-40',
+                    instructionUpdateMode
+                      ? 'border-accent bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent'
+                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <BrainIcon size={14} />
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={isAssistantPending}
+                      className="flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                      aria-label="Model mode"
+                    >
+                      <span>{MODEL_MODE_LABEL[modelMode]}</span>
+                      <ChevronDownIcon size={14} />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    className="w-52 rounded-[22px] p-1.5 shadow-none"
+                  >
+                    <DropdownMenuRadioGroup
+                      value={modelMode}
+                      onValueChange={(value) => setModelMode(value as AgentModelMode)}
+                    >
+                      <DropdownMenuRadioItem value="fast" className="rounded-full px-3">
+                        Blitz
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="default" className="rounded-full px-3">
+                        Default
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="thinking" className="rounded-full px-3">
+                        Thinking
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="ml-auto flex items-center pr-1">
+                  <ContextUsageIndicator
+                    tokens={contextTokens}
+                    onCompact={() => toast.success('Context compacted (demo).')}
+                    disabled={isAssistantPending}
+                  />
+                </div>
+              </>
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      className={cn(
+        'relative flex h-full min-h-0 max-h-full flex-1 overflow-hidden bg-background',
+        className,
+      )}
+    >
+      {mode === 'page' && isMobilePageLayout ? (
+        <MobileAgentLayout
+          showSidebar={showHistory}
+          onToggleSidebar={() => setShowHistory((current) => !current)}
+          sidebar={
+            <div className="flex h-full min-h-0 flex-col border-r bg-sidebar/60">
+              {historyPanel}
+            </div>
+          }
+          chat={chatColumn}
+        />
+      ) : (
+        <>
+          {showHistory ? (
+            <div
+              className={cn(
+                'flex min-h-0 flex-col border-r bg-sidebar/60',
+                mode === 'page' ? 'w-[320px]' : 'w-full border-r-0 border-b',
+              )}
+            >
+              {historyPanel}
+            </div>
+          ) : null}
+          {chatColumn}
+        </>
+      )}
+
+      {previewFile ? (
+        <ChatFilePreviewDialog file={previewFile} onClose={() => setPreviewFile(null)} />
+      ) : null}
     </div>
   );
 }

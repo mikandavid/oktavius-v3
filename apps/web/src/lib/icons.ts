@@ -106,6 +106,8 @@ export {
   MapPin as LocationIcon,
   Globe as WebIcon,
   Globe as GlobeIcon,
+  MapTrifold as MapIcon,
+  ArrowSquareOut as ExternalLinkIcon,
   Sun as SunIcon,
   Moon as MoonIcon,
   Desktop as SystemThemeIcon,
@@ -122,6 +124,16 @@ export {
   Minus as MinusIcon,
   Equals as EqualsIcon,
   Stop as StopIcon,
+  Brain as BrainIcon,
+  TerminalWindow as TerminalIcon,
+  ChatCircle as MessageSquareIcon,
+  Lightning as ZapIcon,
+  ArrowRight as ArrowRightIcon,
+  ArrowsLeftRight as ArrowRightLeftIcon,
+  Square as SquareIcon,
+  ArrowUp as ArrowUpIcon,
+  Table as FileSpreadsheetIcon,
+  Image as ImageIcon,
 } from '@phosphor-icons/react';
 
 // ─── Dynamic icon registry (for nav config, module manifests, etc.) ──────────

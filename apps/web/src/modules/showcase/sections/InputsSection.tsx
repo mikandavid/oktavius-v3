@@ -20,6 +20,23 @@ import {
 } from '@oktavius/base-ui';
 
 import { ShowcaseBlock } from '../shared';
+import {
+  BusinessContactPicker,
+  type BusinessContactPickerValue,
+} from '@/components/pickers/BusinessContactPicker';
+import { ContactPicker, type ContactPickerValue } from '@/components/pickers/ContactPicker';
+import { EntityPicker, type EntityPickerValue } from '@/components/pickers/EntityPicker';
+import {
+  FuneralCasePicker,
+  type FuneralCasePickerValue,
+} from '@/components/pickers/FuneralCasePicker';
+import { ProjectPicker, type ProjectPickerValue } from '@/components/pickers/ProjectPicker';
+
+const DEMO_ENTITY_OPTIONS: EntityPickerValue[] = [
+  { id: 'staff_1', label: 'Anna Hofer', description: 'Account manager' },
+  { id: 'staff_2', label: 'Markus Leitner', description: 'Operations lead' },
+  { id: 'staff_3', label: 'Nina Weiss', description: 'Finance' },
+];
 
 export function InputsSection() {
   const [text, setText] = useState('Apex Technologies');
@@ -43,6 +60,11 @@ export function InputsSection() {
     city: 'Vienna',
     country: 'AT',
   });
+  const [contact, setContact] = useState<ContactPickerValue | null>(null);
+  const [businessContact, setBusinessContact] = useState<BusinessContactPickerValue | null>(null);
+  const [funeralCase, setFuneralCase] = useState<FuneralCasePickerValue | null>(null);
+  const [project, setProject] = useState<ProjectPickerValue | null>(null);
+  const [entity, setEntity] = useState<EntityPickerValue | null>(null);
 
   return (
     <div className="space-y-4">
@@ -156,6 +178,50 @@ export function InputsSection() {
                 { value: 'company', label: 'Company' },
                 { value: 'individual', label: 'Individual' },
               ]}
+            />
+          </FormField>
+        </div>
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Entity pickers"
+        meta="EntityPicker base · ContactPicker · ProjectPicker"
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField id="inp-entity-picker" label="EntityPicker">
+            <EntityPicker
+              id="inp-entity-picker"
+              value={entity}
+              onChange={setEntity}
+              searchEntities={async (query) => {
+                const normalized = query.trim().toLowerCase();
+                if (!normalized) return DEMO_ENTITY_OPTIONS;
+                return DEMO_ENTITY_OPTIONS.filter(
+                  (option) =>
+                    option.label.toLowerCase().includes(normalized) ||
+                    option.description?.toLowerCase().includes(normalized),
+                );
+              }}
+            />
+          </FormField>
+          <FormField id="inp-contact-picker" label="ContactPicker">
+            <ContactPicker id="inp-contact-picker" value={contact} onChange={setContact} />
+          </FormField>
+          <FormField id="inp-project-picker" label="ProjectPicker">
+            <ProjectPicker id="inp-project-picker" value={project} onChange={setProject} />
+          </FormField>
+          <FormField id="inp-business-contact-picker" label="BusinessContactPicker">
+            <BusinessContactPicker
+              id="inp-business-contact-picker"
+              value={businessContact}
+              onChange={setBusinessContact}
+            />
+          </FormField>
+          <FormField id="inp-funeral-case-picker" label="FuneralCasePicker">
+            <FuneralCasePicker
+              id="inp-funeral-case-picker"
+              value={funeralCase}
+              onChange={setFuneralCase}
             />
           </FormField>
         </div>

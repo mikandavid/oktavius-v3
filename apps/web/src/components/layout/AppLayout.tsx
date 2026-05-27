@@ -10,6 +10,7 @@ import {
   APP_MAIN_SCROLL_CLASS,
   APP_WORKSPACE_COLUMN_CLASS,
 } from '@/components/common/pageChrome';
+import { rememberHealthyRoute } from '@/lib/chunkLoadRecovery';
 import { AppShellLayoutProvider, useAppShellLayout } from './AppShellLayoutContext';
 import { AIChatSidebar } from './AIChatSidebar';
 import { Header } from './Header';
@@ -38,6 +39,7 @@ export function AppLayout() {
 
   useEffect(() => {
     setSidebarOpen(false);
+    rememberHealthyRoute(`${pathname}${window.location.search}${window.location.hash}`);
   }, [pathname]);
 
   const isAgentChatRoute = pathname === '/ai-chat';

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
-import { Textarea, cn } from '@oktavius/base-ui';
+import { cn } from '@oktavius/base-ui';
 
-import { ForwardIcon, StopIcon } from '@/lib/icons';
+import { ArrowUpIcon, SquareIcon } from '@/lib/icons';
 
 type ChatComposerProps = {
   value: string;
@@ -14,7 +14,10 @@ type ChatComposerProps = {
   disabled?: boolean;
   submitDisabled?: boolean;
   placeholder: string;
+  stopAriaLabel?: string;
   leftControls?: React.ReactNode;
+  rightControls?: React.ReactNode;
+  bottomControls?: React.ReactNode;
   className?: string;
   inputClassName?: string;
   textareaRef?: RefObject<HTMLTextAreaElement | null>;
@@ -35,7 +38,10 @@ export function ChatComposer({
   disabled = false,
   submitDisabled = false,
   placeholder,
+  stopAriaLabel = 'Stop generation',
   leftControls,
+  rightControls,
+  bottomControls,
   className,
   inputClassName,
   textareaRef,
@@ -63,61 +69,73 @@ export function ChatComposer({
   return (
     <div
       className={cn(
-        'flex rounded-[20px] border border-border bg-background py-1.5 pl-1.5 pr-1.5 transition-colors duration-150 focus-within:border-primary/30',
-        isMultiline ? 'items-start' : 'items-center',
+        'rounded-[20px] border border-border bg-background px-1.5 py-1.5 transition-colors duration-150 focus-within:border-primary/30',
         className,
       )}
     >
-      {leftControls ? (
-        <div className={cn('flex shrink-0 items-center gap-0.5', isMultiline && 'self-start')}>
-          {leftControls}
-        </div>
-      ) : null}
-      <Textarea
-        ref={resolvedRef}
-        rows={1}
-        value={value}
-        onChange={(event) => onValueChange(event.target.value)}
-        onPaste={onPaste}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            onSubmit();
-          }
-        }}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={cn(
-          'min-h-7 h-7 flex-1 resize-none border-0 bg-transparent px-2 py-1 text-sm leading-5 shadow-none placeholder:text-muted-foreground/50 focus-visible:ring-0',
-          inputClassName,
+      <div className={cn('flex min-w-0', isMultiline ? 'items-start' : 'items-center')}>
+        {leftControls ? (
+          <div className={cn('flex shrink-0 items-center gap-0.5', isMultiline && 'self-start')}>
+            {leftControls}
+          </div>
+        ) : null}
+        <textarea
+          ref={resolvedRef}
+          rows={1}
+          value={value}
+          onChange={(event) => onValueChange(event.target.value)}
+          onPaste={onPaste}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault();
+              onSubmit();
+            }
+          }}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={cn(
+            'min-h-7 h-7 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-1 text-sm leading-5 shadow-none outline-none placeholder:text-muted-foreground/50 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50',
+            inputClassName,
+          )}
+        />
+        {rightControls ? (
+          <div className={cn('flex shrink-0 items-center gap-0.5', isMultiline && 'self-start')}>
+            {rightControls}
+          </div>
+        ) : null}
+        {isLoading ? (
+          <button
+            type="button"
+            onClick={() => onStop?.()}
+            tabIndex={-1}
+            aria-label={stopAriaLabel}
+            className={cn(
+              'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-colors hover:bg-destructive/90',
+              isMultiline && 'self-start',
+            )}
+          >
+            <SquareIcon size={14} />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={submitDisabled}
+            tabIndex={-1}
+            aria-label="Send message"
+            className={cn(
+              'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cta text-cta-foreground transition-colors hover:bg-cta/90 disabled:opacity-40',
+              submitDisabled && 'disabled:pointer-events-none',
+              isMultiline && 'self-start',
+            )}
+          >
+            <ArrowUpIcon size={14} weight="bold" />
+          </button>
         )}
-      />
-      {isLoading ? (
-        <button
-          type="button"
-          onClick={() => onStop?.()}
-          tabIndex={-1}
-          className={cn(
-            'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-destructive text-destructive-foreground transition-colors hover:bg-destructive/90',
-            isMultiline && 'self-start',
-          )}
-        >
-          <StopIcon size={14} />
-        </button>
-      ) : (
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={submitDisabled}
-          tabIndex={-1}
-          className={cn(
-            'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-30',
-            isMultiline && 'self-start',
-          )}
-        >
-          <ForwardIcon size={14} />
-        </button>
-      )}
+      </div>
+      {bottomControls ? (
+        <div className="mt-1 flex items-center gap-1.5 px-0.5 pt-0.5">{bottomControls}</div>
+      ) : null}
     </div>
   );
 }

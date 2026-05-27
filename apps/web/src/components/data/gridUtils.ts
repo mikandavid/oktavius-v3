@@ -53,12 +53,12 @@ export function resolveEffectiveTableWidth(containerWidth: number, viewportWidth
 }
 
 const DEFAULT_COLUMN_WIDTH_BY_TYPE = {
-  text: '18rem',
-  status: '9rem',
-  date: '11rem',
-  currency: '11rem',
-  boolean: '6rem',
-  badge: '9rem',
+  text: '10rem',
+  status: '7rem',
+  date: '8rem',
+  currency: '8rem',
+  boolean: '4rem',
+  badge: '7rem',
 } as const;
 
 export function computeMinTableWidth(
@@ -80,7 +80,7 @@ export function computeMinTableWidth(
     const type = (column.type ?? 'text') as keyof typeof DEFAULT_COLUMN_WIDTH_BY_TYPE;
     const defaultWidth = parseCssSizeToPx(DEFAULT_COLUMN_WIDTH_BY_TYPE[type] ?? '18rem', 80) ?? 80;
     const width = parseCssSizeToPx(column.width, defaultWidth) ?? defaultWidth;
-    const widthMin = parseCssSizeToPx(column.minWidth, 80) ?? 80;
+    const widthMin = parseCssSizeToPx(column.minWidth, 48) ?? 48;
     total += Math.max(widthMin, Math.min(width, defaultWidth));
   }
 

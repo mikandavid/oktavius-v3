@@ -30,9 +30,14 @@ oktavius-v3/
 │   ├── app/              # Router, providers, demo data
 │   ├── components/
 │   │   ├── command/      # CommandPalette (⌘K global search)
-│   │   ├── common/       # PageLayout, BackButton, InfoBox, EmptyState, DetailView, ConfirmActionDialog
+│   │   ├── common/       # PageLayout, BackButton, InfoBox, EmptyState, DetailView, FormattedText
 │   │   ├── data/         # CrudTable, CrudMainView, BulkImportWizard, TreeList, exportGrid
-│   │   ├── documents/    # DocumentPreviewPanel
+│   │   ├── documents/    # DocumentPreview, DocumentPreviewPanel, PdfPreviewPanel
+│   │   ├── agent/        # AgentMessageList, result cards, chat shell utilities
+│   │   ├── maps/         # GoogleMapsPreview, GoogleMapsDialog, googleMapsEmbed
+│   │   ├── pickers/      # EntityPicker, ContactPicker, ProjectPicker
+│   │   ├── reports/      # ReportBuilderPanel
+│   │   ├── workflow/     # CommentsPanel, MentionComposer, approvals, TaskInbox
 │   │   └── forms/        # EntityForm (full field registry)
 │   ├── components/feedback/  # StatusBadge
 │   ├── components/layout/    # AppLayout, Sidebar, Header, HeaderAccountMenu, NotificationPanel, MobileTopBar
@@ -282,14 +287,18 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 
 ### Wizard / Multi-step (base-ui)
 
-| Component                                  | When to use                                                               |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `<StepperLayout steps currentStep footer>` | Multi-step form wrapper — stepper header + content + footer buttons       |
-| `<Stepper steps currentStep>`              | Standalone step indicator (use inside custom layouts)                     |
-| `<CommandDialog>` + cmdk primitives        | Global command palette — wrap app in `CommandPaletteProvider`             |
-| `<RichTextEditor>`                         | Internal notes / long text in detail tabs                                 |
-| `<SimpleLineChart>` `<SimpleBarChart>`     | Dashboard KPI charts (recharts, brand violet)                             |
-| `<CalendarMonthPreview>`                   | Static month grid for scheduling UI mock (legacy — prefer `CalendarView`) |
+| Component                                                          | When to use                                                                                                                |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `<StepperLayout steps currentStep footer>`                         | Multi-step form wrapper — stepper header + content + footer buttons                                                        |
+| `<Stepper steps currentStep>`                                      | Standalone step indicator (use inside custom layouts)                                                                      |
+| `<CommandDialog>` + cmdk primitives                                | Global command palette — wrap app in `CommandPaletteProvider`                                                              |
+| `<RichTextEditor>`                                                 | Internal notes / long text in detail tabs                                                                                  |
+| `<SimpleLineChart>` `<SimpleBarChart>` `<SimpleAreaChart>`         | Dashboard KPI charts (recharts)                                                                                            |
+| `<SimpleMultiLineChart>` `<SimpleComboChart>` `<SimpleRadarChart>` | Multi-series and comparison charts                                                                                         |
+| `<SimpleHorizontalBarChart>` `<SimpleSparklineChart>`              | Rankings and inline StatCard trends                                                                                        |
+| `<ChartCard type="…">`                                             | Wrapped chart tile — line, area, bar, pie, stacked-bar, gauge, funnel, multi-line, combo, horizontal-bar, radar, sparkline |
+| `CHART_PALETTE` / `resolveChartColor()`                            | `@oktavius/base-ui` — curated 8-color viz palette                                                                          |
+| `<CalendarMonthPreview>`                                           | Static month grid for scheduling UI mock (legacy — prefer `CalendarView`)                                                  |
 
 ### Calendar / Planning (base-ui)
 
@@ -308,22 +317,110 @@ Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use 
 
 ### App shell patterns (apps/web)
 
-| Need                     | Component                                                     | Notes                                                                         |
-| ------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| ⌘K / header search       | `CommandPaletteProvider` + `useCommandPalette`                | `@/components/command/CommandPalette`                                         |
-| Org switcher             | `<OrganizationMenuSection>`                                   | Inside profile dropdown (`HeaderAccountMenu`) — not a separate header control |
-| Notifications            | `<NotificationPanel>`                                         | Header popover with `ListRow` items                                           |
-| Bulk CSV import          | `<BulkImportWizard>` / `<BulkImportTrigger>`                  | List page header — e.g. `/clients`, `/products`                               |
-| Folder tree              | `<TreeList nodes>`                                            | `CollapsibleSection` branches                                                 |
-| Document list + preview  | `<DocumentPreviewPanel>`                                      | `/documents` module · entity document tabs                                    |
-| Generate / send document | `<DocumentGenerateDialog>` `<DocumentSendDialog>`             | `/documents` module · template pickers + `DialogFormFooter`                   |
-| Template pickers         | `<TemplatePicker>` `<EmailTemplatePicker>`                    | `/documents` → Templates tab                                                  |
-| Approvals                | `<ApprovalPanel>` `<ApprovalHistory>` `<ApproveRejectDialog>` | PO/invoice/leave sign-off flows                                               |
-| Task queue               | `<TaskInbox>`                                                 | `/tasks` module                                                               |
-| Comments                 | `<CommentsPanel>`                                             | Record thread + internal notes                                                |
-| Catalog settings         | `<CatalogOptionsManager>`                                     | Payment terms, case types, etc.                                               |
-| Saved list views         | `<SavedViewSelector>` + `useListSavedViews()`                 | `CrudMainView` `toolbarTrailing` — `/clients`, `/products`                    |
-| RBAC blocked module      | `<AccessDeniedPage>`                                          | `@/components/common/AccessDeniedPage` — `/access-denied`                     |
+| Need                     | Component                                                                         | Notes                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| ⌘K / header search       | `CommandPaletteProvider` + `useCommandPalette`                                    | `@/components/command/CommandPalette`                                         |
+| Org switcher             | `<OrganizationMenuSection>`                                                       | Inside profile dropdown (`HeaderAccountMenu`) — not a separate header control |
+| Notifications            | `<NotificationPanel>`                                                             | Header popover with `ListRow` items                                           |
+| Bulk CSV import          | `<BulkImportWizard>` / `<BulkImportTrigger>` / `<BulkImportDialog>`               | List page header — e.g. `/clients`, `/products`                               |
+| Active location          | `<ActiveLocationPicker>` `<ActiveLocationInfoButton>` `<LocationSitesDetailList>` | Header + settings; requires `ActiveLocationProvider`                          |
+| Calendar sync accounts   | `<ConnectedAccountsHeaderMenu>`                                                   | Header — connected email/calendar account switcher                            |
+| Settings language        | `<LanguageSelector>`                                                              | Settings general section (also in account menu via `LanguageMenuSection`)     |
+| Route error boundary     | `<RouteErrorPage>` / `<AppErrorPage>`                                             | Router `errorElement` + chunk-load auto-reload                                |
+| Link storage files       | `<StorageFileLinkPickerDialog>`                                                   | Used by `EntityStoragePanel` link action                                      |
+| Business contact picker  | `<BusinessContactPicker>`                                                         | `@/components/pickers/BusinessContactPicker`                                  |
+| Funeral case picker      | `<FuneralCasePicker>`                                                             | Vertical-specific; respects active location                                   |
+| Form leave guard         | `useFormLeaveBlocker`                                                             | In-app navigation when form dirty (with `useFormDirtyGuard`)                  |
+| Folder tree              | `<TreeList nodes>`                                                                | `CollapsibleSection` branches                                                 |
+| Document list + preview  | `<DocumentPreviewPanel>`                                                          | `/documents` module · entity document tabs                                    |
+| Generate / send document | `<DocumentGenerateDialog>` `<DocumentSendDialog>`                                 | `/documents` module · template pickers + `DialogFormFooter`                   |
+| Template pickers         | `<TemplatePicker>` `<EmailTemplatePicker>`                                        | `/documents` → Templates tab                                                  |
+| Approvals                | `<ApprovalPanel>` `<ApprovalHistory>` `<ApproveRejectDialog>`                     | PO/invoice/leave sign-off flows                                               |
+| Task queue               | `<TaskInbox>`                                                                     | `/tasks` module                                                               |
+| Comments                 | `<CommentsPanel>`                                                                 | Record thread + internal notes                                                |
+| Catalog settings         | `<CatalogOptionsManager>`                                                         | Payment terms, case types, etc.                                               |
+| Saved list views         | `<SavedViewSelector>` + `useListSavedViews()`                                     | `CrudMainView` `toolbarTrailing` — `/clients`, `/products`                    |
+| RBAC blocked module      | `<AccessDeniedPage>`                                                              | `@/components/common/AccessDeniedPage` — `/access-denied`                     |
+
+### Agent / AI chat (apps/web)
+
+See [`agent-components.md`](./agent-components.md).
+
+| Need                        | Component                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Import                                                        |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Full message thread         | `<AgentMessageList>`                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `@/components/agent/AgentMessageList`                         |
+| Chat shell (page + sidebar) | `<OsirisChatShell>`                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/layout/OsirisChatShell`                         |
+| Empty thread                | `<AgentWelcomeScreen>`                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `@/components/agent/AgentWelcomeScreen`                       |
+| Loading state               | `<AgentThinkingIndicator>`                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `@/components/agent/AgentThinkingIndicator`                   |
+| Composer attachments        | `<AgentFileAttachmentChip>`                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `@/components/agent/AgentFileAttachmentChip`                  |
+| Header settings             | `<AgentSettingsPopover>`                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `@/components/agent/AgentSettingsPopover`                     |
+| Context usage               | `<ContextUsageIndicator>` `<TokenBadge>`                                                                                                                                                                                                                                                                                                                                                                                                                                    | `@/components/agent/ContextUsageIndicator`                    |
+| Tool call row               | `<AgentToolCallCard>`                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/agent/AgentToolCallCard`                        |
+| Action confirm              | `<AgentConfirmationCard>`                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `@/components/agent/AgentConfirmationCard`                    |
+| Result cards                | `AgentEntityListCard`, `AgentEntityDetailCard`, `AgentPythonExecutionCard`, `AgentGeneratedDocumentCard`, `AgentScheduleCard`, `AgentSkillApprovalCard`, `AgentFinancialCard`, `AgentSearchResultsCard`, `AgentTimelineCard`, `AgentActionItemsCard`, `AgentActiveTimerCard`, `AgentPlannerCard`, `AgentMemoryCard`, `AgentProjectSummaryCard`, `AgentCatalogItemCard`, `AgentDocProcessingCard`, `AgentEmailComposeCard`, `AgentContextDumpCard`, `AgentSalesDocumentCard` | `@/components/agent/cards`                                    |
+| Render card payload         | `renderAgentCard(card, options)`                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/agent/cards`                                    |
+| Backend UI component name   | `<ChatUIComponent name props />`                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/agent/UIComponentRegistry`                      |
+| Structured assistant text   | `<StructuredContent text={…} />`                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/agent/structured/StructuredContent`             |
+| Attachment preview          | `<ChatFilePreviewDialog>`                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `@/components/agent/ChatFilePreviewDialog`                    |
+| Editable thread title       | `<EditableConversationTitle>`                                                                                                                                                                                                                                                                                                                                                                                                                                               | `@/components/agent/EditableConversationTitle`                |
+| Voice input                 | `<VoiceRecorder>` `<RecordingBar>`                                                                                                                                                                                                                                                                                                                                                                                                                                          | `@/components/agent/VoiceRecorder`                            |
+| Side panel                  | `<ContentPanel>`                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/agent/ContentPanel`                             |
+| Mobile agent layout         | `<MobileAgentLayout>`                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/layout/MobileAgentLayout`                       |
+| App loading state           | `<AppShellSpinner>`                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/layout/AppShellSpinner`                         |
+| Location picker             | `<ActiveLocationPicker>` `<ActiveLocationInfoButton>`                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/layout/` · wrap app in `ActiveLocationProvider` |
+| Shortcut help               | `<ShortcutHelpDialog>`                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `@/components/layout/ShortcutHelpDialog`                      |
+| Date/time pair field        | `<DateTimePairField>`                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/forms/DateTimePairField`                        |
+| Recipient combobox          | `<RecipientCombobox>`                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/forms/RecipientCombobox`                        |
+| Page file drop zone         | `<PageFileDrop>`                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/forms/PageFileDrop`                             |
+| Role selector               | `<RoleSelector>`                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/admin/RoleSelector`                             |
+| User status badge           | `<UserStatusBadge>`                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/admin/UserStatusBadge`                          |
+| Org custom roles            | `<OrgCustomRolesSection>`                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `@/components/admin/OrgCustomRolesSection`                    |
+| Message types               | `AgentMessage`, `AgentCardPayload`, …                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/agent/types`                                    |
+| Links + mentions in text    | `<FormattedText>` (used inside `StructuredContent`)                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/common/FormattedText`                           |
+
+### Maps (apps/web)
+
+See [`maps-components.md`](./maps-components.md).
+
+| Need                       | Component                     | Import                               |
+| -------------------------- | ----------------------------- | ------------------------------------ |
+| **Inline map (preferred)** | `<GoogleMapsPreview>`         | `@/components/maps/GoogleMapsDialog` |
+| Dialog trigger             | `<GoogleMapsPreviewButton>`   | `@/components/maps/GoogleMapsDialog` |
+| Full dialog                | `<GoogleMapsDialog>`          | `@/components/maps/GoogleMapsDialog` |
+| Extract URLs from text     | `extractGoogleMapsUrls(text)` | `@/components/maps/googleMapsEmbed`  |
+| Embed URL resolver         | `resolveGoogleMapsEmbed(url)` | `@/components/maps/googleMapsEmbed`  |
+
+Optional env: `VITE_GOOGLE_MAPS_EMBED_API_KEY` for official Embed API directions.
+
+### Documents (apps/web)
+
+| Need                    | Component                | Import                                        |
+| ----------------------- | ------------------------ | --------------------------------------------- |
+| Standalone file preview | `<DocumentPreview>`      | `@/components/documents/DocumentPreview`      |
+| PDF-focused panel       | `<PdfPreviewPanel>`      | `@/components/documents/PdfPreviewPanel`      |
+| List + preview split    | `<DocumentPreviewPanel>` | `@/components/documents/DocumentPreviewPanel` |
+
+### Pickers (apps/web)
+
+| Need                    | Component         | Import                               |
+| ----------------------- | ----------------- | ------------------------------------ |
+| Generic entity relation | `<EntityPicker>`  | `@/components/pickers/EntityPicker`  |
+| Contact lookup          | `<ContactPicker>` | `@/components/pickers/ContactPicker` |
+| Project lookup          | `<ProjectPicker>` | `@/components/pickers/ProjectPicker` |
+
+### Collaboration (apps/web)
+
+| Need                          | Component           | Import                                  |
+| ----------------------------- | ------------------- | --------------------------------------- |
+| Record comments thread        | `<CommentsPanel>`   | `@/components/workflow/CommentsPanel`   |
+| `@` mention composer          | `<MentionComposer>` | `@/components/workflow/MentionComposer` |
+| Rich text with mentions/links | `<FormattedText>`   | `@/components/common/FormattedText`     |
+
+### Reports (apps/web)
+
+| Need                 | Component              | Import                                    |
+| -------------------- | ---------------------- | ----------------------------------------- |
+| Report builder panel | `<ReportBuilderPanel>` | `@/components/reports/ReportBuilderPanel` |
 
 ### Toast
 
@@ -708,5 +805,10 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 | Lead complex entity detail pages with an Overview tab (stats + timeline + party summary)                                 | Start directly on the first data tab                                                                |
 | Use `Dialog` + `EntityForm` for sub-entity add/edit (parties, tasks)                                                     | Inline editing rows or custom modal markup per module                                               |
 | Use `<ChecklistSection>` for tick-off checklists — done = strikethrough + muted label                                    | Checkbox-only done state or `StatusBadge` on checklist rows                                         |
+| Use `AgentMessageList` + result cards for agent structured output                                                        | Custom chat bubbles or nested cards per module                                                      |
+| Use `GoogleMapsPreview` inline on detail/route panels                                                                    | Dialog-only maps or raw Google URLs in iframes                                                      |
+| Use `GoogleMapsPreviewButton` in chat/compact rows; `extractGoogleMapsUrls` for link detection                           | Custom map modal markup per module                                                                  |
+| Use `DocumentPreview` / `PdfPreviewPanel` for file preview                                                               | Custom iframe/pdf viewers per module                                                                |
+| Use `MentionComposer` + `FormattedText` for @mentions                                                                    | Plain textarea with manual highlight styling                                                        |
 | Keep base-ui component APIs variant-based (`variant`, `size`, `tone`)                                                    | Add `*ClassName` / `triggerClassName` / `contentClassName` escape-hatch props to base-ui components |
 | Use `<TooltipProvider>` once (already in `AppLayout`)                                                                    | Add `<TooltipProvider>` inside individual components                                                |

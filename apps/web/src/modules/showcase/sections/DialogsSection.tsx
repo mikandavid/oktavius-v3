@@ -25,11 +25,13 @@ import {
   DropdownMenuTrigger,
 } from '@oktavius/base-ui';
 
+import { BulkImportDialog } from '@/components/data/BulkImportDialog';
 import { BulkImportWizard } from '@/components/data/BulkImportWizard';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import { ApproveRejectDialog } from '@/components/workflow/ApproveRejectDialog';
+import { ShortcutHelpDialog } from '@/components/layout/ShortcutHelpDialog';
 import { DeleteIcon, EditIcon, MoreIcon, PlusIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
@@ -46,7 +48,9 @@ export function DialogsSection() {
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -137,6 +141,9 @@ export function DialogsSection() {
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
             Bulk import wizard
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setImportDialogOpen(true)}>
+            Bulk import dialog
+          </Button>
         </div>
       </ShowcaseBlock>
 
@@ -204,6 +211,18 @@ export function DialogsSection() {
       />
 
       <BulkImportWizard open={importOpen} onOpenChange={setImportOpen} entityLabel="clients" />
+      <BulkImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        entityLabel="clients"
+      />
+
+      <ShowcaseBlock title="ShortcutHelpDialog" meta="Keyboard shortcut reference">
+        <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)}>
+          Open shortcut help
+        </Button>
+        <ShortcutHelpDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      </ShowcaseBlock>
     </div>
   );
 }

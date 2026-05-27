@@ -162,13 +162,16 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    overflow-x: hidden;
     contain: inline-size;
   }
 
   .crud-table-host [data-ln-viewport='true'] {
     width: 100% !important;
     max-width: 100%;
+    min-width: 0 !important;
     box-sizing: border-box;
+    overflow-x: hidden !important;
   }
 
   .crud-table-host .overflow-x-auto {

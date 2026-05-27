@@ -25,10 +25,10 @@ export const USER_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
 
 export const userColumns: CrudColumn<UserRecord>[] = [
   { key: 'name', header: 'Name', sortable: true },
-  { key: 'email', header: 'Email', sortable: true },
-  statusColumn('role', 'Role', USER_ROLE_VARIANT),
+  { key: 'email', header: 'Email', sortable: true, hideBelow: 'md' },
+  statusColumn('role', 'Role', USER_ROLE_VARIANT, { hideBelow: 'lg' }),
   statusColumn('status', 'Status', USER_STATUS_VARIANT),
-  { key: 'team', header: 'Team', sortable: true },
+  { key: 'team', header: 'Team', sortable: true, hideBelow: 'lg' },
 ];
 
 export const userFilters: FilterDef[] = [

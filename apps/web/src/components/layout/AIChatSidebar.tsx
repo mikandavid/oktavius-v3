@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { MouseTooltip, cn } from '@oktavius/base-ui';
 
-import { BotIcon, ChevronLeftIcon } from '@/lib/icons';
+import { OctopusIcon } from '@/components/agent/OctopusIcon';
+import { ChevronLeftIcon } from '@/lib/icons';
 
 import { OsirisChatShell } from './OsirisChatShell';
 
@@ -104,7 +105,7 @@ export function AIChatSidebar() {
     <div
       data-ai-chat-sidebar="true"
       className={cn(
-        'relative flex h-dvh max-h-dvh shrink-0 overflow-hidden border-l border-border/60 bg-card',
+        'relative flex h-dvh max-h-dvh shrink-0 overflow-hidden border-l border-border/60 bg-background',
         !isResizing && 'transition-[width] duration-200 ease-out',
       )}
       style={
@@ -126,7 +127,7 @@ export function AIChatSidebar() {
               onClick={() => setCollapsedState(false)}
               aria-label="Expand AI chat"
             >
-              <BotIcon size={16} className="mx-auto" />
+              <OctopusIcon className="mx-auto h-4 w-4" />
             </button>
           </MouseTooltip>
 

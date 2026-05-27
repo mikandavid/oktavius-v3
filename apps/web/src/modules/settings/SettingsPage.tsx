@@ -2,10 +2,13 @@ import { useState } from 'react';
 
 import { Combobox, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
 
+import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
+import { LocationSitesDetailList } from '@/components/layout/LocationSitesDetailList';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
+import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import {
   CatalogOptionsManager,
   type CatalogOption,
@@ -36,7 +39,7 @@ export function SettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [emailDigest, setEmailDigest] = useState(true);
   const [approvalAlerts, setApprovalAlerts] = useState(true);
-  const [locale, setLocale] = useState('de-AT');
+  const [formatLocale, setFormatLocale] = useState('de-AT');
   const [paymentTerms, setPaymentTerms] = useState(INITIAL_PAYMENT_TERMS);
 
   const handleSavePaymentTerm = (option: CatalogOption) => {
@@ -75,10 +78,16 @@ export function SettingsPage() {
             >
               <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
             </SettingsRow>
-            <SettingsRow label="Locale" description="Formatting for dates, numbers, and currency.">
+            <SettingsRow label="Interface language" description="Labels and navigation copy.">
+              <LanguageSelector />
+            </SettingsRow>
+            <SettingsRow
+              label="Format locale"
+              description="Formatting for dates, numbers, and currency."
+            >
               <Combobox
-                value={locale}
-                onChange={(value) => setLocale(value ?? 'de-AT')}
+                value={formatLocale}
+                onChange={(value) => setFormatLocale(value ?? 'de-AT')}
                 options={[
                   { value: 'de-AT', label: 'German (Austria)' },
                   { value: 'de-DE', label: 'German (Germany)' },
@@ -86,6 +95,14 @@ export function SettingsPage() {
                 ]}
                 className="w-[220px]"
               />
+            </SettingsRow>
+            <SettingsRow
+              label="Locations"
+              description="Sites available in the active-location picker."
+            >
+              <div className="w-full max-w-xl rounded-control border border-border/60 bg-card px-3">
+                <LocationSitesDetailList locations={DEMO_LOCATIONS} />
+              </div>
             </SettingsRow>
           </SettingsSection>
         ) : null}

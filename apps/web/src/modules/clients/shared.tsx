@@ -23,8 +23,8 @@ export const CLIENT_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
 
 export const clientColumns: CrudColumn<ClientRecord>[] = [
   { key: 'name', header: 'Name', sortable: true },
-  { key: 'type', header: 'Type', sortable: true, type: 'badge' },
-  { key: 'industry', header: 'Industry', sortable: true },
+  { key: 'type', header: 'Type', sortable: true, type: 'badge', hideBelow: 'md' },
+  { key: 'industry', header: 'Industry', sortable: true, hideBelow: 'lg' },
   {
     key: 'status',
     header: 'Status',
@@ -37,9 +37,9 @@ export const clientColumns: CrudColumn<ClientRecord>[] = [
       />
     ),
   },
-  { key: 'city', header: 'City', sortable: true },
-  { key: 'accountManager', header: 'Account manager', sortable: true },
-  { key: 'contractEnd', header: 'Contract end', sortable: true, type: 'date' },
+  { key: 'city', header: 'City', sortable: true, hideBelow: 'md' },
+  { key: 'accountManager', header: 'Account manager', sortable: true, hideBelow: 'lg' },
+  { key: 'contractEnd', header: 'Contract end', sortable: true, type: 'date', hideBelow: 'lg' },
 ];
 
 export const clientFilters: FilterDef[] = [

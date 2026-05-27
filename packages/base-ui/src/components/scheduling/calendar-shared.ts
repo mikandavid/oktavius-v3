@@ -62,11 +62,41 @@ export interface CalendarResource {
   label: string;
 }
 
+export interface CalendarSlotAnchor {
+  x: number;
+  y: number;
+}
+
+export interface CalendarEventEditorDraft {
+  day: Date;
+  startTime: string;
+  endTime: string;
+  anchor: CalendarSlotAnchor;
+  /** When set, the editor updates an existing event instead of creating one. */
+  eventId?: string;
+  allDay?: boolean;
+  title?: string;
+  calendarId?: string;
+}
+
+/** @deprecated Use CalendarEventEditorDraft */
+export type CalendarCreateDraft = CalendarEventEditorDraft;
+
+export type CalendarEventClickHandler = (event: CalendarEvent, anchor: CalendarSlotAnchor) => void;
+
+export function eventClickAnchor(element: HTMLElement): CalendarSlotAnchor {
+  const rect = element.getBoundingClientRect();
+  return { x: rect.right, y: rect.top };
+}
+
 export const CALENDAR_WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 export const DEFAULT_SCHEDULER_START_HOUR = 7;
 export const DEFAULT_SCHEDULER_END_HOUR = 20;
+/** Visual grid row height (30 min matches Google Calendar's default slot labels). */
 export const DEFAULT_SLOT_MINUTES = 30;
+/** Drag, resize, and create snap increment (Google uses 15 min). */
+export const CALENDAR_SNAP_MINUTES = 15;
 
 export function parseCalendarDate(value: string): Date | null {
   if (!value) return null;
@@ -244,6 +274,26 @@ export function isToday(day: Date): boolean {
 
 export function isOutsideMonth(day: Date, anchor: Date): boolean {
   return !isSameMonth(day, anchor);
+}
+
+export function eventToEditorDraft(
+  event: CalendarEvent,
+  anchor: CalendarSlotAnchor,
+): CalendarEventEditorDraft {
+  const start = eventStartDate(event);
+  const end = eventEndDate(event);
+  const day = startOfDay(start ?? new Date());
+
+  return {
+    day,
+    startTime: start && !event.allDay ? format(start, 'HH:mm') : '09:00',
+    endTime: end && !event.allDay ? format(end, 'HH:mm') : '10:00',
+    anchor,
+    eventId: event.id,
+    allDay: event.allDay,
+    title: event.title,
+    calendarId: event.calendarId,
+  };
 }
 
 /** Borderless white tile shell */

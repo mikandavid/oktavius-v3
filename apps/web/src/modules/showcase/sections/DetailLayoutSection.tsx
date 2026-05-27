@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import {
   Breadcrumb,
+  Button,
   CollapsibleSection,
   InlineEdit,
   ListRow,
@@ -21,7 +22,24 @@ import {
 import { BackButton } from '@/components/common/BackButton';
 import { DetailView } from '@/components/common/DetailView';
 import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
+import { OrgCustomRolesSection } from '@/components/admin/OrgCustomRolesSection';
+import { UserStatusBadge } from '@/components/admin/UserStatusBadge';
+import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
+import { CustomFieldsDetailSection } from '@/components/custom-fields';
+import { RelatedRecordsPanel } from '@/components/detail/RelatedRecordsPanel';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { ActiveLocationInfoButton } from '@/components/layout/ActiveLocationInfoButton';
+import { ActiveLocationPicker } from '@/components/layout/ActiveLocationPicker';
+import { LocationSitesDetailList } from '@/components/layout/LocationSitesDetailList';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
+import {
+  ConnectedAccountsHeaderMenu,
+  hostedNylasProviderLabel,
+} from '@/components/common/ConnectedAccountsHeaderMenu';
+
+import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
+import { StorageFileLinkPickerDialog } from '@/components/storage/StorageFileLinkPickerDialog';
+import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import { CaseIcon, ProjectsIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
 
@@ -39,6 +57,9 @@ export function DetailLayoutSection() {
   const [settingsKey, setSettingsKey] = useState('general');
   const [inlineValue, setInlineValue] = useState('Apex Technologies GmbH');
   const [syncEnabled, setSyncEnabled] = useState(true);
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>('role_sales');
+  const [storageLinkOpen, setStorageLinkOpen] = useState(false);
+  const [connectedAccountId, setConnectedAccountId] = useState('acct_google');
 
   return (
     <div className="space-y-4">
@@ -181,6 +202,115 @@ export function DetailLayoutSection() {
             </SettingsSection>
           )}
         </SettingsLayout>
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Shell & admin helpers"
+        meta="ActiveLocationPicker · ActiveLocationInfoButton · ConnectedAccountsHeaderMenu · LanguageSelector"
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <ActiveLocationPicker />
+            <ActiveLocationInfoButton />
+          </div>
+          <ConnectedAccountsHeaderMenu
+            connectedLabel="Calendar synced"
+            menuHint="Demo connected accounts"
+            ariaLabel="Connected accounts"
+            items={[
+              {
+                id: 'acct_google',
+                primaryLabel: 'anna.hofer@apex.at',
+                secondaryLabel: hostedNylasProviderLabel('google'),
+              },
+              {
+                id: 'acct_microsoft',
+                primaryLabel: 'anna.hofer@outlook.com',
+                secondaryLabel: hostedNylasProviderLabel('microsoft'),
+              },
+            ]}
+            activeAccountId={connectedAccountId}
+            onSelectAccount={setConnectedAccountId}
+            settingsLabel="Sync settings"
+            onOpenSettings={() => toast.info('Open calendar sync settings — demo.')}
+          />
+        </div>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs text-muted-foreground">LanguageSelector (settings)</p>
+            <LanguageSelector />
+          </div>
+          <div className="rounded-control border border-border/60 bg-card px-3">
+            <LocationSitesDetailList locations={DEMO_LOCATIONS} emphasizedSiteId="loc_vienna" />
+          </div>
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <UserStatusBadge status="active" />
+          <UserStatusBadge status="invited" />
+          <UserStatusBadge status="suspended" />
+          <UserStatusBadge status="inactive" />
+        </div>
+        <div className="mt-4">
+          <OrgCustomRolesSection
+            roles={[
+              { id: 'role_sales', name: 'Sales manager', description: 'CRM + quotes' },
+              { id: 'role_finance', name: 'Finance reviewer', description: 'Invoices + approvals' },
+            ]}
+            selectedRoleId={selectedRoleId}
+            onSelectRole={setSelectedRoleId}
+          />
+        </div>
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="ERP detail blocks"
+        meta="Custom fields · related records · audit · storage"
+      >
+        <div className="space-y-4">
+          <CustomFieldsDetailSection
+            entityType="client"
+            customFields={{
+              vipTier: 'gold',
+              referralSource: 'Partner summit',
+              newsletterOptIn: true,
+            }}
+          />
+          <RelatedRecordsPanel
+            title="Related orders"
+            records={[
+              {
+                id: 'ord_1',
+                title: 'ORD-2024-0042',
+                subtitle: 'Confirmed',
+                href: '/orders/ord_1',
+              },
+              {
+                id: 'ord_2',
+                title: 'ORD-2024-0048',
+                subtitle: 'Draft',
+                href: '/orders/ord_2',
+              },
+            ]}
+            viewAllHref="/orders"
+          />
+          <AuditTrailPanel entityType="client" entityId="cli_1001" />
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setStorageLinkOpen(true)}>
+              Open storage link picker
+            </Button>
+          </div>
+          <StorageFileLinkPickerDialog
+            open={storageLinkOpen}
+            onOpenChange={setStorageLinkOpen}
+            entityType="client"
+            entityId="cli_1001"
+            linkedNodeIds={['stor_1']}
+            onLinked={() => {
+              toast.success('Files linked from storage library.');
+            }}
+          />
+          <EntityStoragePanel entityType="client" entityId="cli_1001" />
+        </div>
       </ShowcaseBlock>
     </div>
   );

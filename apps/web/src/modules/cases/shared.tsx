@@ -51,12 +51,12 @@ export const CASE_PRIORITIES: CaseRecord['priority'][] = ['Low', 'Normal', 'High
 export const caseColumns: CrudColumn<CaseRecord>[] = [
   { key: 'caseNumber', header: 'Case #', sortable: true },
   { key: 'title', header: 'Title', sortable: true },
-  statusColumn('type', 'Type', CASE_TYPE_VARIANT),
+  statusColumn('type', 'Type', CASE_TYPE_VARIANT, { hideBelow: 'lg' }),
   statusColumn('stage', 'Stage', CASE_STAGE_VARIANT),
-  statusColumn('priority', 'Priority', CASE_PRIORITY_VARIANT),
-  { key: 'clientName', header: 'Client', sortable: true },
-  { key: 'assignee', header: 'Assignee', sortable: true },
-  { key: 'dueAt', header: 'Due', sortable: true, type: 'date' },
+  statusColumn('priority', 'Priority', CASE_PRIORITY_VARIANT, { hideBelow: 'md' }),
+  { key: 'clientName', header: 'Client', sortable: true, hideBelow: 'md' },
+  { key: 'assignee', header: 'Assignee', sortable: true, hideBelow: 'lg' },
+  { key: 'dueAt', header: 'Due', sortable: true, type: 'date', hideBelow: 'lg' },
   {
     key: 'slaStatus',
     header: 'SLA',

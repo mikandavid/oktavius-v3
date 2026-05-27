@@ -12,7 +12,8 @@ Use the simplest correct block.
 - Single record: `DetailView` or `Tabs` + `SectionCard`.
 - Create/edit: `EntityForm` — or `SubEntityFormDialog` when the form lives in a dialog.
 - Events / scheduling: `CalendarView`.
-- Files/documents: `DocumentPreviewPanel` / `AttachmentList`.
+- Files/documents: `DocumentPreview` / `DocumentPreviewPanel` / `AttachmentList`.
+- Maps/routes: `GoogleMapsPreview` (inline) or `GoogleMapsPreviewButton` (dialog).
 - Metrics: `StatCard`, `ChartCard` (not `MetricCard`).
 - Settings / catalogs: `AppSectionNavLayout` + `SettingsSection` + `SettingsRow`; config tables use `SettingsTable` (not `CrudTable`). See [`section-nav.md`](./section-nav.md).
 - Status display: `StatusBadge` (not ad-hoc colored `Badge`).
@@ -163,8 +164,8 @@ Purpose:
 Includes:
 
 - attachment panel
-- document list
-- document preview
+- `DocumentPreview` / `PdfPreviewPanel`
+- document list + split preview (`DocumentPreviewPanel`)
 - generate dialog
 - send dialog
 - template picker
@@ -210,7 +211,7 @@ Includes:
 
 - `Timeline` — audit trail
 - `CommentsPanel` — thread + internal notes
-- mentions UI (planned)
+- `MentionComposer` + `FormattedText` — `@` mentions and links
 
 Used by:
 
@@ -247,7 +248,8 @@ Purpose:
 
 Includes:
 
-- `StatCard`, `ChartCard`
+- `StatCard`, `ChartCard` (area, pie, stacked bar, gauge, funnel)
+- `ReportBuilderPanel` — report builder UI (demo)
 - `SavedViewSelector` for list pages
 - `SimpleLineChart`, `SimpleBarChart`
 - export menu
@@ -274,6 +276,26 @@ Used by:
 - case board
 - procurement stages
 
+## MapsBlock
+
+Purpose:
+
+- Show routes and locations inline or in a dialog.
+
+Includes:
+
+- `GoogleMapsPreview` — inline embed (preferred on detail pages)
+- `GoogleMapsPreviewButton` + `GoogleMapsDialog` — compact contexts
+- `resolveGoogleMapsEmbed`, `extractGoogleMapsUrls`
+
+Used by:
+
+- field service / routing agent results
+- location detail tabs
+- logistics and site addresses
+
+See [`maps-components.md`](./maps-components.md).
+
 ## AgentUIBlock
 
 Purpose:
@@ -282,19 +304,20 @@ Purpose:
 
 Includes:
 
-- chat panel
-- confirmation cards
-- tool result cards
-- entity list cards
-- document cards
-- schedule cards
-- artifact cards
+- `OsirisChatShell` / `AgentMessageList`
+- `AgentWelcomeScreen`, `AgentThinkingIndicator`, `AgentFileAttachmentChip`
+- `AgentSettingsPopover`, `ContextUsageIndicator`
+- `AgentConfirmationCard`, `AgentToolCallCard`
+- result cards: entity list/detail, python, document, schedule, skill approval
+- `GoogleMapsPreviewButton` for map links in messages
 
 Used by:
 
-- global agent chat
-- module assistant panels
+- global agent chat (`/ai-chat`, right rail)
+- module assistant panels (future)
 - action confirmations
+
+See [`agent-components.md`](./agent-components.md).
 
 ## Example Composition: Case Management Module
 
@@ -307,6 +330,7 @@ CaseManagementModule =
   + CaseWorkspace for detail
   + CalendarBlock for appointments
   + DocumentBlock for files/generated docs
+  + MapsBlock for site/route preview
   + TaskApprovalBlock for workflow
   + ActivityCommentsBlock for history/collaboration
   + AgentUIBlock for backend AI actions

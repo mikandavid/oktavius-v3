@@ -10,10 +10,12 @@ import {
   ListRow,
   RelativeTime,
   SectionCard,
-  Textarea,
 } from '@oktavius/base-ui';
 
+import { FormattedText } from '@/components/common/FormattedText';
 import { UserIcon } from '@/lib/icons';
+
+import { MentionComposer, type MentionOption } from './MentionComposer';
 
 export interface CommentItem {
   id: string;
@@ -31,6 +33,7 @@ export interface CommentsPanelProps {
   meta?: string;
   placeholder?: string;
   allowInternal?: boolean;
+  mentionOptions?: MentionOption[];
   className?: string;
 }
 
@@ -42,6 +45,7 @@ export function CommentsPanel({
   meta,
   placeholder = 'Write a comment…',
   allowInternal = true,
+  mentionOptions = [],
   className,
 }: CommentsPanelProps) {
   const [body, setBody] = useState('');
@@ -79,7 +83,7 @@ export function CommentsPanel({
                 subtitle={
                   <>
                     <span className="mt-1 block whitespace-pre-wrap text-sm text-foreground">
-                      {comment.body}
+                      <FormattedText text={comment.body} />
                     </span>
                     <RelativeTime date={comment.createdAt} className="mt-1 block text-xs" />
                   </>
@@ -92,11 +96,13 @@ export function CommentsPanel({
         )}
 
         <div className="space-y-2 border-t border-border/50 pt-3">
-          <Textarea
+          <MentionComposer
             value={body}
-            onChange={(event) => setBody(event.target.value)}
+            onChange={setBody}
+            mentionOptions={mentionOptions}
             placeholder={placeholder}
             rows={3}
+            id="comment-body"
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             {allowInternal ? (

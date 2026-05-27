@@ -83,38 +83,35 @@ export function Button({
   ...props
 }: ButtonProps) {
   const resolvedTooltip = resolveButtonTooltip(tooltip, size, ariaLabel);
-  const { handlers, node } = useMouseTooltip(loading ? false : resolvedTooltip);
+  const { handlers } = useMouseTooltip(loading ? false : resolvedTooltip);
   const isDisabled = disabled || loading;
   const showLabel = !(loading && size === 'icon');
 
   return (
-    <>
-      <button
-        ref={ref}
-        aria-label={ariaLabel}
-        aria-busy={loading || undefined}
-        data-loading={loading ? 'true' : undefined}
-        disabled={isDisabled}
-        className={cn(buttonVariants({ variant, size }), className)}
-        onMouseEnter={(event) => {
-          handlers.onMouseEnter?.(event);
-          onMouseEnter?.(event);
-        }}
-        onMouseMove={(event) => {
-          handlers.onMouseMove?.(event);
-          onMouseMove?.(event);
-        }}
-        onMouseLeave={(event) => {
-          handlers.onMouseLeave?.();
-          onMouseLeave?.(event);
-        }}
-        {...props}
-      >
-        {loading ? <SpinnerGap className="h-4 w-4 shrink-0 animate-spin" aria-hidden /> : null}
-        {showLabel ? children : null}
-      </button>
-      {node}
-    </>
+    <button
+      ref={ref}
+      aria-label={ariaLabel}
+      aria-busy={loading || undefined}
+      data-loading={loading ? 'true' : undefined}
+      disabled={isDisabled}
+      className={cn(buttonVariants({ variant, size }), className)}
+      onMouseEnter={(event) => {
+        handlers.onMouseEnter?.(event);
+        onMouseEnter?.(event);
+      }}
+      onMouseMove={(event) => {
+        handlers.onMouseMove?.(event);
+        onMouseMove?.(event);
+      }}
+      onMouseLeave={(event) => {
+        handlers.onMouseLeave?.();
+        onMouseLeave?.(event);
+      }}
+      {...props}
+    >
+      {loading ? <SpinnerGap className="h-4 w-4 shrink-0 animate-spin" aria-hidden /> : null}
+      {showLabel ? children : null}
+    </button>
   );
 }
 

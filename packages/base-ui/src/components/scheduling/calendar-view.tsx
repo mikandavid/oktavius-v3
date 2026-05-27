@@ -21,6 +21,7 @@ import { AgendaList } from './agenda-list';
 import {
   CALENDAR_WEEKDAY_LABELS,
   type CalendarEvent,
+  type CalendarEventClickHandler,
   type CalendarViewMode,
   DEFAULT_SCHEDULER_END_HOUR,
   DEFAULT_SCHEDULER_START_HOUR,
@@ -32,6 +33,7 @@ import {
   isToday,
   schedulingBodyClass,
   schedulingShellClass,
+  type CalendarSlotAnchor,
 } from './calendar-shared';
 
 const MAX_VISIBLE_EVENTS = 4;
@@ -50,15 +52,20 @@ export interface CalendarViewProps {
   startHour?: number;
   endHour?: number;
   slotMinutes?: number;
-  onEventClick?: (event: CalendarEvent) => void;
+  onEventClick?: CalendarEventClickHandler;
   /** Drag event chips / time blocks to another day or slot. */
   onEventMove?: (event: CalendarEvent, target: CalendarEventMoveTarget) => void;
   /** Drag top/bottom edge of timed events in day/week grid. */
   onEventResize?: (event: CalendarEvent, target: CalendarEventResizeTarget) => void;
   onDayClick?: (day: Date) => void;
-  onSlotClick?: (day: Date, time: string) => void;
+  onSlotClick?: (day: Date, time: string, anchor: CalendarSlotAnchor) => void;
   /** Click-drag on empty grid to select a time range (day/week). */
-  onSlotRangeSelect?: (day: Date, startTime: string, endTime: string) => void;
+  onSlotRangeSelect?: (
+    day: Date,
+    startTime: string,
+    endTime: string,
+    anchor: CalendarSlotAnchor,
+  ) => void;
   className?: string;
 }
 
@@ -76,7 +83,7 @@ function MonthDayCell({
   events: CalendarEvent[];
   calendars?: CalendarSource[];
   draggable: boolean;
-  onEventClick?: (event: CalendarEvent) => void;
+  onEventClick?: CalendarEventClickHandler;
   onDayClick?: (day: Date) => void;
 }) {
   const dayEvents = eventsForDay(events, day);
@@ -146,7 +153,7 @@ function MonthGrid({
   events: CalendarEvent[];
   calendars?: CalendarSource[];
   draggable: boolean;
-  onEventClick?: (event: CalendarEvent) => void;
+  onEventClick?: CalendarEventClickHandler;
   onDayClick?: (day: Date) => void;
 }) {
   const days = getMonthGridDays(anchor);
@@ -297,6 +304,7 @@ export function CalendarView({
                 draggable={draggable}
                 resizable={resizable}
                 onEventClick={onEventClick}
+                onEventMove={onEventMove}
                 onEventResize={onEventResize}
                 onSlotClick={onSlotClick}
                 onSlotRangeSelect={onSlotRangeSelect}
@@ -315,6 +323,7 @@ export function CalendarView({
               draggable={draggable}
               resizable={resizable}
               onEventClick={onEventClick}
+              onEventMove={onEventMove}
               onEventResize={onEventResize}
               onSlotClick={onSlotClick}
               onSlotRangeSelect={onSlotRangeSelect}
@@ -346,9 +355,13 @@ export function CalendarView({
           onDragEnd={handleDragEnd}
         >
           {calendarBody}
-          <DragOverlay dropAnimation={{ duration: 180, easing: 'ease-out' }}>
+          <DragOverlay dropAnimation={{ duration: 160, easing: 'ease-out' }}>
             {activeEvent ? (
-              <CalendarEventChip event={activeEvent} calendars={calendars} compact />
+              <CalendarEventChip
+                event={activeEvent}
+                calendars={calendars}
+                className="scale-[1.02] shadow-lg ring-2 ring-ring/30"
+              />
             ) : null}
           </DragOverlay>
         </DndContext>

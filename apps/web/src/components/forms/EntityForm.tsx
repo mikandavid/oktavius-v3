@@ -1,5 +1,5 @@
-import type { ChangeEvent, FormEvent } from 'react';
-import { useState } from 'react';
+import type { ChangeEvent, FormEvent, ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 
 import type {
   CountryOption,
@@ -46,6 +46,14 @@ import {
   type VocabularyOptionsMap,
 } from '@/lib/reference-data';
 import { useUserPreferences } from '@/lib/userPreferences';
+import {
+  filterVisibleFields,
+  validateFormFields,
+  type FieldValidationRule,
+} from '@/lib/formValidation';
+
+import { JsonField } from './JsonField';
+import { useFormDirtyGuard } from './useFormDirtyGuard';
 
 export type { AddressValue };
 export { EMPTY_ADDRESS } from '@oktavius/base-ui';
@@ -75,7 +83,10 @@ export type FieldType =
   | 'country'
   | 'file'
   | 'address'
-  | 'vocabulary';
+  | 'vocabulary'
+  | 'json';
+
+export type { FieldValidationRule };
 
 export type FormFieldValue =
   | string
@@ -137,6 +148,10 @@ export type FormField = {
   vocabulary?: VocabularyKey;
   /** `vocabulary`: render as radio instead of combobox */
   vocabularyDisplay?: 'combobox' | 'radio';
+  /** Hide the field when this returns false. */
+  visibleWhen?: (values: Record<string, FormFieldValue>) => boolean;
+  /** Client-side validation rules applied on submit. */
+  validate?: FieldValidationRule;
 };
 
 // ─── Form Props ───────────────────────────────────────────────────────────────
@@ -158,6 +173,16 @@ type EntityFormProps<T extends Record<string, FormFieldValue>> = {
   submitVariant?: 'default' | 'cta';
   /** Hide the built-in title block when the parent Dialog already has DialogTitle. */
   showHeader?: boolean;
+  /** Extra blocks rendered after standard fields (e.g. custom fields section). */
+  renderAfterFields?: (ctx: {
+    values: T;
+    set: (name: string, value: FormFieldValue) => void;
+    errors: Partial<Record<keyof T & string, string>>;
+  }) => ReactNode;
+  /** Warn on browser tab close when values differ from defaultValues. */
+  warnOnDirty?: boolean;
+  /** Skip built-in client validation (server-only forms). */
+  skipClientValidation?: boolean;
 };
 
 function isAddressValue(value: FormFieldValue): value is AddressValue {
@@ -483,6 +508,17 @@ function FieldInput({
       );
     }
 
+    case 'json':
+      return (
+        <JsonField
+          id={inputId}
+          value={strValue}
+          placeholder={field.placeholder}
+          disabled={field.disabled}
+          onChange={(next) => onChange(next)}
+        />
+      );
+
     default: {
       const inputType = field.type === 'email' || field.type === 'url' ? field.type : 'text';
       return (
@@ -516,7 +552,7 @@ function FieldInput({
 // ─── EntityForm ───────────────────────────────────────────────────────────────
 
 function EntityFormFields<T extends Record<string, FormFieldValue>>({
-  groupedFields,
+  fields,
   values,
   errors,
   set,
@@ -527,7 +563,7 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
   vocabularyOptions,
   surface = 'page',
 }: {
-  groupedFields: Record<string, FormField[]>;
+  fields: FormField[];
   values: T;
   errors?: Partial<Record<keyof T & string, string>>;
   set: (name: string, value: FormFieldValue) => void;
@@ -538,7 +574,20 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
   vocabularyOptions: VocabularyOptionsMap;
   surface?: 'page' | 'dialog';
 }) {
-  const sectionEntries = Object.entries(groupedFields);
+  const visibleFields = useMemo(() => filterVisibleFields(fields, values), [fields, values]);
+  const visibleGroupedFields = useMemo(() => {
+    return visibleFields.reduce(
+      (sections, field) => {
+        const key = field.section ?? 'General';
+        if (!sections[key]) sections[key] = [];
+        sections[key].push(field);
+        return sections;
+      },
+      {} as Record<string, FormField[]>,
+    );
+  }, [visibleFields]);
+
+  const sectionEntries = Object.entries(visibleGroupedFields);
   const hideSectionHeading = surface === 'dialog' && sectionEntries.length === 1;
 
   return (
@@ -667,26 +716,35 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   surface = 'page',
   submitVariant,
   showHeader,
+  renderAfterFields,
+  warnOnDirty = false,
+  skipClientValidation = false,
 }: EntityFormProps<T>) {
   const [values, setValues] = useState<T>(defaultValues);
+  const [clientErrors, setClientErrors] = useState<Partial<Record<keyof T & string, string>>>({});
   const { locale } = useUserPreferences();
   const defaultCountryOptions = useCountryOptions();
   const defaultPhoneCountries = usePhoneCountries();
   const defaultCurrencyOptions = useCurrencyOptions();
   const vocabularyOptions = useVocabularyOptionsMap();
 
-  const groupedFields = fields.reduce(
-    (sections, field) => {
-      const key = field.section ?? 'General';
-      if (!sections[key]) sections[key] = [];
-      sections[key].push(field);
-      return sections;
-    },
-    {} as Record<string, FormField[]>,
-  );
+  useFormDirtyGuard({
+    values,
+    initialValues: defaultValues,
+    enabled: warnOnDirty,
+  });
 
-  const set = (name: string, value: FormFieldValue) =>
+  const mergedErrors = { ...clientErrors, ...errors };
+
+  const set = (name: string, value: FormFieldValue) => {
     setValues((current) => ({ ...current, [name]: value }));
+    setClientErrors((current) => {
+      if (!current[name as keyof T & string]) return current;
+      const next = { ...current };
+      delete next[name as keyof T & string];
+      return next;
+    });
+  };
 
   const resolvedSubmitVariant = submitVariant ?? (surface === 'dialog' ? 'cta' : 'default');
   const resolvedShowHeader = showHeader === true && surface === 'dialog';
@@ -696,6 +754,16 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
       className="space-y-4"
       onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        if (!skipClientValidation) {
+          const nextErrors = validateFormFields(fields, values) as Partial<
+            Record<keyof T & string, string>
+          >;
+          if (Object.keys(nextErrors).length > 0) {
+            setClientErrors(nextErrors);
+            return;
+          }
+        }
+        setClientErrors({});
         onSubmit(values);
       }}
     >
@@ -706,9 +774,9 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
         </div>
       ) : null}
       <EntityFormFields
-        groupedFields={groupedFields}
+        fields={fields}
         values={values}
-        errors={errors}
+        errors={mergedErrors}
         set={set}
         locale={locale}
         defaultCountryOptions={defaultCountryOptions}
@@ -717,6 +785,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
         vocabularyOptions={vocabularyOptions}
         surface={surface}
       />
+      {renderAfterFields ? renderAfterFields({ values, set, errors: mergedErrors }) : null}
       <div
         className={
           surface === 'dialog'

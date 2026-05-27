@@ -2,18 +2,20 @@ import { cn } from '../../lib/utils';
 import { type CalendarSource, eventBlockClasses } from './calendar-colors';
 import {
   type CalendarEvent,
+  type CalendarEventClickHandler,
   formatAgendaDayHeading,
   formatEventTimeRange,
   groupEventsByDay,
   isToday,
   schedulingBodyClass,
   schedulingShellClass,
+  eventClickAnchor,
 } from './calendar-shared';
 
 export interface AgendaListProps {
   events?: CalendarEvent[];
   calendars?: CalendarSource[];
-  onEventClick?: (event: CalendarEvent) => void;
+  onEventClick?: CalendarEventClickHandler;
   emptyMessage?: string;
   /** When true, renders without outer card shell (inside CalendarView) */
   embedded?: boolean;
@@ -64,7 +66,11 @@ export function AgendaList({
           <button
             key={event.id}
             type="button"
-            onClick={onEventClick ? () => onEventClick(event) : undefined}
+            onClick={
+              onEventClick
+                ? (clickEvent) => onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
+                : undefined
+            }
             disabled={!onEventClick}
             className={cn(
               'flex w-full flex-col rounded-control px-3 py-2.5 text-left transition-[filter]',

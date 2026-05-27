@@ -28,7 +28,7 @@ export const incidentColumns: CrudColumn<IncidentRecord>[] = [
   { key: 'title', header: 'Title', sortable: true },
   statusColumn('severity', 'Severity', INCIDENT_SEVERITY_VARIANT),
   statusColumn('status', 'Status', INCIDENT_STATUS_VARIANT),
-  { key: 'service', header: 'Service', sortable: true },
+  { key: 'service', header: 'Service', sortable: true, hideBelow: 'md' },
   { key: 'assignee', header: 'Assignee', sortable: true, hideBelow: 'md' },
   { key: 'reportedAt', header: 'Reported', sortable: true, type: 'date', hideBelow: 'lg' },
 ];

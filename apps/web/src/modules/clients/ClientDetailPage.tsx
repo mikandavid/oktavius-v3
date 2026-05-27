@@ -19,10 +19,15 @@ import {
   formatDisplayDate,
 } from '@oktavius/base-ui';
 
+import { useRegisterAgentPageContext } from '@/components/agent/page-context';
+import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
+import { CustomFieldsDetailSection } from '@/components/custom-fields';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { RelatedRecordsPanel } from '@/components/detail/RelatedRecordsPanel';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
 import { useDemoData } from '@/app/demo-data';
 import { PlusIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
@@ -44,6 +49,25 @@ export function ClientDetailPage() {
   const [partyDialogOpen, setPartyDialogOpen] = useState(false);
 
   const client = useMemo(() => clients.find((entry) => entry.id === clientId), [clients, clientId]);
+
+  const agentPageRegistration = useMemo(
+    () =>
+      client
+        ? {
+            moduleId: 'clients',
+            moduleLabel: 'Clients',
+            routeLabel: client.name,
+            primaryEntity: {
+              entityType: 'client',
+              entityId: client.id,
+              displayLabel: client.name,
+            },
+          }
+        : null,
+    [client],
+  );
+
+  useRegisterAgentPageContext(agentPageRegistration);
 
   const clientParties = useMemo(
     () => parties.filter((party) => party.clientId === clientId),
@@ -113,6 +137,7 @@ export function ClientDetailPage() {
             <TabsTrigger value="contacts">Contacts</TabsTrigger>
             <TabsTrigger value="commercial">Commercial</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="files">Files</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 pt-4">
@@ -152,6 +177,8 @@ export function ClientDetailPage() {
                 </div>
               </dl>
             </SectionCard>
+
+            <CustomFieldsDetailSection entityType="client" customFields={client.customFields} />
 
             <SectionCard
               title="Key contacts"
@@ -256,23 +283,23 @@ export function ClientDetailPage() {
               ) : null}
             </SectionCard>
 
-            <SectionCard title="Orders" meta={`${clientOrders.length} records`}>
-              {clientOrders.map((order) => (
-                <ListRow
-                  key={order.id}
-                  title={order.orderNumber}
-                  subtitle={order.status}
-                  meta={formatDisplayDate(order.orderDate)}
-                  onClick={() => navigate(`/orders/${order.id}`)}
-                />
-              ))}
-              {clientOrders.length === 0 ? (
-                <InlineEmptyState text="No orders yet." centered />
-              ) : null}
-            </SectionCard>
+            <RelatedRecordsPanel
+              title="Orders"
+              records={clientOrders.map((order) => ({
+                id: order.id,
+                title: order.orderNumber,
+                subtitle: order.status,
+                href: `/orders/${order.id}`,
+                trailing: <Badge variant="outline">{formatDisplayDate(order.orderDate)}</Badge>,
+              }))}
+              viewAllHref="/orders"
+              emptyLabel="No orders yet."
+            />
           </TabsContent>
 
           <TabsContent value="activity" className="space-y-4 pt-4">
+            <AuditTrailPanel entityType="client" entityId={client.id} />
+
             <SectionCard title="Recent activity">
               <Timeline events={recentActivity} />
             </SectionCard>
@@ -291,6 +318,10 @@ export function ClientDetailPage() {
                 <InlineEmptyState text="No tasks assigned." centered />
               ) : null}
             </SectionCard>
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-4 pt-4">
+            <EntityStoragePanel entityType="client" entityId={client.id} />
           </TabsContent>
         </Tabs>
       </ModulePage>

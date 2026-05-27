@@ -9,6 +9,8 @@ export * from './components/calendar';
 export * from './components/card';
 export * from './components/chart';
 export * from './components/chart-card';
+export * from './components/chart-parts';
+export * from './lib/chartPalette';
 export * from './components/scheduling';
 export * from './components/calendar-month-preview';
 export * from './components/checkbox';

@@ -7,6 +7,7 @@ import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
 import { showcasePageIcon } from '@/lib/modulePageIcons';
 
 import { SHOWCASE_NAV, type ShowcaseSectionId } from './shared';
+import { AgentSection } from './sections/AgentSection';
 import { CalendarChartsSection } from './sections/CalendarChartsSection';
 import { DataSection } from './sections/DataSection';
 import { DetailLayoutSection } from './sections/DetailLayoutSection';
@@ -40,6 +41,8 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
       return <DetailLayoutSection />;
     case 'workflow':
       return <WorkflowSection />;
+    case 'agent':
+      return <AgentSection />;
     case 'documents':
       return <DocumentsSection />;
     case 'calendar-charts':

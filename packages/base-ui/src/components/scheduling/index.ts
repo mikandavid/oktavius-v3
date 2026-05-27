@@ -1,4 +1,6 @@
+export * from './calendar-event-quick-create';
 export * from './agenda-list';
+export * from './calendar-event-layout';
 export * from './calendar-dnd';
 export * from './calendar-colors';
 export * from './calendar-event-chip';

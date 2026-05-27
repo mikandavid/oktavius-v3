@@ -47,6 +47,8 @@ export interface CalendarEventMoveTarget {
   day: Date;
   /** HH:mm — omitted for month / all-day moves */
   time?: string;
+  /** Drop on the all-day row (converts timed events to all-day) */
+  toAllDay?: boolean;
 }
 
 export interface CalendarEventResizeTarget {
@@ -85,14 +87,18 @@ export function moveCalendarEvent(
 
   const durationMs = Math.max(end.getTime() - start.getTime(), slotMinutesToMs(15));
 
-  if (!target.time) {
-    if (event.allDay) {
-      const dayStr = format(target.day, 'yyyy-MM-dd');
-      return { ...event, start: dayStr, end: dayStr, allDay: true };
-    }
-    const nextStart = new Date(target.day);
-    nextStart.setHours(start.getHours(), start.getMinutes(), 0, 0);
-    const nextEnd = new Date(nextStart.getTime() + durationMs);
+  if (target.toAllDay) {
+    const dayStr = format(target.day, 'yyyy-MM-dd');
+    return { ...event, start: dayStr, end: dayStr, allDay: true };
+  }
+
+  if (target.time) {
+    const [hours, minutes] = target.time.split(':').map(Number);
+    const nextStart = setMinutes(setHours(startOfDay(target.day), hours), minutes);
+    const nextEnd = event.allDay
+      ? new Date(nextStart.getTime() + slotMinutesToMs(60))
+      : new Date(nextStart.getTime() + durationMs);
+
     return {
       ...event,
       start: format(nextStart, "yyyy-MM-dd'T'HH:mm"),
@@ -101,10 +107,14 @@ export function moveCalendarEvent(
     };
   }
 
-  const [hours, minutes] = target.time.split(':').map(Number);
-  const nextStart = setMinutes(setHours(startOfDay(target.day), hours), minutes);
-  const nextEnd = new Date(nextStart.getTime() + durationMs);
+  if (event.allDay) {
+    const dayStr = format(target.day, 'yyyy-MM-dd');
+    return { ...event, start: dayStr, end: dayStr, allDay: true };
+  }
 
+  const nextStart = new Date(target.day);
+  nextStart.setHours(start.getHours(), start.getMinutes(), 0, 0);
+  const nextEnd = new Date(nextStart.getTime() + durationMs);
   return {
     ...event,
     start: format(nextStart, "yyyy-MM-dd'T'HH:mm"),
@@ -151,6 +161,83 @@ export function useCalendarDndSensors() {
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+}
+
+export interface CalendarDayColumnRef {
+  day: Date;
+  el: HTMLElement;
+}
+
+/** Find the day column element under the pointer (week/day grid). */
+export function findColumnAtPointer(
+  clientX: number,
+  clientY: number,
+  columns: CalendarDayColumnRef[],
+): CalendarDayColumnRef | null {
+  for (const column of columns) {
+    const rect = column.el.getBoundingClientRect();
+    if (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    ) {
+      return column;
+    }
+  }
+  return null;
+}
+
+/** Resolve a drag drop target from pointer position within the time grid. */
+export function pointerToMoveTarget(
+  clientX: number,
+  clientY: number,
+  columns: CalendarDayColumnRef[],
+  startHour: number,
+  endHour: number,
+  snapMinutes: number,
+): CalendarEventMoveTarget | null {
+  const column = findColumnAtPointer(clientX, clientY, columns);
+  if (!column) return null;
+  const time = pointerYToSlotTime(clientY, column.el, startHour, endHour, snapMinutes);
+  return { day: column.day, time };
+}
+
+export interface CalendarAllDayColumnRef {
+  day: Date;
+  el: HTMLElement;
+}
+
+/** Resolve drop target from pointer — checks all-day row first, then timed columns. */
+export function pointerToDropTarget(
+  clientX: number,
+  clientY: number,
+  allDayColumns: CalendarAllDayColumnRef[],
+  timeColumns: CalendarDayColumnRef[],
+  startHour: number,
+  endHour: number,
+  snapMinutes: number,
+  sourceIsAllDay: boolean,
+  grabOffsetY: number,
+): CalendarEventMoveTarget | null {
+  for (const column of allDayColumns) {
+    const rect = column.el.getBoundingClientRect();
+    if (
+      clientX >= rect.left &&
+      clientX <= rect.right &&
+      clientY >= rect.top &&
+      clientY <= rect.bottom
+    ) {
+      return { day: column.day, toAllDay: true };
+    }
+  }
+
+  const timeColumn = findColumnAtPointer(clientX, clientY, timeColumns);
+  if (!timeColumn) return null;
+
+  const anchorY = sourceIsAllDay ? clientY : clientY - grabOffsetY;
+  const time = pointerYToSlotTime(anchorY, timeColumn.el, startHour, endHour, snapMinutes);
+  return { day: timeColumn.day, time };
 }
 
 function timeStringToMinutes(time: string): number {

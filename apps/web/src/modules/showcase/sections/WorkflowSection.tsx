@@ -3,9 +3,13 @@ import { useState } from 'react';
 import { Badge, Button, KanbanBoard, ListRow, Timeline, applyKanbanMove } from '@oktavius/base-ui';
 
 import { ChecklistSection } from '@/components/common/ChecklistSection';
+import { FormattedText } from '@/components/common/FormattedText';
 import { ApprovalHistory } from '@/components/workflow/ApprovalHistory';
 import { ApprovalPanel, type ApprovalItem } from '@/components/workflow/ApprovalPanel';
+import { AgentConfirmationCard } from '@/components/agent/AgentConfirmationCard';
+import { AgentToolCallCard } from '@/components/agent/AgentToolCallCard';
 import { CommentsPanel, type CommentItem } from '@/components/workflow/CommentsPanel';
+import { MentionComposer } from '@/components/workflow/MentionComposer';
 import { TaskInbox, type TaskInboxItem } from '@/components/workflow/TaskInbox';
 import { UserIcon } from '@/lib/icons';
 import { toast } from '@/lib/toast';
@@ -91,6 +95,9 @@ export function WorkflowSection() {
   const [comments, setComments] = useState(INITIAL_COMMENTS);
   const [approvals, setApprovals] = useState(INITIAL_APPROVALS);
   const [readOnlyChecklist, setReadOnlyChecklist] = useState(false);
+  const [mentionDraft, setMentionDraft] = useState(
+    'Please review @anna — details at https://oktavius.app/docs',
+  );
 
   const [kanbanColumns, setKanbanColumns] = useState([
     {
@@ -145,8 +152,30 @@ export function WorkflowSection() {
       </ShowcaseBlock>
 
       <div className="grid gap-4 lg:grid-cols-2">
+        <ShowcaseBlock title="FormattedText" meta="Links · @mentions in read-only text">
+          <FormattedText text={mentionDraft} className="text-sm leading-6 text-foreground" />
+        </ShowcaseBlock>
+        <ShowcaseBlock title="MentionComposer" meta="@ autocomplete for comment threads">
+          <MentionComposer
+            value={mentionDraft}
+            onChange={setMentionDraft}
+            mentionOptions={[
+              { handle: 'anna', label: 'Anna Hofer', description: 'Account manager' },
+              { handle: 'markus', label: 'Markus Leitner', description: 'Operations' },
+              { handle: 'nina', label: 'Nina Weiss', description: 'Finance' },
+            ]}
+          />
+        </ShowcaseBlock>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
         <CommentsPanel
           comments={comments}
+          mentionOptions={[
+            { handle: 'anna', label: 'Anna Hofer', description: 'Account manager' },
+            { handle: 'markus', label: 'Markus Leitner', description: 'Operations' },
+            { handle: 'nina', label: 'Nina Weiss', description: 'Finance' },
+          ]}
           onSubmit={(body, internal) => {
             setComments((current) => [
               {
@@ -201,6 +230,30 @@ export function WorkflowSection() {
           },
         ]}
       />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ShowcaseBlock title="AgentToolCallCard" meta="Tool input · result · status">
+          <AgentToolCallCard
+            toolName="search_clients"
+            input={{ query: 'Apex', limit: 5 }}
+            result={'[\n  { "id": "c1", "name": "Apex Technologies" }\n]'}
+          />
+        </ShowcaseBlock>
+        <ShowcaseBlock title="AgentConfirmationCard" meta="Approve or reject sensitive actions">
+          <AgentConfirmationCard
+            confirmation={{
+              id: 'demo_confirm',
+              action: 'Delete client record',
+              description: 'Permanently removes the client and linked commercial records.',
+              details: { Client: 'Apex Technologies', Module: 'Clients' },
+              status: 'pending',
+            }}
+            onRespond={(approved) => {
+              toast.success(approved ? 'Approved' : 'Rejected');
+            }}
+          />
+        </ShowcaseBlock>
+      </div>
 
       <ShowcaseBlock title="KanbanBoard" meta="Drag cards between columns · pipeline stages">
         <KanbanBoard<KanbanTask>

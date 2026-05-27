@@ -12,6 +12,7 @@ export type ShowcaseSectionId =
   | 'data'
   | 'detail-layout'
   | 'workflow'
+  | 'agent'
   | 'documents'
   | 'calendar-charts'
   | 'patterns';
@@ -29,10 +30,19 @@ export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; descri
     label: 'Detail & layout',
     description: 'DetailView, SplitView, tabs, settings',
   },
-  { key: 'workflow', label: 'Workflow', description: 'Tasks, approvals, comments, checklist' },
-  { key: 'documents', label: 'Documents', description: 'Preview, templates, attachments' },
-  { key: 'calendar-charts', label: 'Calendar & charts', description: 'Scheduling and KPI charts' },
-  { key: 'patterns', label: 'ERP patterns', description: 'Kanban, stepper, tree, import' },
+  { key: 'workflow', label: 'Workflow', description: 'Tasks, approvals, comments, mentions' },
+  { key: 'agent', label: 'Agent', description: 'Chat shell, message list, result cards, settings' },
+  {
+    key: 'documents',
+    label: 'Documents',
+    description: 'Preview, PDF panel, templates, attachments',
+  },
+  {
+    key: 'calendar-charts',
+    label: 'Calendar & charts',
+    description: 'Scheduling, KPI charts, report builder',
+  },
+  { key: 'patterns', label: 'ERP patterns', description: 'Kanban, stepper, tree, maps, import' },
 ];
 
 export function ShowcaseBlock({

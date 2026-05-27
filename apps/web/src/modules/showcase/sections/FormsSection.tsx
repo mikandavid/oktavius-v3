@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@oktavius/base-ui';
 
+import { CustomFieldsFormSection } from '@/components/custom-fields';
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
+import { JsonField } from '@/components/forms/JsonField';
+import { DateTimePairField } from '@/components/forms/DateTimePairField';
+import { PageFileDrop } from '@/components/forms/PageFileDrop';
+import { RecipientCombobox } from '@/components/forms/RecipientCombobox';
+import {
+  buildCustomFieldDefaults,
+  getCustomFieldDefinitions,
+  type CustomFieldValues,
+} from '@/lib/custom-fields';
 import { toast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
@@ -64,6 +74,14 @@ const ALL_FIELD_TYPES: FormField[] = [
     section: 'Reference',
   },
   { name: 'attachment', label: 'Attachment', type: 'file', section: 'Reference' },
+  {
+    name: 'metadataJson',
+    label: 'Metadata JSON',
+    type: 'json',
+    colSpan: 2,
+    section: 'Reference',
+    placeholder: '{ "source": "import" }',
+  },
 ];
 
 type DemoFormValues = {
@@ -87,6 +105,7 @@ type DemoFormValues = {
   status: string;
   client: string;
   attachment: File | null;
+  metadataJson: string;
 };
 
 const FORM_DEFAULTS: DemoFormValues = {
@@ -110,11 +129,53 @@ const FORM_DEFAULTS: DemoFormValues = {
   status: 'active',
   client: '',
   attachment: null,
+  metadataJson: '{\n  "source": "showcase"\n}',
+};
+
+const CONDITIONAL_FIELDS: FormField[] = [
+  {
+    name: 'recordType',
+    label: 'Record type',
+    type: 'combobox',
+    options: ['Standard', 'Enterprise'],
+    section: 'Conditional',
+  },
+  {
+    name: 'enterpriseCode',
+    label: 'Enterprise code',
+    type: 'text',
+    section: 'Conditional',
+    visibleWhen: (values) => values.recordType === 'Enterprise',
+    validate: { required: true, message: 'Enterprise code is required for enterprise records.' },
+  },
+  {
+    name: 'supportTier',
+    label: 'Support tier',
+    type: 'combobox',
+    options: ['Bronze', 'Silver', 'Gold'],
+    section: 'Conditional',
+    visibleWhen: (values) => values.recordType === 'Enterprise',
+  },
+];
+
+type ConditionalFormValues = {
+  recordType: string;
+  enterpriseCode: string;
+  supportTier: string;
 };
 
 export function FormsSection() {
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitted, setSubmitted] = useState<string | null>(null);
+  const [eventDate, setEventDate] = useState('2024-12-05');
+  const [eventTime, setEventTime] = useState('10:00');
+  const [recipients, setRecipients] = useState<string[]>(['maria.keller@apex.example']);
+  const [droppedFiles, setDroppedFiles] = useState<string[]>([]);
+  const customFieldDefinitions = useMemo(() => getCustomFieldDefinitions('client'), []);
+  const [customFieldValues, setCustomFieldValues] = useState(() =>
+    buildCustomFieldDefaults(customFieldDefinitions),
+  );
+  const [jsonPreview, setJsonPreview] = useState('{\n  "enabled": true\n}');
 
   return (
     <div className="space-y-4">
@@ -154,6 +215,74 @@ export function FormsSection() {
             Last submit: <strong className="font-medium text-foreground">{submitted}</strong>
           </p>
         ) : null}
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Conditional fields + client validation"
+        meta="visibleWhen · validate · warnOnDirty on submit"
+      >
+        <EntityForm<ConditionalFormValues>
+          title="Conditional record"
+          fields={CONDITIONAL_FIELDS}
+          defaultValues={{ recordType: 'Standard', enterpriseCode: '', supportTier: '' }}
+          submitLabel="Validate"
+          warnOnDirty
+          onSubmit={() => toast.success('Conditional form passed validation.')}
+        />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="CustomFieldsFormSection"
+        meta="Schema-driven org fields · client entity"
+      >
+        <CustomFieldsFormSection
+          entityType="client"
+          values={customFieldValues}
+          onChange={(fieldKey, value) =>
+            setCustomFieldValues((current: CustomFieldValues) => ({
+              ...current,
+              [fieldKey]: value as CustomFieldValues[string],
+            }))
+          }
+        />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock title="JsonField" meta="Admin JSON editor · format + parse validation">
+        <JsonField value={jsonPreview} onChange={setJsonPreview} />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Form helpers"
+        meta="DateTimePairField · RecipientCombobox · PageFileDrop"
+      >
+        <div className="grid gap-6 lg:grid-cols-2">
+          <DateTimePairField
+            dateValue={eventDate}
+            timeValue={eventTime}
+            onDateChange={setEventDate}
+            onTimeChange={setEventTime}
+          />
+          <RecipientCombobox
+            value={recipients}
+            onChange={setRecipients}
+            options={[
+              { value: 'maria.keller@apex.example', label: 'Maria Keller' },
+              { value: 'jonas.weber@apex.example', label: 'Jonas Weber' },
+              { value: 'ops@oktavius.test', label: 'Ops team' },
+            ]}
+          />
+        </div>
+        <div className="mt-4">
+          <PageFileDrop
+            onFiles={(files) => {
+              setDroppedFiles(files.map((file) => file.name));
+              toast.success(`${files.length} file(s) dropped.`);
+            }}
+          />
+          {droppedFiles.length > 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">Dropped: {droppedFiles.join(', ')}</p>
+          ) : null}
+        </div>
       </ShowcaseBlock>
 
       <ShowcaseBlock title="Dialog surface" meta="EntityForm surface=dialog → purple CTA submit">

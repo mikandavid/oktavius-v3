@@ -1,8 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
+import { AgentPageContextProvider } from '@/components/agent/page-context';
 import { AccessDeniedPage } from '@/components/common/AccessDeniedPage';
 import { CommandPaletteProvider } from '@/components/command/CommandPalette';
+import { RouteErrorPage } from '@/components/errors/AppErrorPage';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { ShortcutHelpProvider } from '@/components/layout/ShortcutHelpProvider';
 import { AIChatPage } from '@/modules/ai-chat/AIChatPage';
 import { CalendarPage } from '@/modules/calendar/CalendarPage';
 import { CaseCreatePage } from '@/modules/cases/CaseCreatePage';
@@ -42,49 +45,53 @@ import { UsersListPage } from '@/modules/users/UsersListPage';
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <CommandPaletteProvider>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/ai-chat" element={<AIChatPage />} />
-            <Route path="/showcase" element={<ComponentShowcasePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/superadmin" element={<SuperadminPage />} />
-            <Route path="/superadmin/orgs/new" element={<OrganizationCreatePage />} />
-            <Route path="/superadmin/orgs/:orgId" element={<OrganizationDetailPage />} />
-            <Route path="/users" element={<UsersListPage />} />
-            <Route path="/users/new" element={<UserCreatePage />} />
-            <Route path="/users/:userId" element={<UserDetailPage />} />
-            <Route path="/clients" element={<ClientsListPage />} />
-            <Route path="/clients/new" element={<ClientCreatePage />} />
-            <Route path="/clients/onboarding" element={<ClientOnboardingPage />} />
-            <Route path="/clients/:clientId" element={<ClientDetailPage />} />
-            <Route path="/cases" element={<CasesListPage />} />
-            <Route path="/cases/board" element={<CasesBoardPage />} />
-            <Route path="/cases/new" element={<CaseCreatePage />} />
-            <Route path="/cases/:caseId" element={<CaseDetailPage />} />
-            <Route path="/incidents" element={<IncidentsListPage />} />
-            <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
-            <Route path="/contracts" element={<ContractsListPage />} />
-            <Route path="/contracts/:contractId" element={<ContractDetailPage />} />
-            <Route path="/orders" element={<OrdersListPage />} />
-            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-            <Route path="/invoices" element={<InvoicesListPage />} />
-            <Route path="/invoices/:invoiceId" element={<InvoiceDetailPage />} />
-            <Route path="/products" element={<ProductsListPage />} />
-            <Route path="/products/new" element={<ProductCreatePage />} />
-            <Route path="/products/:productId" element={<ProductDetailPage />} />
-            <Route path="/projects" element={<ProjectsListPage />} />
-            <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-            <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/access-denied" element={<AccessDeniedPage />} />
-          </Route>
-        </Routes>
-      </CommandPaletteProvider>
+      <AgentPageContextProvider>
+        <ShortcutHelpProvider>
+          <CommandPaletteProvider>
+            <Routes>
+              <Route element={<AppLayout />} errorElement={<RouteErrorPage />}>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/ai-chat" element={<AIChatPage />} />
+                <Route path="/showcase" element={<ComponentShowcasePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/superadmin" element={<SuperadminPage />} />
+                <Route path="/superadmin/orgs/new" element={<OrganizationCreatePage />} />
+                <Route path="/superadmin/orgs/:orgId" element={<OrganizationDetailPage />} />
+                <Route path="/users" element={<UsersListPage />} />
+                <Route path="/users/new" element={<UserCreatePage />} />
+                <Route path="/users/:userId" element={<UserDetailPage />} />
+                <Route path="/clients" element={<ClientsListPage />} />
+                <Route path="/clients/new" element={<ClientCreatePage />} />
+                <Route path="/clients/onboarding" element={<ClientOnboardingPage />} />
+                <Route path="/clients/:clientId" element={<ClientDetailPage />} />
+                <Route path="/cases" element={<CasesListPage />} />
+                <Route path="/cases/board" element={<CasesBoardPage />} />
+                <Route path="/cases/new" element={<CaseCreatePage />} />
+                <Route path="/cases/:caseId" element={<CaseDetailPage />} />
+                <Route path="/incidents" element={<IncidentsListPage />} />
+                <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
+                <Route path="/contracts" element={<ContractsListPage />} />
+                <Route path="/contracts/:contractId" element={<ContractDetailPage />} />
+                <Route path="/orders" element={<OrdersListPage />} />
+                <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                <Route path="/invoices" element={<InvoicesListPage />} />
+                <Route path="/invoices/:invoiceId" element={<InvoiceDetailPage />} />
+                <Route path="/products" element={<ProductsListPage />} />
+                <Route path="/products/new" element={<ProductCreatePage />} />
+                <Route path="/products/:productId" element={<ProductDetailPage />} />
+                <Route path="/projects" element={<ProjectsListPage />} />
+                <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+                <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/documents" element={<DocumentsPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/access-denied" element={<AccessDeniedPage />} />
+              </Route>
+            </Routes>
+          </CommandPaletteProvider>
+        </ShortcutHelpProvider>
+      </AgentPageContextProvider>
     </BrowserRouter>
   );
 }

@@ -32,13 +32,13 @@ export const ORG_ENV_VARIANT: Record<string, BadgeProps['variant']> = {
 
 export const orgColumns: CrudColumn<OrganizationRecord>[] = [
   { key: 'name', header: 'Organization', sortable: true },
-  { key: 'slug', header: 'Slug', sortable: true },
+  { key: 'slug', header: 'Slug', sortable: true, hideBelow: 'md' },
   statusColumn('plan', 'Plan', ORG_PLAN_VARIANT),
   statusColumn('status', 'Status', ORG_STATUS_VARIANT),
-  statusColumn('environment', 'Environment', ORG_ENV_VARIANT),
-  { key: 'region', header: 'Region', sortable: true },
-  { key: 'memberCount', header: 'Members', sortable: true },
-  { key: 'createdAt', header: 'Created', sortable: true, type: 'date' },
+  statusColumn('environment', 'Environment', ORG_ENV_VARIANT, { hideBelow: 'lg' }),
+  { key: 'region', header: 'Region', sortable: true, hideBelow: 'lg' },
+  { key: 'memberCount', header: 'Members', sortable: true, hideBelow: 'md' },
+  { key: 'createdAt', header: 'Created', sortable: true, type: 'date', hideBelow: 'lg' },
 ];
 
 export const orgFilters: FilterDef[] = [

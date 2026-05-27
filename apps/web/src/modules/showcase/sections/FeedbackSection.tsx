@@ -10,6 +10,7 @@ import {
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { InfoBox } from '@/components/common/InfoBox';
+import { AppShellSpinner } from '@/components/layout/AppShellSpinner';
 import { InfoIcon, SuccessIcon, WarningIcon } from '@/lib/icons';
 
 import { ShowcaseBlock } from '../shared';
@@ -91,6 +92,10 @@ export function FeedbackSection() {
             <Skeleton className="h-9 w-full max-w-xs" />
           </div>
         )}
+      </ShowcaseBlock>
+
+      <ShowcaseBlock title="AppShellSpinner" meta="Full-area shell loading state">
+        <AppShellSpinner label="Loading workspace…" />
       </ShowcaseBlock>
     </div>
   );

@@ -41,6 +41,8 @@ Single source of truth for frontend UI conventions. For developers, designers, a
 | [`status-and-money.md`](./status-and-money.md)                 | StatusBadge, MoneyText                          |
 | [`dialogs.md`](./dialogs.md)                                   | Modals and confirms                             |
 | [`checklist.md`](./checklist.md)                               | ChecklistSection done-state                     |
+| [`agent-components.md`](./agent-components.md)                 | Agent chat messages, result cards, shell        |
+| [`maps-components.md`](./maps-components.md)                   | Inline map preview and dialog embed             |
 
 ---
 
@@ -61,6 +63,8 @@ Single source of truth for frontend UI conventions. For developers, designers, a
 | `apps/web/src/modules/**`                       | `module-pattern.md`, `detail-pages.md`, `page-header.md` |
 | `apps/web/src/components/data/**`               | `crud-table.md`, `filter-toolbar.md`                     |
 | `apps/web/src/components/forms/**`              | `entity-form.md`, `combobox.md`                          |
+| `apps/web/src/components/agent/**`              | `agent-components.md`                                    |
+| `apps/web/src/components/maps/**`               | `maps-components.md`                                     |
 | `packages/base-ui/src/components/scheduling/**` | `calendar-components.md`                                 |
 | Any `apps/web` UI file                          | `ui-system.md` + relevant topic above                    |
 

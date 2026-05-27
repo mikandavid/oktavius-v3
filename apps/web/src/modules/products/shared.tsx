@@ -23,9 +23,9 @@ export const PRODUCT_STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
 export const PRODUCT_CATEGORIES = ['Licenses', 'Services', 'Hardware'] as const;
 
 export const productColumns: CrudColumn<ProductRecord>[] = [
-  { key: 'sku', header: 'SKU', sortable: true },
+  { key: 'sku', header: 'SKU', sortable: true, hideBelow: 'md' },
   { key: 'name', header: 'Name', sortable: true },
-  { key: 'category', header: 'Category', sortable: true, type: 'badge' },
+  { key: 'category', header: 'Category', sortable: true, type: 'badge', hideBelow: 'md' },
   statusColumn('status', 'Status', PRODUCT_STATUS_VARIANT),
   {
     key: 'price',
@@ -35,8 +35,8 @@ export const productColumns: CrudColumn<ProductRecord>[] = [
     meta: { currencySymbol: '€' },
     align: 'right',
   },
-  { key: 'stock', header: 'Stock', sortable: true, align: 'right' },
-  { key: 'unit', header: 'Unit', sortable: true },
+  { key: 'stock', header: 'Stock', sortable: true, align: 'right', hideBelow: 'lg' },
+  { key: 'unit', header: 'Unit', sortable: true, hideBelow: 'lg' },
 ];
 
 export const productFilters: FilterDef[] = [

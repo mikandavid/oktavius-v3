@@ -1,4 +1,5 @@
 import { UserPreferencesProvider } from '@/lib/userPreferences';
+import { ActiveLocationProvider } from '@/lib/locations/ActiveLocationContext';
 
 import { AgentChatProvider } from './agent-chat-data';
 import { DemoDataProvider } from './demo-data';
@@ -8,9 +9,11 @@ export function App() {
   return (
     <UserPreferencesProvider>
       <DemoDataProvider>
-        <AgentChatProvider>
-          <AppRouter />
-        </AgentChatProvider>
+        <ActiveLocationProvider>
+          <AgentChatProvider>
+            <AppRouter />
+          </AgentChatProvider>
+        </ActiveLocationProvider>
       </DemoDataProvider>
     </UserPreferencesProvider>
   );

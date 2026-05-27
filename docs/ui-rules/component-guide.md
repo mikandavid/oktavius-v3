@@ -287,6 +287,61 @@ Never use bare `<Skeleton>` lines scattered at page level. Compose via `PageSkel
 
 ---
 
+## Agent / AI chat selection
+
+```
+What agent UI is this?
+│
+├── Full chat thread (sidebar or /ai-chat)
+│   └── OsirisChatShell → AgentMessageList
+│
+├── Structured tool/result in a message
+│   ├── List of records → AgentEntityListCard (role: 'card', kind: 'entity-list')
+│   ├── Single record → AgentEntityDetailCard
+│   ├── Code execution → AgentPythonExecutionCard
+│   ├── Generated file → AgentGeneratedDocumentCard
+│   ├── Schedule snippet → AgentScheduleCard
+│   ├── Skill approval → AgentSkillApprovalCard
+│   ├── Destructive confirm → AgentConfirmationCard (role: 'confirmation')
+│   └── Raw tool JSON → AgentToolCallCard (role: 'tool')
+│
+├── Empty / loading / attachments
+│   ├── Empty thread → AgentWelcomeScreen
+│   ├── Generating → AgentThinkingIndicator
+│   └── Composer files → AgentFileAttachmentChip
+│
+├── Map link in assistant text
+│   └── extractGoogleMapsUrls → GoogleMapsPreviewButton (or GoogleMapsPreview inline)
+│
+└── Text with @mentions or links
+    └── FormattedText (CommentsPanel uses MentionComposer for input)
+```
+
+See [`agent-components.md`](./agent-components.md).
+
+---
+
+## Map preview selection
+
+```
+Where is the map shown?
+│
+├── Detail page, route panel, location section (enough space)
+│   └── GoogleMapsPreview (inline — preferred)
+│
+├── Chat message, table row, compact toolbar
+│   └── GoogleMapsPreviewButton → GoogleMapsDialog
+│
+└── Custom layout needing only the iframe
+    └── GoogleMapsEmbedFrame (internal — prefer Preview/Dialog)
+```
+
+Never iframe raw Google Maps share URLs. Use `resolveGoogleMapsEmbed()`.
+
+See [`maps-components.md`](./maps-components.md).
+
+---
+
 ## Icon Rules
 
 Always import from `@/lib/icons`, never from `@phosphor-icons/react` directly.
