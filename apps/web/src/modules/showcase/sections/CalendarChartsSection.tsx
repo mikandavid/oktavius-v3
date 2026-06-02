@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import {
+  CalendarEventEditorDialog,
   CalendarEventQuickCreate,
   CalendarView,
   ChartCard,
@@ -50,8 +51,13 @@ export function CalendarChartsSection() {
           onViewChange={setView}
           events={calendar.events}
           calendars={calendar.calendars}
+          teamMembers={calendar.teamMembers}
+          selectedTeamMemberIds={calendar.selectedTeamMemberIds}
+          onTeamMemberVisibilityChange={calendar.onTeamMemberVisibilityChange}
+          onSelectAllTeamMembers={calendar.onSelectAllTeamMembers}
+          onClearTeamMembers={calendar.onClearTeamMembers}
           onCalendarVisibilityChange={calendar.onCalendarVisibilityChange}
-          showCalendarLegend
+          showSidebar
           onEventClick={calendar.onEventClick}
           onEventMove={calendar.onEventMove}
           onEventResize={calendar.onEventResize}
@@ -60,12 +66,23 @@ export function CalendarChartsSection() {
           className="min-h-[420px]"
         />
         <CalendarEventQuickCreate
-          draft={calendar.editorDraft}
+          draft={calendar.createDraft}
           calendars={calendar.calendars}
+          teamMembers={calendar.teamMembers}
           onOpenChange={(open) => {
             if (!open) calendar.cancelEditor();
           }}
           onSave={calendar.confirmSave}
+        />
+        <CalendarEventEditorDialog
+          draft={calendar.editDraft}
+          calendars={calendar.calendars}
+          teamMembers={calendar.teamMembers}
+          onOpenChange={(open) => {
+            if (!open) calendar.cancelEditor();
+          }}
+          onSave={calendar.confirmSave}
+          onDelete={calendar.deleteEvent}
         />
       </ShowcaseBlock>
 

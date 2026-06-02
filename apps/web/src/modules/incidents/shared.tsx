@@ -3,6 +3,8 @@ import type { BadgeProps } from '@oktavius/base-ui';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import { statusColumn } from '@/components/data/columns';
 import type { FilterDef } from '@/components/data/FilterToolbar';
+import type { SavedViewPreset } from '@/components/data/useListSavedViews';
+import type { FormField } from '@/components/forms/EntityForm';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { IncidentRecord } from '@/app/demo-data';
 import { incidentsPageIcon } from '@/lib/modulePageIcons';
@@ -72,3 +74,48 @@ export function incidentSeverityBadge(severity: IncidentRecord['severity']) {
 export function incidentStatusBadge(status: IncidentRecord['status']) {
   return <StatusBadge status={status} variantMap={INCIDENT_STATUS_VARIANT} />;
 }
+
+export type IncidentFormValues = {
+  title: string;
+  incidentNumber: string;
+  severity: IncidentRecord['severity'];
+  status: IncidentRecord['status'];
+  service: string;
+  assignee: string;
+  reportedAt: string;
+  impact: string;
+};
+
+export const incidentFormFields: FormField[] = [
+  { name: 'title', label: 'Title', type: 'text', required: true, section: 'Incident' },
+  { name: 'incidentNumber', label: 'Number', type: 'text', section: 'Identification' },
+  {
+    name: 'severity',
+    label: 'Severity',
+    type: 'combobox',
+    options: ['Low', 'Medium', 'High', 'Critical'],
+    section: 'Status',
+  },
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'combobox',
+    options: ['Open', 'Investigating', 'Mitigated', 'Resolved'],
+    section: 'Status',
+  },
+  { name: 'service', label: 'Service', type: 'text', section: 'Assignment' },
+  { name: 'assignee', label: 'Assignee', type: 'text', section: 'Assignment' },
+  { name: 'reportedAt', label: 'Reported at', type: 'datetime', section: 'Timeline' },
+  { name: 'impact', label: 'Impact', type: 'textarea', colSpan: 2, section: 'Impact' },
+];
+
+export const INCIDENT_SAVED_VIEWS: SavedViewPreset[] = [
+  {
+    id: 'all',
+    label: 'All incidents',
+    isDefault: true,
+    filters: { severity: '', status: '', service: '' },
+  },
+  { id: 'open', label: 'Open', filters: { severity: '', status: 'Open', service: '' } },
+  { id: 'critical', label: 'Critical', filters: { severity: 'Critical', status: '', service: '' } },
+];

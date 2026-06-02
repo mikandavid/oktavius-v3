@@ -36,9 +36,10 @@ export const CALENDAR_COLOR_STYLES: Record<CalendarColorKey, CalendarColorStyle>
   orange: calendarSolid('orange'),
   red: calendarSolid('destructive'),
   gray: {
-    chip: 'bg-neutral-500 text-neutral-50 hover:brightness-95',
-    block: 'bg-neutral-500 text-neutral-50 hover:brightness-95',
-    dot: 'bg-neutral-500',
+    chip: 'bg-neutral-500 text-neutral-50 hover:brightness-95 dark:bg-neutral-700 dark:text-neutral-950',
+    block:
+      'bg-neutral-500 text-neutral-50 hover:brightness-95 dark:bg-neutral-700 dark:text-neutral-950',
+    dot: 'bg-neutral-500 dark:bg-neutral-700',
   },
 };
 

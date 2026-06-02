@@ -2,8 +2,10 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@oktavius/base-ui';
 
+import { useRegisterFillHeightPage } from '@/components/layout/AppShellLayoutContext';
+
 import { BackButton } from './BackButton';
-import { PAGE_HEADER_ACTIONS_ROW } from './pageChrome';
+import { MODULE_PAGE_FILL_CLASS, PAGE_HEADER_ACTIONS_ROW } from './pageChrome';
 
 type PageHeaderProps = {
   title: ReactNode;
@@ -20,12 +22,21 @@ export function PageLayout({ children, className }: { children: ReactNode; class
 export function ModulePage({
   children,
   layoutClassName,
+  fillHeight,
   ...headerProps
-}: PageHeaderProps & { children: ReactNode; layoutClassName?: string }) {
+}: PageHeaderProps & { children: ReactNode; layoutClassName?: string; fillHeight?: boolean }) {
+  const resolvedLayoutClassName =
+    layoutClassName ?? (fillHeight ? MODULE_PAGE_FILL_CLASS : undefined);
+  const usesFillHeight = Boolean(resolvedLayoutClassName);
+
+  useRegisterFillHeightPage(usesFillHeight);
+
   return (
-    <PageLayout className={cn(!layoutClassName && 'space-y-4', layoutClassName)}>
-      <PageHeader {...headerProps} />
-      {children}
+    <PageLayout className={cn(!resolvedLayoutClassName && 'space-y-4', resolvedLayoutClassName)}>
+      <div className={usesFillHeight ? 'shrink-0' : undefined}>
+        <PageHeader {...headerProps} />
+      </div>
+      {usesFillHeight ? <div className="flex min-h-0 flex-1 flex-col">{children}</div> : children}
     </PageLayout>
   );
 }

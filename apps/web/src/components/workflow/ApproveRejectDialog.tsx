@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 
 import {
-  Button,
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   Label,
@@ -85,22 +83,17 @@ export function ApproveRejectDialog({
             }}
           />
         ) : (
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={confirmDisabled}
-              onClick={() => {
-                onConfirm(comment.trim() || undefined);
-                setComment('');
-              }}
-            >
-              Reject
-            </Button>
-          </DialogFooter>
+          <DialogFormFooter
+            cancelLabel="Cancel"
+            onCancel={() => handleOpenChange(false)}
+            confirmLabel="Reject"
+            confirmVariant="destructive"
+            confirmDisabled={confirmDisabled}
+            onConfirm={() => {
+              onConfirm(comment.trim() || undefined);
+              setComment('');
+            }}
+          />
         )}
       </DialogContent>
     </Dialog>

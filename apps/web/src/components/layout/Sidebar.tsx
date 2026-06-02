@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -11,87 +12,43 @@ import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import { MouseTooltip, cn } from '@oktavius/base-ui';
-import type { IconProps } from '@/lib/icons';
 
+import { CheckIcon, EditIcon, SortIcon, PanelLeftCloseIcon, PanelLeftIcon } from '@/lib/icons';
+
+import { useDemoData } from '@/app/demo-data';
+import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import {
-  BotIcon,
-  CaseIcon,
-  CheckIcon,
-  ContractIcon,
-  EditIcon,
-  HomeIcon,
-  IncidentIcon,
-  InvoiceIcon,
-  OrderIcon,
-  ProductIcon,
-  ProjectIcon,
-  ReportsIcon,
-  SortIcon,
-  PanelLeftCloseIcon,
-  PanelLeftIcon,
-  ProjectsIcon,
-  SettingsIcon,
-  SlidersHorizontalIcon,
-  SuperadminIcon,
-  UsersIcon,
-  CalendarIcon,
-  DocumentIcon,
-  TasksIcon,
-} from '@/lib/icons';
+  ADMIN_NAV_ITEMS,
+  MODULE_NAV_ITEMS,
+  PRIMARY_NAV_ITEMS,
+  type AppNavModule,
+  isAppNavItemEnabled,
+  moduleLabelFor,
+  visiblePathFor,
+} from '@/lib/appNavModules';
+import type { OrgProfile } from '@/lib/org-profiles/types';
+import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import {
+  canAccessAppNavItem,
+  permissionSubjectFor,
+  type PermissionSubject,
+} from '@/lib/permissions';
 
 import { useAppShellLayout } from './AppShellLayoutContext';
 import { BrandMark } from './BrandMark';
 
 type SidebarProps = {
   mobile?: boolean;
+  /** Render inside a Drawer — no fixed positioning or slide transform. */
+  embedded?: boolean;
   open?: boolean;
   onNavigate?: () => void;
-};
-
-type NavItem = {
-  id: string;
-  path: string;
-  label: string;
-  icon: React.ComponentType<IconProps>;
 };
 
 const MODULE_ORDER_STORAGE_KEY = 'sidebar-modules-order-v1';
 const LABELS_VISIBLE_DELAY_MS = 80;
 const COLLAPSED_PILL_GAP_PX = 10;
 const ORG_HOME_PATH = '/dashboard';
-
-const PRIMARY_ITEMS: NavItem[] = [
-  { id: 'dashboard', path: '/dashboard', label: 'Dashboard', icon: HomeIcon },
-  { id: 'ai-chat', path: '/ai-chat', label: 'AI Chat', icon: BotIcon },
-];
-
-const MODULE_ITEMS: NavItem[] = [
-  { id: 'cases', path: '/cases', label: 'Cases', icon: CaseIcon },
-  { id: 'incidents', path: '/incidents', label: 'Incidents', icon: IncidentIcon },
-  { id: 'clients', path: '/clients', label: 'Clients', icon: ProjectsIcon },
-  { id: 'contracts', path: '/contracts', label: 'Contracts', icon: ContractIcon },
-  { id: 'orders', path: '/orders', label: 'Orders', icon: OrderIcon },
-  { id: 'invoices', path: '/invoices', label: 'Invoices', icon: InvoiceIcon },
-  { id: 'products', path: '/products', label: 'Products', icon: ProductIcon },
-  { id: 'projects', path: '/projects', label: 'Projects', icon: ProjectIcon },
-  { id: 'users', path: '/users', label: 'Users', icon: UsersIcon },
-  { id: 'tasks', path: '/tasks', label: 'Tasks', icon: TasksIcon },
-  { id: 'documents', path: '/documents', label: 'Documents', icon: DocumentIcon },
-  { id: 'calendar', path: '/calendar', label: 'Calendar', icon: CalendarIcon },
-  { id: 'reports', path: '/reports', label: 'Reports', icon: ReportsIcon },
-];
-
-const ADMIN_ITEMS: NavItem[] = [
-  { id: 'superadmin', path: '/superadmin', label: 'Superadmin', icon: SuperadminIcon },
-  { id: 'showcase', path: '/showcase', label: 'Showcase', icon: SlidersHorizontalIcon },
-  { id: 'settings', path: '/settings', label: 'Settings', icon: SettingsIcon },
-];
-
-const SIDEBAR_SECTIONS = [
-  { title: 'Primary', items: PRIMARY_ITEMS },
-  { title: 'Modules', items: MODULE_ITEMS },
-  { title: 'Admin', items: ADMIN_ITEMS },
-] as const;
 
 function readStoredModuleOrder() {
   if (typeof window === 'undefined') return [];
@@ -112,7 +69,24 @@ function writeStoredModuleOrder(order: string[]) {
   window.localStorage.setItem(MODULE_ORDER_STORAGE_KEY, JSON.stringify(order));
 }
 
-function orderItems(items: NavItem[], preferredOrder: string[]) {
+function buildVisibleModuleItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {
+  return MODULE_NAV_ITEMS.filter(
+    (item) => isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject),
+  ).map((item) => ({
+    ...item,
+    path: visiblePathFor(profile, item),
+    label: moduleLabelFor(profile, item),
+  }));
+}
+
+function buildVisibleAdminItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {
+  return ADMIN_NAV_ITEMS.filter((item) => {
+    if (item.id === 'showcase' && !import.meta.env.DEV) return false;
+    return isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject);
+  });
+}
+
+function orderItems(items: AppNavModule[], preferredOrder: string[]) {
   if (preferredOrder.length === 0) return items;
   const orderIndex = new Map(preferredOrder.map((id, index) => [id, index]));
   return [...items].sort((left, right) => {
@@ -230,8 +204,11 @@ function SidebarNavPill({
   const pillClass = cn(
     'flex h-8 max-w-[14rem] items-center truncate rounded-full border px-3 text-sm shadow-elevated active:scale-[0.98]',
     isActive
-      ? 'border-sidebar-primary bg-sidebar font-medium text-sidebar-primary shadow-md'
-      : 'border-sidebar-border bg-sidebar text-foreground',
+      ? cn(
+          'border-sidebar-primary font-medium text-sidebar-primary shadow-md',
+          APP_SHELL_SURFACE_CLASS,
+        )
+      : cn('text-foreground', APP_SHELL_SURFACE_CLASS, APP_SHELL_BORDER_CLASS),
   );
 
   const labelNode = href ? (
@@ -275,7 +252,7 @@ function NavItemRow({
   onDrop,
   dragHandleTitle,
 }: {
-  item: NavItem;
+  item: AppNavModule;
   expanded: boolean;
   labelsVisible: boolean;
   onNavigate?: () => void;
@@ -395,10 +372,48 @@ export function Sidebar(props: SidebarProps) {
   );
 }
 
-function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarProps) {
+function SidebarContent({
+  mobile = false,
+  embedded = false,
+  open = false,
+  onNavigate,
+}: SidebarProps) {
   const { pathname } = useLocation();
   const { isSidebarCompact, toggleSidebarCollapsed } = useAppShellLayout();
+  const profile = useOrgProfile();
+  const { activeMembership, activeOrganization, currentUser } = useDemoData();
+  const permissionSubject = useMemo(
+    () => permissionSubjectFor(currentUser, activeMembership),
+    [activeMembership, currentUser],
+  );
+  const brandTitle = profile.industryKey === 'funeral' ? activeOrganization.name : 'Oktavius ERP';
+  const visiblePrimaryItems = useMemo(
+    () =>
+      PRIMARY_NAV_ITEMS.map((item) => ({
+        ...item,
+        path: visiblePathFor(profile, item),
+        label: moduleLabelFor(profile, item),
+      })),
+    [profile],
+  );
+  const visibleModuleItems = useMemo(
+    () => buildVisibleModuleItems(profile, permissionSubject),
+    [permissionSubject, profile],
+  );
+  const visibleAdminItems = useMemo(
+    () => buildVisibleAdminItems(profile, permissionSubject),
+    [permissionSubject, profile],
+  );
   const [preferredModuleOrder, setPreferredModuleOrder] = useState<string[]>(readStoredModuleOrder);
+
+  useEffect(() => {
+    const allowedIds = visibleModuleItems.map((item) => item.id);
+    const allowed = new Set<string>(allowedIds);
+    setPreferredModuleOrder((current) => {
+      const filtered = current.filter((id) => allowed.has(id));
+      return filtered.length > 0 ? filtered : allowedIds;
+    });
+  }, [profile.id, visibleModuleItems]);
   const [isEditingModules, setIsEditingModules] = useState(false);
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const [isLabelsVisible, setIsLabelsVisible] = useState(false);
@@ -406,7 +421,7 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
   const collapseRowRef = useRef<HTMLDivElement>(null);
   const brandFlyout = useSidebarFlyout('brand');
   const collapseFlyout = useSidebarFlyout('collapse');
-  const isExpanded = mobile ? true : !isSidebarCompact;
+  const isExpanded = mobile || embedded ? true : !isSidebarCompact;
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -428,12 +443,12 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
     toggleSidebarCollapsed();
   }, [toggleSidebarCollapsed]);
 
-  const orderedModuleItems = orderItems(MODULE_ITEMS, preferredModuleOrder);
+  const orderedModuleItems = orderItems(visibleModuleItems, preferredModuleOrder);
 
   const moveModuleItem = useCallback(
     (targetItemId: string) => {
       if (!draggingItemId || draggingItemId === targetItemId) return;
-      const currentIds = orderedModuleItems.map((item) => item.id);
+      const currentIds = orderedModuleItems.map((item) => item.id as string);
       const fromIndex = currentIds.indexOf(draggingItemId);
       const toIndex = currentIds.indexOf(targetItemId);
       if (fromIndex === -1 || toIndex === -1) return;
@@ -451,22 +466,28 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
   return (
     <aside
       className={cn(
-        'relative z-40 flex shrink-0 flex-col overflow-x-hidden border-r border-sidebar-border bg-sidebar transition-[width] duration-200 ease-out',
-        mobile
-          ? cn(
-              'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh overflow-x-hidden shadow-elevated transition-[width,transform]',
-              open ? 'translate-x-0' : '-translate-x-full',
-            )
-          : isExpanded
-            ? 'h-dvh w-52 max-h-dvh'
-            : 'h-dvh w-12 max-h-dvh',
+        'relative z-40 flex shrink-0 flex-col overflow-x-hidden border-r transition-[width] duration-200 ease-out',
+        APP_SHELL_BORDER_CLASS,
+        APP_SHELL_SURFACE_CLASS,
+        embedded
+          ? 'h-full w-full max-h-full overflow-x-hidden'
+          : mobile
+            ? cn(
+                'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh overflow-x-hidden shadow-elevated transition-[width,transform]',
+                open ? 'translate-x-0' : '-translate-x-full',
+              )
+            : isExpanded
+              ? 'h-dvh w-52 max-h-dvh'
+              : 'h-dvh w-12 max-h-dvh',
       )}
     >
       {isExpanded ? (
         <Link
           to={ORG_HOME_PATH}
           onClick={onNavigate}
-          className="flex h-12 w-full shrink-0 items-center gap-2 border-b border-sidebar-border px-3 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] active:bg-sidebar-foreground/[0.08]"
+          className={cn(
+            'flex h-12 w-full shrink-0 items-center gap-2 px-3 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] active:bg-sidebar-foreground/[0.08]',
+          )}
         >
           <BrandMark />
           <span
@@ -475,20 +496,20 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
               isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
             )}
           >
-            Oktavius ERP
+            {brandTitle}
           </span>
         </Link>
       ) : (
         <div
           ref={brandRowRef}
-          className="relative flex h-12 w-full shrink-0 items-center justify-center border-b border-sidebar-border"
+          className={cn('relative flex h-12 w-full shrink-0 items-center justify-center')}
           onMouseEnter={brandFlyout.show}
           onMouseLeave={brandFlyout.hide}
         >
           <Link
             to={ORG_HOME_PATH}
             onClick={onNavigate}
-            aria-label="Oktavius ERP"
+            aria-label={brandTitle}
             className={cn(
               'mx-auto flex h-9 w-9 items-center justify-center rounded-full',
               (brandFlyout.open || brandIsActive) && 'bg-sidebar-primary/10',
@@ -500,7 +521,7 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
           <SidebarNavPill
             anchorRef={brandRowRef}
             open={brandFlyout.open}
-            label="Oktavius ERP"
+            label={brandTitle}
             isActive={brandIsActive}
             href={ORG_HOME_PATH}
             onNavigate={onNavigate}
@@ -510,7 +531,7 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
         </div>
       )}
 
-      <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain py-3">
+      <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
         <div>
           {isExpanded ? (
             <div className="mb-1.5 h-5 px-3">
@@ -525,7 +546,7 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
             </div>
           ) : null}
           <div className="space-y-0.5">
-            {SIDEBAR_SECTIONS[0].items.map((item) => (
+            {visiblePrimaryItems.map((item) => (
               <NavItemRow
                 key={item.id}
                 item={item}
@@ -587,35 +608,37 @@ function SidebarContent({ mobile = false, open = false, onNavigate }: SidebarPro
           </div>
         </div>
 
-        <div className={cn(isExpanded ? 'mt-4' : 'mt-2')}>
-          {isExpanded ? (
-            <div className="mb-1.5 h-5 px-3">
-              <span
-                className={cn(
-                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
-                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-                )}
-              >
-                Admin
-              </span>
+        {visibleAdminItems.length > 0 ? (
+          <div className={cn(isExpanded ? 'mt-4' : 'mt-2')}>
+            {isExpanded ? (
+              <div className="mb-1.5 h-5 px-3">
+                <span
+                  className={cn(
+                    'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                    isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
+                  )}
+                >
+                  Admin
+                </span>
+              </div>
+            ) : null}
+            <div className="space-y-0.5">
+              {visibleAdminItems.map((item) => (
+                <NavItemRow
+                  key={item.id}
+                  item={item}
+                  expanded={isExpanded}
+                  labelsVisible={isLabelsVisible}
+                  onNavigate={onNavigate}
+                />
+              ))}
             </div>
-          ) : null}
-          <div className="space-y-0.5">
-            {ADMIN_ITEMS.map((item) => (
-              <NavItemRow
-                key={item.id}
-                item={item}
-                expanded={isExpanded}
-                labelsVisible={isLabelsVisible}
-                onNavigate={onNavigate}
-              />
-            ))}
           </div>
-        </div>
+        ) : null}
       </nav>
 
-      {!mobile ? (
-        <div className="shrink-0 border-t border-sidebar-border px-0 py-2">
+      {!mobile && !embedded ? (
+        <div className={cn('shrink-0 border-t px-2 py-2', APP_SHELL_BORDER_CLASS)}>
           {isExpanded ? (
             <button
               type="button"

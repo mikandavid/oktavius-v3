@@ -5,6 +5,11 @@ import { cn } from '../lib/utils';
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
+/**
+ * Default month grid for popovers and forms (`DatePicker`).
+ * For sidebar jump-to-date panels use `<CalendarMiniPicker>` — it ships correct
+ * react-day-picker v9 grid + nav styling; do not override this component ad hoc.
+ */
 export function Calendar({
   className,
   classNames,

@@ -159,25 +159,34 @@ function SortableKanbanCard({
   if (!enabled) {
     if (!onClick) return <div>{children}</div>;
     return (
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         onClick={onClick}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            onClick();
-          }
-        }}
         className={cn(
+          'w-full text-left',
           interactiveSurfaceClasses,
           'rounded-control outline-none focus-visible:ring-offset-2',
         )}
       >
         {children}
-      </div>
+      </button>
     );
   }
+
+  const cardContent = onClick ? (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'w-full rounded-control text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        interactiveSurfaceClasses,
+      )}
+    >
+      {children}
+    </button>
+  ) : (
+    children
+  );
 
   return (
     <div
@@ -186,25 +195,12 @@ function SortableKanbanCard({
       className={cn(
         'touch-none rounded-control outline-none',
         isDragging && 'opacity-40',
-        onClick && interactiveSurfaceClasses,
+        !onClick && interactiveSurfaceClasses,
       )}
       {...attributes}
       {...listeners}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={
-        onClick
-          ? (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
     >
-      {children}
+      {cardContent}
     </div>
   );
 }

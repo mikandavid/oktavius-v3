@@ -12,7 +12,7 @@ that multiplies across modules. When in doubt, check this file before building.
 
 **The most common AI-generated UI mistake in this codebase.**
 
-Cards inside cards break the hierarchy system (see 02-hierarchy-system.md). They create
+Cards inside cards break the hierarchy system (see [`hierarchy-system.md`](./hierarchy-system.md)). They create
 visual nesting that has no semantic meaning and makes the UI feel heavy, layered, and inconsistent.
 
 ```tsx
@@ -51,11 +51,11 @@ visual nesting that has no semantic meaning and makes the UI feel heavy, layered
 </Card>
 
 // ✅ Also correct — no container at all, just spacing + label
+import { FIELD_GROUP_LABEL_CLASS } from '@/components/common/pageChrome';
+
 <Card>
   <CardContent className="space-y-4">
-    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-      Group label
-    </p>
+    <p className={FIELD_GROUP_LABEL_CLASS}>Group label</p>
     <ListRow ... />
     <ListRow ... />
   </CardContent>
@@ -248,7 +248,52 @@ if (window.confirm('Delete this?')) { ... }
 
 ---
 
-## 10. Large Modal Workflows
+## 10. Top Tabs as a Default Page Shape
+
+Top tabs are a workspace control, not a way to make generated pages look organized.
+When an agent does not understand the dominant workflow, it often hides every section behind
+`Overview / Details / Activity / Files` tabs. That makes pages feel generic and forces users
+to hunt for information that should stay visible.
+
+```tsx
+// ❌ Wrong — tabs used as a dumping ground for ordinary record sections
+<ModulePage title={client.name} icon={clientsPageIcon()} backTo="/clients">
+  <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <TabsList>
+      <TabsTrigger value="overview">Overview</TabsTrigger>
+      <TabsTrigger value="details">Details</TabsTrigger>
+      <TabsTrigger value="contacts">Contacts</TabsTrigger>
+      <TabsTrigger value="documents">Documents</TabsTrigger>
+    </TabsList>
+    ...
+  </Tabs>
+</ModulePage>
+
+// ✅ Better — many sections remain discoverable in section nav
+<ModulePage
+  title={client.name}
+  icon={clientsPageIcon()}
+  backTo="/clients"
+  layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}
+>
+  <AppSectionNavLayout items={sectionNav} activeKey={activeSection} onSelect={setActiveSection}>
+    {activeSection === 'overview' && <DetailView title="Client details" fields={detailFields} />}
+    {activeSection === 'contacts' && <SectionCard title="Contacts">...</SectionCard>}
+  </AppSectionNavLayout>
+</ModulePage>
+```
+
+Before using tabs, choose the page anatomy:
+
+- Read a record → `DetailView`
+- Scan many sections → `AppSectionNavLayout`
+- Work through a queue → `SplitView`
+- Inspect files/documents → preview-led split layout
+- Switch between peer work modes → `Tabs`
+
+---
+
+## 11. Large Modal Workflows
 
 A Dialog is for focused, bounded interactions. When a workflow has 3+ steps, complex state,
 or requires navigating between sections, it must be a full page route.
@@ -265,7 +310,7 @@ or requires navigating between sections, it must be a full page route.
 
 ---
 
-## 11. Shadow on Inner Surfaces
+## 12. Shadow on Inner Surfaces
 
 Only **floating overlays** use shadow (`shadow-elevated`): dialogs, popovers, dropdowns, tooltips.
 
@@ -285,7 +330,7 @@ Page-anchored surfaces are flat — no shadow on cards, sections, tables, or sid
 
 ---
 
-## 12. Hardcoded Visible Strings
+## 13. Hardcoded Visible Strings
 
 All user-visible text must be a string literal ready for translation.
 Never construct visible labels dynamically in a way that breaks i18n structure.
@@ -300,7 +345,7 @@ Never construct visible labels dynamically in a way that breaks i18n structure.
 
 ---
 
-## 13. Import Icons Directly from @phosphor-icons/react
+## 14. Import Icons Directly from @phosphor-icons/react
 
 Always go through `@/lib/icons`. The lib provides aliases, tree-shaking, and future-proofing.
 
@@ -314,9 +359,10 @@ import { PlusIcon, DeleteIcon, EditIcon } from '@/lib/icons';
 
 ---
 
-## 14. Using bg-background on Layout Containers
+## 15. Using bg-background on Layout Containers
 
-`bg-background` is 100% white. It is reserved for surfaces (Level 2+) and interactive inputs.
+`bg-background` is the page canvas (`neutral-50`). It is not for shell chrome or white tiles — use `APP_SHELL_SURFACE_CLASS` / `bg-card` for those.
+
 Layout containers must inherit the grey body background, not be forced white.
 
 ```tsx
@@ -324,13 +370,36 @@ Layout containers must inherit the grey body background, not be forced white.
 <div className="bg-background min-h-screen">
   <AppLayout>
 
+// ❌ Wrong — separate sidebar tint
+<aside className="bg-sidebar-background">
+
 // ✅ Correct — body CSS sets the background; layout inherits
 <AppLayout>  // no bg class needed
+
+// ✅ Correct — shared shell surface
+<aside className={APP_SHELL_SURFACE_CLASS}>
 ```
 
 ---
 
-## 15. Equal Spacing Between All Elements
+## 16. Raw neutral ramp for layout
+
+The `neutral-*` steps are the source of truth for gray, but components should use semantic roles that alias them.
+
+```tsx
+// ❌ Wrong — layout fill via raw ramp
+<div className="bg-neutral-200 rounded-card">
+
+// ✅ Correct — semantic role
+<div className="bg-muted rounded-card">
+<div className="rounded-card bg-card">
+```
+
+Use `neutral-*` only for charts, calendar gray events, and other data viz.
+
+---
+
+## 17. Equal Spacing Between All Elements
 
 Related elements must sit closer together than unrelated elements. Equal spacing everywhere
 destroys grouping signals and makes the UI hard to scan.
@@ -363,7 +432,7 @@ destroys grouping signals and makes the UI hard to scan.
 
 ---
 
-## 16. Clickable Without Hover / Press Feedback
+## 18. Clickable Without Hover / Press Feedback
 
 If something handles clicks, it must look clickable on hover (and show press/focus states).
 `cursor-pointer` alone is not enough.
@@ -390,7 +459,7 @@ Shared primitives (`Button`, `ListRow`, `Combobox`, `TabsTrigger`, etc.) already
 
 ---
 
-## 17. TooltipProvider Duplication
+## 19. TooltipProvider Duplication
 
 `TooltipProvider` is already mounted once in `AppLayout`. Never add another one
 inside a component, page, or module.

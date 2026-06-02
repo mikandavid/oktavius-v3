@@ -1,31 +1,67 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { MoneyText } from '@oktavius/base-ui';
-
+import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { EntityDetailWorkspaceTabs } from '@/components/detail/EntityDetailWorkspaceTabs';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
 import { useDemoData } from '@/app/demo-data';
-import { toast } from '@/lib/toast';
+import { useEnsureDemoOrgForRecord } from '@/lib/demo/useEnsureDemoOrg';
+import { productsPageIcon } from '@/lib/modulePageIcons';
+import { useOrgNavPaths, useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { appToast } from '@/lib/toast';
 
-import { productStatusBadge, productsPageIcon } from './shared';
+const PRODUCT_DETAIL_TABS = ['overview', 'activity', 'files', 'assistant'] as const;
+
+import { buildProductDetailFields } from './productDetailFields';
+import { productStatusBadge } from './shared';
 
 export function ProductDetailPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { products } = useDemoData();
+  const api = useApiRegistry();
+  const { findProductById } = useDemoData();
+  const profile = useOrgProfile();
+  const nav = useOrgNavPaths();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', PRODUCT_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const product = useMemo(
-    () => products.find((entry) => entry.id === productId),
-    [products, productId],
+  const product = useMemo(() => findProductById(productId), [findProductById, productId]);
+  useEnsureDemoOrgForRecord(product);
+  const updateProductInline = useCallback(
+    async (input: Parameters<typeof api.products.update>[1]) => {
+      if (!product) return;
+
+      try {
+        await api.products.update(product.id, input);
+        appToast.success('Product updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Product could not be updated.');
+        throw error;
+      }
+    },
+    [api, product],
+  );
+
+  useEntityAgentRegistration(
+    product
+      ? {
+          entityType: 'product',
+          entityId: product.id,
+          displayLabel: product.name,
+        }
+      : null,
+    { moduleId: 'products', moduleLabel: profile.terminology.products },
   );
 
   if (!product) {
     return (
-      <ModulePage title="Product not found" icon={productsPageIcon()} backTo="/products">
+      <ModulePage title="Product not found" icon={productsPageIcon()} backTo={nav.products}>
         <p className="text-sm text-muted-foreground">This product may have been removed.</p>
       </ModulePage>
     );
@@ -42,29 +78,30 @@ export function ProductDetailPage() {
           </span>
         }
         icon={productsPageIcon()}
-        backTo="/products"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete product" />}
+        backTo={nav.products}
+        actions={
+          <DetailPageHeaderActions
+            editTo={`${nav.products}/${product.id}/edit`}
+            editLabel="Edit product"
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel="Delete product"
+          />
+        }
       >
-        <DetailView
-          title="Product details"
-          fields={[
-            { label: 'Name', value: product.name, importance: 'primary' },
-            { label: 'SKU', value: product.sku, section: 'Product' },
-            { label: 'Category', value: product.category, section: 'Product' },
-            {
-              label: 'Status',
-              value: productStatusBadge(product.status),
-              section: 'Product',
-            },
-            {
-              label: 'Price',
-              value: <MoneyText value={Number(product.price)} currency={product.currency} />,
-              section: 'Pricing',
-            },
-            { label: 'Currency', value: product.currency, section: 'Pricing' },
-            { label: 'Stock', value: String(product.stock), section: 'Inventory' },
-            { label: 'Unit', value: product.unit, section: 'Inventory' },
-          ]}
+        <EntityDetailWorkspaceTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          entityType="product"
+          entityId={product.id}
+          overview={
+            <DetailView
+              title="Product details"
+              fields={buildProductDetailFields({
+                product,
+                onInlineUpdate: updateProductInline,
+              })}
+            />
+          }
         />
       </ModulePage>
 
@@ -75,8 +112,14 @@ export function ProductDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Product deleted.');
-          navigate('/products');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.products.delete(product.id),
+            navigate,
+            redirectTo: nav.products,
+            successMessage: 'Product deleted.',
+            errorMessage: 'Product could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

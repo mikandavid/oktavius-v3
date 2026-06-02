@@ -18,6 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -25,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from '@oktavius/base-ui';
 
-import { BulkImportDialog } from '@/components/data/BulkImportDialog';
 import { BulkImportWizard } from '@/components/data/BulkImportWizard';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
@@ -33,7 +38,7 @@ import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import { ApproveRejectDialog } from '@/components/workflow/ApproveRejectDialog';
 import { ShortcutHelpDialog } from '@/components/layout/ShortcutHelpDialog';
 import { DeleteIcon, EditIcon, MoreIcon, PlusIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -48,8 +53,8 @@ export function DialogsSection() {
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   return (
@@ -77,7 +82,10 @@ export function DialogsSection() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction variant="destructive" onClick={() => toast.success('Deleted.')}>
+                <AlertDialogAction
+                  variant="destructive"
+                  onClick={() => appToast.success('Deleted.')}
+                >
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -87,7 +95,7 @@ export function DialogsSection() {
             title="Remove line item?"
             description="This cannot be undone."
             confirmLabel="Remove"
-            onConfirm={() => toast.success('Line item removed.')}
+            onConfirm={() => appToast.success('Line item removed.')}
             trigger={
               <Button size="sm" variant="outline">
                 ConfirmPopover
@@ -95,6 +103,31 @@ export function DialogsSection() {
             }
           />
         </div>
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Drawer"
+        meta="Radix Dialog slide-in — mobile nav, filters, bottom sheets"
+      >
+        <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+          <DrawerTrigger asChild>
+            <Button size="sm" variant="outline">
+              Open bottom drawer
+            </Button>
+          </DrawerTrigger>
+          <DrawerContent side="bottom" className="max-w-lg mx-auto">
+            <DrawerHeader className="text-left">
+              <DrawerTitle>Filter cases</DrawerTitle>
+              <DrawerDescription>
+                Bottom sheets for mobile filters and quick actions — no extra dependencies.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-4 text-sm text-muted-foreground">
+              Use <code className="text-foreground">side=&quot;left&quot;</code> for navigation
+              rails (see mobile app shell).
+            </div>
+          </DrawerContent>
+        </Drawer>
       </ShowcaseBlock>
 
       <ShowcaseBlock
@@ -120,7 +153,7 @@ export function DialogsSection() {
               <DialogFormFooter
                 confirmLabel="Assign"
                 onConfirm={() => {
-                  toast.success('Assigned.');
+                  appToast.success('Assigned.');
                   setDialogOpen(false);
                 }}
                 onCancel={() => setDialogOpen(false)}
@@ -139,10 +172,7 @@ export function DialogsSection() {
             Reject flow
           </Button>
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-            Bulk import wizard
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setImportDialogOpen(true)}>
-            Bulk import dialog
+            Bulk import
           </Button>
         </div>
       </ShowcaseBlock>
@@ -155,14 +185,14 @@ export function DialogsSection() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => toast.info('Edit clicked.')}>
+            <DropdownMenuItem onClick={() => appToast.info('Edit clicked.')}>
               <EditIcon size={14} className="mr-2" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
-              onClick={() => toast.error('Delete clicked.')}
+              onClick={() => appToast.error('Delete clicked.')}
             >
               <DeleteIcon size={14} className="mr-2" />
               Delete
@@ -177,7 +207,7 @@ export function DialogsSection() {
         title="Delete this record?"
         description="This action cannot be undone."
         confirmLabel="Delete"
-        onConfirm={() => toast.success('Record deleted.')}
+        onConfirm={() => appToast.success('Record deleted.')}
       />
 
       <SubEntityFormDialog
@@ -188,7 +218,7 @@ export function DialogsSection() {
         defaultValues={{ name: '', role: 'primary_contact' }}
         submitLabel="Add contact"
         onSubmit={() => {
-          toast.success('Contact added.');
+          appToast.success('Contact added.');
         }}
       />
 
@@ -198,7 +228,7 @@ export function DialogsSection() {
         action="approve"
         title="PO SO-2024-1101"
         description="Approve this purchase order for €15,800?"
-        onConfirm={() => toast.success('Approved.')}
+        onConfirm={() => appToast.success('Approved.')}
       />
 
       <ApproveRejectDialog
@@ -207,15 +237,10 @@ export function DialogsSection() {
         action="reject"
         title="PO SO-2024-1101"
         commentRequired
-        onConfirm={() => toast.success('Rejected.')}
+        onConfirm={() => appToast.success('Rejected.')}
       />
 
       <BulkImportWizard open={importOpen} onOpenChange={setImportOpen} entityLabel="clients" />
-      <BulkImportDialog
-        open={importDialogOpen}
-        onOpenChange={setImportDialogOpen}
-        entityLabel="clients"
-      />
 
       <ShowcaseBlock title="ShortcutHelpDialog" meta="Keyboard shortcut reference">
         <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)}>

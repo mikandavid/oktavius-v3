@@ -10,6 +10,7 @@ import {
 } from '@oktavius/base-ui';
 
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
+import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
 import { EmailTemplatePicker, type EmailTemplateOption } from './EmailTemplatePicker';
 
@@ -54,7 +55,7 @@ export interface DocumentSendDialogProps {
     recipient: string;
     subject: string;
     message: string;
-  }) => void;
+  }) => boolean | void | Promise<boolean | void>;
 }
 
 /** Send a generated document via email with template and message body. */
@@ -70,6 +71,7 @@ export function DocumentSendDialog({
 }: DocumentSendDialogProps) {
   const [templateId, setTemplateId] = useState<string | undefined>(emailTemplates[0]?.id);
   const [formKey, setFormKey] = useState(0);
+  const { handleOpenChange, requestClose, onDirtyChange } = useDirtyDialogClose(onOpenChange);
 
   useEffect(() => {
     if (open) {
@@ -95,7 +97,7 @@ export function DocumentSendDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
@@ -121,18 +123,22 @@ export function DocumentSendDialog({
             message: '',
           }}
           submitLabel="Send"
-          onSubmit={(values) => {
+          warnOnDirty
+          onDirtyChange={onDirtyChange}
+          onSubmit={async (values) => {
             if (!templateId || !values.recipient.trim() || !values.subject.trim()) return;
-            onSend({
+            const result = await onSend({
               templateId,
               recipient: values.recipient.trim(),
               subject: values.subject.trim(),
               message: values.message.trim(),
             });
-            onOpenChange(false);
+            if (result !== false) {
+              onOpenChange(false);
+            }
           }}
           footerActions={
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={requestClose}>
               Cancel
             </Button>
           }

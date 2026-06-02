@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 
 import { ChartCard, type ChartPoint } from '@oktavius/base-ui';
 
+import { createConfiguredReportStore } from '@/api/apiStoreConfig';
 import { ModulePage } from '@/components/common/PageLayout';
+import { MODULE_TABS_CONTENT_SCROLL_CLASS } from '@/components/common/pageChrome';
 import {
   COMBO_DATA,
   MULTI_LINE_REVENUE,
@@ -41,6 +43,16 @@ function aggregateByMonth(items: Array<{ date: string; value: number }>): ChartP
 
 export function ReportsPage() {
   const { orders, invoices } = useDemoData();
+  const storage = typeof window === 'undefined' ? undefined : window.localStorage;
+  const reportStore = useMemo(
+    () =>
+      createConfiguredReportStore({
+        storageKey: 'reports',
+        storage,
+        env: import.meta.env,
+      }),
+    [storage],
+  );
 
   const ordersTrend = useMemo(
     () =>
@@ -83,91 +95,94 @@ export function ReportsPage() {
       title="Reports"
       subtitle={`€${totalRevenue.toLocaleString('de-AT')} invoiced · €${totalOrders.toLocaleString('de-AT')} ordered`}
       icon={reportsPageIcon()}
+      fillHeight
     >
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-        <ChartCard
-          title="Revenue trend"
-          meta="Issued invoice amounts by month"
-          type="area"
-          data={REVENUE_DATA}
-          valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
-        />
-        <ChartCard
-          title="Revenue vs margin"
-          meta="Multi-line comparison"
-          type="multi-line"
-          multiSeriesData={MULTI_LINE_REVENUE}
-          series={REVENUE_SERIES}
-          valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
-        />
-        <ChartCard
-          title="Orders + revenue"
-          meta="Volume vs value"
-          type="combo"
-          comboData={COMBO_DATA}
-          barLabel="Orders"
-          lineLabel="Revenue"
-          valueFormatter={(value) =>
-            value > 500 ? `€${value.toLocaleString('de-AT')}` : String(value)
-          }
-        />
-        <ChartCard
-          title="Order value trend"
-          meta="Order totals by month"
-          type="line"
-          data={ordersTrend}
-          valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
-        />
-        <ChartCard
-          title="Top clients"
-          meta="Revenue share"
-          type="horizontal-bar"
-          data={TOP_CLIENTS}
-          valueFormatter={(value) => `€${value}k`}
-        />
-        <ChartCard
-          title="Invoice collection"
-          meta="Paid vs open balances"
-          type="pie"
-          data={paidVsOpen}
-          valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
-        />
-        <ChartCard
-          title="Team KPIs"
-          meta="Actual vs target"
-          type="radar"
-          radarData={RADAR_KPIS}
-          series={RADAR_SERIES}
-        />
-        <ChartCard
-          title="Orders by status"
-          meta="Current pipeline mix"
-          type="bar"
-          data={ORDER_STATUS_DATA.length ? ORDER_STATUS_DATA : orderStatusMix}
-        />
-        <ChartCard
-          title="Pipeline by quarter"
-          meta="Stacked new / active / won"
-          type="stacked-bar"
-          stackedData={STACKED_PIPELINE}
-        />
-        <ChartCard
-          title="Sales funnel"
-          meta="Lead to won conversion"
-          type="funnel"
-          funnelData={PIPELINE_FUNNEL}
-        />
-        <ChartCard
-          title="Collection rate"
-          meta="Paid invoices vs total issued"
-          type="gauge"
-          gaugeValue={Math.round(((paidVsOpen[0]?.value ?? 0) / Math.max(totalRevenue, 1)) * 100)}
-          gaugeLabel="Collected"
-        />
-      </div>
+      <div className={MODULE_TABS_CONTENT_SCROLL_CLASS}>
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          <ChartCard
+            title="Revenue trend"
+            meta="Issued invoice amounts by month"
+            type="area"
+            data={REVENUE_DATA}
+            valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
+          />
+          <ChartCard
+            title="Revenue vs margin"
+            meta="Multi-line comparison"
+            type="multi-line"
+            multiSeriesData={MULTI_LINE_REVENUE}
+            series={REVENUE_SERIES}
+            valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
+          />
+          <ChartCard
+            title="Orders + revenue"
+            meta="Volume vs value"
+            type="combo"
+            comboData={COMBO_DATA}
+            barLabel="Orders"
+            lineLabel="Revenue"
+            valueFormatter={(value) =>
+              value > 500 ? `€${value.toLocaleString('de-AT')}` : String(value)
+            }
+          />
+          <ChartCard
+            title="Order value trend"
+            meta="Order totals by month"
+            type="line"
+            data={ordersTrend}
+            valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
+          />
+          <ChartCard
+            title="Top clients"
+            meta="Revenue share"
+            type="horizontal-bar"
+            data={TOP_CLIENTS}
+            valueFormatter={(value) => `€${value}k`}
+          />
+          <ChartCard
+            title="Invoice collection"
+            meta="Paid vs open balances"
+            type="pie"
+            data={paidVsOpen}
+            valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
+          />
+          <ChartCard
+            title="Team KPIs"
+            meta="Actual vs target"
+            type="radar"
+            radarData={RADAR_KPIS}
+            series={RADAR_SERIES}
+          />
+          <ChartCard
+            title="Orders by status"
+            meta="Current pipeline mix"
+            type="bar"
+            data={ORDER_STATUS_DATA.length ? ORDER_STATUS_DATA : orderStatusMix}
+          />
+          <ChartCard
+            title="Pipeline by quarter"
+            meta="Stacked new / active / won"
+            type="stacked-bar"
+            stackedData={STACKED_PIPELINE}
+          />
+          <ChartCard
+            title="Sales funnel"
+            meta="Lead to won conversion"
+            type="funnel"
+            funnelData={PIPELINE_FUNNEL}
+          />
+          <ChartCard
+            title="Collection rate"
+            meta="Paid invoices vs total issued"
+            type="gauge"
+            gaugeValue={Math.round(((paidVsOpen[0]?.value ?? 0) / Math.max(totalRevenue, 1)) * 100)}
+            gaugeLabel="Collected"
+          />
+        </div>
 
-      <div className="mt-4">
-        <ReportBuilderPanel />
+        <div className="mt-4">
+          <ReportBuilderPanel store={reportStore} />
+        </div>
       </div>
     </ModulePage>
   );

@@ -12,7 +12,7 @@ import { CommentsPanel, type CommentItem } from '@/components/workflow/CommentsP
 import { MentionComposer } from '@/components/workflow/MentionComposer';
 import { TaskInbox, type TaskInboxItem } from '@/components/workflow/TaskInbox';
 import { UserIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -148,7 +148,7 @@ export function WorkflowSection() {
       </ShowcaseBlock>
 
       <ShowcaseBlock title="TaskInbox" meta="Cross-module assigned work queue">
-        <TaskInbox items={TASK_ITEMS} onItemClick={(id) => toast.info(`Open task ${id}`)} />
+        <TaskInbox items={TASK_ITEMS} onItemClick={(id) => appToast.info(`Open task ${id}`)} />
       </ShowcaseBlock>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -187,7 +187,7 @@ export function WorkflowSection() {
               },
               ...current,
             ]);
-            toast.success('Comment posted.');
+            appToast.success('Comment posted.');
           }}
         />
 
@@ -199,7 +199,7 @@ export function WorkflowSection() {
                 item.id === id ? { ...item, status: 'approved' as const } : item,
               ),
             );
-            toast.success('Approved.');
+            appToast.success('Approved.');
           }}
           onReject={(id) => {
             setApprovals((current) =>
@@ -207,7 +207,7 @@ export function WorkflowSection() {
                 item.id === id ? { ...item, status: 'rejected' as const } : item,
               ),
             );
-            toast.success('Rejected.');
+            appToast.success('Rejected.');
           }}
         />
       </div>
@@ -249,7 +249,7 @@ export function WorkflowSection() {
               status: 'pending',
             }}
             onRespond={(approved) => {
-              toast.success(approved ? 'Approved' : 'Rejected');
+              appToast.success(approved ? 'Approved' : 'Rejected');
             }}
           />
         </ShowcaseBlock>
@@ -261,9 +261,9 @@ export function WorkflowSection() {
           getItemId={(item) => item.id}
           onMove={(move) => {
             setKanbanColumns((current) => applyKanbanMove(current, (item) => item.id, move));
-            toast.success('Task moved.');
+            appToast.success('Task moved.');
           }}
-          onCardClick={() => toast.info('Card clicked — navigate to detail in modules.')}
+          onCardClick={() => appToast.info('Card clicked — navigate to detail in modules.')}
           renderCard={(item) => (
             <ListRow
               title={item.title}

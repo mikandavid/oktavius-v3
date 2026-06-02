@@ -20,11 +20,11 @@ const queryClient = new QueryClient({
 
 type ApiProviderProps = {
   children: ReactNode;
-  demoRegistry: DemoApiRegistry;
+  registry: DemoApiRegistry;
 };
 
-export function ApiProvider({ children, demoRegistry }: ApiProviderProps) {
-  const value = useMemo(() => ({ registry: demoRegistry }), [demoRegistry]);
+export function ApiProvider({ children, registry }: ApiProviderProps) {
+  const value = useMemo(() => ({ registry }), [registry]);
 
   return (
     <ApiContext.Provider value={value}>

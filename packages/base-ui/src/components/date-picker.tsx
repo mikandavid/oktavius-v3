@@ -413,38 +413,40 @@ export function DatePicker({
               className,
             )}
           >
-            <span className="flex shrink-0 items-center pl-3 text-muted-foreground">
-              <CalendarBlank className="h-3.5 w-3.5" />
-            </span>
-            <input
-              ref={dateInputRef}
-              id={id}
-              type="text"
-              disabled={disabled}
-              value={dateText}
-              placeholder="DD.MM.YYYY"
-              onFocus={() => !disabled && setOpen(true)}
-              onChange={(e) => handleDateChange(e.target.value)}
-              onBlur={handleDateBlur}
-              onKeyDown={sharedKeyDown}
-              className={cn(inputBase, 'min-w-0 flex-1 px-2')}
-            />
-            <span className="select-none text-xs text-border">|</span>
-            <span className="flex shrink-0 items-center pl-2 text-muted-foreground">
-              <Clock className="h-3.5 w-3.5" />
-            </span>
-            <input
-              ref={timeInputRef}
-              type="text"
-              disabled={disabled}
-              value={timeText}
-              placeholder="HH:mm"
-              onFocus={() => !disabled && setOpen(true)}
-              onChange={(e) => handleTimeChange(e.target.value)}
-              onBlur={handleTimeBlur}
-              onKeyDown={sharedKeyDown}
-              className={cn(inputBase, 'w-14 shrink-0 px-2')}
-            />
+            <div className="flex min-w-0 items-center">
+              <span className="flex shrink-0 items-center pl-3 text-muted-foreground">
+                <CalendarBlank className="h-3.5 w-3.5" />
+              </span>
+              <input
+                ref={dateInputRef}
+                id={id}
+                type="text"
+                disabled={disabled}
+                value={dateText}
+                placeholder="DD.MM.YYYY"
+                onFocus={() => !disabled && setOpen(true)}
+                onChange={(e) => handleDateChange(e.target.value)}
+                onBlur={handleDateBlur}
+                onKeyDown={sharedKeyDown}
+                className={cn(inputBase, 'w-[6.5rem] shrink-0 px-2')}
+              />
+              <span className="select-none px-1 text-xs text-border">|</span>
+              <span className="flex shrink-0 items-center text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+              </span>
+              <input
+                ref={timeInputRef}
+                type="text"
+                disabled={disabled}
+                value={timeText}
+                placeholder="HH:mm"
+                onFocus={() => !disabled && setOpen(true)}
+                onChange={(e) => handleTimeChange(e.target.value)}
+                onBlur={handleTimeBlur}
+                onKeyDown={sharedKeyDown}
+                className={cn(inputBase, 'w-14 shrink-0 px-2')}
+              />
+            </div>
             {hasClear ? (
               <button
                 type="button"
@@ -455,9 +457,7 @@ export function DatePicker({
               >
                 <X className="h-3 w-3" />
               </button>
-            ) : (
-              <span className="flex-1" />
-            )}
+            ) : null}
           </div>
         ) : (
           // ── Single input trigger (date or time) ─────────────────────────

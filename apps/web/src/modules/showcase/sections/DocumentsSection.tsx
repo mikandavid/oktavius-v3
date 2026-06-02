@@ -5,11 +5,15 @@ import { AttachmentList, Button, type Attachment } from '@oktavius/base-ui';
 import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import { DocumentGenerateDialog } from '@/components/documents/DocumentGenerateDialog';
 import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
+import {
+  DOCUMENT_PREVIEW_DEMO_FILES,
+  DOCUMENT_PREVIEW_DEMO_PDF_URL,
+} from '@/components/documents/documentPreviewDemoData';
 import { PdfPreviewPanel } from '@/components/documents/PdfPreviewPanel';
 import { DocumentSendDialog } from '@/components/documents/DocumentSendDialog';
 import { EmailTemplatePicker } from '@/components/documents/EmailTemplatePicker';
 import { TemplatePicker } from '@/components/documents/TemplatePicker';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -63,13 +67,10 @@ const INITIAL_ATTACHMENTS: Attachment[] = [
     uploadedBy: 'Markus Leitner',
   },
 ];
-
-const DEMO_PDF_URL = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
-
 export function DocumentsSection() {
   const [attachments, setAttachments] = useState(INITIAL_ATTACHMENTS);
   const [deletingId, setDeletingId] = useState<string | undefined>();
-  const [previewId, setPreviewId] = useState('f1');
+  const [previewId, setPreviewId] = useState(DOCUMENT_PREVIEW_DEMO_FILES[0]?.id ?? '');
   const [generateOpen, setGenerateOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [templateId, setTemplateId] = useState(DEMO_TEMPLATES[0]?.id);
@@ -82,8 +83,8 @@ export function DocumentsSection() {
           document={{
             name: 'sample_report.pdf',
             mimeType: 'application/pdf',
-            sourceUrl: DEMO_PDF_URL,
-            downloadUrl: DEMO_PDF_URL,
+            sourceUrl: DOCUMENT_PREVIEW_DEMO_PDF_URL,
+            downloadUrl: DOCUMENT_PREVIEW_DEMO_PDF_URL,
           }}
           bodyClassName="min-h-[280px]"
         />
@@ -94,27 +95,32 @@ export function DocumentsSection() {
           document={{
             name: 'contract_signed.pdf',
             mimeType: 'application/pdf',
-            sourceUrl: DEMO_PDF_URL,
-            downloadUrl: DEMO_PDF_URL,
+            sourceUrl: DOCUMENT_PREVIEW_DEMO_PDF_URL,
+            downloadUrl: DOCUMENT_PREVIEW_DEMO_PDF_URL,
           }}
         />
       </ShowcaseBlock>
 
       <ShowcaseBlock title="DocumentPreviewPanel" meta="SplitView master-detail · file queue">
-        <DocumentPreviewPanel selectedId={previewId} onSelect={setPreviewId} />
+        <DocumentPreviewPanel
+          className="h-[min(32rem,70vh)]"
+          files={DOCUMENT_PREVIEW_DEMO_FILES}
+          selectedId={previewId}
+          onSelect={setPreviewId}
+        />
       </ShowcaseBlock>
 
       <ShowcaseBlock title="AttachmentList" meta="Open · delete · file type icons">
         <AttachmentList
           attachments={attachments}
           isDeleting={deletingId}
-          onOpen={(file) => toast.info(`Open ${file.name}`)}
+          onOpen={(file) => appToast.info(`Open ${file.name}`)}
           onDelete={(id) => {
             setDeletingId(id);
             setTimeout(() => {
               setAttachments((current) => current.filter((a) => a.id !== id));
               setDeletingId(undefined);
-              toast.success('Attachment removed.');
+              appToast.success('Attachment removed.');
             }, 600);
           }}
         />
@@ -153,7 +159,7 @@ export function DocumentsSection() {
         onOpenChange={setGenerateOpen}
         templates={DEMO_TEMPLATES}
         onGenerate={({ templateId: id, format }) => {
-          toast.success(`Generated ${format.toUpperCase()} from template ${id}.`);
+          appToast.success(`Generated ${format.toUpperCase()} from template ${id}.`);
         }}
       />
 
@@ -162,7 +168,7 @@ export function DocumentsSection() {
         onOpenChange={setSendOpen}
         emailTemplates={DEMO_EMAIL_TEMPLATES}
         onSend={(payload) => {
-          toast.success(`Sent to ${payload.recipient}.`);
+          appToast.success(`Sent to ${payload.recipient}.`);
         }}
       />
     </div>

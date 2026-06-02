@@ -1,6 +1,10 @@
 import { useState } from 'react';
 
-import { CalendarEventQuickCreate, CalendarView } from '@oktavius/base-ui';
+import {
+  CalendarEventEditorDialog,
+  CalendarEventQuickCreate,
+  CalendarView,
+} from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { calendarPageIcon } from '@/lib/modulePageIcons';
@@ -25,8 +29,13 @@ export function CalendarPage() {
         onViewChange={setView}
         events={calendar.events}
         calendars={calendar.calendars}
+        teamMembers={calendar.teamMembers}
+        selectedTeamMemberIds={calendar.selectedTeamMemberIds}
+        onTeamMemberVisibilityChange={calendar.onTeamMemberVisibilityChange}
+        onSelectAllTeamMembers={calendar.onSelectAllTeamMembers}
+        onClearTeamMembers={calendar.onClearTeamMembers}
         onCalendarVisibilityChange={calendar.onCalendarVisibilityChange}
-        showCalendarLegend
+        showSidebar
         onEventClick={calendar.onEventClick}
         onEventMove={calendar.onEventMove}
         onEventResize={calendar.onEventResize}
@@ -36,12 +45,24 @@ export function CalendarPage() {
       />
 
       <CalendarEventQuickCreate
-        draft={calendar.editorDraft}
+        draft={calendar.createDraft}
         calendars={calendar.calendars}
+        teamMembers={calendar.teamMembers}
         onOpenChange={(open) => {
           if (!open) calendar.cancelEditor();
         }}
         onSave={calendar.confirmSave}
+      />
+
+      <CalendarEventEditorDialog
+        draft={calendar.editDraft}
+        calendars={calendar.calendars}
+        teamMembers={calendar.teamMembers}
+        onOpenChange={(open) => {
+          if (!open) calendar.cancelEditor();
+        }}
+        onSave={calendar.confirmSave}
+        onDelete={calendar.deleteEvent}
       />
     </ModulePage>
   );

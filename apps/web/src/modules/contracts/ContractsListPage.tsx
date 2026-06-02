@@ -1,52 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { CrudMainView } from '@/components/data/CrudMainView';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { useDemoData } from '@/app/demo-data';
-import { useListPageState } from '@/lib/useListPageState';
+import {
+  StandardCrudListPage,
+  type StandardCrudListRequestParams,
+} from '@/components/data/StandardCrudListPage';
 
-import { contractColumns, contractFilters, contractsPageIcon } from './shared';
+import {
+  CONTRACT_SAVED_VIEWS,
+  contractColumns,
+  contractFilters,
+  contractsPageIcon,
+} from './shared';
 
 export function ContractsListPage() {
+  const api = useApiRegistry();
   const { contracts } = useDemoData();
-  const [rows, setRows] = useState(contracts);
-
-  useEffect(() => {
-    setRows(contracts);
-  }, [contracts]);
-
-  const list = useListPageState({
-    rows,
-    defaultSort: 'contractNumber',
-    filterKeys: ['status', 'clientName', 'owner'],
-    searchKeys: ['contractNumber', 'title', 'clientName', 'owner'],
-  });
+  const loadContracts = useCallback(
+    (params: StandardCrudListRequestParams) => api.contracts.list(params),
+    [api.contracts],
+  );
 
   return (
-    <CrudMainView
+    <StandardCrudListPage
       title="Contracts"
       subtitle="Agreements, renewals, and commercial terms"
       icon={contractsPageIcon()}
+      rows={contracts}
+      loadRows={loadContracts}
       columns={contractColumns}
-      rows={list.paged}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
-      search={list.search}
-      onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search contracts"
       filters={contractFilters}
-      values={list.values}
-      onFilterChange={list.onFilterChange}
-      onReset={list.onReset}
-      page={list.page}
-      pageSize={list.pageSize}
-      total={list.total}
-      totalPages={list.totalPages}
-      onPageChange={list.onPageChange}
+      savedViews={CONTRACT_SAVED_VIEWS}
+      defaultSort="contractNumber"
+      filterKeys={['status', 'clientName', 'owner']}
+      searchKeys={['contractNumber', 'title', 'clientName', 'owner']}
+      searchPlaceholder="Search contracts"
       entityLabel="contract"
       getRowHref={(row) => `/contracts/${row.id}`}
-      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
-      exportOptions={{ fileName: 'contracts', label: 'Export' }}
-      allRows={list.filtered}
+      onDeleteRows={(ids) =>
+        Promise.all(ids.map((id) => api.contracts.delete(id))).then(() => undefined)
+      }
+      exportFileName="contracts"
       emptyTitle="No contracts found"
       emptyDescription="Adjust your filters or search terms."
     />

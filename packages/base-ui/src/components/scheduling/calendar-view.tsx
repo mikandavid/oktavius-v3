@@ -14,7 +14,7 @@ import {
   type CalendarEventResizeTarget,
 } from './calendar-dnd';
 import { CalendarEventChip } from './calendar-event-chip';
-import { CalendarSourceLegend } from './calendar-source-legend';
+import { CalendarSidebar } from './calendar-sidebar';
 import { CalendarTimeGrid } from './calendar-time-grid';
 import { CalendarToolbar } from './calendar-toolbar';
 import { AgendaList } from './agenda-list';
@@ -22,6 +22,7 @@ import {
   CALENDAR_WEEKDAY_LABELS,
   type CalendarEvent,
   type CalendarEventClickHandler,
+  type CalendarTeamMember,
   type CalendarViewMode,
   DEFAULT_SCHEDULER_END_HOUR,
   DEFAULT_SCHEDULER_START_HOUR,
@@ -45,8 +46,17 @@ export interface CalendarViewProps {
   onViewChange?: (view: CalendarViewMode) => void;
   events?: CalendarEvent[];
   calendars?: CalendarSource[];
+  /** Resolves attendee ids for tooltips and schedule detail lines. */
+  teamMembers?: CalendarTeamMember[];
+  /** Checked team members in the sidebar — omit to treat all members as selected. */
+  selectedTeamMemberIds?: string[];
+  onTeamMemberVisibilityChange?: (memberId: string, visible: boolean) => void;
+  onSelectAllTeamMembers?: () => void;
+  onClearTeamMembers?: () => void;
   onCalendarVisibilityChange?: (calendarId: string, visible: boolean) => void;
-  /** Show calendar color legend sidebar (Google-style) */
+  /** Show left sidebar: team list, calendar legend, mini month picker */
+  showSidebar?: boolean;
+  /** @deprecated Use `showSidebar` — kept for existing call sites */
   showCalendarLegend?: boolean;
   leadingAction?: ReactNode;
   startHour?: number;
@@ -74,6 +84,7 @@ function MonthDayCell({
   anchor,
   events,
   calendars,
+  teamMembers,
   draggable,
   onEventClick,
   onDayClick,
@@ -82,6 +93,7 @@ function MonthDayCell({
   anchor: Date;
   events: CalendarEvent[];
   calendars?: CalendarSource[];
+  teamMembers?: CalendarTeamMember[];
   draggable: boolean;
   onEventClick?: CalendarEventClickHandler;
   onDayClick?: (day: Date) => void;
@@ -122,6 +134,7 @@ function MonthDayCell({
             key={event.id}
             event={event}
             calendars={calendars}
+            teamMembers={teamMembers}
             compact
             draggable={draggable}
             onClick={onEventClick}
@@ -145,6 +158,7 @@ function MonthGrid({
   anchor,
   events,
   calendars,
+  teamMembers,
   draggable,
   onEventClick,
   onDayClick,
@@ -152,6 +166,7 @@ function MonthGrid({
   anchor: Date;
   events: CalendarEvent[];
   calendars?: CalendarSource[];
+  teamMembers?: CalendarTeamMember[];
   draggable: boolean;
   onEventClick?: CalendarEventClickHandler;
   onDayClick?: (day: Date) => void;
@@ -178,6 +193,7 @@ function MonthGrid({
             anchor={anchor}
             events={events}
             calendars={calendars}
+            teamMembers={teamMembers}
             draggable={draggable}
             onEventClick={onEventClick}
             onDayClick={onDayClick}
@@ -195,7 +211,13 @@ export function CalendarView({
   onViewChange,
   events = [],
   calendars,
+  teamMembers,
+  selectedTeamMemberIds,
+  onTeamMemberVisibilityChange,
+  onSelectAllTeamMembers,
+  onClearTeamMembers,
   onCalendarVisibilityChange,
+  showSidebar,
   showCalendarLegend = false,
   leadingAction,
   startHour = DEFAULT_SCHEDULER_START_HOUR,
@@ -216,6 +238,9 @@ export function CalendarView({
   const filteredEvents = visibleEvents(events, calendars);
   const weekDays = getWeekDays(anchor);
   const dayAnchor = startOfDay(anchor);
+  const sidebarVisible =
+    showSidebar ??
+    (showCalendarLegend || (teamMembers?.length ?? 0) > 0 || (calendars?.length ?? 0) > 0);
   const activeEvent = activeEventId
     ? filteredEvents.find((event) => event.id === activeEventId)
     : null;
@@ -256,28 +281,34 @@ export function CalendarView({
   };
 
   const calendarBody = (
-    <>
-      <CalendarToolbar
-        anchor={anchor}
-        view={view}
-        onAnchorChange={onAnchorChange}
-        onViewChange={onViewChange}
-        leadingAction={leadingAction}
-      />
+    <div className="flex min-h-[28rem] flex-col lg:min-h-0 lg:flex-row">
+      {sidebarVisible ? (
+        <CalendarSidebar
+          anchor={anchor}
+          view={view}
+          onAnchorChange={onAnchorChange}
+          teamMembers={teamMembers}
+          selectedTeamMemberIds={selectedTeamMemberIds}
+          onTeamMemberVisibilityChange={onTeamMemberVisibilityChange}
+          onSelectAllTeamMembers={onSelectAllTeamMembers}
+          onClearTeamMembers={onClearTeamMembers}
+          calendars={calendars}
+          onCalendarVisibilityChange={onCalendarVisibilityChange}
+        />
+      ) : null}
 
-      <div className="flex min-h-[28rem]">
-        {showCalendarLegend && calendars && calendars.length > 0 ? (
-          <aside className="hidden w-52 shrink-0 border-r border-border/40 p-4 lg:block">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              Calendars
-            </p>
-            <CalendarSourceLegend calendars={calendars} onToggle={onCalendarVisibilityChange} />
-          </aside>
-        ) : null}
+      <div className="flex min-w-0 min-h-0 flex-1 flex-col">
+        <CalendarToolbar
+          anchor={anchor}
+          view={view}
+          onAnchorChange={onAnchorChange}
+          onViewChange={onViewChange}
+          leadingAction={leadingAction}
+        />
 
         <div
           className={cn(
-            'min-w-0 flex-1',
+            'min-h-0 min-w-0 flex-1',
             view === 'agenda' ? '' : cn(schedulingBodyClass, view !== 'month' && 'overflow-x-auto'),
           )}
         >
@@ -286,6 +317,7 @@ export function CalendarView({
               anchor={anchor}
               events={filteredEvents}
               calendars={calendars}
+              teamMembers={teamMembers}
               draggable={draggable}
               onEventClick={onEventClick}
               onDayClick={handleDayClick}
@@ -335,12 +367,13 @@ export function CalendarView({
               embedded
               events={filteredEvents}
               calendars={calendars}
+              teamMembers={teamMembers}
               onEventClick={onEventClick}
             />
           ) : null}
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -360,6 +393,7 @@ export function CalendarView({
               <CalendarEventChip
                 event={activeEvent}
                 calendars={calendars}
+                teamMembers={teamMembers}
                 className="scale-[1.02] shadow-lg ring-2 ring-ring/30"
               />
             ) : null}

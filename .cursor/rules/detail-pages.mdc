@@ -8,13 +8,22 @@ alwaysApply: false
 
 ## Choose the pattern
 
-| Entity | Pattern |
+| Entity / workflow | Pattern |
 |---|---|
-| Simple (users, single record) | `<ModulePage>` + `<DetailView>` — one scroll, no tabs |
-| Complex (clients, cases, projects) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` per tab |
-| Multi-section (settings, profile sections) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` — see `docs/ui-rules/section-nav.md` |
+| Simple record (users, contacts, basic config) | `<ModulePage>` + `<DetailView>` — one scroll, no tabs |
+| Long record with many sections (profile, compliance, settings-like details) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` — see `docs/ui-rules/section-nav.md` |
+| Operational workspace with peer modes (case workbench, project workspace) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` per tab, only after the modes are genuinely separate workflows |
+| Queue or master-detail workflow | `<ModulePage fillHeight>` + `<SplitView>` — see `docs/ui-rules/split-view-master-detail.md` |
 
 **Never put `<DetailView>` inside `<Tabs>`** — it nests a Card inside tab content. Use `SectionCard` + field rows, or a dedicated Details tab with inline `<dl>` layout.
+
+**Tabs are not the default for complexity.** Before adding a top tab bar, choose the page anatomy:
+
+1. If users mostly read the record, use `DetailView`.
+2. If users scan many sections in one record, use `AppSectionNavLayout`.
+3. If users choose records from a queue and work one at a time, use `SplitView`.
+4. If users compare or inspect files, make the preview the dominant surface.
+5. Use tabs only for peer work modes that users intentionally switch between, such as Overview / Activity / Files on a true workspace.
 
 ## ModulePage header
 
@@ -22,7 +31,7 @@ alwaysApply: false
 - `actions`: `<IconEditButton>` + `<IconDeleteButton>` only — icon-only, no visible text
 - Delete: `<ConfirmActionDialog variant destructive>` wired to `open` state
 
-## Complex entity — Overview tab (first tab)
+## Workspace tabs — Overview tab (first tab)
 
 1. `StatCard` row — `STAT_CARD_GRID_CLASS`, max 6 KPIs
 2. `SectionCard` “Recent activity” — `<Timeline>`

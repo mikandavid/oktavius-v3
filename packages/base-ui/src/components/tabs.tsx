@@ -2,7 +2,7 @@ import * as TabsPrimitive from '@radix-ui/react-tabs';
 import * as React from 'react';
 
 import { cn } from '../lib/utils';
-import { pressableMicroClasses } from '../lib/microInteractions';
+import { surfaceMicroClasses } from '../lib/microInteractions';
 
 export const Tabs = TabsPrimitive.Root;
 
@@ -13,7 +13,7 @@ export const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      'inline-flex h-9 items-center gap-0.5 rounded-control bg-muted p-1 text-muted-foreground',
+      'flex w-full flex-wrap items-stretch gap-0 border-b border-border/60 bg-transparent p-0 text-muted-foreground',
       className,
     )}
     {...props}
@@ -31,19 +31,20 @@ export const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      'relative inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-control px-3 py-1 text-sm font-medium ring-offset-background',
-      pressableMicroClasses,
+      'relative -mb-px inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 text-sm font-medium ring-offset-background',
+      surfaceMicroClasses,
+      'transition-[color,border-color] duration-150 ease-out',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
       'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-      'data-[state=inactive]:hover:bg-muted/60 data-[state=inactive]:hover:text-foreground data-[state=inactive]:active:bg-muted/80',
-      'data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
+      'data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:border-border data-[state=inactive]:hover:text-foreground',
+      'data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:shadow-none',
       className,
     )}
     {...props}
   >
     {children}
     {attention ? (
-      <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-warning" />
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-warning" aria-hidden />
     ) : null}
   </TabsPrimitive.Trigger>
 ));

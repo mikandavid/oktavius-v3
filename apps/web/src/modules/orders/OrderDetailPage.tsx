@@ -1,50 +1,98 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import {
-  Badge,
-  InlineEmptyState,
-  ListRow,
-  MoneyText,
-  SectionCard,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  formatDisplayDate,
-} from '@oktavius/base-ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@oktavius/base-ui';
 
+import { ModuleScopedAssistantPanel } from '@/components/agent/ModuleScopedAssistantPanel';
+import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
+import { DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { GeneratedRelatedRecordsPanel } from '@/components/detail/relatedRecordsConfig';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
+import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
 import { useDemoData } from '@/app/demo-data';
+import { useEnsureDemoOrgForRecord } from '@/lib/demo/useEnsureDemoOrg';
+import { useOrgNavPaths } from '@/lib/org-profiles/useOrgProfile';
 import { ordersPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { appToast } from '@/lib/toast';
+import { useApiRegistry } from '@/api/ApiProvider';
+
+const ORDER_DETAIL_TABS = ['overview', 'lines', 'tasks', 'activity', 'files', 'assistant'] as const;
 
 import { orderStatusBadge } from './shared';
+import { buildOrderDetailFields } from './orderDetailFields';
+import { createOrderLinesRelationConfig, orderTasksRelationConfig } from './orderRelatedRecords';
 
 export function OrderDetailPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { orders, orderLines, tasks } = useDemoData();
-  const [activeTab, setActiveTab] = useState('overview');
+  const api = useApiRegistry();
+  const { clients, findOrderById, orderLines, tasks, users } = useDemoData();
+  const nav = useOrgNavPaths();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', ORDER_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const order = useMemo(() => orders.find((entry) => entry.id === orderId), [orders, orderId]);
+  const order = useMemo(() => findOrderById(orderId), [findOrderById, orderId]);
+  useEnsureDemoOrgForRecord(order);
 
-  const lines = useMemo(
-    () => orderLines.filter((line) => line.orderId === orderId),
-    [orderLines, orderId],
+  const updateOrderInline = useCallback(
+    async (input: Parameters<typeof api.orders.update>[1]) => {
+      if (!order) return;
+      try {
+        await api.orders.update(order.id, input);
+        appToast.success('Order updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Order could not be updated.');
+        throw error;
+      }
+    },
+    [api, order],
+  );
+  const clientRelationOptions = useMemo(
+    () =>
+      clients.map((client) => ({
+        value: client.name,
+        label: client.name,
+        description: [client.city, client.industry].filter(Boolean).join(' · '),
+      })),
+    [clients],
+  );
+  const ownerRelationOptions = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.name,
+        label: user.name,
+        description: [user.team, user.role].filter(Boolean).join(' · '),
+      })),
+    [users],
   );
 
-  const orderTasks = useMemo(
-    () => tasks.filter((task) => task.parentId === orderId && task.parentType === 'order'),
-    [tasks, orderId],
+  const orderLinesRelationConfig = useMemo(
+    () =>
+      createOrderLinesRelationConfig({
+        orderHref: order ? `${nav.orders}/${order.id}?tab=lines` : nav.orders,
+      }),
+    [nav.orders, order],
+  );
+
+  useEntityAgentRegistration(
+    order
+      ? {
+          entityType: 'order',
+          entityId: order.id,
+          displayLabel: order.orderNumber,
+        }
+      : null,
+    { moduleId: 'orders', moduleLabel: 'Orders' },
   );
 
   if (!order) {
     return (
-      <ModulePage title="Order not found" icon={ordersPageIcon()} backTo="/orders">
+      <ModulePage title="Order not found" icon={ordersPageIcon()} backTo={nav.orders}>
         <p className="text-sm text-muted-foreground">This order may have been removed.</p>
       </ModulePage>
     );
@@ -61,83 +109,62 @@ export function OrderDetailPage() {
           </span>
         }
         icon={ordersPageIcon()}
-        backTo="/orders"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete order" />}
+        backTo={nav.orders}
+        actions={
+          <DetailPageHeaderActions
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel="Delete order"
+          />
+        }
       >
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="lines">Line items</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="files">Files</TabsTrigger>
+            <TabsTrigger value="assistant">Assistant</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 pt-4">
-            <SectionCard title="Order summary">
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Client</dt>
-                  <dd className="text-sm">{order.clientName}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Owner</dt>
-                  <dd className="text-sm">{order.owner}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Status</dt>
-                  <dd className="text-sm">{orderStatusBadge(order.status)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Total</dt>
-                  <dd className="text-sm">
-                    <MoneyText value={Number(order.total)} currency="EUR" />
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Order date</dt>
-                  <dd className="text-sm">{formatDisplayDate(order.orderDate)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Due date</dt>
-                  <dd className="text-sm">{formatDisplayDate(order.dueDate)}</dd>
-                </div>
-              </dl>
-            </SectionCard>
+            <DetailView
+              title="Order summary"
+              fields={buildOrderDetailFields({
+                order,
+                onInlineUpdate: updateOrderInline,
+                clientOptions: clientRelationOptions,
+                ownerOptions: ownerRelationOptions,
+              })}
+            />
           </TabsContent>
 
           <TabsContent value="lines" className="space-y-4 pt-4">
-            <SectionCard title="Line items" meta={`${lines.length} items`}>
-              {lines.map((line) => (
-                <ListRow
-                  key={line.id}
-                  title={line.productName}
-                  subtitle={line.sku}
-                  meta={`Qty ${line.quantity}`}
-                  trailing={
-                    <MoneyText value={Number(line.unitPrice) * line.quantity} currency="EUR" />
-                  }
-                />
-              ))}
-              {lines.length === 0 ? (
-                <InlineEmptyState text="No line items on this order." centered />
-              ) : null}
-            </SectionCard>
+            <GeneratedRelatedRecordsPanel
+              config={orderLinesRelationConfig}
+              parent={order}
+              rows={orderLines}
+            />
           </TabsContent>
 
           <TabsContent value="tasks" className="space-y-4 pt-4">
-            <SectionCard title="Tasks" meta={`${orderTasks.length} open items`}>
-              {orderTasks.map((task) => (
-                <ListRow
-                  key={task.id}
-                  title={task.title}
-                  subtitle={task.assignee}
-                  meta={formatDisplayDate(task.dueDate)}
-                  trailing={<Badge variant="outline">{task.status}</Badge>}
-                />
-              ))}
-              {orderTasks.length === 0 ? (
-                <InlineEmptyState text="No tasks linked to this order." centered />
-              ) : null}
-            </SectionCard>
+            <GeneratedRelatedRecordsPanel
+              config={orderTasksRelationConfig}
+              parent={order}
+              rows={tasks}
+            />
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-4 pt-4">
+            <AuditTrailPanel entityType="order" entityId={order.id} />
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-4 pt-4">
+            <EntityStoragePanel entityType="order" entityId={order.id} />
+          </TabsContent>
+
+          <TabsContent value="assistant" className="space-y-4 pt-4">
+            <ModuleScopedAssistantPanel />
           </TabsContent>
         </Tabs>
       </ModulePage>
@@ -149,8 +176,14 @@ export function OrderDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Order deleted.');
-          navigate('/orders');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.orders.delete(order.id),
+            navigate,
+            redirectTo: nav.orders,
+            successMessage: 'Order deleted.',
+            errorMessage: 'Order could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

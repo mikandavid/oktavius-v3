@@ -66,6 +66,14 @@ function inspectExpression(node, context) {
         inspectExpression(element, context);
       }
       return;
+    case 'ConditionalExpression':
+      inspectExpression(node.consequent, context);
+      inspectExpression(node.alternate, context);
+      return;
+    case 'LogicalExpression':
+      inspectExpression(node.left, context);
+      inspectExpression(node.right, context);
+      return;
     default:
       return;
   }

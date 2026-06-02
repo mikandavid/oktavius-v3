@@ -56,6 +56,7 @@ export default {
           foreground: 'hsl(var(--orange-foreground))',
         },
         neutral: {
+          0: 'hsl(var(--neutral-0))',
           50: 'hsl(var(--neutral-50))',
           100: 'hsl(var(--neutral-100))',
           200: 'hsl(var(--neutral-200))',

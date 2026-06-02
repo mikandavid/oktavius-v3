@@ -1,52 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { CrudMainView } from '@/components/data/CrudMainView';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { useDemoData } from '@/app/demo-data';
-import { useListPageState } from '@/lib/useListPageState';
+import {
+  StandardCrudListPage,
+  type StandardCrudListRequestParams,
+} from '@/components/data/StandardCrudListPage';
+import { useOrgNavPaths } from '@/lib/org-profiles/useOrgProfile';
 
-import { orderColumns, orderFilters, ordersPageIcon } from './shared';
+import { ORDER_SAVED_VIEWS, orderColumns, orderFilters, ordersPageIcon } from './shared';
 
 export function OrdersListPage() {
+  const api = useApiRegistry();
   const { orders } = useDemoData();
-  const [rows, setRows] = useState(orders);
-
-  useEffect(() => {
-    setRows(orders);
-  }, [orders]);
-
-  const list = useListPageState({
-    rows,
-    defaultSort: 'orderDate',
-    filterKeys: ['status', 'owner', 'clientName'],
-    searchKeys: ['orderNumber', 'clientName', 'owner'],
-  });
+  const nav = useOrgNavPaths();
+  const loadOrders = useCallback(
+    (params: StandardCrudListRequestParams) => api.orders.list(params),
+    [api.orders],
+  );
 
   return (
-    <CrudMainView
+    <StandardCrudListPage
       title="Orders"
       subtitle="Sales orders and fulfillment"
       icon={ordersPageIcon()}
+      rows={orders}
+      loadRows={loadOrders}
       columns={orderColumns}
-      rows={list.paged}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
-      search={list.search}
-      onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search orders"
       filters={orderFilters}
-      values={list.values}
-      onFilterChange={list.onFilterChange}
-      onReset={list.onReset}
-      page={list.page}
-      pageSize={list.pageSize}
-      total={list.total}
-      totalPages={list.totalPages}
-      onPageChange={list.onPageChange}
+      savedViews={ORDER_SAVED_VIEWS}
+      defaultSort="orderDate"
+      filterKeys={['status', 'owner', 'clientName']}
+      searchKeys={['orderNumber', 'clientName', 'owner']}
+      searchPlaceholder="Search orders"
       entityLabel="order"
-      getRowHref={(row) => `/orders/${row.id}`}
-      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
-      exportOptions={{ fileName: 'orders', label: 'Export' }}
-      allRows={list.filtered}
+      getRowHref={(row) => `${nav.orders}/${row.id}`}
+      onDeleteRows={(ids) =>
+        Promise.all(ids.map((id) => api.orders.delete(id))).then(() => undefined)
+      }
+      exportFileName="orders"
       emptyTitle="No orders found"
       emptyDescription="Adjust your filters or search terms."
     />

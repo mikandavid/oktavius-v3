@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Oktavius UI system
 
-Canonical references: `docs/ui-rules/README.md` (index) and `docs/ui-rules/component-registry.md`. When in doubt, use those — do not invent layouts.
+Canonical references: `docs/ui-rules/README.md` (index), `docs/ui-rules/component-registry.md`, and `docs/ui-rules/ux-principles.md` (nav, tabs, filters, chunking). When in doubt, use those — do not invent layouts.
 
 ## Stack constraints
 
@@ -23,7 +23,8 @@ Canonical references: `docs/ui-rules/README.md` (index) and `docs/ui-rules/compo
 | List | `<CrudMainView>` + columns/formFields from `shared.tsx` |
 | Create/edit | `<ModulePage>` + `<EntityForm>` |
 | Detail (simple) | `<ModulePage>` + `<DetailView>` |
-| Detail (complex) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` |
+| Detail (many sections) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` |
+| Detail (workspace modes) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` — only when users switch between peer work modes |
 | Section nav (settings, multi-section record) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` |
 
 Every route uses `<ModulePage>`. Never build custom page headers or shells.
@@ -57,8 +58,9 @@ For section-nav pages see `docs/ui-rules/section-nav.md` — use `AppSectionNavL
 ## App shell
 
 - Desktop: nav left · workspace center · chat right — never hide sidebar on desktop
+- **Nav:** Main · Modules (`enabledModules`, scrollable, reorderable) · Admin — no per-module nav; long lists → `⌘K` palette (`docs/ui-rules/ux-principles.md`)
 - **Section-nav pages:** app sidebar auto-compacts to icon rail; section nav + content scroll independently — see `docs/ui-rules/section-nav.md`
-- Import layout classes from `@/components/common/pageChrome`
+- Import layout classes from `@/components/common/pageChrome` (`FIELD_GROUP_LABEL_CLASS` for form section headings)
 - Toasts: `@/lib/toast` — Toaster already in `AppLayout`
 
 ## Scoped rules (read when relevant)

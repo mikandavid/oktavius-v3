@@ -1,6 +1,7 @@
 import type { BadgeProps } from '@oktavius/base-ui';
 
 import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
+import type { SavedViewPreset } from '@/components/data/useListSavedViews';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import { statusColumn } from '@/components/data/columns';
 import type { FilterDef } from '@/components/data/FilterToolbar';
@@ -86,6 +87,13 @@ export const userFormFields: FormField[] = [
     section: 'Access',
   },
   { name: 'team', label: 'Team', type: 'text', section: 'Organization' },
+];
+
+export const USER_SAVED_VIEWS: SavedViewPreset[] = [
+  { id: 'all', label: 'All users', isDefault: true, filters: { role: '', status: '' } },
+  { id: 'active', label: 'Active', filters: { role: '', status: 'Active' } },
+  { id: 'admins', label: 'Admins', filters: { role: 'Admin', status: '' } },
+  { id: 'pending', label: 'Pending', filters: { role: '', status: 'Pending' } },
 ];
 
 export function UsersHeaderAction() {

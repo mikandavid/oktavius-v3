@@ -1,8 +1,18 @@
 import { KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { format, setHours, setMinutes, startOfDay } from 'date-fns';
+import {
+  addDays,
+  differenceInCalendarDays,
+  format,
+  setHours,
+  setMinutes,
+  startOfDay,
+} from 'date-fns';
 
 import { type CalendarEvent, eventEndDate, eventStartDate } from './calendar-shared';
+
+/** Pointer movement below this threshold counts as a click, not a drag. */
+export const CALENDAR_CLICK_DRAG_THRESHOLD_PX = 6;
 
 export const CALENDAR_EVENT_DRAG_PREFIX = 'cal-event:';
 export const CALENDAR_DAY_DROP_PREFIX = 'cal-day:';
@@ -88,8 +98,17 @@ export function moveCalendarEvent(
   const durationMs = Math.max(end.getTime() - start.getTime(), slotMinutesToMs(15));
 
   if (target.toAllDay) {
-    const dayStr = format(target.day, 'yyyy-MM-dd');
-    return { ...event, start: dayStr, end: dayStr, allDay: true };
+    const startDay = startOfDay(start);
+    const endDay = startOfDay(end);
+    const spanDays = event.allDay ? Math.max(0, differenceInCalendarDays(endDay, startDay)) : 0;
+    const nextStart = startOfDay(target.day);
+    const nextEnd = addDays(nextStart, spanDays);
+    return {
+      ...event,
+      start: format(nextStart, 'yyyy-MM-dd'),
+      end: format(nextEnd, 'yyyy-MM-dd'),
+      allDay: true,
+    };
   }
 
   if (target.time) {
@@ -108,8 +127,17 @@ export function moveCalendarEvent(
   }
 
   if (event.allDay) {
-    const dayStr = format(target.day, 'yyyy-MM-dd');
-    return { ...event, start: dayStr, end: dayStr, allDay: true };
+    const startDay = startOfDay(start);
+    const endDay = startOfDay(end);
+    const spanDays = Math.max(0, differenceInCalendarDays(endDay, startDay));
+    const nextStart = startOfDay(target.day);
+    const nextEnd = addDays(nextStart, spanDays);
+    return {
+      ...event,
+      start: format(nextStart, 'yyyy-MM-dd'),
+      end: format(nextEnd, 'yyyy-MM-dd'),
+      allDay: true,
+    };
   }
 
   const nextStart = new Date(target.day);
@@ -158,7 +186,9 @@ export function resizeCalendarEvent(
 
 export function useCalendarDndSensors() {
   return useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: CALENDAR_CLICK_DRAG_THRESHOLD_PX },
+    }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 }
@@ -288,13 +318,34 @@ export function createCalendarEventTimesFromSlot(
   endTime?: string,
   slotMinutes = 30,
 ): { start: string; end: string } {
+  return createCalendarEventTimesFromRange(day, day, startTime, endTime, slotMinutes);
+}
+
+export function createCalendarEventTimesFromRange(
+  startDay: Date,
+  endDay: Date,
+  startTime: string,
+  endTime?: string,
+  slotMinutes = 30,
+): { start: string; end: string } {
+  const normalizedStartDay = startOfDay(startDay);
+  const normalizedEndDay =
+    startOfDay(endDay).getTime() < normalizedStartDay.getTime()
+      ? normalizedStartDay
+      : startOfDay(endDay);
+
   const { start, end } = endTime
     ? normalizeSlotRange(startTime, endTime, slotMinutes)
     : { start: startTime, end: minutesToTimeString(timeStringToMinutes(startTime) + slotMinutes) };
   const [startHours, startMinutes] = start.split(':').map(Number);
   const [endHours, endMinutes] = end.split(':').map(Number);
-  const nextStart = setMinutes(setHours(startOfDay(day), startHours), startMinutes);
-  const nextEnd = setMinutes(setHours(startOfDay(day), endHours), endMinutes);
+  const nextStart = setMinutes(setHours(normalizedStartDay, startHours), startMinutes);
+  let nextEnd = setMinutes(setHours(normalizedEndDay, endHours), endMinutes);
+
+  if (nextEnd.getTime() <= nextStart.getTime()) {
+    nextEnd = new Date(nextStart.getTime() + slotMinutesToMs(slotMinutes));
+  }
+
   return {
     start: format(nextStart, "yyyy-MM-dd'T'HH:mm"),
     end: format(nextEnd, "yyyy-MM-dd'T'HH:mm"),

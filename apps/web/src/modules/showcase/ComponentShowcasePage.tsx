@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { cn } from '@oktavius/base-ui';
+
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 
 import { ModulePage } from '@/components/common/PageLayout';
@@ -15,6 +17,7 @@ import { DialogsSection } from './sections/DialogsSection';
 import { DocumentsSection } from './sections/DocumentsSection';
 import { FeedbackSection } from './sections/FeedbackSection';
 import { FormsSection } from './sections/FormsSection';
+import { DesignTokensSection } from './sections/DesignTokensSection';
 import { FoundationsSection } from './sections/FoundationsSection';
 import { InputsSection } from './sections/InputsSection';
 import { OverviewSection } from './sections/OverviewSection';
@@ -25,6 +28,8 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
   switch (section) {
     case 'overview':
       return <OverviewSection />;
+    case 'design-tokens':
+      return <DesignTokensSection />;
     case 'foundations':
       return <FoundationsSection />;
     case 'inputs':
@@ -73,11 +78,25 @@ export function ComponentShowcasePage() {
         }))}
         activeKey={activeSection}
         onSelect={(key) => setActiveSection(key as ShowcaseSectionId)}
+        contentClassName={
+          activeSection === 'design-tokens'
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden p-5'
+            : undefined
+        }
       >
-        {activeMeta ? (
-          <p className="mb-4 text-sm text-muted-foreground">{activeMeta.description}</p>
-        ) : null}
-        <ShowcaseSectionContent section={activeSection} />
+        <div
+          className={cn(
+            'flex flex-col gap-4',
+            activeSection === 'design-tokens' && 'min-h-0 flex-1',
+          )}
+        >
+          {activeMeta ? (
+            <p className="shrink-0 text-sm text-muted-foreground">{activeMeta.description}</p>
+          ) : null}
+          <div className={activeSection === 'design-tokens' ? 'min-h-0 flex-1' : undefined}>
+            <ShowcaseSectionContent section={activeSection} />
+          </div>
+        </div>
       </AppSectionNavLayout>
     </ModulePage>
   );

@@ -1,11 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import {
-  Avatar,
   Button,
-  InlineEmptyState,
-  ListRow,
   STAT_CARD_GRID_CLASS,
   SectionCard,
   StatCard,
@@ -17,16 +14,40 @@ import {
   formatDisplayDate,
 } from '@oktavius/base-ui';
 
+import { useApiRegistry } from '@/api/ApiProvider';
+import { ModuleScopedAssistantPanel } from '@/components/agent/ModuleScopedAssistantPanel';
+import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ChecklistSection } from '@/components/common/ChecklistSection';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
+import { DetailView } from '@/components/common/DetailView';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { GeneratedRelatedRecordsPanel } from '@/components/detail/relatedRecordsConfig';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
+import { buildPlaceMapsUrl } from '@/components/maps/AddressMapAction';
+import { AddressMapSection } from '@/components/maps/AddressMapSection';
+import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
 import { CommentsPanel, type CommentItem } from '@/components/workflow/CommentsPanel';
 import { useDemoData } from '@/app/demo-data';
+import { useEnsureDemoOrgForRecord } from '@/lib/demo/useEnsureDemoOrg';
 import { PlusIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { appToast } from '@/lib/toast';
 
+const CASE_DETAIL_TABS = [
+  'overview',
+  'workflow',
+  'comments',
+  'activity',
+  'files',
+  'assistant',
+] as const;
+
+import { createCasePartiesRelationConfig } from './caseRelatedRecords';
+import { buildCaseDetailFields } from './caseDetailFields';
 import {
   casePriorityBadge,
   caseSlaBadge,
@@ -34,6 +55,7 @@ import {
   caseTypeBadge,
   casesPageIcon,
 } from './shared';
+import { useCasesModuleConfig } from './useCasesModuleConfig';
 
 const checklistFormFields = [
   { name: 'label', label: 'Item', type: 'text' as const, required: true },
@@ -42,18 +64,65 @@ const checklistFormFields = [
 export function CaseDetailPage() {
   const { caseId } = useParams();
   const navigate = useNavigate();
-  const { cases, parties, caseChecklists, toggleChecklistItem, createChecklistItem } =
-    useDemoData();
-  const [activeTab, setActiveTab] = useState('overview');
+  const api = useApiRegistry();
+  const { clients, findCaseById, parties, caseChecklists, users } = useDemoData();
+  const moduleConfig = useCasesModuleConfig();
+  const orgProfile = useOrgProfile();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', CASE_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [checklistDialogOpen, setChecklistDialogOpen] = useState(false);
   const [comments, setComments] = useState<CommentItem[]>([]);
 
-  const caseRecord = useMemo(() => cases.find((entry) => entry.id === caseId), [cases, caseId]);
+  const caseRecord = useMemo(() => findCaseById(caseId), [caseId, findCaseById]);
+  useEnsureDemoOrgForRecord(caseRecord);
+
+  const updateCaseInline = useCallback(
+    async (input: Parameters<typeof api.cases.update>[1]) => {
+      if (!caseRecord) return;
+      try {
+        await api.cases.update(caseRecord.id, input);
+        appToast.success('Case updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Case could not be updated.');
+        throw error;
+      }
+    },
+    [api, caseRecord],
+  );
+
+  const casePartiesRelationConfig = useMemo(
+    () =>
+      createCasePartiesRelationConfig({
+        title: orgProfile.industryKey === 'funeral' ? 'Beteiligte' : 'Parties',
+        basePath: moduleConfig.basePath,
+      }),
+    [moduleConfig.basePath, orgProfile.industryKey],
+  );
 
   const caseParties = useMemo(
-    () => parties.filter((party) => party.caseId === caseId),
-    [parties, caseId],
+    () =>
+      caseRecord
+        ? parties.filter((party) => casePartiesRelationConfig.match(caseRecord, party))
+        : [],
+    [casePartiesRelationConfig, caseRecord, parties],
+  );
+  const clientRelationOptions = useMemo(
+    () =>
+      clients.map((client) => ({
+        value: client.name,
+        label: client.name,
+        description: [client.city, client.industry].filter(Boolean).join(' · '),
+      })),
+    [clients],
+  );
+  const assigneeRelationOptions = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.name,
+        label: user.name,
+        description: [user.team, user.role].filter(Boolean).join(' · '),
+      })),
+    [users],
   );
 
   const checklistItems = useMemo(
@@ -64,9 +133,20 @@ export function CaseDetailPage() {
   const checklistDone = checklistItems.filter((item) => item.done).length;
   const openTasks = checklistItems.filter((item) => !item.done).length;
 
+  useEntityAgentRegistration(
+    caseRecord
+      ? {
+          entityType: 'case',
+          entityId: caseRecord.id,
+          displayLabel: caseRecord.caseNumber,
+        }
+      : null,
+    { moduleId: 'cases', moduleLabel: moduleConfig.listTitle },
+  );
+
   if (!caseRecord) {
     return (
-      <ModulePage title="Case not found" icon={casesPageIcon()} backTo="/cases">
+      <ModulePage title="Case not found" icon={casesPageIcon()} backTo={moduleConfig.basePath}>
         <p className="text-sm text-muted-foreground">This case may have been removed.</p>
       </ModulePage>
     );
@@ -99,6 +179,8 @@ export function CaseDetailPage() {
         ]
       : []),
   ];
+  const burialSiteMapsUrl = buildPlaceMapsUrl(caseRecord.burialSite, 'AT');
+  const locationSiteMapsUrl = buildPlaceMapsUrl(caseRecord.locationSite, 'AT');
 
   const workflowAttention = checklistItems.some((item) => item.required && !item.done);
 
@@ -116,8 +198,15 @@ export function CaseDetailPage() {
           </span>
         }
         icon={casesPageIcon()}
-        backTo="/cases"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete case" />}
+        backTo={moduleConfig.basePath}
+        actions={
+          <DetailPageHeaderActions
+            editTo={`${moduleConfig.basePath}/${caseRecord.id}/edit`}
+            editLabel={moduleConfig.isFuneral ? 'Bearbeiten' : 'Edit case'}
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel={moduleConfig.isFuneral ? 'Sterbefall löschen' : 'Delete case'}
+          />
+        }
       >
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
@@ -126,6 +215,9 @@ export function CaseDetailPage() {
               Workflow
             </TabsTrigger>
             <TabsTrigger value="comments">Comments</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="files">Files</TabsTrigger>
+            <TabsTrigger value="assistant">Assistant</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 pt-4">
@@ -154,41 +246,87 @@ export function CaseDetailPage() {
               <Timeline events={timelineEvents} />
             </SectionCard>
 
-            <SectionCard title="Summary">
-              <p className="text-sm text-foreground">{caseRecord.summary || '—'}</p>
-            </SectionCard>
+            <DetailView
+              title="Case summary"
+              fields={buildCaseDetailFields({
+                caseRecord,
+                onInlineUpdate: updateCaseInline,
+                assigneeOptions: assigneeRelationOptions,
+                clientOptions: clientRelationOptions,
+              })}
+            />
 
-            <SectionCard
-              title="Parties"
-              meta={`${caseParties.length} contacts`}
-              actions={
-                caseParties.length > 0 ? (
-                  <Button size="sm" variant="ghost" onClick={() => setActiveTab('workflow')}>
-                    View workflow
-                  </Button>
-                ) : undefined
-              }
-            >
-              {caseParties.slice(0, 4).map((party) => (
-                <ListRow
-                  key={party.id}
-                  leading={<Avatar label={party.name} size="sm" />}
-                  title={party.name}
-                  subtitle={party.role.replace(/_/g, ' ')}
-                  meta={party.email}
-                />
-              ))}
-              {caseParties.length === 0 ? (
-                <InlineEmptyState text="No parties linked to this case." centered />
-              ) : null}
-            </SectionCard>
+            {caseRecord.deceasedName ? (
+              <SectionCard title="Verstorbene/r">
+                <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-muted-foreground">Name</dt>
+                    <dd className="font-medium text-foreground">{caseRecord.deceasedName}</dd>
+                  </div>
+                  {caseRecord.dateOfDeath ? (
+                    <div>
+                      <dt className="text-muted-foreground">Sterbedatum</dt>
+                      <dd className="font-medium text-foreground">
+                        {formatDisplayDate(caseRecord.dateOfDeath)}
+                      </dd>
+                    </div>
+                  ) : null}
+                  {caseRecord.arrangementType ? (
+                    <div>
+                      <dt className="text-muted-foreground">Bestattungsart</dt>
+                      <dd className="font-medium text-foreground">{caseRecord.arrangementType}</dd>
+                    </div>
+                  ) : null}
+                  {caseRecord.burialSite ? (
+                    <div>
+                      <dt className="text-muted-foreground">Beisetzung</dt>
+                      <dd className="font-medium text-foreground">{caseRecord.burialSite}</dd>
+                    </div>
+                  ) : null}
+                  {caseRecord.locationSite ? (
+                    <div>
+                      <dt className="text-muted-foreground">Filiale</dt>
+                      <dd className="font-medium text-foreground">{caseRecord.locationSite}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </SectionCard>
+            ) : null}
+
+            {caseRecord.burialSite ? (
+              <AddressMapSection
+                title={`Map preview for ${caseRecord.burialSite}`}
+                addressLines={[caseRecord.burialSite, 'Austria']}
+                url={burialSiteMapsUrl}
+              />
+            ) : null}
+
+            {caseRecord.locationSite ? (
+              <AddressMapSection
+                title={`Map preview for ${caseRecord.locationSite}`}
+                addressLines={[caseRecord.locationSite, 'Austria']}
+                url={locationSiteMapsUrl}
+              />
+            ) : null}
+
+            <GeneratedRelatedRecordsPanel
+              config={casePartiesRelationConfig}
+              parent={caseRecord}
+              rows={parties}
+            />
           </TabsContent>
 
           <TabsContent value="workflow" className="space-y-4 pt-4">
             <ChecklistSection
               title="Resolution checklist"
               items={checklistItems}
-              onToggle={toggleChecklistItem}
+              onToggle={(id, done) => {
+                void api.caseChecklists
+                  .updateDone(id, done)
+                  .catch((error) =>
+                    appToast.fromApiError(error, 'Checklist item could not be updated.'),
+                  );
+              }}
               actions={
                 <Button size="sm" variant="outline" onClick={() => setChecklistDialogOpen(true)}>
                   <PlusIcon size={14} />
@@ -212,10 +350,22 @@ export function CaseDetailPage() {
                   },
                   ...current,
                 ]);
-                toast.success(internal ? 'Internal note posted.' : 'Comment posted.');
+                appToast.success(internal ? 'Internal note posted.' : 'Comment posted.');
               }}
               placeholder="Add a note about this case…"
             />
+          </TabsContent>
+
+          <TabsContent value="activity" className="space-y-4 pt-4">
+            <AuditTrailPanel entityType="case" entityId={caseRecord.id} />
+          </TabsContent>
+
+          <TabsContent value="files" className="space-y-4 pt-4">
+            <EntityStoragePanel entityType="case" entityId={caseRecord.id} />
+          </TabsContent>
+
+          <TabsContent value="assistant" className="space-y-4 pt-4">
+            <ModuleScopedAssistantPanel />
           </TabsContent>
         </Tabs>
       </ModulePage>
@@ -227,13 +377,13 @@ export function CaseDetailPage() {
         fields={checklistFormFields}
         defaultValues={{ label: '' }}
         submitLabel="Add item"
-        onSubmit={(values) => {
-          createChecklistItem({
+        onSubmit={async (values) => {
+          await api.caseChecklists.create({
             caseId: caseRecord.id,
             label: String(values.label),
             required: true,
           });
-          toast.success('Checklist item added.');
+          appToast.success('Checklist item added.');
         }}
       />
 
@@ -244,8 +394,14 @@ export function CaseDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Case deleted.');
-          navigate('/cases');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.cases.delete(caseRecord.id),
+            navigate,
+            redirectTo: moduleConfig.basePath,
+            successMessage: 'Case deleted.',
+            errorMessage: 'Case could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

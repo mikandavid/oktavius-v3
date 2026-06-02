@@ -11,12 +11,12 @@ This system prevents visual chaos and eliminates the cards-in-cards problem stru
 ## The Six Levels
 
 ```
-Level 0 → App Shell          (body background, sidebar, top bar)
+Level 0 → App Shell          (page wash, nav rail, top bar, agent chat)
 Level 1 → Page Content Area  (inherits body background, no surface)
-Level 2 → Top-Level Card     (bg-background, border, shadow-sm)
-Level 3 → Section Content    (bg-background, border-border/60, no shadow)
+Level 2 → Top-Level Card     (rounded-card bg-card — no border, no shadow)
+Level 3 → Section Content    (borderless — heading rule + spacing)
 Level 4 → Row / Item         (transparent or bg-muted hover, border-border/50 or none)
-Level 5 → Field / Atom       (bg-background inputs, bg-muted fills, text elements)
+Level 5 → Field / Atom       (bg-muted/60 inputs, text elements)
 ```
 
 **The rule:** An element at level N must never contain another element at level N.
@@ -26,21 +26,23 @@ It may only contain elements at level N+1 or deeper.
 
 ## Level 0 — App Shell
 
-Surface: `hsl(0 0% 96.5%)` body background (set on `<body>`, not with a className)
+Surface: page wash on `<body>` (`bg-muted/40` / `neutral-50` via CSS — not a layout className)
 
 Includes:
 
 - Main content area background
-- Sidebar (`bg-sidebar-background`)
-- Header / MobileTopBar
+- Sidebar, header, agent chat (`APP_SHELL_SURFACE_CLASS` → `bg-card`)
 - Page gutter / outer padding
 
 Rules:
 
-- Never set a layout container to `bg-background` (100% white). White is reserved for Level 2+.
+- Shell chrome shares one white surface — nav, header, and chat use `APP_SHELL_SURFACE_CLASS`, not separate tints.
+- Never set a layout container to `bg-card` or `bg-background` for the full viewport — white tiles are Level 2+.
 - Shell backgrounds must be flat. No gradients, no decorative patterns.
-- Sidebar is structural. Keep it visually calm, no shadow, border-right only.
-- Body background color: let it inherit via CSS. Never manually set `bg-background` on layout wrappers.
+- Sidebar is structural. Keep it visually calm, no shadow, border-right only (`APP_SHELL_BORDER_CLASS`).
+- Body background: let it inherit via CSS. Never manually set `bg-background` on layout wrappers.
+
+Token reference: [`design-tokens.md`](./design-tokens.md).
 
 Typography at this level:
 

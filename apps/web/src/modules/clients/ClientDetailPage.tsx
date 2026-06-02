@@ -1,12 +1,8 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import {
-  Avatar,
   Badge,
-  Button,
-  InlineEmptyState,
-  ListRow,
   MoneyText,
   STAT_CARD_GRID_CLASS,
   SectionCard,
@@ -19,20 +15,43 @@ import {
   formatDisplayDate,
 } from '@oktavius/base-ui';
 
-import { useRegisterAgentPageContext } from '@/components/agent/page-context';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
 import { CustomFieldsDetailSection } from '@/components/custom-fields';
+import { DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
-import { RelatedRecordsPanel } from '@/components/detail/RelatedRecordsPanel';
+import { GeneratedRelatedRecordsPanel } from '@/components/detail/relatedRecordsConfig';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { buildStructuredAddressMapsUrl } from '@/components/maps/AddressMapAction';
+import { AddressMapSection } from '@/components/maps/AddressMapSection';
 import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
 import { useDemoData } from '@/app/demo-data';
-import { PlusIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { useEnsureDemoOrgForRecord } from '@/lib/demo/useEnsureDemoOrg';
+import { useOrgNavPaths, useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { appToast } from '@/lib/toast';
+
+const CLIENT_DETAIL_TABS = [
+  'overview',
+  'contacts',
+  'commercial',
+  'activity',
+  'files',
+  'assistant',
+] as const;
 
 import { clientStatusBadge, clientsPageIcon } from './shared';
+import { buildClientDetailFields } from './clientDetailFields';
+import {
+  createClientPartiesRelationConfig,
+  clientContractsRelationConfig,
+  clientOrdersRelationConfig,
+  clientTasksRelationConfig,
+} from './clientRelatedRecords';
 
 const partyFormFields = [
   { name: 'name', label: 'Name', type: 'text' as const, required: true },
@@ -43,56 +62,84 @@ const partyFormFields = [
 export function ClientDetailPage() {
   const { clientId } = useParams();
   const navigate = useNavigate();
-  const { clients, parties, tasks, orders, contracts, createParty } = useDemoData();
-  const [activeTab, setActiveTab] = useState('overview');
+  const api = useApiRegistry();
+  const { findClientById, parties, tasks, orders, contracts, users } = useDemoData();
+  const profile = useOrgProfile();
+  const nav = useOrgNavPaths();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', CLIENT_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [partyDialogOpen, setPartyDialogOpen] = useState(false);
 
-  const client = useMemo(() => clients.find((entry) => entry.id === clientId), [clients, clientId]);
+  const client = useMemo(() => findClientById(clientId), [clientId, findClientById]);
+  useEnsureDemoOrgForRecord(client);
 
-  const agentPageRegistration = useMemo(
-    () =>
-      client
-        ? {
-            moduleId: 'clients',
-            moduleLabel: 'Clients',
-            routeLabel: client.name,
-            primaryEntity: {
-              entityType: 'client',
-              entityId: client.id,
-              displayLabel: client.name,
-            },
-          }
-        : null,
-    [client],
+  const updateClientInline = useCallback(
+    async (input: Parameters<typeof api.clients.update>[1]) => {
+      if (!client) return;
+      try {
+        await api.clients.update(client.id, input);
+        appToast.success('Client updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Client could not be updated.');
+        throw error;
+      }
+    },
+    [api, client],
   );
 
-  useRegisterAgentPageContext(agentPageRegistration);
+  useEntityAgentRegistration(
+    client ? { entityType: 'client', entityId: client.id, displayLabel: client.name } : null,
+    { moduleId: 'clients', moduleLabel: profile.terminology.clients },
+  );
 
   const clientParties = useMemo(
     () => parties.filter((party) => party.clientId === clientId),
     [parties, clientId],
   );
 
-  const clientTasks = useMemo(
-    () => tasks.filter((task) => task.parentId === clientId && task.parentType === 'client'),
-    [tasks, clientId],
-  );
-
   const clientOrders = useMemo(
     () => orders.filter((order) => order.clientId === clientId),
     [orders, clientId],
   );
-
-  const clientContracts = useMemo(
-    () => contracts.filter((contract) => contract.clientName === client?.name),
-    [contracts, client],
+  const accountManagerOptions = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.name,
+        label: user.name,
+        description: [user.team, user.role].filter(Boolean).join(' · '),
+      })),
+    [users],
+  );
+  const clientContactHref = client ? `${nav.clients}/${client.id}?tab=contacts` : nav.clients;
+  const keyContactsRelationConfig = useMemo(
+    () =>
+      createClientPartiesRelationConfig({
+        title: 'Key contacts',
+        clientHref: clientContactHref,
+        viewAllHref: clientContactHref,
+        emptyLabel: 'No contacts yet.',
+        addLabel: 'Add',
+        onAdd: () => setPartyDialogOpen(true),
+      }),
+    [clientContactHref],
+  );
+  const clientContactsRelationConfig = useMemo(
+    () =>
+      createClientPartiesRelationConfig({
+        title: 'Contacts',
+        clientHref: clientContactHref,
+        addLabel: 'Add contact',
+        onAdd: () => setPartyDialogOpen(true),
+      }),
+    [clientContactHref],
   );
 
   if (!client) {
     return (
-      <ModulePage title="Client not found" icon={clientsPageIcon()} backTo="/clients">
-        <p className="text-sm text-muted-foreground">This client may have been removed.</p>
+      <ModulePage title="Client not found" icon={clientsPageIcon()} backTo={nav.clients}>
+        <p className="text-sm text-muted-foreground">
+          No client with id <code className="text-xs">{clientId}</code> exists in the demo data.
+        </p>
       </ModulePage>
     );
   }
@@ -113,6 +160,10 @@ export function ClientDetailPage() {
       tone: 'default' as const,
     })),
   ];
+  const clientLocationMapsUrl = buildStructuredAddressMapsUrl({
+    city: client.city,
+    country: client.country,
+  });
 
   return (
     <>
@@ -128,8 +179,15 @@ export function ClientDetailPage() {
           </span>
         }
         icon={clientsPageIcon()}
-        backTo="/clients"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete client" />}
+        backTo={nav.clients}
+        actions={
+          <DetailPageHeaderActions
+            editTo={`${nav.clients}/${client.id}/edit`}
+            editLabel="Edit client"
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel="Delete client"
+          />
+        }
       >
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
@@ -150,93 +208,55 @@ export function ClientDetailPage() {
                     .length,
                 )}
               />
-              <StatCard label="Contracts" value={String(clientContracts.length)} />
+              <StatCard
+                label="Contracts"
+                value={String(
+                  contracts.filter((contract) =>
+                    clientContractsRelationConfig.match(client, contract),
+                  ).length,
+                )}
+              />
               <StatCard
                 label="Open tasks"
-                value={String(clientTasks.filter((t) => t.status !== 'Completed').length)}
+                value={String(
+                  tasks.filter(
+                    (task) =>
+                      clientTasksRelationConfig.match(client, task) && task.status !== 'Completed',
+                  ).length,
+                )}
               />
             </div>
 
-            <SectionCard title="Account summary">
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Industry</dt>
-                  <dd className="text-sm">{client.industry || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Account manager</dt>
-                  <dd className="text-sm">{client.accountManager || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Email</dt>
-                  <dd className="text-sm">{client.email || '—'}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Phone</dt>
-                  <dd className="text-sm">{client.phone || '—'}</dd>
-                </div>
-              </dl>
-            </SectionCard>
+            <DetailView
+              title="Account summary"
+              fields={buildClientDetailFields({
+                client,
+                onInlineUpdate: updateClientInline,
+                accountManagerOptions,
+              })}
+            />
+
+            <AddressMapSection
+              title={`Map preview for ${client.name}`}
+              addressLines={[client.city, client.country]}
+              url={clientLocationMapsUrl}
+            />
 
             <CustomFieldsDetailSection entityType="client" customFields={client.customFields} />
 
-            <SectionCard
-              title="Key contacts"
-              actions={
-                <Button size="sm" variant="outline" onClick={() => setPartyDialogOpen(true)}>
-                  <PlusIcon size={14} />
-                  Add
-                </Button>
-              }
-            >
-              {clientParties.slice(0, 3).map((party) => (
-                <ListRow
-                  key={party.id}
-                  leading={<Avatar label={party.name} size="sm" />}
-                  title={party.name}
-                  subtitle={party.role.replace(/_/g, ' ')}
-                  meta={party.email}
-                />
-              ))}
-              {clientParties.length === 0 ? (
-                <InlineEmptyState text="No contacts yet." centered />
-              ) : clientParties.length > 3 ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => setActiveTab('contacts')}
-                >
-                  View all contacts
-                </Button>
-              ) : null}
-            </SectionCard>
+            <GeneratedRelatedRecordsPanel
+              config={keyContactsRelationConfig}
+              parent={client}
+              rows={parties}
+            />
           </TabsContent>
 
           <TabsContent value="contacts" className="space-y-4 pt-4">
-            <SectionCard
-              title="Contacts"
-              meta={`${clientParties.length} people`}
-              actions={
-                <Button size="sm" variant="outline" onClick={() => setPartyDialogOpen(true)}>
-                  <PlusIcon size={14} />
-                  Add contact
-                </Button>
-              }
-            >
-              {clientParties.map((party) => (
-                <ListRow
-                  key={party.id}
-                  leading={<Avatar label={party.name} size="sm" />}
-                  title={party.name}
-                  subtitle={party.role.replace(/_/g, ' ')}
-                  meta={party.email}
-                />
-              ))}
-              {clientParties.length === 0 ? (
-                <InlineEmptyState text="No contacts linked to this client." centered />
-              ) : null}
-            </SectionCard>
+            <GeneratedRelatedRecordsPanel
+              config={clientContactsRelationConfig}
+              parent={client}
+              rows={parties}
+            />
           </TabsContent>
 
           <TabsContent value="commercial" className="space-y-4 pt-4">
@@ -263,37 +283,16 @@ export function ClientDetailPage() {
               </dl>
             </SectionCard>
 
-            <SectionCard title="Contracts" meta={`${clientContracts.length} records`}>
-              {clientContracts.map((contract) => (
-                <ListRow
-                  key={contract.id}
-                  title={contract.title}
-                  subtitle={contract.contractNumber}
-                  meta={formatDisplayDate(contract.endDate)}
-                  trailing={
-                    <Link to={`/contracts/${contract.id}`} className="text-xs text-primary">
-                      View
-                    </Link>
-                  }
-                  onClick={() => navigate(`/contracts/${contract.id}`)}
-                />
-              ))}
-              {clientContracts.length === 0 ? (
-                <InlineEmptyState text="No contracts for this client." centered />
-              ) : null}
-            </SectionCard>
+            <GeneratedRelatedRecordsPanel
+              config={clientContractsRelationConfig}
+              parent={client}
+              rows={contracts}
+            />
 
-            <RelatedRecordsPanel
-              title="Orders"
-              records={clientOrders.map((order) => ({
-                id: order.id,
-                title: order.orderNumber,
-                subtitle: order.status,
-                href: `/orders/${order.id}`,
-                trailing: <Badge variant="outline">{formatDisplayDate(order.orderDate)}</Badge>,
-              }))}
-              viewAllHref="/orders"
-              emptyLabel="No orders yet."
+            <GeneratedRelatedRecordsPanel
+              config={clientOrdersRelationConfig}
+              parent={client}
+              rows={orders}
             />
           </TabsContent>
 
@@ -304,20 +303,11 @@ export function ClientDetailPage() {
               <Timeline events={recentActivity} />
             </SectionCard>
 
-            <SectionCard title="Tasks">
-              {clientTasks.map((task) => (
-                <ListRow
-                  key={task.id}
-                  title={task.title}
-                  subtitle={task.assignee}
-                  meta={formatDisplayDate(task.dueDate)}
-                  trailing={<Badge variant="outline">{task.status}</Badge>}
-                />
-              ))}
-              {clientTasks.length === 0 ? (
-                <InlineEmptyState text="No tasks assigned." centered />
-              ) : null}
-            </SectionCard>
+            <GeneratedRelatedRecordsPanel
+              config={clientTasksRelationConfig}
+              parent={client}
+              rows={tasks}
+            />
           </TabsContent>
 
           <TabsContent value="files" className="space-y-4 pt-4">
@@ -333,14 +323,14 @@ export function ClientDetailPage() {
         fields={partyFormFields}
         defaultValues={{ name: '', role: 'primary_contact', email: '' }}
         submitLabel="Add contact"
-        onSubmit={(values) => {
-          createParty({
+        onSubmit={async (values) => {
+          await api.parties.create({
             clientId: client.id,
             name: String(values.name),
             role: String(values.role),
             email: String(values.email ?? ''),
           });
-          toast.success('Contact added.');
+          appToast.success('Contact added.');
         }}
       />
 
@@ -351,8 +341,14 @@ export function ClientDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Client deleted.');
-          navigate('/clients');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.clients.delete(client.id),
+            navigate,
+            redirectTo: nav.clients,
+            successMessage: 'Client deleted.',
+            errorMessage: 'Client could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

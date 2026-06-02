@@ -1,7 +1,7 @@
 import type { NavigateFunction } from 'react-router-dom';
 
 import { DeleteIcon, EditIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import type { BulkAction, CrudRowAction } from './CrudTable';
 
@@ -13,7 +13,9 @@ export type StandardListCrudConfig<T extends { id: string }> = {
   getDetailHref: (row: T) => string;
   navigate: NavigateFunction;
   /** Optional hook when rows are deleted (demo data is not mutated by default) */
-  onDelete?: (ids: string[]) => void;
+  onDelete?: (ids: string[]) => void | Promise<void>;
+  /** Whether destructive row/bulk delete actions should be generated */
+  allowDelete?: boolean;
   /** Called after row/bulk delete so the parent can clear selection */
   onAfterDelete?: (ids: string[]) => void;
 };
@@ -24,6 +26,7 @@ export function buildStandardListCrudActions<T extends { id: string }>({
   getDetailHref,
   navigate,
   onDelete,
+  allowDelete = true,
   onAfterDelete,
 }: StandardListCrudConfig<T>): {
   selectable: true;
@@ -33,13 +36,17 @@ export function buildStandardListCrudActions<T extends { id: string }>({
   const plural = pluralLabel ?? `${entityLabel}s`;
   const titleCase = entityLabel.charAt(0).toUpperCase() + entityLabel.slice(1);
 
-  const finishDelete = (ids: string[]) => {
-    onDelete?.(ids);
-    onAfterDelete?.(ids);
-    if (ids.length === 1) {
-      toast.success(`${titleCase} deleted.`);
-    } else {
-      toast.success(`Deleted ${ids.length} ${plural}.`);
+  const finishDelete = async (ids: string[]) => {
+    try {
+      await onDelete?.(ids);
+      onAfterDelete?.(ids);
+      if (ids.length === 1) {
+        appToast.success(`${titleCase} deleted.`);
+      } else {
+        appToast.success(`Deleted ${ids.length} ${plural}.`);
+      }
+    } catch (error) {
+      appToast.fromApiError(error, `${titleCase} could not be deleted.`);
     }
   };
 
@@ -50,7 +57,10 @@ export function buildStandardListCrudActions<T extends { id: string }>({
       icon: <EditIcon size={14} />,
       onClick: (row) => navigate(getDetailHref(row)),
     },
-    {
+  ];
+
+  if (allowDelete) {
+    rowActions.push({
       key: 'delete',
       label: 'Delete',
       icon: <DeleteIcon size={14} />,
@@ -61,8 +71,8 @@ export function buildStandardListCrudActions<T extends { id: string }>({
         actionLabel: 'Delete',
       },
       onClick: (row) => finishDelete([row.id]),
-    },
-  ];
+    });
+  }
 
   const bulkActions: BulkAction[] = [
     {
@@ -72,7 +82,10 @@ export function buildStandardListCrudActions<T extends { id: string }>({
       maxSelection: 1,
       onClick: (ids) => navigate(getDetailHref({ id: ids[0] } as T)),
     },
-    {
+  ];
+
+  if (allowDelete) {
+    bulkActions.push({
       key: 'bulk-delete',
       label: 'Delete selected',
       icon: <DeleteIcon size={14} />,
@@ -83,8 +96,8 @@ export function buildStandardListCrudActions<T extends { id: string }>({
         actionLabel: 'Delete',
       },
       onClick: (ids) => finishDelete(ids),
-    },
-  ];
+    });
+  }
 
   return { selectable: true, rowActions, bulkActions };
 }

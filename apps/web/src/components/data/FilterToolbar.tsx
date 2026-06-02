@@ -13,11 +13,15 @@ export type FilterDef = {
   options: FilterOption[];
 };
 
-/** Fixed filter slots so toolbar controls do not shift between list pages. */
+/** Fixed filter slots so toolbar controls do not shift between list pages. Lint: ux-limits.mjs MAX_LIST_FILTERS. */
 export const FILTER_TOOLBAR_SLOT_COUNT = 3;
 
+/** Filled controls on white `bg-card` list shells — lighter than default `bg-muted/60` forms. */
+const FILTER_TOOLBAR_FIELD_SURFACE =
+  'rounded-control bg-secondary text-foreground transition-colors hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring/40';
+
 const FILTER_COMBO_CLASS =
-  'h-auto min-h-0 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-sm shadow-none hover:bg-transparent focus:ring-0';
+  'h-auto min-h-0 min-w-0 flex-1 border-0 bg-transparent px-0 py-0 text-sm text-foreground shadow-none hover:bg-transparent focus:ring-0';
 
 type FilterToolbarProps = {
   search: string;
@@ -40,8 +44,8 @@ function FilterSlot({
   onFilterChange?: (key: string, value: string) => void;
 }) {
   return (
-    <label className="flex h-9 min-w-0 items-center gap-2 rounded-control bg-muted/60 px-3 transition-colors hover:bg-muted/80 focus-within:ring-2 focus-within:ring-ring/40">
-      <span className="w-[4.75rem] shrink-0 truncate text-xs font-medium text-muted-foreground">
+    <label className={cn('flex h-9 min-w-0 items-center gap-2 px-3', FILTER_TOOLBAR_FIELD_SURFACE)}>
+      <span className="w-[4.75rem] shrink-0 truncate text-xs font-medium text-foreground/70">
         {filter.label}
       </span>
       <Combobox
@@ -93,7 +97,7 @@ export function FilterToolbar({
           size={16}
         />
         <Input
-          className="w-full min-w-0 pl-9 pr-9"
+          className={cn('w-full min-w-0 pl-9 pr-9', FILTER_TOOLBAR_FIELD_SURFACE)}
           placeholder={searchPlaceholder}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}

@@ -2,7 +2,7 @@ import { Button } from '@oktavius/base-ui';
 
 import { InfoBox } from '@/components/common/InfoBox';
 import { useCommandPalette } from '@/components/command/CommandPalette';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -27,32 +27,32 @@ export function OverviewSection() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => toast.success('Record saved successfully.')}
+            onClick={() => appToast.success('Record saved successfully.')}
           >
             Success
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => toast.error('Failed to save — try again.')}
+            onClick={() => appToast.error('Failed to save — try again.')}
           >
             Error
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => toast.warning('Contract expires in 7 days.')}
+            onClick={() => appToast.warning('Contract expires in 7 days.')}
           >
             Warning
           </Button>
-          <Button size="sm" variant="outline" onClick={() => toast.info('3 rows selected.')}>
+          <Button size="sm" variant="outline" onClick={() => appToast.info('3 rows selected.')}>
             Info
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={() =>
-              toast.promise(new Promise((resolve) => setTimeout(resolve, 1200)), {
+              appToast.promise(new Promise((resolve) => setTimeout(resolve, 1200)), {
                 loading: 'Exporting…',
                 success: 'Export complete.',
                 error: 'Export failed.',
@@ -74,10 +74,14 @@ export function OverviewSection() {
       </ShowcaseBlock>
 
       <InfoBox tone="info" title="Design tokens">
-        Surfaces use <strong className="font-medium">rounded-card</strong> on white tiles over a{' '}
-        <strong className="font-medium">bg-muted/40</strong> page wash. Inputs are filled grey (
-        <strong className="font-medium">bg-muted/60</strong>) with no borders. Primary actions use{' '}
-        <strong className="font-medium">variant="cta"</strong> (brand violet).
+        Grays come from the <strong className="font-medium">neutral ramp</strong> (
+        <code className="text-xs">neutral-0</code> … <code className="text-xs">neutral-950</code>
+        ). Surface roles like <strong className="font-medium">bg-card</strong> and{' '}
+        <strong className="font-medium">bg-muted</strong> alias that ramp. Shell chrome (nav,
+        header, chat) shares <strong className="font-medium">bg-card</strong>. Primary actions use{' '}
+        <strong className="font-medium">variant="cta"</strong> (brand violet). Tune editable tokens
+        live under <strong className="font-medium">Design tokens</strong> in this gallery (
+        <span className="text-xs">docs/ui-rules/design-tokens.md</span>).
       </InfoBox>
     </div>
   );

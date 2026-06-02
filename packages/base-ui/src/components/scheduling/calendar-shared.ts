@@ -39,6 +39,13 @@ export type CalendarColorKey =
 
 export type CalendarEventTone = 'default' | 'primary' | 'warning' | 'success' | 'destructive';
 
+/** Team member or guest selectable on a calendar event. */
+export interface CalendarTeamMember {
+  id: string;
+  label: string;
+  description?: string;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -47,6 +54,9 @@ export interface CalendarEvent {
   /** ISO date or datetime — inclusive end for all-day spans */
   end: string;
   allDay?: boolean;
+  description?: string;
+  /** User or staff ids linked to this event (labels resolved via `CalendarTeamMember`). */
+  attendeeIds?: string[];
   /** @deprecated Prefer colorKey + calendarId */
   tone?: CalendarEventTone;
   /** Google-style calendar color */
@@ -69,6 +79,8 @@ export interface CalendarSlotAnchor {
 
 export interface CalendarEventEditorDraft {
   day: Date;
+  /** Last day of the event (inclusive). Defaults to `day` when omitted. */
+  endDay?: Date;
   startTime: string;
   endTime: string;
   anchor: CalendarSlotAnchor;
@@ -77,6 +89,8 @@ export interface CalendarEventEditorDraft {
   allDay?: boolean;
   title?: string;
   calendarId?: string;
+  description?: string;
+  attendeeIds?: string[];
 }
 
 /** @deprecated Use CalendarEventEditorDraft */
@@ -182,12 +196,76 @@ export function shiftCalendarAnchor(anchor: Date, mode: CalendarViewMode, direct
   }
 }
 
+export function eventEndDay(event: CalendarEvent): Date | null {
+  const end = eventEndDate(event);
+  return end ? startOfDay(end) : null;
+}
+
+export function isMultiDayEvent(event: CalendarEvent): boolean {
+  const start = eventStartDate(event);
+  const end = eventEndDay(event);
+  if (!start || !end) return false;
+  return !isSameDay(startOfDay(start), end);
+}
+
 export function formatEventTimeRange(event: CalendarEvent): string {
-  if (event.allDay) return 'All day';
   const start = eventStartDate(event);
   const end = eventEndDate(event);
   if (!start || !end) return '—';
+
+  const startDay = startOfDay(start);
+  const endDay = startOfDay(end);
+  const multiDay = !isSameDay(startDay, endDay);
+
+  if (event.allDay) {
+    if (multiDay) {
+      return `${format(startDay, 'd MMM')} – ${format(endDay, 'd MMM')} · All day`;
+    }
+    return 'All day';
+  }
+
+  if (multiDay) {
+    return `${format(startDay, 'EEE d MMM')} ${format(start, 'HH:mm')} – ${format(endDay, 'EEE d MMM')} ${format(end, 'HH:mm')}`;
+  }
+
   return `${format(start, 'HH:mm')} – ${format(end, 'HH:mm')}`;
+}
+
+/** Keep events with no attendees visible; otherwise require a selected team member. */
+export function filterEventsByTeamMembers(
+  events: CalendarEvent[],
+  selectedMemberIds: string[],
+  allMemberIds: string[],
+): CalendarEvent[] {
+  if (allMemberIds.length === 0 || selectedMemberIds.length === 0) return events;
+  if (selectedMemberIds.length === allMemberIds.length) return events;
+  const selected = new Set(selectedMemberIds);
+  return events.filter((event) => {
+    if (!event.attendeeIds?.length) return true;
+    return event.attendeeIds.some((id) => selected.has(id));
+  });
+}
+
+export function resolveCalendarAttendeeLabels(
+  attendeeIds: string[] | undefined,
+  members: CalendarTeamMember[],
+): string {
+  if (!attendeeIds?.length) return '';
+  return attendeeIds
+    .map((id) => members.find((member) => member.id === id)?.label)
+    .filter((label): label is string => Boolean(label))
+    .join(', ');
+}
+
+export function formatCalendarEventDetailHint(
+  event: CalendarEvent,
+  members: CalendarTeamMember[] = [],
+): string | undefined {
+  const parts: string[] = [];
+  if (event.description?.trim()) parts.push(event.description.trim());
+  const attendees = resolveCalendarAttendeeLabels(event.attendeeIds, members);
+  if (attendees) parts.push(attendees);
+  return parts.length > 0 ? parts.join(' · ') : undefined;
 }
 
 export function formatAgendaDayHeading(day: Date): string {
@@ -202,17 +280,28 @@ export function groupEventsByDay(
 
   for (const event of sorted) {
     const start = eventStartDate(event);
-    if (!start) continue;
-    const key = format(startOfDay(start), 'yyyy-MM-dd');
-    const bucket = groups.get(key) ?? [];
-    bucket.push(event);
-    groups.set(key, bucket);
+    const end = eventEndDate(event);
+    if (!start || !end) continue;
+
+    const spanDays = eachDayOfInterval({
+      start: startOfDay(start),
+      end: startOfDay(end),
+    });
+
+    for (const day of spanDays) {
+      const key = format(day, 'yyyy-MM-dd');
+      const bucket = groups.get(key) ?? [];
+      bucket.push(event);
+      groups.set(key, bucket);
+    }
   }
 
-  return [...groups.entries()].map(([key, dayEvents]) => ({
-    day: parseISO(`${key}T00:00:00`),
-    events: dayEvents,
-  }));
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, dayEvents]) => ({
+      day: parseISO(`${key}T00:00:00`),
+      events: sortEventsByStart(dayEvents),
+    }));
 }
 
 export function eventToneClass(tone: CalendarEventTone = 'default'): string {
@@ -283,9 +372,11 @@ export function eventToEditorDraft(
   const start = eventStartDate(event);
   const end = eventEndDate(event);
   const day = startOfDay(start ?? new Date());
+  const endDay = startOfDay(end ?? start ?? new Date());
 
   return {
     day,
+    endDay: endDay.getTime() >= day.getTime() ? endDay : day,
     startTime: start && !event.allDay ? format(start, 'HH:mm') : '09:00',
     endTime: end && !event.allDay ? format(end, 'HH:mm') : '10:00',
     anchor,
@@ -293,6 +384,8 @@ export function eventToEditorDraft(
     allDay: event.allDay,
     title: event.title,
     calendarId: event.calendarId,
+    description: event.description,
+    attendeeIds: event.attendeeIds,
   };
 }
 

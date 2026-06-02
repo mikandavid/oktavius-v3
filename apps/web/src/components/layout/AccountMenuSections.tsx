@@ -27,8 +27,6 @@ import {
   type UiTheme,
 } from '@/lib/userPreferences';
 
-const SUBMENU_TRIGGER_CLASS = 'gap-2 rounded-control';
-
 type OrganizationMenuSectionProps = {
   userId: string;
 };
@@ -64,10 +62,10 @@ export function OrganizationMenuSection({ userId }: OrganizationMenuSectionProps
             onSelect={() => setActiveOrgId(org.id)}
           >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              {isActive ? <CheckIcon size={14} weight="bold" className="text-cta" /> : null}
+              {isActive ? <CheckIcon size={14} weight="bold" className="text-foreground" /> : null}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">{org.name}</p>
+              <p className="truncate text-sm text-foreground">{org.name}</p>
               <p className="text-xs text-muted-foreground">{org.environment}</p>
             </div>
           </DropdownMenuItem>
@@ -144,13 +142,15 @@ type AccountSubmenuProps = {
 function AccountSubmenu({ icon, label, hint, children }: AccountSubmenuProps) {
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className={SUBMENU_TRIGGER_CLASS}>
+      <DropdownMenuSubTrigger className="gap-2">
         {icon}
-        <span className="flex-1 truncate text-left">{label}</span>
+        <span className="min-w-0 flex-1 truncate text-left">{label}</span>
         {hint ? (
-          <span className="max-w-[7rem] truncate text-xs text-muted-foreground">{hint}</span>
+          <span className="min-w-0 flex-[0_1_45%] truncate text-right text-xs text-muted-foreground">
+            {hint}
+          </span>
         ) : null}
-        <ChevronRightIcon size={14} className="ml-1 shrink-0 text-muted-foreground" />
+        <ChevronRightIcon size={14} className="shrink-0 text-muted-foreground" />
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent
         alignOffset={-4}
@@ -174,7 +174,7 @@ function AccountSubmenuOption({ active, label, leading, onSelect }: AccountSubme
   return (
     <DropdownMenuItem className="gap-2" onSelect={onSelect}>
       <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-        {active ? <CheckIcon size={14} weight="bold" className="text-cta" /> : null}
+        {active ? <CheckIcon size={14} weight="bold" className="text-foreground" /> : null}
       </span>
       {leading}
       <span className="truncate">{label}</span>

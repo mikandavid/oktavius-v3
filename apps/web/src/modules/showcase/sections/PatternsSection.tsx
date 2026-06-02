@@ -10,7 +10,7 @@ import {
   type CatalogOption,
 } from '@/components/settings/CatalogOptionsManager';
 import { UploadIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -62,12 +62,12 @@ export function PatternsSection() {
         ? current.map((entry) => (entry.id === option.id ? option : entry))
         : [...current, option];
     });
-    toast.success('Catalog option saved.');
+    appToast.success('Catalog option saved.');
   };
 
   const handleDeleteCatalog = (id: string) => {
     setCatalogOptions((current) => current.filter((entry) => entry.id !== id));
-    toast.success('Catalog option deleted.');
+    appToast.success('Catalog option deleted.');
   };
 
   return (
@@ -94,7 +94,7 @@ export function PatternsSection() {
               <DialogFormFooter
                 confirmLabel="Finish"
                 onConfirm={() => {
-                  toast.success('Wizard complete.');
+                  appToast.success('Wizard complete.');
                   setStep(0);
                 }}
                 onCancel={() => setStep(0)}

@@ -13,6 +13,13 @@ const VISUAL_SIZE_CLASS: Record<RecordVisualSize, string> = {
   xl: 'h-14 w-14',
 };
 
+const VISUAL_SIZE_PX: Record<RecordVisualSize, number> = {
+  sm: 28,
+  md: 36,
+  lg: 48,
+  xl: 56,
+};
+
 const ICON_SIZE_CLASS: Record<RecordVisualSize, string> = {
   sm: '[&_svg]:size-3.5',
   md: '[&_svg]:size-4',
@@ -86,7 +93,15 @@ export function RecordVisual(props: RecordVisualProps) {
           className={cn('overflow-hidden rounded-full bg-muted/40 ring-1 ring-border/40', shell)}
           aria-label={props.label}
         >
-          <img src={props.src} alt="" className="h-full w-full object-cover" />
+          <img
+            src={props.src}
+            alt=""
+            width={VISUAL_SIZE_PX[size]}
+            height={VISUAL_SIZE_PX[size]}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         </div>
       );
     }
@@ -101,7 +116,15 @@ export function RecordVisual(props: RecordVisualProps) {
       <div
         className={cn('overflow-hidden rounded-control bg-muted/40 ring-1 ring-border/40', shell)}
       >
-        <img src={props.src} alt={props.alt} className="h-full w-full object-cover" />
+        <img
+          src={props.src}
+          alt={props.alt}
+          width={VISUAL_SIZE_PX[size]}
+          height={VISUAL_SIZE_PX[size]}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       </div>
     );
   }

@@ -9,7 +9,7 @@ This document lists the reusable frontend blocks that custom modules should comp
 Use the simplest correct block.
 
 - Tabular records: `CrudMainView` / `CrudTable` (not legacy `DataTable`).
-- Single record: `DetailView` or `Tabs` + `SectionCard`.
+- Single record: `DetailView`; use section nav, split view, or preview-led layouts before reaching for `Tabs` + `SectionCard`.
 - Create/edit: `EntityForm` — or `SubEntityFormDialog` when the form lives in a dialog.
 - Events / scheduling: `CalendarView`.
 - Files/documents: `DocumentPreview` / `DocumentPreviewPanel` / `AttachmentList`.

@@ -1,5 +1,5 @@
 ---
-description: Calendar and scheduling components — views, events, and module wiring
+description: Calendar and scheduling components — views, events, sidebar, mini picker
 globs: apps/web/src/**/*.{tsx,ts},packages/base-ui/src/components/scheduling/**/*
 alwaysApply: false
 ---
@@ -7,50 +7,53 @@ alwaysApply: false
 # Calendar components
 
 Canonical registry: `docs/ui-rules/component-registry.md` (Calendar / Planning section).
+Full rules: `docs/ui-rules/calendar-components.md`
 
 ## Primary component
 
-Use **`<CalendarView>`** as the Google Calendar–style planner. It includes:
+Use **`<CalendarView>`** with `showSidebar` for the full planner (grid + team/calendar filters + mini picker).
 
-- Toolbar: Create (optional) · Today · prev/next · period title · **Day | Week | Month | Schedule** switcher
-- **Month** — colored event pills with time prefix, click day → day view
-- **Week / Day** — time grid, all-day row, current-time indicator, click slot → create
-- **Schedule** — agenda list grouped by day with color stripe
-- Optional **calendar legend sidebar** (`showCalendarLegend` + `calendars` prop)
+## Mini month picker — critical
 
-Lower-level pieces (`SchedulerView`, `AgendaList`, `CalendarTimeGrid`) exist for edge cases — modules should default to `CalendarView`.
+**Use `<CalendarMiniPicker>`** for jump-to-date / sidebar month grids.
 
-## Event model & colors
+```tsx
+<CalendarMiniPicker selected={anchor} onSelect={setAnchor} />
+```
+
+**Never** style a sidebar picker by passing `classNames` to raw `<Calendar>`. All v9 grid + nav rules live in `calendar-mini-picker.tsx`.
+
+Agent checklist (one-pass):
+
+1. Sidebar jump date → `CalendarMiniPicker` or `CalendarSidebar` (not raw `Calendar`)
+2. Week rows + weekday headers → both `grid grid-cols-7` (not flex + fixed widths)
+3. Nav → in-flow top bar; no `absolute` on `button_previous` / `button_next`; no `navLayout="around"`
+4. Selected day → `bg-cta` + `text-cta-foreground` only via `selected` class; no week-highlight modifiers with bg/ring on buttons
+5. Sidebar toggles → `CalendarSidebarToggleRow` (native checkbox) for team AND calendars
+6. Sidebar sections → `CalendarSidebarSection` (not `CollapsibleSection`)
+
+## Sidebar
+
+`CalendarView` + `showSidebar` renders `CalendarSidebar` (`w-60`, `lg:flex-col`). Toolbar sits over main grid only — not over sidebar.
+
+## Event model
 
 ```ts
 interface CalendarEvent {
   id: string;
   title: string;
-  start: string;   // ISO date or datetime
+  start: string;
   end: string;
   allDay?: boolean;
-  calendarId?: string;  // links to CalendarSource for color + visibility
-  colorKey?: CalendarColorKey;  // override source color
-  resourceId?: string;  // ResourceCalendar only
-}
-
-interface CalendarSource {
-  id: string;
-  label: string;
-  color: CalendarColorKey;  // violet | blue | teal | green | yellow | orange | red | gray
-  visible?: boolean;
+  calendarId?: string;
+  colorKey?: CalendarColorKey;
+  resourceId?: string;
 }
 ```
 
-Events render with **solid calendar color fills** (Google Calendar style) from `CALENDAR_COLOR_STYLES` — full background on chips, time blocks, and agenda rows. Do not use side-accent-only styling.
+Solid calendar color fills from `CALENDAR_COLOR_STYLES` — no side-accent-only styling.
 
-## Module pattern (future `modules/calendar/`)
-
-```
-calendar/
-├── shared.tsx           # events, calendarSources, page icon
-└── CalendarPage.tsx     # ModulePage + CalendarView (single planner — no separate tabs)
-```
+## Module pattern
 
 ```tsx
 <CalendarView
@@ -60,25 +63,17 @@ calendar/
   onViewChange={setView}
   events={events}
   calendars={sources}
-  onCalendarVisibilityChange={toggleSource}
-  showCalendarLegend
-  leadingAction={<PageHeaderCtaLink …>Create</PageHeaderCtaLink>}
+  teamMembers={teamMembers}
+  showSidebar
   onEventClick={openEvent}
   onSlotClick={openCreateAt}
 />
 ```
 
-## Visual rules
-
-- Shell: `schedulingShellClass` — no outer border on the card
-- Body: `schedulingBodyClass` (`px-4 pb-4 pt-3`) — content never flush to edge
-- Toolbar: Today + ghost icon nav + large period label (Google layout)
-- View switcher: bordered segmented control (`CalendarViewSwitcher`)
-- Week starts **Monday** — do not override
-
 ## Don't
 
-- Split Day/Week/Month into separate pages — one `CalendarView` with `view` state
-- Add FullCalendar or third-party schedulers
-- Use `Timeline` for events — that's audit history; use Schedule view or `AgendaList`
-- Import `@phosphor-icons/react` in `apps/web` — use `@/lib/icons`
+- Raw `<Calendar classNames={…}>` in sidebar — use `CalendarMiniPicker`
+- Copy osiris `CalendarV2Sidebar` patterns into v3
+- Split Day/Week/Month into separate pages
+- FullCalendar or third-party schedulers
+- `@phosphor-icons/react` in `apps/web` — use `@/lib/icons`

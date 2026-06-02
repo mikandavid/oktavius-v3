@@ -3,6 +3,7 @@ import type { BadgeProps } from '@oktavius/base-ui';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import { statusColumn } from '@/components/data/columns';
 import type { FilterDef } from '@/components/data/FilterToolbar';
+import type { SavedViewPreset } from '@/components/data/useListSavedViews';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { OrderRecord } from '@/app/demo-data';
 import { ordersPageIcon } from '@/lib/modulePageIcons';
@@ -64,3 +65,14 @@ export const orderFilters: FilterDef[] = [
 export function orderStatusBadge(status: OrderRecord['status']) {
   return <StatusBadge status={status} variantMap={ORDER_STATUS_VARIANT} />;
 }
+
+export const ORDER_SAVED_VIEWS: SavedViewPreset[] = [
+  {
+    id: 'all',
+    label: 'All orders',
+    isDefault: true,
+    filters: { status: '', owner: '', clientName: '' },
+  },
+  { id: 'open', label: 'Confirmed', filters: { status: 'Confirmed', owner: '', clientName: '' } },
+  { id: 'shipped', label: 'Shipped', filters: { status: 'Shipped', owner: '', clientName: '' } },
+];

@@ -9,37 +9,41 @@ import {
   type KanbanColumn,
 } from '@oktavius/base-ui';
 
+import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
 import type { CaseRecord } from '@/app/demo-data';
 import { useDemoData } from '@/app/demo-data';
 import { PlusIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
-import { CASE_STAGES, casePriorityBadge, casesPageIcon } from './shared';
+import { casePriorityBadge, casesPageIcon } from './shared';
+import { useCasesModuleConfig } from './useCasesModuleConfig';
 
 export function CasesBoardPage() {
   const navigate = useNavigate();
-  const { cases, updateCaseStage } = useDemoData();
+  const api = useApiRegistry();
+  const { cases } = useDemoData();
+  const moduleConfig = useCasesModuleConfig();
 
   const columns = useMemo<KanbanColumn<CaseRecord>[]>(
     () =>
-      CASE_STAGES.map((stage) => ({
+      moduleConfig.caseStages.map((stage) => ({
         id: stage,
         title: stage,
         items: cases.filter((entry) => entry.stage === stage),
       })),
-    [cases],
+    [cases, moduleConfig.caseStages],
   );
 
   return (
     <ModulePage
-      title="Case board"
-      subtitle="Pipeline view by stage"
+      title={moduleConfig.isFuneral ? 'Sterbefall-Pipeline' : 'Case board'}
+      subtitle={moduleConfig.isFuneral ? 'Nach Bearbeitungsstatus' : 'Pipeline view by stage'}
       icon={casesPageIcon()}
-      backTo="/cases"
+      backTo={moduleConfig.basePath}
       actions={
-        <PageHeaderCtaLink to="/cases/new">
+        <PageHeaderCtaLink to={`${moduleConfig.basePath}/new`}>
           <PlusIcon size={14} />
           New case
         </PageHeaderCtaLink>
@@ -49,10 +53,16 @@ export function CasesBoardPage() {
         columns={columns}
         getItemId={(item) => item.id}
         emptyLabel="No cases in this stage"
-        onCardClick={(item) => navigate(`/cases/${item.id}`)}
+        onCardClick={(item) => navigate(`${moduleConfig.basePath}/${item.id}`)}
         onMove={({ itemId, toColumnId }) => {
-          updateCaseStage(itemId, toColumnId as CaseRecord['stage']);
-          toast.success(`Moved to ${toColumnId}.`);
+          void api.cases
+            .updateStage(itemId, toColumnId as CaseRecord['stage'])
+            .then(() => {
+              appToast.success(`Moved to ${toColumnId}.`);
+            })
+            .catch((error) => {
+              appToast.fromApiError(error, 'Case could not be moved.');
+            });
         }}
         renderCard={(item) => (
           <ListRow

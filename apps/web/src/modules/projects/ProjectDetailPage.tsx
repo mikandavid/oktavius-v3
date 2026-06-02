@@ -1,45 +1,82 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import {
-  Badge,
-  InlineEmptyState,
-  ListRow,
-  MoneyText,
-  STAT_CARD_GRID_CLASS,
-  SectionCard,
-  StatCard,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-  formatDisplayDate,
-} from '@oktavius/base-ui';
+import { MoneyText, STAT_CARD_GRID_CLASS, StatCard } from '@oktavius/base-ui';
 
+import { useApiRegistry } from '@/api/ApiProvider';
+import { DetailView } from '@/components/common/DetailView';
+import { RecordEditDialog } from '@/components/common/RecordEditDialog';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { EntityDetailWorkspaceTabs } from '@/components/detail/EntityDetailWorkspaceTabs';
+import { GeneratedRelatedRecordsPanel } from '@/components/detail/relatedRecordsConfig';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
 import { useDemoData } from '@/app/demo-data';
 import { projectsPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { submitApiForm } from '@/lib/apiFormSubmit';
+import { appToast } from '@/lib/toast';
 
-import { projectStatusBadge } from './shared';
+const PROJECT_DETAIL_TABS = ['overview', 'tasks', 'activity', 'files', 'assistant'] as const;
+
+import { projectFormFields, projectStatusBadge, type ProjectFormValues } from './shared';
+import { buildProjectDetailFields } from './projectDetailFields';
+import { projectTasksRelationConfig } from './projectRelatedRecords';
 
 export function ProjectDetailPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
-  const { projects, tasks } = useDemoData();
-  const [activeTab, setActiveTab] = useState('overview');
+  const api = useApiRegistry();
+  const { clients, projects, tasks } = useDemoData();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', PROJECT_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const project = useMemo(
     () => projects.find((entry) => entry.id === projectId),
     [projects, projectId],
   );
 
+  const updateProjectInline = useCallback(
+    async (input: Parameters<typeof api.projects.update>[1]) => {
+      if (!project) return;
+      try {
+        await api.projects.update(project.id, input);
+        appToast.success('Project updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Project could not be updated.');
+        throw error;
+      }
+    },
+    [api, project],
+  );
+
   const projectTasks = useMemo(
-    () => tasks.filter((task) => task.parentId === projectId && task.parentType === 'project'),
-    [tasks, projectId],
+    () => (project ? tasks.filter((task) => projectTasksRelationConfig.match(project, task)) : []),
+    [tasks, project],
+  );
+  const clientRelationOptions = useMemo(
+    () =>
+      clients.map((client) => ({
+        value: client.name,
+        label: client.name,
+        description: [client.city, client.industry].filter(Boolean).join(' · '),
+      })),
+    [clients],
+  );
+
+  useEntityAgentRegistration(
+    project
+      ? {
+          entityType: 'project',
+          entityId: project.id,
+          displayLabel: project.name,
+        }
+      : null,
+    { moduleId: 'projects', moduleLabel: 'Projects' },
   );
 
   if (!project) {
@@ -51,6 +88,17 @@ export function ProjectDetailPage() {
   }
 
   const openTasks = projectTasks.filter((task) => task.status !== 'Completed').length;
+
+  const editDefaults: ProjectFormValues = {
+    name: project.name,
+    clientName: project.clientName,
+    status: project.status,
+    manager: project.manager,
+    startDate: project.startDate,
+    endDate: project.endDate,
+    budget: project.budget,
+    completion: String(project.completion),
+  };
 
   return (
     <>
@@ -64,67 +112,84 @@ export function ProjectDetailPage() {
         }
         icon={projectsPageIcon()}
         backTo="/projects"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete project" />}
+        actions={
+          <DetailPageHeaderActions
+            onEdit={() => setEditOpen(true)}
+            editLabel="Edit project"
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel="Delete project"
+          />
+        }
       >
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4 pt-4">
-            <div className={STAT_CARD_GRID_CLASS}>
-              <StatCard label="Completion" value={`${project.completion}%`} />
-              <StatCard
-                label="Budget"
-                value={<MoneyText value={Number(project.budget)} currency="EUR" />}
-              />
-              <StatCard label="Open tasks" value={String(openTasks)} />
-              <StatCard label="Total tasks" value={String(projectTasks.length)} />
-            </div>
-
-            <SectionCard title="Project summary">
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Client</dt>
-                  <dd className="text-sm">{project.clientName}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Manager</dt>
-                  <dd className="text-sm">{project.manager}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Status</dt>
-                  <dd className="text-sm">{projectStatusBadge(project.status)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-muted-foreground">Timeline</dt>
-                  <dd className="text-sm">
-                    {formatDisplayDate(project.startDate)} – {formatDisplayDate(project.endDate)}
-                  </dd>
-                </div>
-              </dl>
-            </SectionCard>
-          </TabsContent>
-
-          <TabsContent value="tasks" className="space-y-4 pt-4">
-            <SectionCard title="Tasks" meta={`${projectTasks.length} items`}>
-              {projectTasks.map((task) => (
-                <ListRow
-                  key={task.id}
-                  title={task.title}
-                  subtitle={task.assignee}
-                  meta={formatDisplayDate(task.dueDate)}
-                  trailing={<Badge variant="outline">{task.status}</Badge>}
+        <EntityDetailWorkspaceTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          entityType="project"
+          entityId={project.id}
+          overview={
+            <>
+              <div className={STAT_CARD_GRID_CLASS}>
+                <StatCard label="Completion" value={`${project.completion}%`} />
+                <StatCard
+                  label="Budget"
+                  value={<MoneyText value={Number(project.budget)} currency="EUR" />}
                 />
-              ))}
-              {projectTasks.length === 0 ? (
-                <InlineEmptyState text="No tasks linked to this project." centered />
-              ) : null}
-            </SectionCard>
-          </TabsContent>
-        </Tabs>
+                <StatCard label="Open tasks" value={String(openTasks)} />
+                <StatCard label="Total tasks" value={String(projectTasks.length)} />
+              </div>
+
+              <DetailView
+                title="Project summary"
+                fields={buildProjectDetailFields({
+                  project,
+                  onInlineUpdate: updateProjectInline,
+                  clientOptions: clientRelationOptions,
+                })}
+              />
+            </>
+          }
+          extraTabs={[
+            {
+              value: 'tasks',
+              label: 'Tasks',
+              content: (
+                <GeneratedRelatedRecordsPanel
+                  config={projectTasksRelationConfig}
+                  parent={project}
+                  rows={tasks}
+                />
+              ),
+            },
+          ]}
+        />
       </ModulePage>
+
+      <RecordEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        title="Edit project"
+        fields={projectFormFields}
+        defaultValues={editDefaults}
+        isSubmitting={isSubmitting}
+        onSubmit={async (values) => {
+          setIsSubmitting(true);
+          try {
+            return await submitApiForm({
+              action: () =>
+                api.projects.update(project.id, {
+                  ...values,
+                  completion: Number.parseInt(values.completion, 10) || 0,
+                }),
+              onSuccess: () => {
+                appToast.success('Project updated.');
+              },
+              onError: (error) => appToast.fromApiError(error, 'Project could not be updated.'),
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      />
 
       <ConfirmActionDialog
         open={deleteOpen}
@@ -133,8 +198,14 @@ export function ProjectDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Project deleted.');
-          navigate('/projects');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.projects.delete(project.id),
+            navigate,
+            redirectTo: '/projects',
+            successMessage: 'Project deleted.',
+            errorMessage: 'Project could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

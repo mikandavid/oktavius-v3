@@ -3,6 +3,8 @@ import type { BadgeProps } from '@oktavius/base-ui';
 import type { CrudColumn } from '@/components/data/CrudTable';
 import { statusColumn } from '@/components/data/columns';
 import type { FilterDef } from '@/components/data/FilterToolbar';
+import type { SavedViewPreset } from '@/components/data/useListSavedViews';
+import type { FormField } from '@/components/forms/EntityForm';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { ContractRecord } from '@/app/demo-data';
 import { contractsPageIcon } from '@/lib/modulePageIcons';
@@ -61,3 +63,42 @@ export const contractFilters: FilterDef[] = [
 export function contractStatusBadge(status: ContractRecord['status']) {
   return <StatusBadge status={status} variantMap={CONTRACT_STATUS_VARIANT} />;
 }
+
+export type ContractFormValues = {
+  contractNumber: string;
+  title: string;
+  clientName: string;
+  status: ContractRecord['status'];
+  value: string;
+  startDate: string;
+  endDate: string;
+  owner: string;
+};
+
+export const contractFormFields: FormField[] = [
+  { name: 'contractNumber', label: 'Number', type: 'text', required: true, section: 'Contract' },
+  { name: 'title', label: 'Title', type: 'text', required: true, section: 'Contract' },
+  { name: 'clientName', label: 'Client', type: 'text', required: true, section: 'Parties' },
+  {
+    name: 'status',
+    label: 'Status',
+    type: 'combobox',
+    options: ['Draft', 'Active', 'Expiring', 'Terminated'],
+    section: 'Contract',
+  },
+  { name: 'value', label: 'Value', type: 'currency', currencySymbol: '€', section: 'Commercial' },
+  { name: 'startDate', label: 'Start', type: 'date', section: 'Timeline' },
+  { name: 'endDate', label: 'End', type: 'date', section: 'Timeline' },
+  { name: 'owner', label: 'Owner', type: 'text', section: 'Assignment' },
+];
+
+export const CONTRACT_SAVED_VIEWS: SavedViewPreset[] = [
+  {
+    id: 'all',
+    label: 'All contracts',
+    isDefault: true,
+    filters: { status: '', clientName: '', owner: '' },
+  },
+  { id: 'active', label: 'Active', filters: { status: 'Active', clientName: '', owner: '' } },
+  { id: 'expiring', label: 'Expiring', filters: { status: 'Expiring', clientName: '', owner: '' } },
+];

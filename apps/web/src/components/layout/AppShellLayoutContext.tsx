@@ -19,6 +19,9 @@ type AppShellLayoutContextValue = {
   hasSecondaryNav: boolean;
   registerSecondaryNav: () => void;
   unregisterSecondaryNav: () => void;
+  hasFillHeightPage: boolean;
+  registerFillHeightPage: () => void;
+  unregisterFillHeightPage: () => void;
   isSidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebarCollapsed: () => void;
@@ -29,10 +32,12 @@ const AppShellLayoutContext = createContext<AppShellLayoutContextValue | null>(n
 
 export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
   const [secondaryNavCount, setSecondaryNavCount] = useState(0);
+  const [fillHeightPageCount, setFillHeightPageCount] = useState(0);
   const [isSidebarCollapsed, setIsSidebarCollapsedState] = useState(readStoredCollapsedState);
   const [detailExpandedOverride, setDetailExpandedOverride] = useState(false);
 
   const hasSecondaryNav = secondaryNavCount > 0;
+  const hasFillHeightPage = fillHeightPageCount > 0;
 
   useEffect(() => {
     setDetailExpandedOverride(false);
@@ -61,6 +66,14 @@ export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
     setSecondaryNavCount((count) => Math.max(0, count - 1));
   }, []);
 
+  const registerFillHeightPage = useCallback(() => {
+    setFillHeightPageCount((count) => count + 1);
+  }, []);
+
+  const unregisterFillHeightPage = useCallback(() => {
+    setFillHeightPageCount((count) => Math.max(0, count - 1));
+  }, []);
+
   const isSidebarCompact = hasSecondaryNav ? !detailExpandedOverride : isSidebarCollapsed;
 
   const value = useMemo(
@@ -68,6 +81,9 @@ export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
       hasSecondaryNav,
       registerSecondaryNav,
       unregisterSecondaryNav,
+      hasFillHeightPage,
+      registerFillHeightPage,
+      unregisterFillHeightPage,
       isSidebarCollapsed,
       setSidebarCollapsed,
       toggleSidebarCollapsed,
@@ -77,6 +93,9 @@ export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
       hasSecondaryNav,
       registerSecondaryNav,
       unregisterSecondaryNav,
+      hasFillHeightPage,
+      registerFillHeightPage,
+      unregisterFillHeightPage,
       isSidebarCollapsed,
       setSidebarCollapsed,
       toggleSidebarCollapsed,
@@ -104,4 +123,15 @@ export function useRegisterSecondaryNav(active = true) {
     registerSecondaryNav();
     return unregisterSecondaryNav;
   }, [active, registerSecondaryNav, unregisterSecondaryNav]);
+}
+
+/** Switches `<main>` to fit mode so module content can fill the workspace height. */
+export function useRegisterFillHeightPage(active = true) {
+  const { registerFillHeightPage, unregisterFillHeightPage } = useAppShellLayout();
+
+  useEffect(() => {
+    if (!active) return;
+    registerFillHeightPage();
+    return unregisterFillHeightPage;
+  }, [active, registerFillHeightPage, unregisterFillHeightPage]);
 }

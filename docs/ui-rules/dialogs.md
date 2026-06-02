@@ -2,13 +2,14 @@
 
 ## Pick the right pattern
 
-| Need                                  | Component                                                              |
-| ------------------------------------- | ---------------------------------------------------------------------- |
-| Form modal (add/edit sub-entity)      | `<Dialog>` + `<EntityForm surface="dialog">`                           |
-| Standard Cancel + Save footer         | `<DialogFormFooter confirmVariant="cta">`                              |
-| Page-level delete (header trash icon) | `<ConfirmActionDialog>` — `confirmLabel="Delete"`, destructive         |
-| Row-level delete (table/menu)         | Built-in `confirm` on `CrudRowAction`, or `<ConfirmPopover>`           |
-| Blocking yes/no (rare)                | `<AlertDialog>` — `AlertDialogAction variant="destructive"` for delete |
+| Need                                  | Component                                                                                    |
+| ------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Form modal (add/edit sub-entity)      | `<Dialog>` + `<EntityForm surface="dialog">`                                                 |
+| Standard Cancel + Save footer         | `<DialogFormFooter confirmVariant="cta">`                                                    |
+| Page-level delete (header trash icon) | `<ConfirmActionDialog>` — `confirmLabel="Delete"`, destructive                               |
+| Row/bulk delete (CrudTable)           | Built-in `confirm` on `CrudRowAction` / `BulkAction` — uses `ConfirmActionDialog` internally |
+| Row-level delete (elsewhere)          | `<ConfirmPopover>`                                                                           |
+| Blocking yes/no (rare)                | `<AlertDialog>` — `AlertDialogAction variant="destructive"` for delete                       |
 
 ## DialogFormFooter
 

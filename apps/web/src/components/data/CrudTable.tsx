@@ -4,14 +4,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
   Button,
   Checkbox,
   DropdownMenu,
@@ -24,6 +16,7 @@ import {
 
 import { cn } from '@oktavius/base-ui';
 
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { EmptyState } from '@/components/common/EmptyState';
 
 import {
@@ -167,7 +160,7 @@ function LoadingStateWithColumns<T>({
   const rows = compact ? 6 : 8;
 
   return (
-    <div className="overflow-hidden bg-background">
+    <div className="overflow-hidden bg-card">
       <div className="border-b bg-muted/20 px-5 py-2">
         <Skeleton className="h-4 w-40" />
       </div>
@@ -417,8 +410,34 @@ export function CrudTable<T extends { id: string }>({
       setConfirmDialog({ mode: 'bulk', action, ids });
       return;
     }
-    action.onClick(ids);
+    void action.onClick(ids);
   }, []);
+
+  const crudConfirm = useMemo(() => {
+    if (!confirmDialog) return null;
+    const confirm = confirmDialog.action.confirm;
+    if (!confirm) return null;
+    const { action } = confirmDialog;
+    const title: string =
+      confirmDialog.mode === 'bulk' && typeof confirm.title === 'function'
+        ? confirm.title(confirmDialog.ids.length)
+        : String(confirm.title);
+
+    return {
+      title,
+      description: confirm.description,
+      confirmLabel: confirm.actionLabel ?? (confirmDialog.mode === 'bulk' ? 'Delete' : 'Confirm'),
+      confirmVariant: (action.destructive ? 'destructive' : 'cta') as 'destructive' | 'cta',
+      onConfirm: () => {
+        if (confirmDialog.mode === 'row') {
+          void confirmDialog.action.onClick(confirmDialog.item);
+        } else {
+          void confirmDialog.action.onClick(confirmDialog.ids);
+        }
+        setConfirmDialog(null);
+      },
+    };
+  }, [confirmDialog]);
 
   const [internalSelectedIds, setInternalSelectedIds] = useState<string[]>([]);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -707,7 +726,7 @@ export function CrudTable<T extends { id: string }>({
                           setConfirmDialog({ mode: 'row', action, item });
                           return;
                         }
-                        action.onClick(item);
+                        void action.onClick(item);
                       }}
                     >
                       {action.icon ? <span className="mr-2">{action.icon}</span> : null}
@@ -727,7 +746,7 @@ export function CrudTable<T extends { id: string }>({
                           setConfirmDialog({ mode: 'row', action, item });
                           return;
                         }
-                        action.onClick(item);
+                        void action.onClick(item);
                       }}
                     >
                       {action.icon ? <span className="mr-2">{action.icon}</span> : null}
@@ -957,7 +976,7 @@ export function CrudTable<T extends { id: string }>({
       ) : (
         <div
           ref={gridContainerRef}
-          className="relative w-full max-w-full min-w-0 overflow-x-hidden bg-background"
+          className="relative w-full max-w-full min-w-0 overflow-x-hidden bg-card"
         >
           <div style={{ height: gridHeight, width: '100%' }}>
             {isFetching ? (
@@ -987,57 +1006,19 @@ export function CrudTable<T extends { id: string }>({
         </div>
       )}
 
-      <AlertDialog
-        open={Boolean(confirmDialog)}
-        onOpenChange={(open) => {
-          if (!open) setConfirmDialog(null);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmDialog?.mode === 'bulk' && confirmDialog.action.confirm
-                ? typeof confirmDialog.action.confirm.title === 'function'
-                  ? confirmDialog.action.confirm.title(confirmDialog.ids.length)
-                  : confirmDialog.action.confirm.title
-                : confirmDialog?.mode === 'row'
-                  ? confirmDialog.action.confirm?.title
-                  : null}
-            </AlertDialogTitle>
-            {confirmDialog?.mode === 'bulk' && confirmDialog.action.confirm?.description ? (
-              <AlertDialogDescription>
-                {confirmDialog.action.confirm.description}
-              </AlertDialogDescription>
-            ) : null}
-            {confirmDialog?.mode === 'row' && confirmDialog.action.confirm?.description ? (
-              <AlertDialogDescription>
-                {confirmDialog.action.confirm.description}
-              </AlertDialogDescription>
-            ) : null}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant={confirmDialog?.action.destructive ? 'destructive' : 'cta'}
-              onClick={() => {
-                if (!confirmDialog) return;
-                if (confirmDialog.mode === 'row') {
-                  confirmDialog.action.onClick(confirmDialog.item);
-                } else {
-                  confirmDialog.action.onClick(confirmDialog.ids);
-                }
-                setConfirmDialog(null);
-              }}
-            >
-              {confirmDialog?.mode === 'bulk'
-                ? (confirmDialog.action.confirm?.actionLabel ?? 'Delete')
-                : confirmDialog?.mode === 'row'
-                  ? (confirmDialog.action.confirm?.actionLabel ?? 'Confirm')
-                  : 'Confirm'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {crudConfirm ? (
+        <ConfirmActionDialog
+          open={Boolean(confirmDialog)}
+          onOpenChange={(open) => {
+            if (!open) setConfirmDialog(null);
+          }}
+          title={crudConfirm.title}
+          description={crudConfirm.description}
+          confirmLabel={crudConfirm.confirmLabel}
+          confirmVariant={crudConfirm.confirmVariant}
+          onConfirm={crudConfirm.onConfirm}
+        />
+      ) : null}
     </div>
   );
 }

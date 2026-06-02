@@ -1,52 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { CrudMainView } from '@/components/data/CrudMainView';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { useDemoData } from '@/app/demo-data';
-import { useListPageState } from '@/lib/useListPageState';
+import {
+  StandardCrudListPage,
+  type StandardCrudListRequestParams,
+} from '@/components/data/StandardCrudListPage';
 
-import { invoiceColumns, invoiceFilters, invoicesPageIcon } from './shared';
+import { INVOICE_SAVED_VIEWS, invoiceColumns, invoiceFilters, invoicesPageIcon } from './shared';
 
 export function InvoicesListPage() {
+  const api = useApiRegistry();
   const { invoices } = useDemoData();
-  const [rows, setRows] = useState(invoices);
-
-  useEffect(() => {
-    setRows(invoices);
-  }, [invoices]);
-
-  const list = useListPageState({
-    rows,
-    defaultSort: 'issuedAt',
-    filterKeys: ['status', 'clientName'],
-    searchKeys: ['invoiceNumber', 'clientName', 'orderNumber'],
-  });
+  const loadInvoices = useCallback(
+    (params: StandardCrudListRequestParams) => api.invoices.list(params),
+    [api.invoices],
+  );
 
   return (
-    <CrudMainView
+    <StandardCrudListPage
       title="Invoices"
       subtitle="Billing documents and payment status"
       icon={invoicesPageIcon()}
+      rows={invoices}
+      loadRows={loadInvoices}
       columns={invoiceColumns}
-      rows={list.paged}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
-      search={list.search}
-      onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search invoices"
       filters={invoiceFilters}
-      values={list.values}
-      onFilterChange={list.onFilterChange}
-      onReset={list.onReset}
-      page={list.page}
-      pageSize={list.pageSize}
-      total={list.total}
-      totalPages={list.totalPages}
-      onPageChange={list.onPageChange}
+      savedViews={INVOICE_SAVED_VIEWS}
+      defaultSort="issuedAt"
+      filterKeys={['status', 'clientName']}
+      searchKeys={['invoiceNumber', 'clientName', 'orderNumber']}
+      searchPlaceholder="Search invoices"
       entityLabel="invoice"
       getRowHref={(row) => `/invoices/${row.id}`}
-      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
-      exportOptions={{ fileName: 'invoices', label: 'Export' }}
-      allRows={list.filtered}
+      onDeleteRows={(ids) =>
+        Promise.all(ids.map((id) => api.invoices.delete(id))).then(() => undefined)
+      }
+      exportFileName="invoices"
       emptyTitle="No invoices found"
       emptyDescription="Adjust your filters or search terms."
     />

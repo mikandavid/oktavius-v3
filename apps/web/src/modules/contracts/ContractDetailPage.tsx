@@ -1,27 +1,82 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { MoneyText, formatDisplayDate } from '@oktavius/base-ui';
-
+import { useApiRegistry } from '@/api/ApiProvider';
+import { RecordEditDialog } from '@/components/common/RecordEditDialog';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { EntityDetailWorkspaceTabs } from '@/components/detail/EntityDetailWorkspaceTabs';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
 import { useDemoData } from '@/app/demo-data';
 import { contractsPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { submitApiForm } from '@/lib/apiFormSubmit';
+import { appToast } from '@/lib/toast';
 
-import { contractStatusBadge } from './shared';
+const CONTRACT_DETAIL_TABS = ['overview', 'activity', 'files', 'assistant'] as const;
+
+import { contractFormFields, contractStatusBadge, type ContractFormValues } from './shared';
+import { buildContractDetailFields } from './contractDetailFields';
 
 export function ContractDetailPage() {
   const { contractId } = useParams();
   const navigate = useNavigate();
-  const { contracts } = useDemoData();
+  const api = useApiRegistry();
+  const { clients, contracts, users } = useDemoData();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', CONTRACT_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const contract = useMemo(
     () => contracts.find((entry) => entry.id === contractId),
     [contracts, contractId],
+  );
+  const updateContractInline = useCallback(
+    async (input: Parameters<typeof api.contracts.update>[1]) => {
+      if (!contract) return;
+
+      try {
+        await api.contracts.update(contract.id, input);
+        appToast.success('Contract updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Contract could not be updated.');
+        throw error;
+      }
+    },
+    [api, contract],
+  );
+  const clientRelationOptions = useMemo(
+    () =>
+      clients.map((client) => ({
+        value: client.name,
+        label: client.name,
+        description: [client.city, client.industry].filter(Boolean).join(' · '),
+      })),
+    [clients],
+  );
+  const ownerRelationOptions = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.name,
+        label: user.name,
+        description: [user.team, user.role].filter(Boolean).join(' · '),
+      })),
+    [users],
+  );
+
+  useEntityAgentRegistration(
+    contract
+      ? {
+          entityType: 'contract',
+          entityId: contract.id,
+          displayLabel: contract.title,
+        }
+      : null,
+    { moduleId: 'contracts', moduleLabel: 'Contracts' },
   );
 
   if (!contract) {
@@ -31,6 +86,17 @@ export function ContractDetailPage() {
       </ModulePage>
     );
   }
+
+  const editDefaults: ContractFormValues = {
+    contractNumber: contract.contractNumber,
+    title: contract.title,
+    clientName: contract.clientName,
+    status: contract.status,
+    value: contract.value,
+    startDate: contract.startDate,
+    endDate: contract.endDate,
+    owner: contract.owner,
+  };
 
   return (
     <>
@@ -44,44 +110,56 @@ export function ContractDetailPage() {
         }
         icon={contractsPageIcon()}
         backTo="/contracts"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete contract" />}
+        actions={
+          <DetailPageHeaderActions
+            onEdit={() => setEditOpen(true)}
+            editLabel="Edit contract"
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel="Delete contract"
+          />
+        }
       >
-        <DetailView
-          title="Contract details"
-          fields={[
-            { label: 'Title', value: contract.title, importance: 'primary' },
-            { label: 'Contract number', value: contract.contractNumber, section: 'Identification' },
-            { label: 'Client', value: contract.clientName, section: 'Parties' },
-            { label: 'Owner', value: contract.owner, section: 'Parties' },
-            {
-              label: 'Status',
-              value: contractStatusBadge(contract.status),
-              section: 'Terms',
-            },
-            {
-              label: 'Contract value',
-              value: <MoneyText value={Number(contract.value)} currency="EUR" />,
-              section: 'Terms',
-            },
-            {
-              label: 'Start date',
-              value: formatDisplayDate(contract.startDate),
-              section: 'Timeline',
-            },
-            {
-              label: 'End date',
-              value: formatDisplayDate(contract.endDate),
-              section: 'Timeline',
-            },
-            {
-              label: 'Renewal notice',
-              value: `${contract.renewalNoticeDays} days`,
-              section: 'Terms',
-              importance: 'meta',
-            },
-          ]}
+        <EntityDetailWorkspaceTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          entityType="contract"
+          entityId={contract.id}
+          overview={
+            <DetailView
+              title="Contract details"
+              fields={buildContractDetailFields({
+                contract,
+                onInlineUpdate: updateContractInline,
+                clientOptions: clientRelationOptions,
+                ownerOptions: ownerRelationOptions,
+              })}
+            />
+          }
         />
       </ModulePage>
+
+      <RecordEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        title="Edit contract"
+        fields={contractFormFields}
+        defaultValues={editDefaults}
+        isSubmitting={isSubmitting}
+        onSubmit={async (values) => {
+          setIsSubmitting(true);
+          try {
+            return await submitApiForm({
+              action: () => api.contracts.update(contract.id, values),
+              onSuccess: () => {
+                appToast.success('Contract updated.');
+              },
+              onError: (error) => appToast.fromApiError(error, 'Contract could not be updated.'),
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      />
 
       <ConfirmActionDialog
         open={deleteOpen}
@@ -90,8 +168,14 @@ export function ContractDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Contract deleted.');
-          navigate('/contracts');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.contracts.delete(contract.id),
+            navigate,
+            redirectTo: '/contracts',
+            successMessage: 'Contract deleted.',
+            errorMessage: 'Contract could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

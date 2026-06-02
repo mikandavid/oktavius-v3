@@ -8,14 +8,40 @@ alwaysApply: false
 
 ## Layout
 
+On fill-height module pages:
+
 ```tsx
-<SplitView className="w-full min-h-[min(32rem,70vh)]" sidebarWidth="w-[min(100%,20rem)]" sidebar={…}>
+<SplitView
+  className="min-h-0 flex-1 w-full"
+  defaultSidebarWidth={400}
+  minSidebarWidth={320}
+  maxSidebarWidth={760}
+  persistKey="clients-master-detail"
+  sidebarScroll
+  sidebar={…}
+>
   {detail content}
 </SplitView>
 ```
 
-- Split container is **`w-full`** (built into `SplitView` + pass `className="w-full"`).
+- Split container is **`w-full min-h-0 flex-1`** — grows with page height; no fixed `vh` on module routes.
 - Do not add `border` on the split outer card — use borderless white surface on `bg-muted/40`.
+- Pass **`persistKey`** to remember user-resized sidebar width in `localStorage`.
+- Size props are pixels: `defaultSidebarWidth`, `minSidebarWidth`, `maxSidebarWidth`.
+- Default queue sizing is intentionally wide: `400 / 320 / 760`. Do not use sub-320px sidebars for queues; they make record titles unreadable and persisted layouts will keep the bad state.
+- Fixed heights only in showcase blocks / dialogs — see `docs/ui-rules/fill-height-pages.md`.
+
+## Page shell
+
+```tsx
+<ModulePage fillHeight …>
+  <Tabs className={MODULE_TABS_FILL_CLASS}>
+    <TabsContent className={MODULE_TABS_CONTENT_FILL_CLASS}>
+      <SplitView className="min-h-0 flex-1" sidebarScroll … />
+    </TabsContent>
+  </Tabs>
+</ModulePage>
+```
 
 ## Sidebar queue
 

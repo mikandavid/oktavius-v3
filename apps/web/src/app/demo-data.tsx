@@ -1,85 +1,83 @@
-import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
-
-import type { ClientStatus, ClientType } from '@oktavius/reference-data';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 
 import { ApiProvider } from '@/api/ApiProvider';
+import { createConfiguredApiRegistry } from '@/api/apiRegistryConfig';
 import type { DemoApiRegistry } from '@/api/demo-client';
+import { buildCaseChecklistsDemoHandlers } from '@/api/demo-handlers/case-checklists';
+import { buildCasesDemoHandlers } from '@/api/demo-handlers/cases';
 import { buildClientsDemoHandlers } from '@/api/demo-handlers/clients';
-import type { CustomFieldValues } from '@/lib/custom-fields';
+import { buildContractsDemoHandlers } from '@/api/demo-handlers/contracts';
+import { buildIncidentsDemoHandlers } from '@/api/demo-handlers/incidents';
+import { buildInvoicesDemoHandlers } from '@/api/demo-handlers/invoices';
+import { buildOrdersDemoHandlers } from '@/api/demo-handlers/orders';
+import { buildOrganizationsDemoHandlers } from '@/api/demo-handlers/organizations';
+import { buildPartiesDemoHandlers } from '@/api/demo-handlers/parties';
+import { buildProductsDemoHandlers } from '@/api/demo-handlers/products';
+import { buildProjectsDemoHandlers } from '@/api/demo-handlers/projects';
+import { buildUsersDemoHandlers } from '@/api/demo-handlers/users';
+import { withPermissionedDemoApiRegistry } from '@/lib/apiPermissions';
+import { ORG_APEX_ID, ORG_KUNZ_ID, getOrgProfile } from '@/lib/org-profiles/profiles';
+import { permissionSubjectFor } from '@/lib/permissions';
 
-export type UserRecord = {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Admin' | 'Manager' | 'Member';
-  status: 'Active' | 'Pending' | 'Suspended';
-  team: string;
-  /** Platform-level superadmin (can access /superadmin) */
-  isSuperadmin?: boolean;
-};
+import {
+  KUNZ_CASE_CHECKLISTS,
+  KUNZ_CASES,
+  KUNZ_CLIENTS,
+  KUNZ_ORDERS,
+  KUNZ_PARTIES,
+  KUNZ_PRODUCTS,
+  KUNZ_PROJECTS,
+  KUNZ_TASKS,
+  KUNZ_USERS,
+} from './demo-data/kunz-seed';
 
-export type OrgPlan = 'Starter' | 'Professional' | 'Enterprise';
-export type OrgStatus = 'Active' | 'Trial' | 'Suspended' | 'Churned';
-export type OrgEnvironment = 'Production' | 'Sandbox' | 'Trial';
+export type {
+  CaseChecklistItem,
+  CaseRecord,
+  CaseStage,
+  CaseType,
+  ClientRecord,
+  OrderRecord,
+  OrgMembershipRecord,
+  OrgPlan,
+  OrgScoped,
+  OrgStatus,
+  OrganizationRecord,
+  PartyRecord,
+  ProductRecord,
+  ProjectRecord,
+  TaskRecord,
+  UserRecord,
+} from './demo-data/records';
 
-export type OrganizationRecord = {
-  id: string;
-  name: string;
-  slug: string;
-  plan: OrgPlan;
-  status: OrgStatus;
-  environment: OrgEnvironment;
-  region: string;
-  billingEmail: string;
-  ownerName: string;
-  memberCount: number;
-  createdAt: string;
-};
-
-export type OrgMembershipRecord = {
-  id: string;
-  orgId: string;
-  userId: string;
-  role: 'Owner' | 'Admin' | 'Member';
-};
+import type {
+  CaseChecklistItem,
+  CaseRecord,
+  ClientRecord,
+  OrderRecord,
+  OrgMembershipRecord,
+  OrganizationRecord,
+  PartyRecord,
+  ProductRecord,
+  ProjectRecord,
+  TaskRecord,
+  UserRecord,
+  OrgScoped,
+} from './demo-data/records';
 
 export type PlatformUserRow = UserRecord & {
   organizationNames: string;
   organizationCount: number;
-};
-
-export type ClientRecord = {
-  id: string;
-  name: string;
-  type: ClientType;
-  industry: string;
-  status: ClientStatus;
-  email: string;
-  phone: string;
-  website: string;
-  country: string;
-  city: string;
-  tags: string[];
-  notes: string;
-  annualRevenue: string;
-  contractStart: string;
-  contractEnd: string;
-  accountManager: string;
-  createdAt: string;
-  customFields?: CustomFieldValues;
-};
-
-export type OrderRecord = {
-  id: string;
-  orderNumber: string;
-  clientId: string;
-  clientName: string;
-  status: 'Draft' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
-  total: string;
-  orderDate: string;
-  dueDate: string;
-  owner: string;
-  lineCount: number;
 };
 
 export type OrderLineRecord = {
@@ -91,7 +89,7 @@ export type OrderLineRecord = {
   unitPrice: string;
 };
 
-export type InvoiceRecord = {
+export type InvoiceRecord = OrgScoped & {
   id: string;
   invoiceNumber: string;
   clientName: string;
@@ -102,75 +100,7 @@ export type InvoiceRecord = {
   dueAt: string;
 };
 
-export type ProductRecord = {
-  id: string;
-  sku: string;
-  name: string;
-  category: string;
-  status: 'Active' | 'Discontinued' | 'Draft';
-  currency: string;
-  price: string;
-  stock: number;
-  unit: string;
-};
-
-export type ProjectRecord = {
-  id: string;
-  name: string;
-  clientName: string;
-  status: 'Planning' | 'Active' | 'On hold' | 'Completed';
-  manager: string;
-  startDate: string;
-  endDate: string;
-  budget: string;
-  completion: number;
-};
-
-export type TaskRecord = {
-  id: string;
-  parentId: string;
-  parentType: 'client' | 'project' | 'order' | 'case';
-  title: string;
-  assignee: string;
-  dueDate: string;
-  status: 'Pending' | 'Active' | 'Completed';
-};
-
-export type PartyRecord = {
-  id: string;
-  clientId?: string;
-  caseId?: string;
-  salutation?: string;
-  name: string;
-  role: string;
-  email: string;
-};
-
-export type CaseRecord = {
-  id: string;
-  caseNumber: string;
-  title: string;
-  type: 'Support' | 'Legal' | 'Billing' | 'Onboarding';
-  stage: 'Intake' | 'Investigation' | 'Resolution' | 'Closed';
-  priority: 'Low' | 'Normal' | 'High' | 'Critical';
-  clientId: string;
-  clientName: string;
-  assignee: string;
-  openedAt: string;
-  dueAt: string;
-  slaStatus: 'ok' | 'warning' | 'breach';
-  summary: string;
-};
-
-export type CaseChecklistItem = {
-  id: string;
-  caseId: string;
-  label: string;
-  done: boolean;
-  required: boolean;
-};
-
-export type IncidentRecord = {
+export type IncidentRecord = OrgScoped & {
   id: string;
   incidentNumber: string;
   title: string;
@@ -182,7 +112,7 @@ export type IncidentRecord = {
   impact: string;
 };
 
-export type ContractRecord = {
+export type ContractRecord = OrgScoped & {
   id: string;
   contractNumber: string;
   title: string;
@@ -196,9 +126,19 @@ export type ContractRecord = {
 };
 
 type CreateUserInput = Omit<UserRecord, 'id'>;
+type UpdateUserInput = Partial<Omit<UserRecord, 'id'>>;
 type CreateClientInput = Omit<ClientRecord, 'id' | 'createdAt'>;
+type UpdateClientInput = Partial<Omit<ClientRecord, 'id' | 'createdAt'>>;
 type CreateProductInput = Omit<ProductRecord, 'id'>;
+type UpdateProductInput = Partial<Omit<ProductRecord, 'id'>>;
 type CreateCaseInput = Omit<CaseRecord, 'id' | 'caseNumber' | 'openedAt' | 'slaStatus'>;
+type UpdateCaseInput = Partial<
+  Omit<CaseRecord, 'id' | 'caseNumber' | 'openedAt' | 'slaStatus' | 'clientId'>
+>;
+type UpdateInvoiceInput = Partial<Omit<InvoiceRecord, 'id'>>;
+type UpdateContractInput = Partial<Omit<ContractRecord, 'id'>>;
+type UpdateIncidentInput = Partial<Omit<IncidentRecord, 'id'>>;
+type UpdateProjectInput = Partial<Omit<ProjectRecord, 'id'>>;
 type CreateOrganizationInput = Omit<OrganizationRecord, 'id' | 'memberCount' | 'createdAt'>;
 type CreatePartyInput = Omit<PartyRecord, 'id'>;
 type CreateChecklistItemInput = Omit<CaseChecklistItem, 'id' | 'done'>;
@@ -206,36 +146,74 @@ type CreateChecklistItemInput = Omit<CaseChecklistItem, 'id' | 'done'>;
 type DemoDataContextValue = {
   users: UserRecord[];
   createUser: (input: CreateUserInput) => UserRecord;
+  updateUser: (userId: string, input: UpdateUserInput) => UserRecord | null;
   organizations: OrganizationRecord[];
   orgMemberships: OrgMembershipRecord[];
   activeOrgId: string;
   setActiveOrgId: (orgId: string) => void;
+  currentUser: UserRecord;
+  activeMembership: OrgMembershipRecord | null;
+  activeOrganization: OrganizationRecord;
   createOrganization: (input: CreateOrganizationInput) => OrganizationRecord;
   getOrgMembers: (orgId: string) => Array<OrgMembershipRecord & { user: UserRecord }>;
   getUserOrganizations: (userId: string) => OrganizationRecord[];
   platformUsers: PlatformUserRow[];
   clients: ClientRecord[];
   createClient: (input: CreateClientInput) => ClientRecord;
+  updateClient: (clientId: string, input: UpdateClientInput) => ClientRecord | null;
   orders: OrderRecord[];
   orderLines: OrderLineRecord[];
   invoices: InvoiceRecord[];
+  updateInvoice: (invoiceId: string, input: UpdateInvoiceInput) => InvoiceRecord | null;
   products: ProductRecord[];
   createProduct: (input: CreateProductInput) => ProductRecord;
+  updateProduct: (productId: string, input: UpdateProductInput) => ProductRecord | null;
   projects: ProjectRecord[];
+  updateProject: (projectId: string, input: UpdateProjectInput) => ProjectRecord | null;
   tasks: TaskRecord[];
   parties: PartyRecord[];
   createParty: (input: CreatePartyInput) => PartyRecord;
   cases: CaseRecord[];
   createCase: (input: CreateCaseInput) => CaseRecord;
+  updateCase: (caseId: string, input: UpdateCaseInput) => CaseRecord | null;
   updateCaseStage: (caseId: string, stage: CaseRecord['stage']) => void;
   caseChecklists: CaseChecklistItem[];
   toggleChecklistItem: (id: string, done: boolean) => void;
   createChecklistItem: (input: CreateChecklistItemInput) => CaseChecklistItem;
   incidents: IncidentRecord[];
+  updateIncident: (incidentId: string, input: UpdateIncidentInput) => IncidentRecord | null;
   contracts: ContractRecord[];
+  updateContract: (contractId: string, input: UpdateContractInput) => ContractRecord | null;
+  removeUsers: (ids: string[]) => void;
+  removeClients: (ids: string[]) => void;
+  removeProducts: (ids: string[]) => void;
+  removeCases: (ids: string[]) => void;
+  removeInvoices: (ids: string[]) => void;
+  removeOrders: (ids: string[]) => void;
+  removeContracts: (ids: string[]) => void;
+  removeIncidents: (ids: string[]) => void;
+  removeProjects: (ids: string[]) => void;
+  /** Resolve by id across all tenants (for detail deep links). */
+  findClientById: (id: string | undefined) => ClientRecord | null;
+  findCaseById: (id: string | undefined) => CaseRecord | null;
+  findProductById: (id: string | undefined) => ProductRecord | null;
+  findOrderById: (id: string | undefined) => OrderRecord | null;
+  findProjectById: (id: string | undefined) => ProjectRecord | null;
+  findInvoiceById: (id: string | undefined) => InvoiceRecord | null;
+  findContractById: (id: string | undefined) => ContractRecord | null;
+  findIncidentById: (id: string | undefined) => IncidentRecord | null;
+  findUserById: (id: string | undefined) => UserRecord | null;
 };
 
 const DemoDataContext = createContext<DemoDataContextValue | null>(null);
+
+function tagOrg<T extends OrgScoped>(rows: T[], orgId: string): T[] {
+  return rows.map((row) => ({ ...row, orgId: row.orgId ?? orgId }));
+}
+
+function filterForOrg<T extends OrgScoped>(rows: T[], orgId: string): T[] {
+  return rows.filter((row) => (row.orgId ?? ORG_APEX_ID) === orgId);
+}
 
 const INITIAL_CLIENTS: ClientRecord[] = [
   {
@@ -936,6 +914,19 @@ const INITIAL_ORGANIZATIONS: OrganizationRecord[] = [
     memberCount: 2,
     createdAt: '2023-11-22',
   },
+  {
+    id: ORG_KUNZ_ID,
+    name: 'Bestattung Kunz',
+    slug: 'bestattung-kunz',
+    plan: 'Professional',
+    status: 'Active',
+    environment: 'Production',
+    region: 'AT · Niederösterreich',
+    billingEmail: 'office@kunz.at',
+    ownerName: 'Klaus Ostermann',
+    memberCount: 4,
+    createdAt: '2018-03-15',
+  },
 ];
 
 const INITIAL_ORG_MEMBERSHIPS: OrgMembershipRecord[] = [
@@ -947,6 +938,10 @@ const INITIAL_ORG_MEMBERSHIPS: OrgMembershipRecord[] = [
   { id: 'mbr_6', orgId: 'org_nordic', userId: 'usr_1002', role: 'Owner' },
   { id: 'mbr_7', orgId: 'org_nordic', userId: 'usr_1003', role: 'Member' },
   { id: 'mbr_8', orgId: 'org_alpine', userId: 'usr_1002', role: 'Owner' },
+  { id: 'mbr_kunz_1', orgId: ORG_KUNZ_ID, userId: 'usr_1001', role: 'Admin' },
+  { id: 'mbr_kunz_2', orgId: ORG_KUNZ_ID, userId: 'usr_kunz_owner', role: 'Owner' },
+  { id: 'mbr_kunz_3', orgId: ORG_KUNZ_ID, userId: 'usr_kunz_member1', role: 'Admin' },
+  { id: 'mbr_kunz_4', orgId: ORG_KUNZ_ID, userId: 'usr_kunz_member2', role: 'Member' },
 ];
 
 const INITIAL_USERS: UserRecord[] = [
@@ -987,20 +982,91 @@ const INITIAL_USERS: UserRecord[] = [
 ];
 
 export function DemoDataProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<UserRecord[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserRecord[]>([...INITIAL_USERS, ...KUNZ_USERS]);
+  const usersRef = useRef(users);
+  usersRef.current = users;
   const [organizations, setOrganizations] = useState<OrganizationRecord[]>(INITIAL_ORGANIZATIONS);
+  const organizationsRef = useRef(organizations);
+  organizationsRef.current = organizations;
   const [orgMemberships] = useState<OrgMembershipRecord[]>(INITIAL_ORG_MEMBERSHIPS);
-  const [activeOrgId, setActiveOrgId] = useState('org_apex');
-  const [clients, setClients] = useState<ClientRecord[]>(INITIAL_CLIENTS);
+  const [activeOrgId, setActiveOrgIdState] = useState(() => {
+    if (typeof window === 'undefined') return ORG_APEX_ID;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('org') === 'bestattung-kunz') return ORG_KUNZ_ID;
+    return ORG_APEX_ID;
+  });
+  const setActiveOrgId = useCallback((orgId: string) => {
+    setActiveOrgIdState((current) => (current === orgId ? current : orgId));
+    sessionStorage.setItem('oktavius.demoActiveOrgId', orgId);
+    const profile = getOrgProfile(orgId);
+    const defaultLocationId = profile.locations[0]?.id;
+    if (defaultLocationId) {
+      localStorage.setItem('oktavius.activeLocationId', defaultLocationId);
+    }
+  }, []);
+  const [clients, setClients] = useState<ClientRecord[]>([
+    ...tagOrg(INITIAL_CLIENTS, ORG_APEX_ID),
+    ...KUNZ_CLIENTS,
+  ]);
   const clientsRef = useRef(clients);
   clientsRef.current = clients;
-  const [products, setProducts] = useState<ProductRecord[]>(INITIAL_PRODUCTS);
-  const [cases, setCases] = useState<CaseRecord[]>(INITIAL_CASES);
-  const [parties, setParties] = useState<PartyRecord[]>(INITIAL_PARTIES);
-  const [caseChecklists, setCaseChecklists] =
-    useState<CaseChecklistItem[]>(INITIAL_CASE_CHECKLISTS);
+  const [products, setProducts] = useState<ProductRecord[]>([
+    ...tagOrg(INITIAL_PRODUCTS, ORG_APEX_ID),
+    ...KUNZ_PRODUCTS,
+  ]);
+  const productsRef = useRef(products);
+  productsRef.current = products;
+  const [cases, setCases] = useState<CaseRecord[]>([
+    ...tagOrg(INITIAL_CASES, ORG_APEX_ID),
+    ...KUNZ_CASES,
+  ]);
+  const casesRef = useRef(cases);
+  casesRef.current = cases;
+  const [parties, setParties] = useState<PartyRecord[]>([...INITIAL_PARTIES, ...KUNZ_PARTIES]);
+  const partiesRef = useRef(parties);
+  partiesRef.current = parties;
+  const [caseChecklists, setCaseChecklists] = useState<CaseChecklistItem[]>([
+    ...INITIAL_CASE_CHECKLISTS,
+    ...KUNZ_CASE_CHECKLISTS,
+  ]);
+  const caseChecklistsRef = useRef(caseChecklists);
+  caseChecklistsRef.current = caseChecklists;
+  const [invoices, setInvoices] = useState<InvoiceRecord[]>(tagOrg(INITIAL_INVOICES, ORG_APEX_ID));
+  const invoicesRef = useRef(invoices);
+  invoicesRef.current = invoices;
+  const [orders, setOrders] = useState<OrderRecord[]>([
+    ...tagOrg(INITIAL_ORDERS, ORG_APEX_ID),
+    ...KUNZ_ORDERS,
+  ]);
+  const ordersRef = useRef(orders);
+  ordersRef.current = orders;
+  const [contracts, setContracts] = useState<ContractRecord[]>(
+    tagOrg(INITIAL_CONTRACTS, ORG_APEX_ID),
+  );
+  const contractsRef = useRef(contracts);
+  contractsRef.current = contracts;
+  const [incidents, setIncidents] = useState<IncidentRecord[]>(
+    tagOrg(INITIAL_INCIDENTS, ORG_APEX_ID),
+  );
+  const incidentsRef = useRef(incidents);
+  incidentsRef.current = incidents;
+  const [projects, setProjects] = useState<ProjectRecord[]>([
+    ...tagOrg(INITIAL_PROJECTS, ORG_APEX_ID),
+    ...KUNZ_PROJECTS,
+  ]);
+  const projectsRef = useRef(projects);
+  projectsRef.current = projects;
+  const allTasks = useMemo(() => [...tagOrg(INITIAL_TASKS, ORG_APEX_ID), ...KUNZ_TASKS], []);
 
   const value = useMemo<DemoDataContextValue>(() => {
+    const removeByIds = <T extends { id: string }>(
+      setter: Dispatch<SetStateAction<T[]>>,
+      ids: string[],
+    ) => {
+      if (ids.length === 0) return;
+      setter((current) => current.filter((row) => !ids.includes(row.id)));
+    };
+
     const getUserOrganizations = (userId: string) => {
       const orgIds = orgMemberships
         .filter((membership) => membership.userId === userId)
@@ -1027,6 +1093,28 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       };
     });
 
+    const orgProfile = getOrgProfile(activeOrgId);
+    const activeOrganization =
+      organizations.find((org) => org.id === activeOrgId) ?? organizations[0]!;
+    const currentUser = users.find((user) => user.id === orgProfile.demoUserId) ?? users[0]!;
+    const activeMembership =
+      orgMemberships.find(
+        (membership) => membership.orgId === activeOrgId && membership.userId === currentUser.id,
+      ) ?? null;
+
+    const orgClients = filterForOrg(clients, activeOrgId);
+    const orgProducts = filterForOrg(products, activeOrgId);
+    const orgCases = filterForOrg(cases, activeOrgId);
+    const orgOrders = filterForOrg(orders, activeOrgId);
+    const orgProjects = filterForOrg(projects, activeOrgId);
+    const orgInvoices = filterForOrg(invoices, activeOrgId);
+    const orgContracts = filterForOrg(contracts, activeOrgId);
+    const orgIncidents = filterForOrg(incidents, activeOrgId);
+    const orgTasks = filterForOrg(allTasks, activeOrgId);
+    const orgCaseIds = new Set(orgCases.map((entry) => entry.id));
+    const orgParties = parties.filter((party) => !party.caseId || orgCaseIds.has(party.caseId));
+    const orgCaseChecklists = caseChecklists.filter((item) => orgCaseIds.has(item.caseId));
+
     return {
       users,
       createUser: (input) => {
@@ -1037,10 +1125,24 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         setUsers((current) => [next, ...current]);
         return next;
       },
+      updateUser: (userId, input) => {
+        let updated: UserRecord | null = null;
+        setUsers((current) =>
+          current.map((entry) => {
+            if (entry.id !== userId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
       organizations,
       orgMemberships,
       activeOrgId,
       setActiveOrgId,
+      currentUser,
+      activeMembership,
+      activeOrganization,
       createOrganization: (input) => {
         const next: OrganizationRecord = {
           id: `org_${Date.now()}`,
@@ -1054,28 +1156,73 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       getOrgMembers,
       getUserOrganizations,
       platformUsers,
-      clients,
+      clients: orgClients,
       createClient: (input) => {
         const next: ClientRecord = {
           id: `cli_${Date.now()}`,
+          orgId: activeOrgId,
           createdAt: new Date().toISOString().slice(0, 10),
           ...input,
         };
         setClients((current) => [next, ...current]);
         return next;
       },
-      orders: INITIAL_ORDERS,
+      updateClient: (clientId, input) => {
+        let updated: ClientRecord | null = null;
+        setClients((current) =>
+          current.map((entry) => {
+            if (entry.id !== clientId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
+      orders: orgOrders,
       orderLines: INITIAL_ORDER_LINES,
-      invoices: INITIAL_INVOICES,
-      products,
+      invoices: orgInvoices,
+      updateInvoice: (invoiceId, input) => {
+        let updated: InvoiceRecord | null = null;
+        setInvoices((current) =>
+          current.map((entry) => {
+            if (entry.id !== invoiceId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
+      products: orgProducts,
       createProduct: (input) => {
-        const next: ProductRecord = { id: `prd_${Date.now()}`, ...input };
+        const next: ProductRecord = { id: `prd_${Date.now()}`, orgId: activeOrgId, ...input };
         setProducts((current) => [next, ...current]);
         return next;
       },
-      projects: INITIAL_PROJECTS,
-      tasks: INITIAL_TASKS,
-      parties,
+      updateProduct: (productId, input) => {
+        let updated: ProductRecord | null = null;
+        setProducts((current) =>
+          current.map((entry) => {
+            if (entry.id !== productId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
+      projects: orgProjects,
+      updateProject: (projectId, input) => {
+        let updated: ProjectRecord | null = null;
+        setProjects((current) =>
+          current.map((entry) => {
+            if (entry.id !== projectId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
+      tasks: orgTasks,
+      parties: orgParties,
       createParty: (input) => {
         const next: PartyRecord = {
           id: `pty_${Date.now()}`,
@@ -1084,11 +1231,16 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         setParties((current) => [...current, next]);
         return next;
       },
-      cases,
+      cases: orgCases,
       createCase: (input) => {
+        const year = new Date().getFullYear();
+        const seq = String(Date.now()).slice(-4);
+        const caseNumber =
+          orgProfile.industryKey === 'funeral' ? `KUNZ-${year}-${seq}` : `CASE-${year}-${seq}`;
         const next: CaseRecord = {
           id: `case_${Date.now()}`,
-          caseNumber: `CASE-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
+          orgId: activeOrgId,
+          caseNumber,
           openedAt: new Date().toISOString().slice(0, 10),
           slaStatus: 'ok',
           ...input,
@@ -1096,12 +1248,30 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         setCases((current) => [next, ...current]);
         return next;
       },
+      updateCase: (caseId, input) => {
+        let updated: CaseRecord | null = null;
+        setCases((current) =>
+          current.map((entry) => {
+            if (entry.id !== caseId) return entry;
+            const client = input.clientName
+              ? orgClients.find((c) => c.name === input.clientName)
+              : undefined;
+            updated = {
+              ...entry,
+              ...input,
+              ...(client ? { clientId: client.id, clientName: client.name } : {}),
+            };
+            return updated;
+          }),
+        );
+        return updated;
+      },
       updateCaseStage: (caseId, stage) => {
         setCases((current) =>
           current.map((entry) => (entry.id === caseId ? { ...entry, stage } : entry)),
         );
       },
-      caseChecklists,
+      caseChecklists: orgCaseChecklists,
       toggleChecklistItem: (id, done) => {
         setCaseChecklists((current) =>
           current.map((item) => (item.id === id ? { ...item, done } : item)),
@@ -1116,34 +1286,151 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         setCaseChecklists((current) => [...current, next]);
         return next;
       },
-      incidents: INITIAL_INCIDENTS,
-      contracts: INITIAL_CONTRACTS,
+      incidents: orgIncidents,
+      updateIncident: (incidentId, input) => {
+        let updated: IncidentRecord | null = null;
+        setIncidents((current) =>
+          current.map((entry) => {
+            if (entry.id !== incidentId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
+      contracts: orgContracts,
+      updateContract: (contractId, input) => {
+        let updated: ContractRecord | null = null;
+        setContracts((current) =>
+          current.map((entry) => {
+            if (entry.id !== contractId) return entry;
+            updated = { ...entry, ...input };
+            return updated;
+          }),
+        );
+        return updated;
+      },
+      removeUsers: (ids) => removeByIds(setUsers, ids),
+      removeClients: (ids) => removeByIds(setClients, ids),
+      removeProducts: (ids) => removeByIds(setProducts, ids),
+      removeCases: (ids) => removeByIds(setCases, ids),
+      removeInvoices: (ids) => removeByIds(setInvoices, ids),
+      removeOrders: (ids) => removeByIds(setOrders, ids),
+      removeContracts: (ids) => removeByIds(setContracts, ids),
+      removeIncidents: (ids) => removeByIds(setIncidents, ids),
+      removeProjects: (ids) => removeByIds(setProjects, ids),
+      findClientById: (id) => (id ? (clients.find((entry) => entry.id === id) ?? null) : null),
+      findCaseById: (id) => (id ? (cases.find((entry) => entry.id === id) ?? null) : null),
+      findProductById: (id) => (id ? (products.find((entry) => entry.id === id) ?? null) : null),
+      findOrderById: (id) => (id ? (orders.find((entry) => entry.id === id) ?? null) : null),
+      findProjectById: (id) => (id ? (projects.find((entry) => entry.id === id) ?? null) : null),
+      findInvoiceById: (id) => (id ? (invoices.find((entry) => entry.id === id) ?? null) : null),
+      findContractById: (id) => (id ? (contracts.find((entry) => entry.id === id) ?? null) : null),
+      findIncidentById: (id) => (id ? (incidents.find((entry) => entry.id === id) ?? null) : null),
+      findUserById: (id) => (id ? (users.find((entry) => entry.id === id) ?? null) : null),
     };
   }, [
     users,
     organizations,
     orgMemberships,
     activeOrgId,
+    setActiveOrgId,
     clients,
     products,
     cases,
     parties,
     caseChecklists,
+    invoices,
+    orders,
+    contracts,
+    incidents,
+    projects,
+    allTasks,
   ]);
 
-  const demoRegistry = useMemo<DemoApiRegistry>(
-    () => ({
-      clients: buildClientsDemoHandlers({
-        getClients: () => clientsRef.current,
-        setClients,
-      }),
-    }),
-    [],
-  );
+  const demoRegistry = useMemo<DemoApiRegistry>(() => {
+    const apiOrgProfile = getOrgProfile(activeOrgId);
+    const apiCurrentUser =
+      usersRef.current.find((user) => user.id === apiOrgProfile.demoUserId) ?? usersRef.current[0]!;
+    const apiActiveMembership =
+      orgMemberships.find(
+        (membership) => membership.orgId === activeOrgId && membership.userId === apiCurrentUser.id,
+      ) ?? null;
+
+    const permissionedDemoRegistry = withPermissionedDemoApiRegistry(
+      {
+        cases: buildCasesDemoHandlers({
+          activeOrgId,
+          industryKey: getOrgProfile(activeOrgId).industryKey,
+          getCases: () => casesRef.current,
+          getClients: () =>
+            clientsRef.current.filter((client) => (client.orgId ?? ORG_APEX_ID) === activeOrgId),
+          setCases,
+        }),
+        caseChecklists: buildCaseChecklistsDemoHandlers({
+          getItems: () => caseChecklistsRef.current,
+          setItems: setCaseChecklists,
+        }),
+        clients: buildClientsDemoHandlers({
+          activeOrgId,
+          getClients: () => clientsRef.current,
+          setClients,
+        }),
+        contracts: buildContractsDemoHandlers({
+          activeOrgId,
+          getContracts: () => contractsRef.current,
+          setContracts,
+        }),
+        incidents: buildIncidentsDemoHandlers({
+          activeOrgId,
+          getIncidents: () => incidentsRef.current,
+          setIncidents,
+        }),
+        invoices: buildInvoicesDemoHandlers({
+          activeOrgId,
+          getInvoices: () => invoicesRef.current,
+          setInvoices,
+        }),
+        orders: buildOrdersDemoHandlers({
+          activeOrgId,
+          getOrders: () => ordersRef.current,
+          setOrders,
+        }),
+        organizations: buildOrganizationsDemoHandlers({
+          getOrganizations: () => organizationsRef.current,
+          setOrganizations,
+        }),
+        parties: buildPartiesDemoHandlers({
+          getParties: () => partiesRef.current,
+          setParties,
+        }),
+        products: buildProductsDemoHandlers({
+          activeOrgId,
+          getProducts: () => productsRef.current,
+          setProducts,
+        }),
+        projects: buildProjectsDemoHandlers({
+          activeOrgId,
+          getProjects: () => projectsRef.current,
+          setProjects,
+        }),
+        users: buildUsersDemoHandlers({
+          getUsers: () => usersRef.current,
+          setUsers,
+        }),
+      },
+      permissionSubjectFor(apiCurrentUser, apiActiveMembership),
+    );
+
+    return createConfiguredApiRegistry({
+      demoRegistry: permissionedDemoRegistry,
+      env: import.meta.env,
+    });
+  }, [activeOrgId, orgMemberships]);
 
   return (
     <DemoDataContext.Provider value={value}>
-      <ApiProvider demoRegistry={demoRegistry}>{children}</ApiProvider>
+      <ApiProvider registry={demoRegistry}>{children}</ApiProvider>
     </DemoDataContext.Provider>
   );
 }

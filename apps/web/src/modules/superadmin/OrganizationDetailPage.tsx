@@ -1,28 +1,46 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { Badge, ListRow, SectionCard } from '@oktavius/base-ui';
 
+import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
 import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { useDemoData } from '@/app/demo-data';
 import { organizationPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ORG_ENV_VARIANT, ORG_PLAN_VARIANT, ORG_STATUS_VARIANT } from './shared';
+import { buildOrganizationDetailFields } from './organizationDetailFields';
 
 export function OrganizationDetailPage() {
   const { orgId } = useParams();
   const navigate = useNavigate();
+  const api = useApiRegistry();
   const { organizations, getOrgMembers } = useDemoData();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const organization = useMemo(
     () => organizations.find((entry) => entry.id === orgId),
     [organizations, orgId],
+  );
+  const updateOrganizationInline = useCallback(
+    async (input: Parameters<typeof api.organizations.update>[1]) => {
+      if (!organization) return;
+
+      try {
+        await api.organizations.update(organization.id, input);
+        appToast.success('Organization updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Organization could not be updated.');
+        throw error;
+      }
+    },
+    [api, organization],
   );
 
   const members = useMemo(() => (orgId ? getOrgMembers(orgId) : []), [getOrgMembers, orgId]);
@@ -56,41 +74,10 @@ export function OrganizationDetailPage() {
         <div className="space-y-4">
           <DetailView
             title="Organization details"
-            fields={[
-              { label: 'Name', value: organization.name, importance: 'primary' },
-              { label: 'Slug', value: organization.slug, section: 'Profile' },
-              { label: 'Region', value: organization.region, section: 'Operations' },
-              {
-                label: 'Plan',
-                value: <StatusBadge status={organization.plan} variantMap={ORG_PLAN_VARIANT} />,
-                section: 'Subscription',
-              },
-              {
-                label: 'Status',
-                value: <StatusBadge status={organization.status} variantMap={ORG_STATUS_VARIANT} />,
-                section: 'Subscription',
-              },
-              {
-                label: 'Environment',
-                value: (
-                  <StatusBadge status={organization.environment} variantMap={ORG_ENV_VARIANT} />
-                ),
-                section: 'Subscription',
-              },
-              { label: 'Billing email', value: organization.billingEmail, section: 'Billing' },
-              { label: 'Owner', value: organization.ownerName, section: 'Ownership' },
-              {
-                label: 'Members',
-                value: String(organization.memberCount),
-                section: 'Ownership',
-                importance: 'meta',
-              },
-              {
-                label: 'Created',
-                value: organization.createdAt,
-                importance: 'meta',
-              },
-            ]}
+            fields={buildOrganizationDetailFields({
+              organization,
+              onInlineUpdate: updateOrganizationInline,
+            })}
           />
 
           <SectionCard title="Members" meta={`${members.length} linked users`}>
@@ -126,8 +113,14 @@ export function OrganizationDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Organization deleted.');
-          navigate('/superadmin');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.organizations.delete(organization.id),
+            navigate,
+            redirectTo: '/superadmin',
+            successMessage: 'Organization deleted.',
+            errorMessage: 'Organization could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

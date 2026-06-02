@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import { cn } from '@oktavius/base-ui';
+import { cn, Drawer, DrawerContent, DrawerTitle } from '@oktavius/base-ui';
 
 import {
   APP_MAIN_FIT_CLASS,
@@ -10,25 +10,40 @@ import {
   APP_MAIN_SCROLL_CLASS,
   APP_WORKSPACE_COLUMN_CLASS,
 } from '@/components/common/pageChrome';
+import { OrgDemoBootstrap } from '@/components/demo/OrgDemoBootstrap';
+import { ModuleErrorBoundary } from '@/components/errors/ModuleErrorBoundary';
 import { rememberHealthyRoute } from '@/lib/chunkLoadRecovery';
+import { sonnerToasterProps } from '@/lib/toast';
 import { AppShellLayoutProvider, useAppShellLayout } from './AppShellLayoutContext';
 import { AIChatSidebar } from './AIChatSidebar';
 import { Header } from './Header';
 import { MobileTopBar } from './MobileTopBar';
 import { Sidebar } from './Sidebar';
 
-function AppLayoutMain({ isAgentChatRoute }: { isAgentChatRoute: boolean }) {
-  const { hasSecondaryNav } = useAppShellLayout();
+function moduleIdFromPath(pathname: string) {
+  return pathname.split('/').filter(Boolean)[0] || 'app';
+}
+
+function AppLayoutMain({
+  isAgentChatRoute,
+  moduleId,
+}: {
+  isAgentChatRoute: boolean;
+  moduleId: string;
+}) {
+  const { hasSecondaryNav, hasFillHeightPage } = useAppShellLayout();
+  const isFitMain = isAgentChatRoute || hasSecondaryNav || hasFillHeightPage;
 
   return (
     <main
       id="app-main-content"
-      className={cn(
-        isAgentChatRoute || hasSecondaryNav ? APP_MAIN_FIT_CLASS : APP_MAIN_SCROLL_CLASS,
-        APP_MAIN_GUTTER_CLASS,
-      )}
+      className={cn(isFitMain ? APP_MAIN_FIT_CLASS : APP_MAIN_SCROLL_CLASS, APP_MAIN_GUTTER_CLASS)}
     >
-      <Outlet />
+      <ModuleErrorBoundary moduleId={moduleId}>
+        <div className={cn(isFitMain && 'flex min-h-0 flex-1 flex-col')}>
+          <Outlet />
+        </div>
+      </ModuleErrorBoundary>
     </main>
   );
 }
@@ -47,6 +62,7 @@ export function AppLayout() {
 
   return (
     <AppShellLayoutProvider>
+      <OrgDemoBootstrap />
       <div className="flex h-dvh max-h-dvh min-w-0 overflow-hidden bg-muted/40">
         <a
           href="#app-main-content"
@@ -60,18 +76,18 @@ export function AppLayout() {
           <Sidebar />
         </div>
 
-        {/* Mobile nav drawer */}
-        {sidebarOpen ? (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-30 bg-foreground/15 backdrop-blur-[1px] md:hidden"
-              aria-label="Close navigation menu"
-              onClick={() => setSidebarOpen(false)}
-            />
-            <Sidebar mobile open onNavigate={() => setSidebarOpen(false)} />
-          </>
-        ) : null}
+        {/* Mobile nav drawer — Radix focus trap + Escape; replaces hand-rolled overlay */}
+        <Drawer open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <DrawerContent
+            side="left"
+            showCloseButton={false}
+            className="md:hidden gap-0 overflow-hidden p-0 shadow-elevated"
+            aria-label="Navigation menu"
+          >
+            <DrawerTitle className="sr-only">Navigation</DrawerTitle>
+            <Sidebar embedded onNavigate={() => setSidebarOpen(false)} />
+          </DrawerContent>
+        </Drawer>
 
         {/* Center + right: workspace and agent chat */}
         <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
@@ -83,12 +99,15 @@ export function AppLayout() {
             <div className="hidden md:block">
               <Header />
             </div>
-            <AppLayoutMain isAgentChatRoute={isAgentChatRoute} />
+            <AppLayoutMain
+              isAgentChatRoute={isAgentChatRoute}
+              moduleId={moduleIdFromPath(pathname)}
+            />
           </div>
 
           {showDesktopChatRail ? (
             <div
-              className="hidden min-h-0 shrink-0 lg:flex"
+              className="hidden min-h-0 shrink-0 xl:flex"
               aria-label="Agent chat"
               role="complementary"
             >
@@ -97,7 +116,7 @@ export function AppLayout() {
           ) : null}
         </div>
 
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="top-right" richColors closeButton {...sonnerToasterProps} />
       </div>
     </AppShellLayoutProvider>
   );

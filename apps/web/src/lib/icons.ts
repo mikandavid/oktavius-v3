@@ -37,6 +37,9 @@ export {
   SidebarSimple as SidebarIcon,
   ClockCounterClockwise as HistoryIcon,
   SlidersHorizontal as SlidersHorizontalIcon,
+  DotsSixVertical as DragHandleIcon,
+  ArrowsOutLineHorizontal as FullWidthIcon,
+  ArrowsInLineHorizontal as HalfWidthIcon,
   Sidebar as PanelLeftIcon,
   SidebarSimple as PanelLeftCloseIcon,
 } from '@phosphor-icons/react';
@@ -52,6 +55,7 @@ export {
   ArrowsClockwise as RefreshIcon,
   DownloadSimple as DownloadIcon,
   UploadSimple as UploadIcon,
+  PaperPlaneTilt as SendIcon,
   Copy as CopyIcon,
   Check as CheckIcon,
   X as CloseIcon,

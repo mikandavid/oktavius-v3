@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -12,26 +13,17 @@ import {
   CommandShortcut,
 } from '@oktavius/base-ui';
 
+import { SearchIcon } from '@/lib/icons';
+import { useDemoData } from '@/app/demo-data';
 import {
-  BotIcon,
-  CalendarIcon,
-  CaseIcon,
-  ContractIcon,
-  DocumentIcon,
-  HomeIcon,
-  IncidentIcon,
-  InvoiceIcon,
-  OrderIcon,
-  ProductIcon,
-  ProjectIcon,
-  ProjectsIcon,
-  ReportsIcon,
-  SearchIcon,
-  Settings2Icon,
-  SuperadminIcon,
-  TasksIcon,
-  UsersIcon,
-} from '@/lib/icons';
+  APP_NAV_MODULES,
+  getAppQuickActionsForProfile,
+  isAppNavItemEnabled,
+  moduleLabelFor,
+  visiblePathFor,
+} from '@/lib/appNavModules';
+import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import { canAccessAppNavItem, permissionSubjectFor } from '@/lib/permissions';
 
 type CommandPaletteContextValue = {
   open: boolean;
@@ -48,50 +40,47 @@ export function useCommandPalette() {
   return ctx;
 }
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/dashboard', icon: HomeIcon, group: 'Modules' },
-  { label: 'Reports', path: '/reports', icon: ReportsIcon, group: 'Modules' },
-  { label: 'Cases', path: '/cases', icon: CaseIcon, group: 'Modules' },
-  { label: 'Case board', path: '/cases/board', icon: CaseIcon, group: 'Modules' },
-  { label: 'Incidents', path: '/incidents', icon: IncidentIcon, group: 'Modules' },
-  { label: 'Clients', path: '/clients', icon: ProjectsIcon, group: 'Modules' },
-  { label: 'Contracts', path: '/contracts', icon: ContractIcon, group: 'Modules' },
-  { label: 'Orders', path: '/orders', icon: OrderIcon, group: 'Modules' },
-  { label: 'Invoices', path: '/invoices', icon: InvoiceIcon, group: 'Modules' },
-  { label: 'Products', path: '/products', icon: ProductIcon, group: 'Modules' },
-  { label: 'Projects', path: '/projects', icon: ProjectIcon, group: 'Modules' },
-  { label: 'Users', path: '/users', icon: UsersIcon, group: 'Modules' },
-  { label: 'Tasks', path: '/tasks', icon: TasksIcon, group: 'Modules' },
-  { label: 'Documents', path: '/documents', icon: DocumentIcon, group: 'Modules' },
-  { label: 'Calendar', path: '/calendar', icon: CalendarIcon, group: 'Modules' },
-  { label: 'Client onboarding', path: '/clients/onboarding', icon: ProjectsIcon, group: 'Modules' },
-  { label: 'AI Chat', path: '/ai-chat', icon: BotIcon, group: 'Modules' },
-  { label: 'Superadmin', path: '/superadmin', icon: SuperadminIcon, group: 'Admin' },
-  { label: 'Component Showcase', path: '/showcase', icon: Settings2Icon, group: 'Admin' },
-] as const;
-
-const QUICK_ACTIONS = [
-  { label: 'New case', path: '/cases/new' },
-  { label: 'New client', path: '/clients/new' },
-  { label: 'New product', path: '/products/new' },
-  { label: 'New user', path: '/users/new' },
-  { label: 'New organization', path: '/superadmin/orgs/new' },
-] as const;
-
 export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const profile = useOrgProfile();
+  const { activeMembership, currentUser } = useDemoData();
+  const permissionSubject = useMemo(
+    () => permissionSubjectFor(currentUser, activeMembership),
+    [activeMembership, currentUser],
+  );
+  const navItems = useMemo(
+    () =>
+      APP_NAV_MODULES.filter((item) => {
+        if (item.devOnly && !import.meta.env.DEV) return false;
+        return isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, permissionSubject);
+      }).map((item) => ({
+        ...item,
+        path: visiblePathFor(profile, item),
+        label: moduleLabelFor(profile, item),
+        group: item.section === 'admin' ? 'Admin' : 'Modules',
+      })),
+    [permissionSubject, profile],
+  );
+  const quickActions = useMemo(
+    () =>
+      getAppQuickActionsForProfile(profile).filter((action) => {
+        const item = APP_NAV_MODULES.find((entry) => entry.id === action.routeId);
+        return item
+          ? isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, permissionSubject)
+          : false;
+      }),
+    [permissionSubject, profile],
+  );
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault();
-        setOpen((current) => !current);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, []);
+  useHotkeys(
+    'mod+k',
+    (event) => {
+      event.preventDefault();
+      setOpen((current) => !current);
+    },
+    { enableOnFormTags: ['INPUT', 'TEXTAREA', 'SELECT'] },
+  );
 
   const run = useCallback(
     (path: string) => {
@@ -109,7 +98,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Quick actions">
-            {QUICK_ACTIONS.map((action) => (
+            {quickActions.map((action) => (
               <CommandItem key={action.path} onSelect={() => run(action.path)}>
                 <SearchIcon size={16} className="text-muted-foreground" />
                 {action.label}
@@ -119,15 +108,17 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
           <CommandSeparator />
           {(['Modules', 'Admin'] as const).map((group) => (
             <CommandGroup key={group} heading={group}>
-              {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <CommandItem key={item.path} onSelect={() => run(item.path)}>
-                    <Icon size={16} className="text-muted-foreground" />
-                    {item.label}
-                  </CommandItem>
-                );
-              })}
+              {navItems
+                .filter((item) => item.group === group)
+                .map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <CommandItem key={item.path} onSelect={() => run(item.path)}>
+                      <Icon size={16} className="text-muted-foreground" />
+                      {item.label}
+                    </CommandItem>
+                  );
+                })}
             </CommandGroup>
           ))}
         </CommandList>

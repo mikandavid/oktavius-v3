@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { EntityForm } from '@/components/forms/EntityForm';
-import { useDemoData } from '@/app/demo-data';
-import { toast } from '@/lib/toast';
+import { submitApiForm } from '@/lib/apiFormSubmit';
+import { appToast } from '@/lib/toast';
 
 import {
   organizationFormDefaults,
@@ -14,12 +16,23 @@ import {
 
 export function OrganizationCreatePage() {
   const navigate = useNavigate();
-  const { createOrganization } = useDemoData();
+  const api = useApiRegistry();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (values: OrganizationFormValues) => {
-    const created = createOrganization(values);
-    toast.success('Organization created.');
-    navigate(`/superadmin/orgs/${created.id}`);
+    setIsSubmitting(true);
+    try {
+      return await submitApiForm({
+        action: () => api.organizations.create(values),
+        onSuccess: (created) => {
+          appToast.success('Organization created.');
+          navigate(`/superadmin/orgs/${created.id}`);
+        },
+        onError: (error) => appToast.fromApiError(error, 'Organization could not be created.'),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -29,6 +42,8 @@ export function OrganizationCreatePage() {
         fields={organizationFormFields}
         defaultValues={organizationFormDefaults}
         submitLabel="Create organization"
+        isSubmitting={isSubmitting}
+        warnOnDirty
         onSubmit={handleSubmit}
       />
     </ModulePage>

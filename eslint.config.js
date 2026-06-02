@@ -6,6 +6,8 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 import noForbiddenTailwindClasses from './apps/web/eslint-rules/no-forbidden-tailwind-classes.mjs';
+import maxDetailTabsTriggers from './apps/web/eslint-rules/max-detail-tabs-triggers.mjs';
+import maxListFilters from './apps/web/eslint-rules/max-list-filters.mjs';
 
 const selectImportRestriction = {
   name: '@oktavius/base-ui',
@@ -30,6 +32,8 @@ const phosphorImportRestriction = {
 const oktaviusUiPlugin = {
   rules: {
     'no-forbidden-tailwind-classes': noForbiddenTailwindClasses,
+    'max-detail-tabs-triggers': maxDetailTabsTriggers,
+    'max-list-filters': maxListFilters,
   },
 };
 
@@ -69,6 +73,20 @@ export default tseslint.config(
           paths: [phosphorImportRestriction, selectImportRestriction],
         },
       ],
+    },
+  },
+  {
+    files: ['apps/web/src/modules/**/*DetailPage.tsx', 'apps/web/src/components/detail/**/*.tsx'],
+    ignores: ['**/showcase/**'],
+    rules: {
+      'oktavius/max-detail-tabs-triggers': 'error',
+    },
+  },
+  {
+    files: ['apps/web/src/modules/**/*.{ts,tsx}'],
+    ignores: ['**/showcase/**'],
+    rules: {
+      'oktavius/max-list-filters': 'error',
     },
   },
   {

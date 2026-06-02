@@ -1,3 +1,5 @@
+export * from './calendar-event-form';
+export * from './calendar-event-editor-dialog';
 export * from './calendar-event-quick-create';
 export * from './agenda-list';
 export * from './calendar-event-layout';
@@ -5,7 +7,9 @@ export * from './calendar-dnd';
 export * from './calendar-colors';
 export * from './calendar-event-chip';
 export * from './calendar-shared';
+export * from './calendar-mini-picker';
 export * from './calendar-source-legend';
+export * from './calendar-sidebar';
 export * from './calendar-time-grid';
 export * from './calendar-toolbar';
 export * from './calendar-view';

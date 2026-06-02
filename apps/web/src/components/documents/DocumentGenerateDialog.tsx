@@ -10,6 +10,7 @@ import {
 } from '@oktavius/base-ui';
 
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
+import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
 import { TemplatePicker, type TemplateOption } from './TemplatePicker';
 
@@ -24,7 +25,10 @@ export interface DocumentGenerateDialogProps {
   formatOptions?: Array<{ value: string; label: string }>;
   title?: string;
   description?: string;
-  onGenerate: (payload: { templateId: string; format: string }) => void;
+  onGenerate: (payload: {
+    templateId: string;
+    format: string;
+  }) => boolean | void | Promise<boolean | void>;
 }
 
 /** Generate a document from a template — PDF, DOCX, etc. */
@@ -42,6 +46,7 @@ export function DocumentGenerateDialog({
 }: DocumentGenerateDialogProps) {
   const [templateId, setTemplateId] = useState<string | undefined>(templates[0]?.id);
   const [formKey, setFormKey] = useState(0);
+  const { handleOpenChange, requestClose, onDirtyChange } = useDirtyDialogClose(onOpenChange);
 
   useEffect(() => {
     if (open) {
@@ -59,10 +64,6 @@ export function DocumentGenerateDialog({
       required: true,
     },
   ];
-
-  const handleOpenChange = (next: boolean) => {
-    onOpenChange(next);
-  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -87,13 +88,17 @@ export function DocumentGenerateDialog({
           fields={generateFormFields}
           defaultValues={{ format: formatOptions[0]?.value ?? 'pdf' }}
           submitLabel="Generate"
-          onSubmit={(values) => {
+          warnOnDirty
+          onDirtyChange={onDirtyChange}
+          onSubmit={async (values) => {
             if (!templateId) return;
-            onGenerate({ templateId, format: values.format });
-            handleOpenChange(false);
+            const result = await onGenerate({ templateId, format: values.format });
+            if (result !== false) {
+              onOpenChange(false);
+            }
           }}
           footerActions={
-            <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="ghost" onClick={requestClose}>
               Cancel
             </Button>
           }

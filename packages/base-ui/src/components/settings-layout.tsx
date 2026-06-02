@@ -15,6 +15,8 @@ export interface SettingsLayoutProps {
   onSelect: (key: string) => void;
   children: ReactNode;
   className?: string;
+  /** Applied to the main content panel — use overflow-hidden when children manage their own scroll (e.g. SplitView). */
+  contentClassName?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export function SettingsLayout({
   onSelect,
   children,
   className,
+  contentClassName,
 }: SettingsLayoutProps) {
   return (
     <div className={cn('flex min-h-0 flex-1 flex-col gap-4 md:flex-row md:gap-8', className)}>
@@ -88,8 +91,13 @@ export function SettingsLayout({
           })}
         </div>
 
-        {/* Content — scrolls independently from section nav */}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain rounded-card bg-card p-5 [scrollbar-gutter:stable]">
+        {/* Content — scrolls independently from section nav; flex col so fill-height panels (e.g. design tokens) can use flex-1 */}
+        <div
+          className={cn(
+            'flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain rounded-card bg-card p-5 [scrollbar-gutter:stable]',
+            contentClassName,
+          )}
+        >
           {children}
         </div>
       </div>
@@ -122,14 +130,25 @@ export interface SettingsRowProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  /** Inline: label left, control right (default). Stacked: full-width content below the label. */
+  layout?: 'inline' | 'stacked';
 }
 
 /** Single settings control row: label+description left, control right. */
-export function SettingsRow({ label, description, children, className }: SettingsRowProps) {
+export function SettingsRow({
+  label,
+  description,
+  children,
+  className,
+  layout = 'inline',
+}: SettingsRowProps) {
+  const stacked = layout === 'stacked';
+
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 py-3 border-b border-border/50 last:border-b-0 sm:flex-row sm:items-center sm:justify-between',
+        'flex flex-col gap-3 border-b border-border/50 py-3 last:border-b-0',
+        !stacked && 'sm:flex-row sm:items-center sm:justify-between',
         className,
       )}
     >
@@ -137,7 +156,7 @@ export function SettingsRow({ label, description, children, className }: Setting
         <p className="text-sm font-medium text-foreground">{label}</p>
         {description ? <p className="mt-0.5 text-xs text-muted-foreground">{description}</p> : null}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className={cn(stacked ? 'min-w-0 w-full max-w-xl' : 'shrink-0')}>{children}</div>
     </div>
   );
 }

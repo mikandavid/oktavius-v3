@@ -11,6 +11,7 @@ import {
 } from '@oktavius/base-ui';
 
 import { EntityForm, type FormField, type FormFieldValue } from '@/components/forms/EntityForm';
+import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
 type SubEntityFormDialogProps<T extends Record<string, FormFieldValue>> = {
   open: boolean;
@@ -21,7 +22,7 @@ type SubEntityFormDialogProps<T extends Record<string, FormFieldValue>> = {
   defaultValues: T;
   submitLabel?: string;
   isSubmitting?: boolean;
-  onSubmit: (values: T) => void;
+  onSubmit: (values: T) => void | Promise<void>;
 };
 
 /** Standard add/edit dialog — Dialog shell + EntityForm (dialog surface) + ghost Cancel + cta Save. */
@@ -37,6 +38,7 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
   onSubmit,
 }: SubEntityFormDialogProps<T>) {
   const [formKey, setFormKey] = useState(0);
+  const { handleOpenChange, onDirtyChange } = useDirtyDialogClose(onOpenChange);
 
   useEffect(() => {
     if (open) {
@@ -45,7 +47,7 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="gap-5 sm:max-w-md">
         <DialogHeader className="space-y-1 pr-6">
           <DialogTitle>{title}</DialogTitle>
@@ -60,8 +62,10 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
           defaultValues={defaultValues}
           submitLabel={submitLabel}
           isSubmitting={isSubmitting}
-          onSubmit={(values) => {
-            onSubmit(values);
+          warnOnDirty
+          onDirtyChange={onDirtyChange}
+          onSubmit={async (values) => {
+            await onSubmit(values);
             onOpenChange(false);
           }}
           footerActions={

@@ -1,10 +1,16 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { ClientRecord } from '@/app/demo-data';
-import type { ClientsHandlers, ClientsListParams, ListResponse } from '@/api/demo-client';
+import {
+  ApiValidationError,
+  type ClientsHandlers,
+  type ClientsListParams,
+  type ListResponse,
+} from '@/api/demo-client';
 import { sortRows } from '@/lib/sortRows';
 
 type BuildClientsDemoHandlersOptions = {
+  activeOrgId: string;
   getClients: () => ClientRecord[];
   setClients: Dispatch<SetStateAction<ClientRecord[]>>;
 };
@@ -33,7 +39,36 @@ function matchesClient(row: ClientRecord, params: ClientsListParams) {
   return matchesSearch && matchesStatus && matchesType;
 }
 
+function normalizeEmail(email: string | null | undefined) {
+  return email?.trim().toLowerCase() ?? '';
+}
+
+function validateClientInput(
+  clients: ClientRecord[],
+  input: Partial<Pick<ClientRecord, 'email' | 'name'>>,
+  currentId?: string,
+) {
+  const fieldErrors: Record<string, string> = {};
+
+  if (!input.name?.trim()) {
+    fieldErrors.name = 'Client name is required.';
+  }
+
+  const email = normalizeEmail(input.email);
+  if (
+    email &&
+    clients.some((client) => client.id !== currentId && normalizeEmail(client.email) === email)
+  ) {
+    fieldErrors.email = 'A client with this email already exists.';
+  }
+
+  if (Object.keys(fieldErrors).length > 0) {
+    throw new ApiValidationError('Client could not be saved.', fieldErrors);
+  }
+}
+
 export function buildClientsDemoHandlers({
+  activeOrgId,
   getClients,
   setClients,
 }: BuildClientsDemoHandlersOptions): ClientsHandlers {
@@ -63,6 +98,35 @@ export function buildClientsDemoHandlers({
 
     async get(id) {
       return getClients().find((client) => client.id === id) ?? null;
+    },
+
+    async create(input) {
+      validateClientInput(getClients(), input);
+      const next: ClientRecord = {
+        orgId: activeOrgId,
+        ...input,
+        id: `cli_${Date.now()}`,
+        createdAt: new Date().toISOString().slice(0, 10),
+        email: input.email.trim(),
+      };
+      setClients((current) => [next, ...current]);
+      return next;
+    },
+
+    async update(id, input) {
+      const existing = getClients().find((client) => client.id === id);
+      if (!existing) {
+        throw new Error('Client not found.');
+      }
+      validateClientInput(getClients(), { ...existing, ...input }, id);
+
+      const updated: ClientRecord = {
+        ...existing,
+        ...input,
+        email: input.email == null ? existing.email : input.email.trim(),
+      };
+      setClients((current) => current.map((client) => (client.id === id ? updated : client)));
+      return updated;
     },
 
     async delete(id) {

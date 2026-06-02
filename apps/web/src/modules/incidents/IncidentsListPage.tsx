@@ -1,52 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { CrudMainView } from '@/components/data/CrudMainView';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { useDemoData } from '@/app/demo-data';
-import { useListPageState } from '@/lib/useListPageState';
+import {
+  StandardCrudListPage,
+  type StandardCrudListRequestParams,
+} from '@/components/data/StandardCrudListPage';
 
-import { incidentColumns, incidentFilters, incidentsPageIcon } from './shared';
+import {
+  INCIDENT_SAVED_VIEWS,
+  incidentColumns,
+  incidentFilters,
+  incidentsPageIcon,
+} from './shared';
 
 export function IncidentsListPage() {
+  const api = useApiRegistry();
   const { incidents } = useDemoData();
-  const [rows, setRows] = useState(incidents);
-
-  useEffect(() => {
-    setRows(incidents);
-  }, [incidents]);
-
-  const list = useListPageState({
-    rows,
-    defaultSort: 'reportedAt',
-    filterKeys: ['severity', 'status', 'service'],
-    searchKeys: ['incidentNumber', 'title', 'service', 'assignee', 'impact'],
-  });
+  const loadIncidents = useCallback(
+    (params: StandardCrudListRequestParams) => api.incidents.list(params),
+    [api.incidents],
+  );
 
   return (
-    <CrudMainView
+    <StandardCrudListPage
       title="Incidents"
       subtitle="Operational incidents and service disruptions"
       icon={incidentsPageIcon()}
+      rows={incidents}
+      loadRows={loadIncidents}
       columns={incidentColumns}
-      rows={list.paged}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
-      search={list.search}
-      onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search incidents"
       filters={incidentFilters}
-      values={list.values}
-      onFilterChange={list.onFilterChange}
-      onReset={list.onReset}
-      page={list.page}
-      pageSize={list.pageSize}
-      total={list.total}
-      totalPages={list.totalPages}
-      onPageChange={list.onPageChange}
+      savedViews={INCIDENT_SAVED_VIEWS}
+      defaultSort="reportedAt"
+      filterKeys={['severity', 'status', 'service']}
+      searchKeys={['incidentNumber', 'title', 'service', 'assignee', 'impact']}
+      searchPlaceholder="Search incidents"
       entityLabel="incident"
       getRowHref={(row) => `/incidents/${row.id}`}
-      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
-      exportOptions={{ fileName: 'incidents', label: 'Export' }}
-      allRows={list.filtered}
+      onDeleteRows={(ids) =>
+        Promise.all(ids.map((id) => api.incidents.delete(id))).then(() => undefined)
+      }
+      exportFileName="incidents"
       emptyTitle="No incidents found"
       emptyDescription="Adjust your filters or search terms."
     />

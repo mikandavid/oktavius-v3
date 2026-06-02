@@ -13,13 +13,14 @@ Canonical references: [`README.md`](./README.md) (index) and [`component-registr
 
 ## Page shells
 
-| Route type       | Shell                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------- |
-| List             | `<CrudMainView>` + columns/formFields from `shared.tsx`                                  |
-| Create/edit      | `<ModulePage>` + `<EntityForm>`                                                          |
-| Detail (simple)  | `<ModulePage>` + `<DetailView>`                                                          |
-| Detail (complex) | `<ModulePage>` + `<Tabs>` + `<SectionCard>`                                              |
-| Section nav      | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` |
+| Route type               | Shell                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| List                     | `<CrudMainView>` + columns/formFields from `shared.tsx`                                      |
+| Create/edit              | `<ModulePage>` + `<EntityForm>`                                                              |
+| Detail (simple)          | `<ModulePage>` + `<DetailView>`                                                              |
+| Detail (many sections)   | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>`     |
+| Detail (workspace modes) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` — only when users switch between peer work modes |
+| Section nav              | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>`     |
 
 Every route uses `<ModulePage>`. Never build custom page headers or shells.
 
@@ -29,7 +30,9 @@ Section-nav pages: use `<AppSectionNavLayout>` (not raw `SettingsLayout`) — se
 
 ## Visual rules (non-negotiable)
 
+- **Color system:** three layers — neutral ramp → semantic roles → brand/state. See [`visual-foundation.md`](./visual-foundation.md#color-system). Tune grays via the ramp; use `bg-card` / `bg-muted` in components, not raw `neutral-*` for layout.
 - Surfaces: `rounded-card bg-card` — **no borders** on cards, `CrudMainView`, `SplitView` outer
+- Shell chrome: `APP_SHELL_SURFACE_CLASS` + `APP_SHELL_BORDER_CLASS` from `@/components/common/pageChrome` — nav, header, chat share `bg-card`
 - Inputs: `bg-muted/60` filled style — never `border border-input bg-background`
 - Page wash: `bg-muted/40` canvas; modules render white tiles on top
 - No `text-gray-*`, `bg-white`, or `rounded-lg` on named surfaces
@@ -50,15 +53,25 @@ Section-nav pages: use `<AppSectionNavLayout>` (not raw `SettingsLayout`) — se
 ## App shell
 
 - Desktop: nav left · workspace center · chat right — never hide sidebar on desktop
+- **Nav model:** Main (2) · Modules (org-filtered, scrollable, user-reorderable) · Admin (settings last) — see [`ux-principles.md`](./ux-principles.md#app-navigation-model-canonical)
+- **Command palette** (`⌘K`): preferred jump for infrequent modules when the sidebar list is long
 - **Section-nav pages:** app sidebar auto-compacts to icon rail; section nav + content scroll independently — see [`section-nav.md`](./section-nav.md)
 - Import layout classes from `@/components/common/pageChrome`
 - Toasts: `@/lib/toast` — Toaster already in `AppLayout`
+
+## Design tokens
+
+Canonical reference: [`design-tokens.md`](./design-tokens.md).
+
+- **Tune colors:** `/showcase → Design tokens` — sliders for neutral ramp, brand/state, radius, motion; live preview; copy CSS to `globals.css`
+- **Edit the ramp, not aliases** — `card`, `muted`, `border` derive from `neutral-*`; they are hidden in the playground
+- **Shell chrome:** always `APP_SHELL_SURFACE_CLASS` + `APP_SHELL_BORDER_CLASS` — never `bg-sidebar-background` or per-region tints
 
 ## Scoped rules (read when relevant)
 
 Full index: [`README.md`](./README.md)
 
-[`page-header.md`](./page-header.md) · [`crud-table.md`](./crud-table.md) · [`filter-toolbar.md`](./filter-toolbar.md) · [`combobox.md`](./combobox.md) · [`date-format.md`](./date-format.md) · [`calendar-components.md`](./calendar-components.md) · [`split-view-master-detail.md`](./split-view-master-detail.md) · [`entity-form.md`](./entity-form.md) · [`module-pattern.md`](./module-pattern.md) · [`detail-pages.md`](./detail-pages.md) · [`section-nav.md`](./section-nav.md) · [`status-and-money.md`](./status-and-money.md) · [`dialogs.md`](./dialogs.md) · [`checklist.md`](./checklist.md)
+[`page-header.md`](./page-header.md) · [`crud-table.md`](./crud-table.md) · [`filter-toolbar.md`](./filter-toolbar.md) · [`combobox.md`](./combobox.md) · [`date-format.md`](./date-format.md) · [`calendar-components.md`](./calendar-components.md) · [`split-view-master-detail.md`](./split-view-master-detail.md) · [`entity-form.md`](./entity-form.md) · [`module-pattern.md`](./module-pattern.md) · [`detail-pages.md`](./detail-pages.md) · [`section-nav.md`](./section-nav.md) · [`design-tokens.md`](./design-tokens.md) · [`status-and-money.md`](./status-and-money.md) · [`dialogs.md`](./dialogs.md) · [`checklist.md`](./checklist.md)
 
 ## Lint (`pnpm lint`)
 

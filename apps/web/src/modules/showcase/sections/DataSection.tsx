@@ -19,7 +19,7 @@ import type { CrudColumn } from '@/components/data/CrudTable';
 import { useDemoData } from '@/app/demo-data';
 import type { ProductRecord } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -163,7 +163,7 @@ export function DataSection() {
             value={savedView}
             onChange={(id) => {
               setSavedView(id);
-              toast.info(`View: ${id}`);
+              appToast.info(`View: ${id}`);
             }}
           />
         }

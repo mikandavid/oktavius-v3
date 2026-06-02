@@ -1,31 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { Combobox, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
+import { Combobox, SettingsRow, Switch } from '@oktavius/base-ui';
 
+import { createConfiguredCatalogOptionsStore } from '@/api/apiStoreConfig';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
 import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
-import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
-import { LocationSitesDetailList } from '@/components/layout/LocationSitesDetailList';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
-import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import {
   CatalogOptionsManager,
   type CatalogOption,
 } from '@/components/settings/CatalogOptionsManager';
+import {
+  GeneratedSettingsModule,
+  type GeneratedSettingsSection,
+} from '@/components/settings/GeneratedSettingsModule';
+import { WorkspaceLocationsOverview } from '@/components/settings/WorkspaceLocationsOverview';
+import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import { DocumentIcon, NotificationsIcon, Settings2Icon } from '@/lib/icons';
 import { settingsPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
-
-const SETTINGS_NAV = [
-  { key: 'general', label: 'General', icon: <Settings2Icon size={16} weight="duotone" /> },
-  {
-    key: 'notifications',
-    label: 'Notifications',
-    icon: <NotificationsIcon size={16} weight="duotone" />,
-  },
-  { key: 'catalogs', label: 'Catalogs', icon: <DocumentIcon size={16} weight="duotone" /> },
-];
+import { appToast } from '@/lib/toast';
 
 const INITIAL_PAYMENT_TERMS: CatalogOption[] = [
   { id: 'pt_net30', label: 'Net 30', code: 'NET30', active: true, sortOrder: 1 },
@@ -35,28 +29,151 @@ const INITIAL_PAYMENT_TERMS: CatalogOption[] = [
 ];
 
 export function SettingsPage() {
+  const { locations } = useActiveLocation();
   const { isSidebarCollapsed, setSidebarCollapsed } = useAppShellLayout();
   const [activeSection, setActiveSection] = useState('general');
   const [emailDigest, setEmailDigest] = useState(true);
   const [approvalAlerts, setApprovalAlerts] = useState(true);
   const [formatLocale, setFormatLocale] = useState('de-AT');
   const [paymentTerms, setPaymentTerms] = useState(INITIAL_PAYMENT_TERMS);
+  const storage = typeof window === 'undefined' ? undefined : window.localStorage;
+  const paymentTermsStore = useMemo(
+    () =>
+      createConfiguredCatalogOptionsStore({
+        catalogKey: 'paymentTerms',
+        defaults: INITIAL_PAYMENT_TERMS,
+        storage,
+        env: import.meta.env,
+      }),
+    [storage],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void Promise.resolve(paymentTermsStore.load()).then((loadedPaymentTerms) => {
+      if (!cancelled) {
+        setPaymentTerms(loadedPaymentTerms);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paymentTermsStore]);
+
+  const persistPaymentTerms = (nextPaymentTerms: CatalogOption[]) => {
+    setPaymentTerms(nextPaymentTerms);
+    void Promise.resolve(paymentTermsStore.save(nextPaymentTerms)).catch((error: unknown) => {
+      appToast.fromApiError(error, 'Payment terms could not be saved.');
+    });
+  };
 
   const handleSavePaymentTerm = (option: CatalogOption) => {
-    setPaymentTerms((current) => {
-      const exists = current.some((entry) => entry.id === option.id);
+    const nextPaymentTerms = (() => {
+      const exists = paymentTerms.some((entry) => entry.id === option.id);
       if (exists) {
-        return current.map((entry) => (entry.id === option.id ? option : entry));
+        return paymentTerms.map((entry) => (entry.id === option.id ? option : entry));
       }
-      return [...current, option];
-    });
-    toast.success('Payment term saved.');
+      return [...paymentTerms, option];
+    })();
+    persistPaymentTerms(nextPaymentTerms);
+    appToast.success('Payment term saved.');
   };
 
   const handleDeletePaymentTerm = (id: string) => {
-    setPaymentTerms((current) => current.filter((entry) => entry.id !== id));
-    toast.success('Payment term removed.');
+    persistPaymentTerms(paymentTerms.filter((entry) => entry.id !== id));
+    appToast.success('Payment term removed.');
   };
+
+  const settingsSections: GeneratedSettingsSection[] = [
+    {
+      key: 'general',
+      label: 'General',
+      icon: <Settings2Icon size={16} weight="duotone" />,
+      title: 'General',
+      sectionDescription: 'Defaults applied across the workspace.',
+      render: () => (
+        <>
+          <SettingsRow
+            label="Compact sidebar"
+            description="Keep the app navigation rail icon-only on list pages."
+          >
+            <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
+          </SettingsRow>
+          <SettingsRow label="Interface language" description="Labels and navigation copy.">
+            <LanguageSelector />
+          </SettingsRow>
+          <SettingsRow
+            label="Format locale"
+            description="Formatting for dates, numbers, and currency."
+          >
+            <Combobox
+              value={formatLocale}
+              onChange={(value) => setFormatLocale(value ?? 'de-AT')}
+              options={[
+                { value: 'de-AT', label: 'German (Austria)' },
+                { value: 'de-DE', label: 'German (Germany)' },
+                { value: 'en-GB', label: 'English (UK)' },
+              ]}
+              className="w-[220px]"
+            />
+          </SettingsRow>
+          <div className="border-b border-border/50 py-3 last:border-b-0">
+            <div className="mb-3">
+              <p className="text-sm font-medium text-foreground">Locations</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Sites available in the active-location picker. Open the location menu in the header
+                for full contact details.
+              </p>
+            </div>
+            <WorkspaceLocationsOverview locations={locations} />
+          </div>
+        </>
+      ),
+    },
+    {
+      key: 'notifications',
+      label: 'Notifications',
+      icon: <NotificationsIcon size={16} weight="duotone" />,
+      title: 'Notifications',
+      sectionDescription: 'Choose how Oktavius keeps you informed.',
+      render: () => (
+        <>
+          <SettingsRow
+            label="Daily email digest"
+            description="Summary of tasks, approvals, and overdue items."
+          >
+            <Switch checked={emailDigest} onCheckedChange={setEmailDigest} />
+          </SettingsRow>
+          <SettingsRow
+            label="Approval alerts"
+            description="Notify when a record needs your sign-off."
+          >
+            <Switch checked={approvalAlerts} onCheckedChange={setApprovalAlerts} />
+          </SettingsRow>
+        </>
+      ),
+    },
+    {
+      key: 'catalogs',
+      label: 'Catalogs',
+      icon: <DocumentIcon size={16} weight="duotone" />,
+      title: 'Catalogs',
+      sectionDescription: 'User-managed values for pickers and filters.',
+      render: () => (
+        <CatalogOptionsManager
+          title="Payment terms"
+          description="Shown on invoices and client commercial terms."
+          options={paymentTerms}
+          orderable
+          onSave={handleSavePaymentTerm}
+          onDelete={handleDeletePaymentTerm}
+          onReorder={persistPaymentTerms}
+        />
+      ),
+    },
+  ];
 
   return (
     <ModulePage
@@ -65,85 +182,11 @@ export function SettingsPage() {
       icon={settingsPageIcon()}
       layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}
     >
-      <AppSectionNavLayout
-        items={SETTINGS_NAV}
+      <GeneratedSettingsModule
+        sections={settingsSections}
         activeKey={activeSection}
-        onSelect={setActiveSection}
-      >
-        {activeSection === 'general' ? (
-          <SettingsSection title="General" description="Defaults applied across the workspace.">
-            <SettingsRow
-              label="Compact sidebar"
-              description="Keep the app navigation rail icon-only on list pages."
-            >
-              <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
-            </SettingsRow>
-            <SettingsRow label="Interface language" description="Labels and navigation copy.">
-              <LanguageSelector />
-            </SettingsRow>
-            <SettingsRow
-              label="Format locale"
-              description="Formatting for dates, numbers, and currency."
-            >
-              <Combobox
-                value={formatLocale}
-                onChange={(value) => setFormatLocale(value ?? 'de-AT')}
-                options={[
-                  { value: 'de-AT', label: 'German (Austria)' },
-                  { value: 'de-DE', label: 'German (Germany)' },
-                  { value: 'en-GB', label: 'English (UK)' },
-                ]}
-                className="w-[220px]"
-              />
-            </SettingsRow>
-            <SettingsRow
-              label="Locations"
-              description="Sites available in the active-location picker."
-            >
-              <div className="w-full max-w-xl rounded-control border border-border/60 bg-card px-3">
-                <LocationSitesDetailList locations={DEMO_LOCATIONS} />
-              </div>
-            </SettingsRow>
-          </SettingsSection>
-        ) : null}
-
-        {activeSection === 'notifications' ? (
-          <SettingsSection
-            title="Notifications"
-            description="Choose how Oktavius keeps you informed."
-          >
-            <SettingsRow
-              label="Daily email digest"
-              description="Summary of tasks, approvals, and overdue items."
-            >
-              <Switch checked={emailDigest} onCheckedChange={setEmailDigest} />
-            </SettingsRow>
-            <SettingsRow
-              label="Approval alerts"
-              description="Notify when a record needs your sign-off."
-            >
-              <Switch checked={approvalAlerts} onCheckedChange={setApprovalAlerts} />
-            </SettingsRow>
-          </SettingsSection>
-        ) : null}
-
-        {activeSection === 'catalogs' ? (
-          <SettingsSection
-            title="Catalogs"
-            description="User-managed values for pickers and filters."
-          >
-            <CatalogOptionsManager
-              title="Payment terms"
-              description="Shown on invoices and client commercial terms."
-              options={paymentTerms}
-              orderable
-              onSave={handleSavePaymentTerm}
-              onDelete={handleDeletePaymentTerm}
-              onReorder={setPaymentTerms}
-            />
-          </SettingsSection>
-        ) : null}
-      </AppSectionNavLayout>
+        onActiveKeyChange={setActiveSection}
+      />
     </ModulePage>
   );
 }

@@ -7,7 +7,7 @@ Each module in `apps/web/src/modules/<name>/`:
 ├── shared.tsx              # columns, formFields, defaults, header action, status maps
 ├── <Name>sListPage.tsx     # CrudMainView only — no custom table UI
 ├── <Name>CreatePage.tsx    # ModulePage + EntityForm
-└── <Name>DetailPage.tsx     # ModulePage + DetailView OR Tabs
+└── <Name>DetailPage.tsx     # ModulePage + DetailView / section nav / SplitView / true workspace tabs
 ```
 
 ## shared.tsx owns config

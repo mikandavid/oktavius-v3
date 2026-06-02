@@ -1,27 +1,78 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { formatDisplayDateTime } from '@oktavius/base-ui';
-
+import { useApiRegistry } from '@/api/ApiProvider';
+import { RecordEditDialog } from '@/components/common/RecordEditDialog';
 import { ModulePage } from '@/components/common/PageLayout';
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { DetailView } from '@/components/common/DetailView';
-import { IconDeleteButton } from '@/components/common/RecordIconButtons';
+import { runDetailDeleteAction } from '@/components/detail/detailDeleteAction';
+import { DetailPageHeaderActions } from '@/components/detail/DetailPageHeaderActions';
+import { EntityDetailWorkspaceTabs } from '@/components/detail/EntityDetailWorkspaceTabs';
+import { useEntityAgentRegistration } from '@/components/detail/useEntityAgentRegistration';
 import { useDemoData } from '@/app/demo-data';
 import { incidentsPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { useUrlTabState } from '@/lib/routing/useUrlTabState';
+import { submitApiForm } from '@/lib/apiFormSubmit';
+import { appToast } from '@/lib/toast';
 
-import { incidentSeverityBadge, incidentStatusBadge } from './shared';
+const INCIDENT_DETAIL_TABS = ['overview', 'activity', 'files', 'assistant'] as const;
+
+import {
+  incidentFormFields,
+  incidentSeverityBadge,
+  incidentStatusBadge,
+  type IncidentFormValues,
+} from './shared';
+import { buildIncidentDetailFields } from './incidentDetailFields';
 
 export function IncidentDetailPage() {
   const { incidentId } = useParams();
   const navigate = useNavigate();
-  const { incidents } = useDemoData();
+  const api = useApiRegistry();
+  const { incidents, users } = useDemoData();
+  const [activeTab, setActiveTab] = useUrlTabState('overview', INCIDENT_DETAIL_TABS);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const incident = useMemo(
     () => incidents.find((entry) => entry.id === incidentId),
     [incidents, incidentId],
+  );
+
+  const updateIncidentInline = useCallback(
+    async (input: Parameters<typeof api.incidents.update>[1]) => {
+      if (!incident) return;
+      try {
+        await api.incidents.update(incident.id, input);
+        appToast.success('Incident updated.');
+      } catch (error) {
+        appToast.fromApiError(error, 'Incident could not be updated.');
+        throw error;
+      }
+    },
+    [api, incident],
+  );
+  const assigneeRelationOptions = useMemo(
+    () =>
+      users.map((user) => ({
+        value: user.name,
+        label: user.name,
+        description: [user.team, user.role].filter(Boolean).join(' · '),
+      })),
+    [users],
+  );
+
+  useEntityAgentRegistration(
+    incident
+      ? {
+          entityType: 'incident',
+          entityId: incident.id,
+          displayLabel: incident.title,
+        }
+      : null,
+    { moduleId: 'incidents', moduleLabel: 'Incidents' },
   );
 
   if (!incident) {
@@ -31,6 +82,17 @@ export function IncidentDetailPage() {
       </ModulePage>
     );
   }
+
+  const editDefaults: IncidentFormValues = {
+    title: incident.title,
+    incidentNumber: incident.incidentNumber,
+    severity: incident.severity,
+    status: incident.status,
+    service: incident.service,
+    assignee: incident.assignee,
+    reportedAt: incident.reportedAt,
+    impact: incident.impact,
+  };
 
   return (
     <>
@@ -45,34 +107,55 @@ export function IncidentDetailPage() {
         }
         icon={incidentsPageIcon()}
         backTo="/incidents"
-        actions={<IconDeleteButton onClick={() => setDeleteOpen(true)} label="Delete incident" />}
+        actions={
+          <DetailPageHeaderActions
+            onEdit={() => setEditOpen(true)}
+            editLabel="Edit incident"
+            onDelete={() => setDeleteOpen(true)}
+            deleteLabel="Delete incident"
+          />
+        }
       >
-        <DetailView
-          title="Incident details"
-          fields={[
-            { label: 'Title', value: incident.title, importance: 'primary' },
-            { label: 'Incident number', value: incident.incidentNumber, section: 'Identification' },
-            {
-              label: 'Severity',
-              value: incidentSeverityBadge(incident.severity),
-              section: 'Status',
-            },
-            {
-              label: 'Status',
-              value: incidentStatusBadge(incident.status),
-              section: 'Status',
-            },
-            { label: 'Service', value: incident.service, section: 'Assignment' },
-            { label: 'Assignee', value: incident.assignee, section: 'Assignment' },
-            {
-              label: 'Reported at',
-              value: formatDisplayDateTime(incident.reportedAt),
-              section: 'Timeline',
-            },
-            { label: 'Impact', value: incident.impact, section: 'Impact', importance: 'meta' },
-          ]}
+        <EntityDetailWorkspaceTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          entityType="incident"
+          entityId={incident.id}
+          overview={
+            <DetailView
+              title="Incident details"
+              fields={buildIncidentDetailFields({
+                incident,
+                onInlineUpdate: updateIncidentInline,
+                assigneeOptions: assigneeRelationOptions,
+              })}
+            />
+          }
         />
       </ModulePage>
+
+      <RecordEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        title="Edit incident"
+        fields={incidentFormFields}
+        defaultValues={editDefaults}
+        isSubmitting={isSubmitting}
+        onSubmit={async (values) => {
+          setIsSubmitting(true);
+          try {
+            return await submitApiForm({
+              action: () => api.incidents.update(incident.id, values),
+              onSuccess: () => {
+                appToast.success('Incident updated.');
+              },
+              onError: (error) => appToast.fromApiError(error, 'Incident could not be updated.'),
+            });
+          } finally {
+            setIsSubmitting(false);
+          }
+        }}
+      />
 
       <ConfirmActionDialog
         open={deleteOpen}
@@ -81,8 +164,14 @@ export function IncidentDetailPage() {
         description="This action cannot be undone."
         confirmLabel="Delete"
         onConfirm={() => {
-          toast.success('Incident deleted.');
-          navigate('/incidents');
+          void runDetailDeleteAction({
+            deleteRecord: () => api.incidents.delete(incident.id),
+            navigate,
+            redirectTo: '/incidents',
+            successMessage: 'Incident deleted.',
+            errorMessage: 'Incident could not be deleted.',
+            toast: appToast,
+          });
         }}
       />
     </>

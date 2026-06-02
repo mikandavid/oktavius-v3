@@ -7,17 +7,25 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
+  formatDisplayDateTime,
   MouseTooltip,
   ScrollArea,
   cn,
 } from '@oktavius/base-ui';
 
+import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { AgentMessageList } from '@/components/agent/AgentMessageList';
 import { ChatFilePreviewDialog } from '@/components/agent/ChatFilePreviewDialog';
 import { EditableConversationTitle } from '@/components/agent/EditableConversationTitle';
 import { RecordingBar } from '@/components/agent/VoiceRecorder';
 import { getAttachmentIcon } from '@/components/agent/agentHelpers';
-import { buildDemoAgentFollowUp } from '@/components/agent/agentDemoResponses';
+import { createConfiguredAgentTransport, runAgentTurn } from '@/components/agent/agentRuntime';
+import {
+  loadStoredChatConversations,
+  storeChatConversations,
+  trimChatConversations,
+  type StoredChatConversation,
+} from '@/components/agent/chatStorage';
 import { useAgentPageContext } from '@/components/agent/page-context';
 import { captureAgentPageContext } from '@/components/agent/page-routing';
 import { ContextUsageIndicator, TokenBadge } from '@/components/agent/ContextUsageIndicator';
@@ -34,21 +42,16 @@ import {
   PaperclipIcon,
   PlusIcon,
 } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ChatComposer } from './ChatComposer';
 import { ConversationHistoryPanel, type ConversationHistoryItem } from './ConversationHistoryPanel';
 import { MobileAgentLayout } from './MobileAgentLayout';
 
-type ShellConversation = {
-  id: string;
-  title: string;
-  updatedAt: string;
-  messages: AgentMessage[];
-};
+type ShellConversation = StoredChatConversation;
 
 type OsirisChatShellProps = {
-  mode: 'page' | 'sidebar';
+  mode: 'page' | 'sidebar' | 'module';
   className?: string;
   onCloseHistory?: () => void;
 };
@@ -56,6 +59,20 @@ type OsirisChatShellProps = {
 type SpeechRecognitionResultEvent = {
   results?: ArrayLike<ArrayLike<{ transcript?: string }>>;
 };
+
+type BrowserSpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onstart: (() => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  onresult: ((event: SpeechRecognitionResultEvent) => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 
 const DEMO_TOKEN_STATS: AgentTokenStats = {
   inputTokens: 18_400,
@@ -69,10 +86,40 @@ const MODEL_MODE_LABEL: Record<AgentModelMode, string> = {
   fast: 'Blitz',
 };
 
+function mergeConversationMessages(currentMessages: AgentMessage[], nextMessages: AgentMessage[]) {
+  const merged = [...currentMessages];
+  for (const message of nextMessages) {
+    const existingIndex = merged.findIndex((entry) => entry.id === message.id);
+    if (existingIndex >= 0) {
+      merged[existingIndex] = message;
+      continue;
+    }
+    merged.push(message);
+  }
+  return merged;
+}
+
+function getChatStorage() {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    return window.localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
 export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatShellProps) {
   const pageContext = useAgentPageContext();
-  const [conversations, setConversations] = useState<ShellConversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const agentTransport = useMemo(
+    () => createConfiguredAgentTransport({ env: import.meta.env }),
+    [],
+  );
+  const [conversations, setConversations] = useState<ShellConversation[]>(() =>
+    loadStoredChatConversations(getChatStorage()),
+  );
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    () => loadStoredChatConversations(getChatStorage())[0]?.id ?? null,
+  );
   const [draft, setDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showHistory, setShowHistory] = useState(mode === 'page');
@@ -86,7 +133,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const [isMobilePageLayout, setIsMobilePageLayout] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
   const fullWidthContentClass = 'mx-auto w-full max-w-5xl';
   const activeConversation =
@@ -98,6 +145,10 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     : pageContext.moduleLabel
       ? `Ask about ${pageContext.moduleLabel.toLowerCase()}…`
       : 'Ask Oktavius anything about the current workspace.';
+
+  useEffect(() => {
+    storeChatConversations(getChatStorage(), conversations);
+  }, [conversations]);
 
   useEffect(() => {
     if (mode !== 'page') {
@@ -132,7 +183,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
       updatedAt: now,
       messages: [],
     };
-    setConversations((current) => [nextConversation, ...current]);
+    setConversations((current) => trimChatConversations([nextConversation, ...current]));
     setActiveConversationId(id);
     setDraft('');
     setSelectedFiles([]);
@@ -163,7 +214,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
             ? {
                 ...conversation,
                 updatedAt: now,
-                messages: [...conversation.messages, ...nextMessages],
+                messages: mergeConversationMessages(conversation.messages, nextMessages),
               }
             : conversation,
         ),
@@ -175,14 +226,16 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     if (!targetConversationId) {
       const id = `chat_${Date.now()}`;
       targetConversationId = id;
-      setConversations([
-        {
-          id,
-          title: trimmedDraft.slice(0, 42) || 'New chat',
-          updatedAt: now,
-          messages: [message],
-        },
-      ]);
+      setConversations(
+        trimChatConversations([
+          {
+            id,
+            title: trimmedDraft.slice(0, 42) || 'New chat',
+            updatedAt: now,
+            messages: [message],
+          },
+        ]),
+      );
       setActiveConversationId(id);
     } else {
       setConversations((current) =>
@@ -208,24 +261,33 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     setIsAssistantPending(true);
 
     window.setTimeout(() => {
-      const followUp = buildDemoAgentFollowUp(content, new Date().toISOString());
       const pageSnapshot = captureAgentPageContext(document, window.location.href, pageContext);
-      if (pageSnapshot.moduleLabel && followUp[0]?.role === 'assistant') {
-        followUp[0] = {
-          ...followUp[0],
-          content: `${followUp[0].content ?? ''}\n\n_Context: ${pageSnapshot.moduleLabel}${
-            pageSnapshot.routeLabel ? ` · ${pageSnapshot.routeLabel}` : ''
-          }_`.trim(),
-        };
-      }
-      if (targetConversationId) {
-        appendToConversation(targetConversationId, followUp);
-      }
-      setIsAssistantPending(false);
-      const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport instanceof HTMLDivElement) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
+      void runAgentTurn({
+        content,
+        createdAt: new Date().toISOString(),
+        pageSnapshot,
+        transport: agentTransport,
+        onStreamMessage: (message) => {
+          if (targetConversationId) {
+            appendToConversation(targetConversationId, [message]);
+          }
+        },
+      })
+        .then((followUp) => {
+          if (targetConversationId) {
+            appendToConversation(targetConversationId, followUp);
+          }
+        })
+        .catch((error: unknown) => {
+          appToast.fromApiError(error, 'Oktavius could not complete the request.');
+        })
+        .finally(() => {
+          setIsAssistantPending(false);
+          const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+          if (viewport instanceof HTMLDivElement) {
+            viewport.scrollTop = viewport.scrollHeight;
+          }
+        });
     }, 900);
 
     window.setTimeout(() => {
@@ -253,7 +315,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
         ),
       })),
     );
-    toast.success(approved ? 'Action approved.' : 'Action rejected.');
+    appToast.success(approved ? 'Action approved.' : 'Action rejected.');
   };
 
   const renameConversation = (conversationId: string, title: string) => {
@@ -289,14 +351,14 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
 
   const toggleVoiceInput = () => {
     const browserWindow = window as typeof window & {
-      SpeechRecognition?: new () => any;
-      webkitSpeechRecognition?: new () => any;
+      SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+      webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
     };
     const SpeechRecognitionCtor =
       browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
 
     if (!SpeechRecognitionCtor) {
-      toast.error('Voice input is not available in this browser.');
+      appToast.error('Voice input is not available in this browser.');
       return;
     }
 
@@ -314,7 +376,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
     recognition.onend = () => setIsVoiceRecording(false);
     recognition.onerror = () => {
       setIsVoiceRecording(false);
-      toast.error('Voice input failed. Try again.');
+      appToast.error('Voice input failed. Try again.');
     };
     recognition.onresult = (event: SpeechRecognitionResultEvent) => {
       const transcript = event.results?.[0]?.[0]?.transcript?.trim();
@@ -350,7 +412,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
 
   const chatColumn = (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-      <div className="h-12 shrink-0 border-b border-border">
+      <div className="h-12 shrink-0">
         <div className={cn('flex h-full w-full items-center gap-1.5 px-2', fullWidthContentClass)}>
           <Button
             variant="ghost"
@@ -400,12 +462,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
               latestConversationTitle={conversations[0]?.title}
               latestConversationTime={
                 conversations[0]?.updatedAt
-                  ? new Intl.DateTimeFormat('de-AT', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    }).format(new Date(conversations[0].updatedAt))
+                  ? formatDisplayDateTime(conversations[0].updatedAt)
                   : undefined
               }
               onOpenLatestConversation={
@@ -427,34 +484,31 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
             {selectedFiles.map((file, index) => {
               const FileIcon = getAttachmentIcon(file.name, file.type);
               return (
-                <button
+                <div
                   key={`${file.name}-${index}`}
-                  type="button"
-                  onClick={() => setPreviewFile(file)}
                   className="group flex items-center gap-1.5 rounded-md bg-muted/40 py-0.5 pl-2 pr-1 text-xs text-foreground/80 transition-colors hover:bg-muted/60"
                 >
-                  <FileIcon size={14} className="shrink-0 text-muted-foreground" />
-                  <span className="max-w-[110px] truncate">{file.name}</span>
-                  <span
-                    role="button"
-                    tabIndex={0}
+                  <button
+                    type="button"
+                    onClick={() => setPreviewFile(file)}
+                    className="flex min-w-0 items-center gap-1.5 rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Preview ${file.name}`}
+                  >
+                    <FileIcon size={14} className="shrink-0 text-muted-foreground" />
+                    <span className="max-w-[110px] truncate">{file.name}</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={(event) => {
                       event.stopPropagation();
                       removeSelectedFile(index);
                     }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        removeSelectedFile(index);
-                      }
-                    }}
-                    className="ml-0.5 shrink-0 rounded-md p-0.5 text-muted-foreground/50 transition-colors hover:text-foreground"
+                    className="ml-0.5 shrink-0 rounded-md p-0.5 text-muted-foreground/50 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     aria-label={`Remove ${file.name}`}
                   >
                     <CloseIcon size={12} />
-                  </span>
-                </button>
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -514,6 +568,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isAssistantPending}
                   tabIndex={-1}
+                  aria-label="Attach file"
                   title="Attach file"
                   className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
                 >
@@ -540,6 +595,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                   onClick={() => setInstructionUpdateMode((current) => !current)}
                   disabled={isAssistantPending}
                   aria-pressed={instructionUpdateMode}
+                  aria-label="Instruction update mode"
                   title="Instruction update mode"
                   className={cn(
                     'flex h-7 w-7 items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-40',
@@ -585,7 +641,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                 <div className="ml-auto flex items-center pr-1">
                   <ContextUsageIndicator
                     tokens={contextTokens}
-                    onCompact={() => toast.success('Context compacted (demo).')}
+                    onCompact={() => appToast.success('Context compacted (demo).')}
                     disabled={isAssistantPending}
                   />
                 </div>
@@ -600,7 +656,8 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   return (
     <div
       className={cn(
-        'relative flex h-full min-h-0 max-h-full flex-1 overflow-hidden bg-background',
+        'relative flex h-full min-h-0 max-h-full flex-1 overflow-hidden',
+        APP_SHELL_SURFACE_CLASS,
         className,
       )}
     >
@@ -609,7 +666,12 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
           showSidebar={showHistory}
           onToggleSidebar={() => setShowHistory((current) => !current)}
           sidebar={
-            <div className="flex h-full min-h-0 flex-col border-r bg-sidebar/60">
+            <div
+              className={cn(
+                'flex h-full min-h-0 flex-col border-r bg-muted/30',
+                APP_SHELL_BORDER_CLASS,
+              )}
+            >
               {historyPanel}
             </div>
           }
@@ -620,7 +682,8 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
           {showHistory ? (
             <div
               className={cn(
-                'flex min-h-0 flex-col border-r bg-sidebar/60',
+                'flex min-h-0 flex-col border-r bg-muted/30',
+                APP_SHELL_BORDER_CLASS,
                 mode === 'page' ? 'w-[320px]' : 'w-full border-r-0 border-b',
               )}
             >

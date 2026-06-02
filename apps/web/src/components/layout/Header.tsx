@@ -5,16 +5,17 @@ import {
   ConnectedAccountsHeaderMenu,
   hostedNylasProviderLabel,
 } from '@/components/common/ConnectedAccountsHeaderMenu';
-import { ActiveLocationInfoButton } from '@/components/layout/ActiveLocationInfoButton';
-import { ActiveLocationPicker } from '@/components/layout/ActiveLocationPicker';
 import { useCommandPalette } from '@/components/command/CommandPalette';
-import { Button, Input } from '@oktavius/base-ui';
+import { cn } from '@oktavius/base-ui';
 
-import { SearchIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
+import { appToast } from '@/lib/toast';
 
 import { HeaderAccountMenu } from './HeaderAccountMenu';
 import { NotificationPanel } from './NotificationPanel';
+
+const COMMAND_PALETTE_TRIGGER_CLASS =
+  'hidden h-9 w-full min-w-0 max-w-xs items-center rounded-control bg-muted/60 px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 md:flex lg:max-w-sm';
 
 const DEMO_CONNECTED_ACCOUNTS = [
   {
@@ -39,32 +40,16 @@ export function Header() {
     DEMO_CONNECTED_ACCOUNTS[0];
 
   return (
-    <header className="shrink-0 border-b border-border/60 bg-card">
+    <header className={cn('shrink-0', APP_SHELL_SURFACE_CLASS)}>
       <div className="flex h-12 items-center gap-3 px-4 md:px-6">
-        <div className="hidden items-center gap-2 lg:flex">
-          <ActiveLocationPicker />
-          <ActiveLocationInfoButton />
-        </div>
-
-        <div className="relative hidden w-full min-w-0 max-w-xs md:block lg:max-w-sm">
-          <SearchIcon
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            size={16}
-          />
-          <Input
-            className="cursor-pointer pl-9"
-            name="workspace-search"
-            aria-label="Open command palette"
-            autoComplete="off"
-            readOnly
-            placeholder="Search modules, records, commands…"
-            onFocus={() => setOpen(true)}
-            onClick={() => setOpen(true)}
-          />
-          <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 rounded border border-border/60 bg-muted/30 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-flex">
-            ⌘K
-          </kbd>
-        </div>
+        <button
+          type="button"
+          className={COMMAND_PALETTE_TRIGGER_CLASS}
+          aria-label="Open command palette"
+          onClick={() => setOpen(true)}
+        >
+          <span className="truncate">Search modules, records, commands…</span>
+        </button>
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden xl:block">
             {activeAccount ? (
@@ -76,27 +61,15 @@ export function Header() {
                 activeAccountId={activeAccount.id}
                 onSelectAccount={(id) => {
                   setActiveAccountId(id);
-                  toast.success('Active calendar account updated.');
+                  appToast.success('Active calendar account updated.');
                 }}
                 settingsLabel="Calendar sync settings"
                 onOpenSettings={() => navigate('/settings')}
               />
             ) : null}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label="Open command palette"
-            onClick={() => setOpen(true)}
-          >
-            <SearchIcon size={18} />
-          </Button>
-          <div className="lg:hidden">
-            <ActiveLocationInfoButton />
-          </div>
           <NotificationPanel />
-          <HeaderAccountMenu />
+          <HeaderAccountMenu compact />
         </div>
       </div>
     </header>

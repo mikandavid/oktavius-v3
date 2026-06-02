@@ -3,13 +3,15 @@ import { useNavigate } from 'react-router-dom';
 
 import { Button, SectionCard, StepperLayout } from '@oktavius/base-ui';
 
+import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
-import { useDemoData } from '@/app/demo-data';
 import { clientsPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { useOrgNavPaths } from '@/lib/org-profiles/useOrgProfile';
+import { appToast } from '@/lib/toast';
 
+import { completeClientOnboarding } from './clientOnboarding';
 import { clientFormDefaults, type ClientFormValues } from './shared';
 
 const STEPS = [
@@ -37,20 +39,19 @@ const commercialFields: FormField[] = [
 
 export function ClientOnboardingPage() {
   const navigate = useNavigate();
-  const { createClient } = useDemoData();
+  const api = useApiRegistry();
+  const nav = useOrgNavPaths();
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<ClientFormValues>({ ...clientFormDefaults });
 
   const finish = () => {
-    const created = createClient({
-      ...draft,
-      status: 'prospect',
-      industry: draft.industry || 'General',
-      website: draft.website || '',
-      tags: draft.tags ?? [],
+    void completeClientOnboarding({
+      draft,
+      clientBasePath: nav.clients,
+      createClient: api.clients.create,
+      navigate,
+      toast: appToast,
     });
-    toast.success('Client onboarding complete.');
-    navigate(`/clients/${created.id}`);
   };
 
   return (
@@ -58,7 +59,7 @@ export function ClientOnboardingPage() {
       title="Client onboarding"
       subtitle="Multi-step wizard — StepperLayout on a full-page route"
       icon={clientsPageIcon()}
-      backTo="/clients"
+      backTo={nav.clients}
     >
       <StepperLayout
         steps={[...STEPS]}
@@ -84,8 +85,9 @@ export function ClientOnboardingPage() {
             fields={profileFields}
             defaultValues={draft}
             submitLabel="Continue"
+            warnOnDirty
             footerActions={
-              <Button type="button" variant="ghost" onClick={() => navigate('/clients')}>
+              <Button type="button" variant="ghost" onClick={() => navigate(nav.clients)}>
                 Cancel
               </Button>
             }
@@ -102,6 +104,7 @@ export function ClientOnboardingPage() {
             fields={commercialFields}
             defaultValues={draft}
             submitLabel="Continue"
+            warnOnDirty
             footerActions={
               <Button type="button" variant="ghost" onClick={() => setStep(0)}>
                 Back

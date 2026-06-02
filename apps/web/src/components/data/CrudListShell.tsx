@@ -2,7 +2,11 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useDemoData } from '@/app/demo-data';
+import { permissionSubjectFor } from '@/lib/permissions';
+
 import { CrudTable, type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
+import { filterCrudListPermissions } from './crudListPermissions';
 import { FilterToolbar, type FilterDef } from './FilterToolbar';
 import { Pagination } from './Pagination';
 import { buildStandardListCrudActions } from './standardListCrud';
@@ -27,6 +31,7 @@ export type CrudListShellProps<T extends { id: string }> = {
   entityLabel?: string;
   pluralLabel?: string;
   enableListCrud?: boolean;
+  allowDeleteRows?: boolean;
   onDeleteRows?: (ids: string[]) => void;
   onRowClick?: (row: T) => void;
   sort?: string;
@@ -63,6 +68,7 @@ export function CrudListShell<T extends { id: string }>({
   entityLabel,
   pluralLabel,
   enableListCrud = true,
+  allowDeleteRows = true,
   onDeleteRows,
   onRowClick,
   sort,
@@ -78,7 +84,12 @@ export function CrudListShell<T extends { id: string }>({
   className,
 }: CrudListShellProps<T>) {
   const navigate = useNavigate();
+  const { activeMembership, currentUser } = useDemoData();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const permissionSubject = useMemo(
+    () => permissionSubjectFor(currentUser, activeMembership),
+    [activeMembership, currentUser],
+  );
 
   const resolvedOnRowClick =
     onRowClick ?? (getRowHref ? (row: T) => navigate(getRowHref(row)) : undefined);
@@ -91,13 +102,38 @@ export function CrudListShell<T extends { id: string }>({
       getDetailHref: getRowHref,
       navigate,
       onDelete: onDeleteRows,
+      allowDelete: allowDeleteRows,
       onAfterDelete: () => setSelectedIds([]),
     });
-  }, [enableListCrud, entityLabel, pluralLabel, getRowHref, navigate, onDeleteRows]);
+  }, [
+    allowDeleteRows,
+    enableListCrud,
+    entityLabel,
+    pluralLabel,
+    getRowHref,
+    navigate,
+    onDeleteRows,
+  ]);
 
   const resolvedSelectable = selectable ?? standardCrud?.selectable ?? false;
-  const resolvedRowActions = [...(standardCrud?.rowActions ?? []), ...(rowActions ?? [])];
-  const resolvedBulkActions = [...(standardCrud?.bulkActions ?? []), ...(bulkActions ?? [])];
+  const resolvedRowActions = useMemo(
+    () => [...(standardCrud?.rowActions ?? []), ...(rowActions ?? [])],
+    [rowActions, standardCrud],
+  );
+  const resolvedBulkActions = useMemo(
+    () => [...(standardCrud?.bulkActions ?? []), ...(bulkActions ?? [])],
+    [bulkActions, standardCrud],
+  );
+  const permittedListParts = useMemo(
+    () =>
+      filterCrudListPermissions({
+        columns,
+        rowActions: resolvedRowActions,
+        bulkActions: resolvedBulkActions,
+        subject: permissionSubject,
+      }),
+    [columns, permissionSubject, resolvedBulkActions, resolvedRowActions],
+  );
 
   useEffect(() => {
     setSelectedIds([]);
@@ -120,9 +156,9 @@ export function CrudListShell<T extends { id: string }>({
       <CrudTable
         columnStretch="all"
         data={rows}
-        columns={columns}
-        rowActions={resolvedRowActions}
-        bulkActions={resolvedBulkActions}
+        columns={permittedListParts.columns}
+        rowActions={permittedListParts.rowActions}
+        bulkActions={permittedListParts.bulkActions}
         selectable={resolvedSelectable}
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}

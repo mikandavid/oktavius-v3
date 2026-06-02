@@ -9,8 +9,10 @@ import type { FilterDef } from '@/components/data/FilterToolbar';
 import type { FormField } from '@/components/forms/EntityForm';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { ClientRecord } from '@/app/demo-data';
+import { getAppCreateActionForProfile } from '@/lib/appNavModules';
 import { PlusIcon } from '@/lib/icons';
 import { clientsPageIcon } from '@/lib/modulePageIcons';
+import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
 
 export { clientsPageIcon };
 
@@ -141,20 +143,35 @@ export const CLIENT_SAVED_VIEWS: SavedViewPreset[] = [
 ];
 
 export function ClientsHeaderAction() {
+  const profile = useOrgProfile();
+  const action = getAppCreateActionForProfile(profile, 'clients') ?? {
+    label: 'New client',
+    path: '/clients/new',
+  };
+
   return (
-    <PageHeaderCtaLink to="/clients/new">
+    <PageHeaderCtaLink to={action.path}>
       <PlusIcon size={14} />
-      New client
+      {action.label}
     </PageHeaderCtaLink>
   );
 }
 
 /** List page header: Import → Onboarding → New client (export is auto on CrudMainView). */
-export function ClientsListHeaderActions() {
+export function ClientsListHeaderActions({
+  onImport,
+}: {
+  onImport?: (file: File) => Promise<number | void>;
+}) {
+  const profile = useOrgProfile();
+  const showOnboarding = profile.industryKey !== 'funeral';
+
   return (
     <>
-      <BulkImportTrigger entityLabel="clients" />
-      <PageHeaderOutlineLink to="/clients/onboarding">Onboarding</PageHeaderOutlineLink>
+      <BulkImportTrigger entityLabel="clients" onImport={onImport} />
+      {showOnboarding ? (
+        <PageHeaderOutlineLink to="/clients/onboarding">Onboarding</PageHeaderOutlineLink>
+      ) : null}
       <ClientsHeaderAction />
     </>
   );

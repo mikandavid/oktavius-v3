@@ -7,7 +7,10 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { TaskInbox, type TaskInboxItem } from '@/components/workflow/TaskInbox';
 import { useDemoData } from '@/app/demo-data';
 import { tasksPageIcon } from '@/lib/modulePageIcons';
-import { toast } from '@/lib/toast';
+import { useOrgNavPaths } from '@/lib/org-profiles/useOrgProfile';
+import { appToast } from '@/lib/toast';
+
+import { buildTaskParentHref } from './taskRouting';
 
 const STATUS_MAP = {
   Pending: 'Open',
@@ -43,6 +46,7 @@ function toInboxItem(task: {
 export function TasksPage() {
   const navigate = useNavigate();
   const { tasks } = useDemoData();
+  const nav = useOrgNavPaths();
 
   const openTasks = useMemo(
     () => tasks.filter((task) => task.status !== 'Completed').map(toInboxItem),
@@ -55,18 +59,11 @@ export function TasksPage() {
     const task = tasks.find((entry) => entry.id === taskId);
     if (!task) return;
 
-    const routes: Record<string, (id: string) => string> = {
-      client: (id) => `/clients/${id}`,
-      project: (id) => `/projects/${id}`,
-      order: (id) => `/orders/${id}`,
-      case: (id) => `/cases/${id}`,
-    };
-
-    const path = routes[task.parentType]?.(task.parentId);
+    const path = buildTaskParentHref(task, nav);
     if (path) {
       navigate(path);
     } else {
-      toast.info(`Task: ${task.title}`);
+      appToast.info(`Task: ${task.title}`);
     }
   };
 

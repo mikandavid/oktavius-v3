@@ -13,7 +13,7 @@ type DialogFormFooterProps = {
   /** When the confirm button submits a form, pass the form id. */
   confirmForm?: string;
   confirmType?: 'button' | 'submit';
-  confirmVariant?: 'cta' | 'default';
+  confirmVariant?: 'cta' | 'default' | 'destructive';
   leading?: ReactNode;
 };
 

@@ -1,4 +1,5 @@
-import * as React from 'react';
+import { useMemo, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 
 import { cn } from '../lib/utils';
 
@@ -10,10 +11,11 @@ export interface FileInputProps {
   placeholder?: string;
   className?: string;
   id?: string;
+  maxSize?: number;
 }
 
 /**
- * Styled file picker with drag-and-drop zone.
+ * Styled file picker with drag-and-drop zone (react-dropzone).
  * Emits `File | null` — calling code handles upload on form submit.
  */
 export function FileInput({
@@ -24,53 +26,62 @@ export function FileInput({
   placeholder = 'Drop a file or click to browse',
   className,
   id,
+  maxSize,
 }: FileInputProps) {
-  const [dragging, setDragging] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [rejectMessage, setRejectMessage] = useState<string | null>(null);
 
-  const handleFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    onChange?.(files[0]);
-  };
+  const acceptMap = useMemo(() => {
+    if (!accept) return undefined;
+    return Object.fromEntries(
+      accept
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+        .map((entry) => [entry, [] as string[]]),
+    );
+  }, [accept]);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    if (disabled) return;
-    handleFiles(e.dataTransfer.files);
-  };
+  const { getRootProps, getInputProps, isDragActive, isDragReject, open } = useDropzone({
+    accept: acceptMap,
+    disabled,
+    maxFiles: 1,
+    maxSize,
+    multiple: false,
+    noClick: true,
+    noKeyboard: false,
+    onDropAccepted: (files) => {
+      setRejectMessage(null);
+      onChange?.(files[0] ?? null);
+    },
+    onDropRejected: (rejections) => {
+      const first = rejections[0]?.errors[0];
+      setRejectMessage(first?.message ?? 'File could not be accepted.');
+    },
+  });
 
   return (
     <div
-      className={cn(
-        'relative flex min-h-[5rem] cursor-pointer flex-col items-center justify-center rounded-card border-2 border-dashed transition-colors',
-        dragging
-          ? 'border-primary bg-primary/5'
-          : 'border-border/60 bg-background hover:border-border/80 hover:bg-muted/20',
-        disabled && 'pointer-events-none opacity-50',
-        className,
-      )}
-      onClick={() => inputRef.current?.click()}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={handleDrop}
+      {...getRootProps({
+        id,
+        className: cn(
+          'relative flex min-h-[5rem] cursor-pointer flex-col items-center justify-center rounded-card border-2 border-dashed transition-colors',
+          isDragActive && !isDragReject
+            ? 'border-primary bg-primary/5'
+            : 'border-border/60 bg-background hover:border-border/80 hover:bg-muted/20',
+          (isDragReject || rejectMessage) && 'border-destructive/60 bg-destructive/5',
+          disabled && 'pointer-events-none opacity-50',
+          className,
+        ),
+        onClick: () => {
+          if (!disabled) open();
+        },
+      })}
     >
-      <input
-        ref={inputRef}
-        id={id}
-        type="file"
-        accept={accept}
-        disabled={disabled}
-        className="sr-only"
-        onChange={(e) => handleFiles(e.target.files)}
-      />
+      <input {...getInputProps()} />
 
       {value ? (
         <div className="flex w-full items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground text-xs font-medium">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-medium text-muted-foreground">
             {value.name.split('.').pop()?.toUpperCase() ?? 'FILE'}
           </div>
           <div className="min-w-0 flex-1">
@@ -79,8 +90,9 @@ export function FileInput({
           </div>
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
+              setRejectMessage(null);
               onChange?.(null);
             }}
             className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -102,6 +114,7 @@ export function FileInput({
         <div className="px-4 py-3 text-center">
           <p className="text-sm text-muted-foreground">{placeholder}</p>
           {accept ? <p className="mt-0.5 text-xs text-muted-foreground/70">{accept}</p> : null}
+          {rejectMessage ? <p className="mt-1 text-xs text-destructive">{rejectMessage}</p> : null}
         </div>
       )}
     </div>

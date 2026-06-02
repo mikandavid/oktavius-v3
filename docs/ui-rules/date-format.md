@@ -10,8 +10,6 @@
 
 ```ts
 import { formatDisplayDate, formatDisplayDateTime } from '@oktavius/base-ui';
-// apps/web may also use:
-import { formatDisplayDate } from '@/lib/formatDate';
 ```
 
 | Use                                                 | Function                           |

@@ -3,6 +3,10 @@ import * as React from 'react';
 
 import { cn } from '../lib/utils';
 
+/** Searchable dropdown panels — at least trigger width, never narrower than 12rem. */
+export const dropdownPopoverPanelClasses =
+  'w-max min-w-[max(var(--radix-popover-trigger-width),12rem)] max-w-sm p-0';
+
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
 export const PopoverAnchor = PopoverPrimitive.Anchor;

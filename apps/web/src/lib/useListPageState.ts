@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 
 import { sortRows } from '@/lib/sortRows';
 
@@ -20,14 +21,6 @@ export type UseListPageStateOptions<T extends Record<string, unknown>> = {
   filterFn?: (row: T, ctx: ListPageFilterContext) => boolean;
 };
 
-function emptyFilters(filterKeys: string[], initial?: Record<string, string>) {
-  const next: Record<string, string> = {};
-  for (const key of filterKeys) {
-    next[key] = initial?.[key] ?? '';
-  }
-  return next;
-}
-
 export function useListPageState<T extends Record<string, unknown>>({
   rows,
   defaultSort,
@@ -37,11 +30,37 @@ export function useListPageState<T extends Record<string, unknown>>({
   searchKeys,
   filterFn,
 }: UseListPageStateOptions<T>) {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [sort, setSort] = useState(defaultSort);
-  const [filters, setFilters] = useState<Record<string, string>>(() =>
-    emptyFilters(filterKeys, initialFilters),
+  const filterParsers = useMemo(
+    () =>
+      Object.fromEntries(
+        filterKeys.map((key) => [key, parseAsString.withDefault(initialFilters?.[key] ?? '')]),
+      ),
+    [filterKeys, initialFilters],
+  );
+
+  const parsers = useMemo(
+    () => ({
+      q: parseAsString.withDefault(''),
+      sort: parseAsString.withDefault(defaultSort),
+      page: parseAsInteger.withDefault(1),
+      ...filterParsers,
+    }),
+    [defaultSort, filterParsers],
+  );
+
+  const [urlState, setUrlState] = useQueryStates(parsers, {
+    history: 'replace',
+    clearOnDefault: true,
+  });
+
+  const search = urlState.q;
+  const sort = urlState.sort;
+  const page = urlState.page;
+  const filters = Object.fromEntries(
+    filterKeys.map((key) => {
+      const value = urlState[key as keyof typeof urlState];
+      return [key, typeof value === 'string' ? value : ''];
+    }),
   );
 
   const filtered = useMemo(() => {
@@ -71,35 +90,35 @@ export function useListPageState<T extends Record<string, unknown>>({
   const safePage = Math.min(page, totalPages);
   const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
-  const resetPage = () => setPage(1);
-
   return {
     search,
     onSearchChange: (value: string) => {
-      setSearch(value);
-      resetPage();
+      void setUrlState({ q: value, page: 1 });
     },
     filters,
     values: filters,
     onFilterChange: (key: string, value: string) => {
-      setFilters((current) => ({ ...current, [key]: value }));
-      resetPage();
+      void setUrlState({ [key]: value, page: 1 });
     },
     onReset: () => {
-      setSearch('');
-      setFilters(emptyFilters(filterKeys, initialFilters));
-      resetPage();
+      void setUrlState({
+        q: '',
+        sort: defaultSort,
+        page: 1,
+        ...Object.fromEntries(filterKeys.map((key) => [key, ''])),
+      });
     },
     sort,
     onSortChange: (nextSort: string) => {
-      setSort(nextSort);
-      resetPage();
+      void setUrlState({ sort: nextSort, page: 1 });
     },
     page: safePage,
     pageSize,
     total: filtered.length,
     totalPages,
-    onPageChange: setPage,
+    onPageChange: (nextPage: number) => {
+      void setUrlState({ page: nextPage });
+    },
     filtered,
     paged,
   };

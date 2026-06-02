@@ -1,11 +1,18 @@
 import { useMemo, useState } from 'react';
 
-import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@oktavius/base-ui';
+import {
+  Button,
+  DatePicker,
+  FormField as FormFieldControl,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@oktavius/base-ui';
 
 import { CustomFieldsFormSection } from '@/components/custom-fields';
-import { EntityForm, type FormField } from '@/components/forms/EntityForm';
+import { EntityForm, type FormField as EntityFormField } from '@/components/forms/EntityForm';
 import { JsonField } from '@/components/forms/JsonField';
-import { DateTimePairField } from '@/components/forms/DateTimePairField';
 import { PageFileDrop } from '@/components/forms/PageFileDrop';
 import { RecipientCombobox } from '@/components/forms/RecipientCombobox';
 import {
@@ -13,11 +20,11 @@ import {
   getCustomFieldDefinitions,
   type CustomFieldValues,
 } from '@/lib/custom-fields';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
 
-const ALL_FIELD_TYPES: FormField[] = [
+const ALL_FIELD_TYPES: EntityFormField[] = [
   { name: 'name', label: 'Text', type: 'text', required: true, section: 'Text & contact' },
   { name: 'email', label: 'Email', type: 'email', section: 'Text & contact' },
   { name: 'phone', label: 'Phone', type: 'phone', section: 'Text & contact' },
@@ -132,7 +139,7 @@ const FORM_DEFAULTS: DemoFormValues = {
   metadataJson: '{\n  "source": "showcase"\n}',
 };
 
-const CONDITIONAL_FIELDS: FormField[] = [
+const CONDITIONAL_FIELDS: EntityFormField[] = [
   {
     name: 'recordType',
     label: 'Record type',
@@ -167,8 +174,7 @@ type ConditionalFormValues = {
 export function FormsSection() {
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [submitted, setSubmitted] = useState<string | null>(null);
-  const [eventDate, setEventDate] = useState('2024-12-05');
-  const [eventTime, setEventTime] = useState('10:00');
+  const [eventDatetime, setEventDatetime] = useState('2024-12-05T10:00');
   const [recipients, setRecipients] = useState<string[]>(['maria.keller@apex.example']);
   const [droppedFiles, setDroppedFiles] = useState<string[]>([]);
   const customFieldDefinitions = useMemo(() => getCustomFieldDefinitions('client'), []);
@@ -204,10 +210,11 @@ export function FormsSection() {
           defaultValues={FORM_DEFAULTS}
           errors={errors}
           submitLabel="Save record"
+          warnOnDirty
           onSubmit={(values) => {
             setErrors({});
             setSubmitted(values.name);
-            toast.success('Form submitted.');
+            appToast.success('Form submitted.');
           }}
         />
         {submitted ? (
@@ -227,7 +234,9 @@ export function FormsSection() {
           defaultValues={{ recordType: 'Standard', enterpriseCode: '', supportTier: '' }}
           submitLabel="Validate"
           warnOnDirty
-          onSubmit={() => toast.success('Conditional form passed validation.')}
+          onSubmit={() => {
+            appToast.success('Conditional form passed validation.');
+          }}
         />
       </ShowcaseBlock>
 
@@ -251,17 +260,16 @@ export function FormsSection() {
         <JsonField value={jsonPreview} onChange={setJsonPreview} />
       </ShowcaseBlock>
 
-      <ShowcaseBlock
-        title="Form helpers"
-        meta="DateTimePairField · RecipientCombobox · PageFileDrop"
-      >
+      <ShowcaseBlock title="Form helpers" meta="DatePicker · RecipientCombobox · PageFileDrop">
         <div className="grid gap-6 lg:grid-cols-2">
-          <DateTimePairField
-            dateValue={eventDate}
-            timeValue={eventTime}
-            onDateChange={setEventDate}
-            onTimeChange={setEventTime}
-          />
+          <FormFieldControl id="form-event-datetime" label="Event date & time">
+            <DatePicker
+              id="form-event-datetime"
+              mode="datetime"
+              value={eventDatetime}
+              onChange={(v) => setEventDatetime(v ?? '')}
+            />
+          </FormFieldControl>
           <RecipientCombobox
             value={recipients}
             onChange={setRecipients}
@@ -276,7 +284,7 @@ export function FormsSection() {
           <PageFileDrop
             onFiles={(files) => {
               setDroppedFiles(files.map((file) => file.name));
-              toast.success(`${files.length} file(s) dropped.`);
+              appToast.success(`${files.length} file(s) dropped.`);
             }}
           />
           {droppedFiles.length > 0 ? (

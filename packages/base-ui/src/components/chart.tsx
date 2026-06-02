@@ -150,7 +150,7 @@ function RechartsTooltipBridge({
     }
 
     onHoverChange(null);
-  }, [active, color, onHoverChange, pointLabel, value]);
+  }, [active, color, onHoverChange, point, pointLabel, value]);
 
   return null;
 }
@@ -417,6 +417,7 @@ export function SimplePieChart({
         </div>
         {showLegend ? (
           <ChartLegend
+            className="shrink-0"
             items={data.map((point, index) => ({
               label: point.label,
               color: resolvePointColor(point, index),
@@ -612,38 +613,41 @@ export function SimpleMultiLineChart({
   }
 
   return (
-    <div className={cn(chartSurfaceClass, className)} style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke={CHART_AXIS.grid} strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            width={40}
-          />
-          <Tooltip content={<MultiSeriesTooltip valueFormatter={valueFormatter} />} />
-          {series.map((entry, index) => (
-            <Line
-              key={entry.key}
-              type="monotone"
-              dataKey={entry.key}
-              name={entry.label}
-              stroke={resolveChartColor(index, entry.color)}
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 4, stroke: 'hsl(var(--card))', strokeWidth: 2 }}
+    <div className={cn(chartSurfaceClass, 'flex min-h-0 flex-col', className)} style={{ height }}>
+      <div className="min-h-0 flex-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke={CHART_AXIS.grid} strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+            <YAxis
+              tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+            />
+            <Tooltip content={<MultiSeriesTooltip valueFormatter={valueFormatter} />} />
+            {series.map((entry, index) => (
+              <Line
+                key={entry.key}
+                type="monotone"
+                dataKey={entry.key}
+                name={entry.label}
+                stroke={resolveChartColor(index, entry.color)}
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 4, stroke: 'hsl(var(--card))', strokeWidth: 2 }}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
       <ChartLegend
+        className="shrink-0"
         items={series.map((entry, index) => ({
           label: entry.label,
           color: resolveChartColor(index, entry.color),
@@ -679,44 +683,47 @@ export function SimpleComboChart({
   const gradientId = useId().replace(/:/g, '');
 
   return (
-    <div className={cn(chartSurfaceClass, className)} style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <ChartGradientDefs idPrefix={gradientId} count={1} />
-          <CartesianGrid stroke={CHART_AXIS.grid} strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            width={40}
-          />
-          <Tooltip content={<MultiSeriesTooltip valueFormatter={valueFormatter} />} />
-          <Bar
-            dataKey="barValue"
-            name={barLabel}
-            fill={getChartPaletteColor(1).soft}
-            stroke={getChartPaletteColor(1).stroke}
-            strokeWidth={1}
-            radius={[4, 4, 0, 0]}
-            maxBarSize={40}
-          />
-          <Line
-            type="monotone"
-            dataKey="lineValue"
-            name={lineLabel}
-            stroke={getChartPaletteColor(0).stroke}
-            strokeWidth={2.5}
-            dot={{ r: 3, fill: getChartPaletteColor(0).stroke, strokeWidth: 0 }}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+    <div className={cn(chartSurfaceClass, 'flex min-h-0 flex-col', className)} style={{ height }}>
+      <div className="min-h-0 flex-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <ChartGradientDefs idPrefix={gradientId} count={1} />
+            <CartesianGrid stroke={CHART_AXIS.grid} strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="label"
+              tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+            />
+            <YAxis
+              tick={{ fill: CHART_AXIS.tick, fontSize: 11 }}
+              tickLine={false}
+              axisLine={false}
+              width={40}
+            />
+            <Tooltip content={<MultiSeriesTooltip valueFormatter={valueFormatter} />} />
+            <Bar
+              dataKey="barValue"
+              name={barLabel}
+              fill={getChartPaletteColor(1).soft}
+              stroke={getChartPaletteColor(1).stroke}
+              strokeWidth={1}
+              radius={[4, 4, 0, 0]}
+              maxBarSize={40}
+            />
+            <Line
+              type="monotone"
+              dataKey="lineValue"
+              name={lineLabel}
+              stroke={getChartPaletteColor(0).stroke}
+              strokeWidth={2.5}
+              dot={{ r: 3, fill: getChartPaletteColor(0).stroke, strokeWidth: 0 }}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
       <ChartLegend
+        className="shrink-0"
         items={[
           { label: barLabel, color: getChartPaletteColor(1).stroke },
           { label: lineLabel, color: getChartPaletteColor(0).stroke },
@@ -784,27 +791,30 @@ export type SimpleRadarChartProps = {
 
 export function SimpleRadarChart({ data, series, className, height = 260 }: SimpleRadarChartProps) {
   return (
-    <div className={cn(chartSurfaceClass, className)} style={{ height }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={data} cx="50%" cy="52%" outerRadius="72%">
-          <PolarGrid stroke={CHART_AXIS.grid} />
-          <PolarAngleAxis dataKey="subject" tick={{ fill: CHART_AXIS.tick, fontSize: 11 }} />
-          <PolarRadiusAxis tick={false} axisLine={false} />
-          {series.map((entry, index) => (
-            <Radar
-              key={entry.key}
-              name={entry.label}
-              dataKey={entry.key}
-              stroke={resolveChartColor(index, entry.color)}
-              fill={resolveChartColor(index, entry.color)}
-              fillOpacity={0.22}
-              strokeWidth={2}
-            />
-          ))}
-          <Tooltip content={<MultiSeriesTooltip />} />
-        </RadarChart>
-      </ResponsiveContainer>
+    <div className={cn(chartSurfaceClass, 'flex min-h-0 flex-col', className)} style={{ height }}>
+      <div className="min-h-0 flex-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={data} cx="50%" cy="52%" outerRadius="72%">
+            <PolarGrid stroke={CHART_AXIS.grid} />
+            <PolarAngleAxis dataKey="subject" tick={{ fill: CHART_AXIS.tick, fontSize: 11 }} />
+            <PolarRadiusAxis tick={false} axisLine={false} />
+            {series.map((entry, index) => (
+              <Radar
+                key={entry.key}
+                name={entry.label}
+                dataKey={entry.key}
+                stroke={resolveChartColor(index, entry.color)}
+                fill={resolveChartColor(index, entry.color)}
+                fillOpacity={0.22}
+                strokeWidth={2}
+              />
+            ))}
+            <Tooltip content={<MultiSeriesTooltip />} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
       <ChartLegend
+        className="shrink-0"
         items={series.map((entry, index) => ({
           label: entry.label,
           color: resolveChartColor(index, entry.color),

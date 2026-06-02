@@ -4,6 +4,7 @@ import { SectionCard } from '@oktavius/base-ui';
 
 export type ShowcaseSectionId =
   | 'overview'
+  | 'design-tokens'
   | 'foundations'
   | 'inputs'
   | 'forms'
@@ -19,6 +20,11 @@ export type ShowcaseSectionId =
 
 export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; description: string }> = [
   { key: 'overview', label: 'Overview', description: 'How to use this gallery' },
+  {
+    key: 'design-tokens',
+    label: 'Design tokens',
+    description: 'Three-layer color system — neutral ramp, roles, live preview',
+  },
   { key: 'foundations', label: 'Foundations', description: 'Buttons, badges, status, typography' },
   { key: 'inputs', label: 'Inputs', description: 'All control primitives and states' },
   { key: 'forms', label: 'Forms', description: 'EntityForm field registry' },

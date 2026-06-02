@@ -1,5 +1,7 @@
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useForm, type DefaultValues, type Path, type Resolver } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import type {
   CountryOption,
@@ -47,13 +49,23 @@ import {
 } from '@/lib/reference-data';
 import { useUserPreferences } from '@/lib/userPreferences';
 import {
+  filterPermittedFormFields,
   filterVisibleFields,
-  validateFormFields,
   type FieldValidationRule,
+  type FormSubmissionResult,
+  normalizeFormSubmissionFailure,
 } from '@/lib/formValidation';
+import type { PermissionRequirement } from '@/lib/permissions';
+import { permissionSubjectFor } from '@/lib/permissions';
+import { buildFormZodSchema } from '@/lib/buildFormZodSchema';
+import { useDemoData } from '@/app/demo-data';
+import { FIELD_GROUP_LABEL_CLASS } from '@/components/common/pageChrome';
+import { GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
+import { buildGoogleMapsSearchUrlFromAddress } from '@/components/maps/googleMapsEmbed';
 
 import { JsonField } from './JsonField';
 import { useFormDirtyGuard } from './useFormDirtyGuard';
+import { useFormLeaveBlocker } from './useFormLeaveBlocker';
 
 export type { AddressValue };
 export { EMPTY_ADDRESS } from '@oktavius/base-ui';
@@ -150,6 +162,8 @@ export type FormField = {
   vocabularyDisplay?: 'combobox' | 'radio';
   /** Hide the field when this returns false. */
   visibleWhen?: (values: Record<string, FormFieldValue>) => boolean;
+  /** Hide the field unless the active subject satisfies this requirement. */
+  permission?: PermissionRequirement;
   /** Client-side validation rules applied on submit. */
   validate?: FieldValidationRule;
 };
@@ -162,7 +176,7 @@ type EntityFormProps<T extends Record<string, FormFieldValue>> = {
   defaultValues: T;
   submitLabel?: string;
   subtitle?: string;
-  onSubmit: (values: T) => void;
+  onSubmit: (values: T) => FormSubmissionResult | Promise<FormSubmissionResult>;
   isSubmitting?: boolean;
   footerActions?: React.ReactNode;
   /** Server or client validation errors keyed by field name. */
@@ -181,8 +195,18 @@ type EntityFormProps<T extends Record<string, FormFieldValue>> = {
   }) => ReactNode;
   /** Warn on browser tab close when values differ from defaultValues. */
   warnOnDirty?: boolean;
+  /** Notifies parent when dirty state changes (for dialog close guards). */
+  onDirtyChange?: (isDirty: boolean) => void;
   /** Skip built-in client validation (server-only forms). */
   skipClientValidation?: boolean;
+  /** Debounced autosave for generated edit forms. Uses `onSubmit` unless `onSave` is provided. */
+  autoSave?: boolean | EntityFormAutoSaveOptions<T>;
+};
+
+export type EntityFormAutoSaveOptions<T extends Record<string, FormFieldValue>> = {
+  enabled?: boolean;
+  delayMs?: number;
+  onSave?: (values: T) => FormSubmissionResult | Promise<FormSubmissionResult>;
 };
 
 function isAddressValue(value: FormFieldValue): value is AddressValue {
@@ -202,6 +226,24 @@ function resolveFieldError<T extends Record<string, FormFieldValue>>(
   errors?: Partial<Record<keyof T & string, string>>,
 ) {
   return errors?.[field.name] ?? field.error;
+}
+
+function serializeAutosaveValues(values: Record<string, FormFieldValue>) {
+  try {
+    return JSON.stringify(values, (_key, value: unknown) => {
+      if (value instanceof File) {
+        return {
+          name: value.name,
+          size: value.size,
+          type: value.type,
+          lastModified: value.lastModified,
+        };
+      }
+      return value;
+    });
+  } catch {
+    return String(Date.now());
+  }
 }
 
 // ─── Field Renderer ───────────────────────────────────────────────────────────
@@ -373,14 +415,24 @@ function FieldInput({
 
     case 'address': {
       const addressValue = isAddressValue(value) ? value : EMPTY_ADDRESS;
+      const mapsUrl = buildGoogleMapsSearchUrlFromAddress(addressValue);
       return (
-        <AddressField
-          id={inputId}
-          value={addressValue}
-          countries={field.countries ?? defaultCountryOptions}
-          disabled={field.disabled}
-          onChange={(v) => onChange(v)}
-        />
+        <div className="space-y-2">
+          <AddressField
+            id={inputId}
+            value={addressValue}
+            countries={field.countries ?? defaultCountryOptions}
+            disabled={field.disabled}
+            onChange={(v) => onChange(v)}
+          />
+          {mapsUrl ? (
+            <GoogleMapsPreviewButton
+              url={mapsUrl}
+              label="Preview address"
+              title={`${field.label} map preview`}
+            />
+          ) : null}
+        </div>
       );
     }
 
@@ -597,11 +649,7 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
           key={section}
           className={index === 0 ? 'space-y-3' : 'space-y-3 border-t border-border/70 pt-4'}
         >
-          {hideSectionHeading ? null : (
-            <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-              {section}
-            </h3>
-          )}
+          {hideSectionHeading ? null : <h3 className={FIELD_GROUP_LABEL_CLASS}>{section}</h3>}
           <div
             className={cn('grid gap-4', surface === 'dialog' ? 'grid-cols-1' : 'md:grid-cols-2')}
           >
@@ -718,53 +766,168 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   showHeader,
   renderAfterFields,
   warnOnDirty = false,
+  onDirtyChange,
   skipClientValidation = false,
+  autoSave = false,
 }: EntityFormProps<T>) {
-  const [values, setValues] = useState<T>(defaultValues);
-  const [clientErrors, setClientErrors] = useState<Partial<Record<keyof T & string, string>>>({});
+  const allowNavigationRef = useRef(false);
+  const [submissionErrors, setSubmissionErrors] = useState<
+    Partial<Record<keyof T & string, string>>
+  >({});
+  const [submissionMessage, setSubmissionMessage] = useState<string | undefined>();
+  const { activeMembership, currentUser } = useDemoData();
+  const permissionSubject = useMemo(
+    () => permissionSubjectFor(currentUser, activeMembership),
+    [activeMembership, currentUser],
+  );
+  const permittedFields = useMemo(
+    () => filterPermittedFormFields(fields, permissionSubject),
+    [fields, permissionSubject],
+  );
+  const schema = useMemo(() => buildFormZodSchema(permittedFields), [permittedFields]);
+  const {
+    watch,
+    setValue,
+    handleSubmit,
+    reset,
+    trigger,
+    formState: { errors: formErrors, isDirty },
+  } = useForm<T>({
+    defaultValues: defaultValues as DefaultValues<T>,
+    resolver: zodResolver(schema) as Resolver<T>,
+    mode: 'onBlur',
+  });
+
+  useEffect(() => {
+    reset(defaultValues);
+    setSubmissionErrors({});
+    setSubmissionMessage(undefined);
+    allowNavigationRef.current = false;
+  }, [defaultValues, reset]);
+
+  const values = watch();
+  const valuesRef = useRef(values);
   const { locale } = useUserPreferences();
   const defaultCountryOptions = useCountryOptions();
   const defaultPhoneCountries = usePhoneCountries();
   const defaultCurrencyOptions = useCurrencyOptions();
   const vocabularyOptions = useVocabularyOptionsMap();
 
-  useFormDirtyGuard({
-    values,
-    initialValues: defaultValues,
-    enabled: warnOnDirty,
+  useFormDirtyGuard({ enabled: warnOnDirty, isDirty });
+  useFormLeaveBlocker({
+    enabled: warnOnDirty && !isSubmitting,
+    isDirty,
+    allowNavigationRef,
   });
 
-  const mergedErrors = { ...clientErrors, ...errors };
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    valuesRef.current = values;
+  }, [values]);
+
+  const rhfErrorMap = useMemo(() => {
+    const next: Partial<Record<keyof T & string, string>> = {};
+    for (const [key, error] of Object.entries(formErrors)) {
+      if (error?.message) {
+        next[key as keyof T & string] = String(error.message);
+      }
+    }
+    return next;
+  }, [formErrors]);
+
+  const mergedErrors = { ...rhfErrorMap, ...submissionErrors, ...errors };
 
   const set = (name: string, value: FormFieldValue) => {
-    setValues((current) => ({ ...current, [name]: value }));
-    setClientErrors((current) => {
-      if (!current[name as keyof T & string]) return current;
-      const next = { ...current };
-      delete next[name as keyof T & string];
-      return next;
+    setValue(name as Path<T>, value as never, {
+      shouldDirty: true,
+      shouldValidate: true,
     });
   };
 
   const resolvedSubmitVariant = submitVariant ?? (surface === 'dialog' ? 'cta' : 'default');
   const resolvedShowHeader = showHeader === true && surface === 'dialog';
+  const autoSaveOptions = typeof autoSave === 'object' ? autoSave : undefined;
+  const autoSaveEnabled =
+    Boolean(autoSave) && (typeof autoSave !== 'object' || autoSave.enabled !== false);
+  const autoSaveDelayMs = Math.max(0, autoSaveOptions?.delayMs ?? 1000);
+  const autoSaveHandler = autoSaveOptions?.onSave ?? onSubmit;
+  const autoSaveValuesKey = useMemo(() => serializeAutosaveValues(values), [values]);
+
+  const submitValues = useCallback(
+    async (
+      submitted: T,
+      handler: (values: T) => FormSubmissionResult | Promise<FormSubmissionResult>,
+    ) => {
+      setSubmissionErrors({});
+      setSubmissionMessage(undefined);
+
+      try {
+        const result = await handler(submitted);
+        const failure = normalizeFormSubmissionFailure(result);
+        if (failure) {
+          setSubmissionErrors(failure.errors as Partial<Record<keyof T & string, string>>);
+          setSubmissionMessage(failure.message);
+          return;
+        }
+      } catch (error) {
+        const failure = normalizeFormSubmissionFailure(error);
+        if (!failure) throw error;
+
+        setSubmissionErrors(failure.errors as Partial<Record<keyof T & string, string>>);
+        setSubmissionMessage(failure.message);
+        return;
+      }
+
+      allowNavigationRef.current = true;
+      reset(submitted as DefaultValues<T>);
+    },
+    [reset],
+  );
+
+  useEffect(() => {
+    if (!autoSaveEnabled || !isDirty || isSubmitting) return undefined;
+
+    const timer = window.setTimeout(() => {
+      const saveCurrentValues = async () => {
+        if (!skipClientValidation) {
+          const isValid = await trigger(undefined, { shouldFocus: false });
+          if (!isValid) return;
+        }
+
+        await submitValues(valuesRef.current as T, autoSaveHandler);
+      };
+
+      void saveCurrentValues().catch(() => undefined);
+    }, autoSaveDelayMs);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    autoSaveDelayMs,
+    autoSaveEnabled,
+    autoSaveHandler,
+    autoSaveValuesKey,
+    isDirty,
+    isSubmitting,
+    skipClientValidation,
+    submitValues,
+    trigger,
+  ]);
 
   const form = (
     <form
       className="space-y-4"
       onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        if (!skipClientValidation) {
-          const nextErrors = validateFormFields(fields, values) as Partial<
-            Record<keyof T & string, string>
-          >;
-          if (Object.keys(nextErrors).length > 0) {
-            setClientErrors(nextErrors);
-            return;
-          }
+        if (skipClientValidation) {
+          void submitValues(values, onSubmit).catch(() => undefined);
+          return;
         }
-        setClientErrors({});
-        onSubmit(values);
+        void handleSubmit((submitted) => submitValues(submitted, onSubmit))(event).catch(
+          () => undefined,
+        );
       }}
     >
       {resolvedShowHeader ? (
@@ -774,7 +937,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
         </div>
       ) : null}
       <EntityFormFields
-        fields={fields}
+        fields={permittedFields}
         values={values}
         errors={mergedErrors}
         set={set}
@@ -786,6 +949,11 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
         surface={surface}
       />
       {renderAfterFields ? renderAfterFields({ values, set, errors: mergedErrors }) : null}
+      {submissionMessage ? (
+        <p className="text-sm font-medium text-destructive" role="alert">
+          {submissionMessage}
+        </p>
+      ) : null}
       <div
         className={
           surface === 'dialog'

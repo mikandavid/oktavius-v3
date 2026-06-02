@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 import { type CalendarSource, eventBlockClasses } from './calendar-colors';
 import {
   calendarDayDropId,
+  CALENDAR_CLICK_DRAG_THRESHOLD_PX,
   moveCalendarEvent,
   normalizeSlotRange,
   pointerToDropTarget,
@@ -26,12 +27,14 @@ import {
   type CalendarEventClickHandler,
   type CalendarSlotAnchor,
   eventClickAnchor,
+  eventStartDate,
+  formatEventTimeRange,
+  isMultiDayEvent,
   DEFAULT_SCHEDULER_END_HOUR,
   DEFAULT_SCHEDULER_START_HOUR,
   DEFAULT_SLOT_MINUTES,
   eventsForDay,
   eventEndDate,
-  eventStartDate,
   isToday,
   schedulingColumnHeaderClass,
   schedulingTimeLabelClass,
@@ -196,11 +199,12 @@ function TimedEventBlock({
 
   const handlePointerDown = useCallback(
     (pointerEvent: React.PointerEvent<HTMLButtonElement>) => {
-      if (!draggable || !onDragStart) return;
+      if (!onDragStart) return;
       if ((pointerEvent.target as HTMLElement).closest('[role="separator"]')) return;
+      pointerEvent.stopPropagation();
       onDragStart(event, day, pointerEvent);
     },
-    [day, draggable, event, onDragStart],
+    [day, event, onDragStart],
   );
 
   const handlePointerMove = useCallback(
@@ -231,15 +235,17 @@ function TimedEventBlock({
     [draggable, isResizing],
   );
 
+  const handleClick =
+    onEventClick && !onDragStart
+      ? (clickEvent: React.MouseEvent<HTMLButtonElement>) =>
+          onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
+      : undefined;
+
   return (
     <button
       type="button"
-      onClick={
-        onEventClick
-          ? (clickEvent) => onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
-          : undefined
-      }
-      onPointerDown={draggable ? handlePointerDown : undefined}
+      onClick={handleClick}
+      onPointerDown={onDragStart ? handlePointerDown : undefined}
       onPointerMove={resizable ? handlePointerMove : undefined}
       onPointerLeave={resizable ? handlePointerLeave : undefined}
       className={cn(
@@ -293,25 +299,29 @@ function AllDayEventBlock({
     pointerEvent: React.PointerEvent<HTMLButtonElement>,
   ) => void;
 }) {
-  const day = eventStartDate(event) ?? new Date();
+  const spanLabel = isMultiDayEvent(event) ? formatEventTimeRange(event) : null;
 
   const handlePointerDown = useCallback(
     (pointerEvent: React.PointerEvent<HTMLButtonElement>) => {
-      if (!draggable || !onDragStart) return;
+      if (!onDragStart) return;
+      pointerEvent.stopPropagation();
+      const day = eventStartDate(event) ?? new Date();
       onDragStart(event, day, pointerEvent);
     },
-    [day, draggable, event, onDragStart],
+    [event, onDragStart],
   );
+
+  const handleClick =
+    onEventClick && !onDragStart
+      ? (clickEvent: React.MouseEvent<HTMLButtonElement>) =>
+          onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
+      : undefined;
 
   return (
     <button
       type="button"
-      onClick={
-        onEventClick
-          ? (clickEvent) => onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
-          : undefined
-      }
-      onPointerDown={draggable ? handlePointerDown : undefined}
+      onClick={handleClick}
+      onPointerDown={onDragStart ? handlePointerDown : undefined}
       className={cn(
         'block w-full truncate rounded-control px-2 py-1 text-left text-[11px] font-medium shadow-sm',
         eventBlockClasses(event, calendars),
@@ -319,8 +329,12 @@ function AllDayEventBlock({
         isDragging && 'pointer-events-none opacity-30',
       )}
       data-calendar-event
+      title={spanLabel ?? event.title}
     >
-      {event.title}
+      <span className="block truncate">{event.title}</span>
+      {spanLabel ? (
+        <span className="block truncate text-[10px] opacity-90">{spanLabel}</span>
+      ) : null}
     </button>
   );
 }
@@ -710,7 +724,7 @@ export function CalendarTimeGrid({
       originDay: Date,
       pointerEvent: React.PointerEvent<HTMLButtonElement>,
     ) => {
-      if (!onEventMove) return;
+      if (!onEventMove && !onEventClick) return;
       const target = pointerEvent.currentTarget;
       const rect = target.getBoundingClientRect();
       const grabOffsetY = pointerEvent.clientY - rect.top;
@@ -722,8 +736,8 @@ export function CalendarTimeGrid({
 
       const handleMove = (moveEvent: PointerEvent) => {
         if (
-          Math.abs(moveEvent.clientX - originX) > 4 ||
-          Math.abs(moveEvent.clientY - originY) > 4
+          Math.abs(moveEvent.clientX - originX) > CALENDAR_CLICK_DRAG_THRESHOLD_PX ||
+          Math.abs(moveEvent.clientY - originY) > CALENDAR_CLICK_DRAG_THRESHOLD_PX
         ) {
           moved = true;
         }
@@ -769,14 +783,27 @@ export function CalendarTimeGrid({
           grabOffsetY,
         );
         if (dropTarget && moved) {
-          onEventMove(event, dropTarget);
+          onEventMove?.(event, dropTarget);
+          return;
+        }
+
+        if (!moved && onEventClick) {
+          onEventClick(event, eventClickAnchor(target));
         }
       };
 
       window.addEventListener('pointermove', handleMove);
       window.addEventListener('pointerup', handleUp);
     },
-    [endHour, getAllDayColumnRefs, getColumnRefs, onEventMove, snapMinutes, startHour],
+    [
+      endHour,
+      getAllDayColumnRefs,
+      getColumnRefs,
+      onEventClick,
+      onEventMove,
+      snapMinutes,
+      startHour,
+    ],
   );
 
   const allDayByDay = days.map((day) => eventsForDay(events, day).filter((e) => e.allDay));
@@ -829,7 +856,7 @@ export function CalendarTimeGrid({
             dragPreview={dragPreview}
             onRegisterAllDayColumn={registerAllDayColumn}
             onEventClick={onEventClick}
-            onEventDragStart={draggable ? handleEventDragStart : undefined}
+            onEventDragStart={onEventMove || onEventClick ? handleEventDragStart : undefined}
           />
         ))}
       </div>
@@ -875,7 +902,7 @@ export function CalendarTimeGrid({
             onRegisterColumn={registerColumn}
             onEventClick={onEventClick}
             onEventResize={onEventResize}
-            onEventDragStart={draggable ? handleEventDragStart : undefined}
+            onEventDragStart={onEventMove || onEventClick ? handleEventDragStart : undefined}
             onSlotClick={onSlotClick}
             onSlotRangeSelect={onSlotRangeSelect}
           />

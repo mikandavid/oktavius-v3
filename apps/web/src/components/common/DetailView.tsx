@@ -1,17 +1,29 @@
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 
 import {
   DetailFieldGrid,
+  InlineEdit,
+  type InlineEditProps,
   RecordIdentity,
   RecordInfoHero,
   RecordInfoMeta,
   RecordVisual,
   SectionCard,
-  type DetailFieldProps,
+  type DetailFieldProps as BaseDetailFieldProps,
   type RecordVisualProps,
 } from '@oktavius/base-ui';
 
-export type { DetailFieldProps };
+import { useDemoData } from '@/app/demo-data';
+import type { PermissionRequirement } from '@/lib/permissions';
+import { canUsePermissionRequirement, permissionSubjectFor } from '@/lib/permissions';
+
+export type DetailFieldProps = BaseDetailFieldProps & {
+  /** Hide the field unless the active subject satisfies this requirement. */
+  permission?: PermissionRequirement;
+  /** Render this field value through the shared compact click-to-edit control. */
+  inlineEdit?: Omit<InlineEditProps, 'className'>;
+};
 
 export type DetailViewVisualLayout = 'identity' | 'header';
 
@@ -39,9 +51,31 @@ export function DetailView({
   identityMeta?: ReactNode;
   identityTrailing?: ReactNode;
 }) {
-  const primaryFields = fields.filter((field) => field.importance === 'primary');
-  const metaFields = fields.filter((field) => field.importance === 'meta');
-  const defaultFields = fields.filter(
+  const { activeMembership, currentUser } = useDemoData();
+  const permissionSubject = useMemo(
+    () => permissionSubjectFor(currentUser, activeMembership),
+    [activeMembership, currentUser],
+  );
+  const permittedFields = useMemo(
+    () =>
+      fields.filter((field) => canUsePermissionRequirement(permissionSubject, field.permission)),
+    [fields, permissionSubject],
+  );
+  const displayFields = useMemo(
+    () =>
+      permittedFields.map((field) =>
+        field.inlineEdit
+          ? {
+              ...field,
+              value: <InlineEdit {...field.inlineEdit} />,
+            }
+          : field,
+      ),
+    [permittedFields],
+  );
+  const primaryFields = displayFields.filter((field) => field.importance === 'primary');
+  const metaFields = displayFields.filter((field) => field.importance === 'meta');
+  const defaultFields = displayFields.filter(
     (field) => field.importance !== 'primary' && field.importance !== 'meta',
   );
 

@@ -1,6 +1,6 @@
 import { CheckIcon, MinusIcon } from '@/lib/icons';
 
-import { Badge, type BadgeProps, formatDisplayDate } from '@oktavius/base-ui';
+import { Badge, type BadgeProps, formatDisplayDate, MoneyText } from '@oktavius/base-ui';
 
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 
@@ -13,18 +13,13 @@ function safeRender(value: unknown): React.ReactNode {
   return String(value);
 }
 
-function formatCurrency(value: unknown, symbol: string): React.ReactNode {
-  const num = Number(value);
+function formatCurrency(value: unknown, currency: string): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">—</span>;
   }
+  const num = Number(value);
   if (Number.isNaN(num)) return String(value);
-  return (
-    <span className="tabular-nums">
-      {symbol}
-      {num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-    </span>
-  );
+  return <MoneyText value={num} currency={currency === '€' ? 'EUR' : currency} />;
 }
 
 export function renderTypedCell<T>(item: T, column: CrudColumn<T>): React.ReactNode {
@@ -56,7 +51,7 @@ export function renderTypedCell<T>(item: T, column: CrudColumn<T>): React.ReactN
         </span>
       );
     case 'currency':
-      return formatCurrency(value, (column.meta?.currencySymbol as string) || '€');
+      return formatCurrency(value, (column.meta?.currency as string) || 'EUR');
     case 'boolean':
       if (value === null || value === undefined) {
         return <span className="text-muted-foreground">—</span>;

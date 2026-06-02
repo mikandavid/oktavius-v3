@@ -10,50 +10,97 @@ Single source of truth for colors, typography, spacing, borders, shadows, and ra
 
 ## Color System
 
+### Architecture (three layers)
+
+```
+Layer 1  neutral-0 … neutral-950     Single source of truth for gray (globals.css)
+              ↓ aliases
+Layer 2  card, muted, border, …      Semantic roles — use these in components
+              +
+Layer 3  cta, success, warning, …    Brand + state colors (independent hues)
+              ↓
+         Tailwind classes            bg-card, text-muted-foreground, bg-cta
+```
+
+**Tune grays:** edit the neutral ramp in [`/showcase → Design tokens`](./design-tokens.md#token-playground) or `globals.css`.  
+**In components:** always use Layer 2 roles (`bg-card`, `text-muted-foreground`) — never `bg-neutral-200` for layout.  
+**Raw ramp steps:** calendar gray events, chart series, data viz only.  
+**Full reference:** [`design-tokens.md`](./design-tokens.md)
+
 ### Philosophy
 
 Color communicates hierarchy and meaning. Never decoration.
 
 Use color for:
 
-- The single primary action on a page
+- The single primary action on a page (`variant="cta"`)
 - Semantic state (success / warning / destructive / info)
-- Active/selected system states
+- Active/selected system states (`sidebar-primary`)
 - Links inside text
 - Data series in charts
 
 Do not use color to make a plain layout feel more interesting.
 
-### Semantic Tokens
+### Layer 1 — Neutral ramp
 
-Always use these tokens. Never hard-code hex or Tailwind default palette scales (`blue-500`, `rose-200`, etc.).
+Defined in `apps/web/src/styles/globals.css`. Light mode: `0` = pure white, `950` = near-black. Dark mode: `50` = deepest surface, `950` = primary text (monotonic scale).
+
+| Step          | Light role            | Dark role               |
+| ------------- | --------------------- | ----------------------- |
+| `neutral-0`   | Pure white card       | Elevated popover base   |
+| `neutral-50`  | Page background       | Deepest page canvas     |
+| `neutral-100` | Secondary fills       | Card surface            |
+| `neutral-200` | Muted fills, inputs   | Popover, sidebar accent |
+| `neutral-300` | Borders, input chrome | Muted fills             |
+| `neutral-600` | Muted text            | Borders                 |
+| `neutral-950` | Primary text          | Primary text            |
+
+### Layer 2 — Semantic roles (aliases)
+
+Always use these in components. Never hard-code hex or Tailwind default palette scales (`blue-500`, `rose-200`, etc.).
 
 ```
-text-foreground           Primary text
-text-muted-foreground     Secondary text, meta, descriptions, labels
-text-destructive          Errors, delete actions
-text-success              Confirmed, approved, healthy
-text-warning              Pending, needs attention
-text-info                 In progress, informational
-text-teal / text-orange   Categorical accents (calendar, charts)
+text-foreground           Primary text          → neutral-950
+text-muted-foreground     Secondary text        → neutral-600 / neutral-800
+text-destructive          Errors, delete
+text-success / warning / info   State text
 
-bg-background             Body / page canvas (100% white)
-bg-card                   Card surfaces — Card, StatCard, CrudMainView (100% white, no border)
-bg-muted/40               Page wash — main content area only (over white body)
-bg-muted/60               Input fill (filled-grey form controls)
-bg-muted/80               Input hover fill
-bg-muted                  Button hover, item hover fills (93%)
+bg-card                   White tiles           → neutral-0 / neutral-100
+bg-muted/40               Page wash only        (only background tint in app)
+bg-muted/60               Input fill
+bg-muted/80               Input hover
+bg-muted                  Button / row hover    → neutral-200 / neutral-300
 
-border-border             Heavy rules (rare)
-border-border/70          Section dividers inside EntityForm / DetailView
-border-border/50          SectionCard heading rule · SettingsRow row separator · SplitView sidebar/content split · AttachmentList row dividers · ListRow borders
-border-dashed border-border/60   InlineEmptyState, dashed ListRow variant
-ring-ring                 Focus rings
+border-border             Rules & dividers      → neutral-300 / neutral-600
+border-border/70          Section dividers
+border-border/50          Row separators, SplitView splits
+ring-ring                 Focus rings           (CTA hue, OKLCH)
 ```
 
-### Neutral ramp
+### Layer 3 — Shell chrome
 
-Theme-aware surface scale exposed as `neutral-50` … `neutral-950` (CSS variables in `globals.css`). Use for data visualization and calendar gray fills — **not** for general UI text or borders (prefer `muted`, `border`, `foreground` roles).
+Nav rail, top header, and agent chat rail share one surface — import from `@/components/common/pageChrome`:
+
+```typescript
+APP_SHELL_SURFACE_CLASS; // bg-card
+APP_SHELL_BORDER_CLASS; // border-border/60
+```
+
+Do not use separate background tokens per shell region. `--sidebar-background` aliases `--card`.
+
+Full alias tables, playground workflow, and file index: [`design-tokens.md`](./design-tokens.md).
+
+### Brand & state colors
+
+| Token                                          | Format       | Use                                                 |
+| ---------------------------------------------- | ------------ | --------------------------------------------------- |
+| `cta`                                          | OKLCH violet | Primary actions, sidebar active, calendar violet    |
+| `accent`                                       | OKLCH tint   | Subtle violet backgrounds                           |
+| `destructive` / `success` / `warning` / `info` | HSL          | Status, badges, banners                             |
+| `teal` / `orange`                              | HSL          | Calendar categories, chart series                   |
+| `highlight`                                    | HSL          | Selected rows (light: blue tint; dark: neutral-500) |
+
+Primary button (`bg-primary`) aliases `neutral-900` — near-black in light, near-white in dark. CTA is brand violet (`bg-cta`).
 
 ### Semantic palette helper
 
@@ -96,7 +143,9 @@ selected / contextual emphasis            → highlight
 
 - Never use the primary color as a generic selection highlight everywhere. It loses meaning.
 - Never invent local module status colors. Use the semantic tokens above.
-- Never use random Tailwind palette colors (e.g. `text-blue-500`, `bg-rose-200`, `bg-teal-500`).
+- Never use random Tailwind palette colors (e.g. `text-blue-500`, `bg-rose-200`, `bg-teal-500` for layout).
+- Never use raw `neutral-*` ramp steps for layout surfaces — use semantic roles (`bg-card`, `bg-muted`).
+- Never assign different backgrounds to nav, header, and chat — use `APP_SHELL_SURFACE_CLASS`.
 - Never duplicate tone class strings in components — use `getSemanticToneClasses()` from `@oktavius/base-ui`.
 - Status must never rely on color alone. Pair with text, icon, or label.
 - Do not tint entire page backgrounds with accent color.
@@ -152,11 +201,13 @@ Used in: `CardTitle`, `SectionCard` title prop, `DetailView` section titles.
 
 **Page-level group label / field group label** (quiet organizer between content blocks):
 
+Import `FIELD_GROUP_LABEL_CLASS` from `@/components/common/pageChrome` (same string as below).
+
 ```
 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground
 ```
 
-Used in: Showcase section dividers, tab content field group headers.
+Used in: `EntityForm` section headings, custom fields, form layout editor, showcase dividers.
 
 **DetailView / field label** (inside cards):
 
@@ -235,13 +286,13 @@ Page wash + white tiles. Separation comes from **contrast** (white-on-tint), not
 | `Card`, `StatCard`, `CrudMainView` container                                            | `rounded-card bg-card` — no border, no shadow                |
 | `Dialog`, `Popover`, `DropdownMenu`, `Tooltip`, `Combobox`/`Select` content             | `bg-popover` + `shadow-elevated` — floats above page         |
 | `SectionCard`, `CollapsibleSection`, `SettingsRow`, `AttachmentList`, `SplitView` outer | borderless — heading rule / row dividers / spacing only      |
-| Page main area                                                                          | `bg-muted/40` over white body (only place a tint is applied) |
-| Sidebar                                                                                 | `bg-sidebar-background` (100% white)                         |
+| Page main area                                                                          | `bg-muted/40` — only background tint                         |
+| Shell chrome (nav, header, chat)                                                        | `APP_SHELL_SURFACE_CLASS` (`bg-card`) — shared white surface |
 | Inputs                                                                                  | `bg-muted/60` filled-grey (no border)                        |
 
 ### Hard Rules
 
-- Cards are pure white (`--card: 100%`). Never re-tint `bg-card`.
+- Cards alias `neutral-0` (pure white in light). Never re-tint `bg-card` with accent colors.
 - Never re-add `border` to `Card`, `StatCard`, `CrudMainView` table container, or `SplitView` outer.
 - Page wash (`bg-muted/40`) is the only background tint. Containers sit on top as white tiles.
 - Inputs stay filled-grey so form fields read as carved without borders. Never use `border border-input bg-background` on inputs.
@@ -328,7 +379,7 @@ Hover, active (press), and focus-visible states are required — not optional po
 
 **Clickable rows (ListRow, TableRow, SettingsTable)** — row background on hover + `cursor-pointer` when `onClick` / `href` is set.
 
-**Tabs** — inactive triggers get `hover:bg-muted/60 hover:text-foreground`.
+**Tabs** — underline bar; inactive triggers get `hover:text-foreground` and a subtle bottom border hint.
 
 **Toggles (Checkbox, Switch, Radio)** — `cursor-pointer` + hover fill on the control surface.
 

@@ -20,6 +20,7 @@ import {
   UsersIcon,
   CalendarIcon,
   DocumentIcon,
+  EmailIcon,
   TasksIcon,
   type IconProps,
 } from '@/lib/icons';
@@ -47,5 +48,6 @@ export const organizationPageIcon = () => modulePageIcon(OrganizationIcon);
 export const showcasePageIcon = () => modulePageIcon(SlidersHorizontalIcon);
 export const accessDeniedPageIcon = () => modulePageIcon(LockIcon);
 export const documentsPageIcon = () => modulePageIcon(DocumentIcon);
+export const emailPageIcon = () => modulePageIcon(EmailIcon);
 export const calendarPageIcon = () => modulePageIcon(CalendarIcon);
 export const tasksPageIcon = () => modulePageIcon(TasksIcon);

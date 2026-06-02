@@ -15,7 +15,7 @@ import * as React from 'react';
 
 import { Button } from './button';
 import { Input } from './input';
-import { Popover, PopoverContent, PopoverTrigger } from './popover';
+import { dropdownPopoverPanelClasses, Popover, PopoverContent, PopoverTrigger } from './popover';
 import {
   type ControlValidationState,
   controlDisabledClasses,
@@ -24,6 +24,8 @@ import {
   filledControlSurfaceClasses,
   resolveControlValidationState,
 } from '../lib/controlStates';
+import { SelectOptionsOverflowHint } from './select-options-overflow-hint';
+import { limitSelectOptions } from '../lib/limit-select-options';
 import { cn } from '../lib/utils';
 
 export interface ComboboxOption {
@@ -125,7 +127,7 @@ export function Combobox({
 
   // ─── Derived options ─────────────────────────────────────────────────────────
 
-  const displayOptions = React.useMemo(() => {
+  const matchedOptions = React.useMemo(() => {
     if (asyncItems) {
       return query.trim()
         ? remoteOptions
@@ -138,6 +140,14 @@ export function Combobox({
         o.label.toLowerCase().includes(q) || (o.description?.toLowerCase().includes(q) ?? false),
     );
   }, [asyncItems, options, query, remoteOptions]);
+
+  const { visible: displayOptions, truncated: truncatedOptions } = React.useMemo(
+    () =>
+      limitSelectOptions(matchedOptions, {
+        selectedValue: value,
+      }),
+    [matchedOptions, value],
+  );
 
   const selectedOption = [...options, ...remoteOptions].find((o) => o.value === value);
   const hasFooter = Boolean(onCreate || footerAction);
@@ -241,7 +251,7 @@ export function Combobox({
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent className={dropdownPopoverPanelClasses} align="start">
         <div className="flex items-center border-b border-border px-3 py-2 gap-2">
           <MagnifyingGlass className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <input
@@ -265,35 +275,41 @@ export function Combobox({
           ) : displayOptions.length === 0 ? (
             <div className="py-3 text-center text-xs text-muted-foreground">{emptyText}</div>
           ) : (
-            displayOptions.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                disabled={option.disabled}
-                onClick={() => handleSelect(option)}
-                className={cn(
-                  'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-left',
-                  'transition-colors hover:bg-muted focus:bg-muted focus:outline-none',
-                  'disabled:pointer-events-none disabled:opacity-50',
-                  option.value === value && 'bg-muted/50',
-                )}
-              >
-                <Check
+            <>
+              {displayOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  disabled={option.disabled}
+                  onClick={() => handleSelect(option)}
                   className={cn(
-                    'h-3.5 w-3.5 shrink-0',
-                    option.value === value ? 'opacity-100' : 'opacity-0',
+                    'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-left',
+                    'transition-colors hover:bg-muted focus:bg-muted focus:outline-none',
+                    'disabled:pointer-events-none disabled:opacity-50',
+                    option.value === value && 'bg-muted/50',
                   )}
-                />
-                <span className="flex-1 min-w-0">
-                  <span className="block truncate">{option.label}</span>
-                  {option.description ? (
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {option.description}
-                    </span>
-                  ) : null}
-                </span>
-              </button>
-            ))
+                >
+                  <Check
+                    className={cn(
+                      'h-3.5 w-3.5 shrink-0',
+                      option.value === value ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                  <span className="flex-1">
+                    <span className="block whitespace-nowrap">{option.label}</span>
+                    {option.description ? (
+                      <span className="block whitespace-nowrap text-xs text-muted-foreground">
+                        {option.description}
+                      </span>
+                    ) : null}
+                  </span>
+                </button>
+              ))}
+              <SelectOptionsOverflowHint
+                truncated={truncatedOptions}
+                total={matchedOptions.length}
+              />
+            </>
           )}
         </div>
 

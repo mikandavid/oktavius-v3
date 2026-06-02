@@ -4,8 +4,10 @@ import {
   type CalendarEvent,
   type CalendarEventClickHandler,
   formatAgendaDayHeading,
+  formatCalendarEventDetailHint,
   formatEventTimeRange,
   groupEventsByDay,
+  type CalendarTeamMember,
   isToday,
   schedulingBodyClass,
   schedulingShellClass,
@@ -15,6 +17,7 @@ import {
 export interface AgendaListProps {
   events?: CalendarEvent[];
   calendars?: CalendarSource[];
+  teamMembers?: CalendarTeamMember[];
   onEventClick?: CalendarEventClickHandler;
   emptyMessage?: string;
   /** When true, renders without outer card shell (inside CalendarView) */
@@ -25,6 +28,7 @@ export interface AgendaListProps {
 export function AgendaList({
   events = [],
   calendars,
+  teamMembers,
   onEventClick,
   emptyMessage = 'No upcoming events.',
   embedded = false,
@@ -62,26 +66,32 @@ export function AgendaList({
         </div>
       </header>
       <div className={cn(schedulingBodyClass, 'space-y-2 pt-2')}>
-        {dayEvents.map((event) => (
-          <button
-            key={event.id}
-            type="button"
-            onClick={
-              onEventClick
-                ? (clickEvent) => onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
-                : undefined
-            }
-            disabled={!onEventClick}
-            className={cn(
-              'flex w-full flex-col rounded-control px-3 py-2.5 text-left transition-[filter]',
-              eventBlockClasses(event, calendars),
-              !onEventClick && 'cursor-default',
-            )}
-          >
-            <span className="truncate text-sm font-semibold">{event.title}</span>
-            <span className="truncate text-xs opacity-90">{formatEventTimeRange(event)}</span>
-          </button>
-        ))}
+        {dayEvents.map((event) => {
+          const detailHint = formatCalendarEventDetailHint(event, teamMembers);
+          return (
+            <button
+              key={event.id}
+              type="button"
+              onClick={
+                onEventClick
+                  ? (clickEvent) => onEventClick(event, eventClickAnchor(clickEvent.currentTarget))
+                  : undefined
+              }
+              disabled={!onEventClick}
+              className={cn(
+                'flex w-full flex-col rounded-control px-3 py-2.5 text-left transition-[filter]',
+                eventBlockClasses(event, calendars),
+                !onEventClick && 'cursor-default',
+              )}
+            >
+              <span className="truncate text-sm font-semibold">{event.title}</span>
+              <span className="truncate text-xs opacity-90">{formatEventTimeRange(event)}</span>
+              {detailHint ? (
+                <span className="truncate text-xs opacity-75">{detailHint}</span>
+              ) : null}
+            </button>
+          );
+        })}
       </div>
     </section>
   ));

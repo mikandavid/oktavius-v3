@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { MouseTooltip, cn } from '@oktavius/base-ui';
 
+import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { OctopusIcon } from '@/components/agent/OctopusIcon';
 import { ChevronLeftIcon } from '@/lib/icons';
 
@@ -10,7 +11,7 @@ import { OsirisChatShell } from './OsirisChatShell';
 const CHAT_SIDEBAR_WIDTH_KEY = 'chat-sidebar-width';
 const CHAT_SIDEBAR_COLLAPSED_KEY = 'chat-sidebar-collapsed';
 const COLLAPSED_WIDTH = 48;
-const DEFAULT_WIDTH = 420;
+const DEFAULT_WIDTH = 340;
 const MIN_WIDTH = 300;
 const MAX_WIDTH = 640;
 const DRAG_COLLAPSE_THRESHOLD = 120;
@@ -25,8 +26,10 @@ function readStoredSidebarWidth() {
 }
 
 function readStoredCollapsedState() {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(CHAT_SIDEBAR_COLLAPSED_KEY) === 'true';
+  if (typeof window === 'undefined') return true;
+  const stored = window.localStorage.getItem(CHAT_SIDEBAR_COLLAPSED_KEY);
+  if (stored === null) return true;
+  return stored === 'true';
 }
 
 export function AIChatSidebar() {
@@ -105,7 +108,8 @@ export function AIChatSidebar() {
     <div
       data-ai-chat-sidebar="true"
       className={cn(
-        'relative flex h-dvh max-h-dvh shrink-0 overflow-hidden border-l border-border/60 bg-background',
+        'relative flex h-dvh max-h-dvh shrink-0 overflow-hidden',
+        APP_SHELL_SURFACE_CLASS,
         !isResizing && 'transition-[width] duration-200 ease-out',
       )}
       style={
@@ -123,7 +127,7 @@ export function AIChatSidebar() {
           <MouseTooltip content="Expand AI chat">
             <button
               type="button"
-              className="h-12 w-full shrink-0 border-b border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="h-12 w-full shrink-0 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               onClick={() => setCollapsedState(false)}
               aria-label="Expand AI chat"
             >
@@ -150,7 +154,8 @@ export function AIChatSidebar() {
               <button
                 type="button"
                 className={cn(
-                  'absolute z-10 h-6 w-6 rounded-full border border-border bg-background text-muted-foreground transition-opacity',
+                  'absolute z-10 h-6 w-6 rounded-full border border-border text-muted-foreground transition-opacity',
+                  APP_SHELL_SURFACE_CLASS,
                   'pointer-events-none opacity-0 group-hover/resize:pointer-events-auto group-hover/resize:opacity-100 hover:text-foreground',
                   isResizing && 'pointer-events-none opacity-0',
                 )}

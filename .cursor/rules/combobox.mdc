@@ -20,6 +20,7 @@ All single-choice dropdowns (forms, filter toolbars, settings, token editor) use
 
 ## Combobox features
 
+- Popover is **at least** trigger width and **never narrower than 12rem** — expands to fit option labels (safe in narrow filter slots)
 - Built-in search field in the popover — **Enter** selects the first visible (non-disabled) match
 - `asyncItems`, `onCreate`, `footerAction` for advanced forms
 - `clearable={false}` for required filters (e.g. "All" row in `FilterToolbar`)

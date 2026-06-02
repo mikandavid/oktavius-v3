@@ -20,7 +20,7 @@ export function EmptyState({ title, description, action, compact, className }: E
         className,
       )}
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted/50 text-muted-foreground/60">
+      <div className="flex h-9 w-9 items-center justify-center rounded-control bg-muted/50 text-muted-foreground/60">
         <EmptyStateIcon size={16} />
       </div>
       <div className="space-y-1">

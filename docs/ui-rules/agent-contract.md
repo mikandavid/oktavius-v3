@@ -8,6 +8,22 @@ Rules for AI agents and developers generating ERP UI code.
 
 Read [`anti-patterns.md`](./anti-patterns.md) before writing any container or layout.
 Read [`ui-system.md`](./ui-system.md) before writing any component, page, or module.
+Read [`locked-components.md`](./locked-components.md) before styling third-party wrappers or sidebar/picker layouts.
+Read [`ux-principles.md`](./ux-principles.md) when choosing tabs, filters, nav exposure, or form/step structure.
+
+---
+
+## Locked components
+
+Some base-ui wrappers serve **one context only**. Styling is locked inside a purpose-built export — agents must not override with ad-hoc `classNames` or long `className` strips.
+
+| Need                       | Use                        | Never                         |
+| -------------------------- | -------------------------- | ----------------------------- |
+| Sidebar jump-to-date month | `CalendarMiniPicker`       | `<Calendar classNames={…}>`   |
+| Planner sidebar            | `CalendarSidebar`          | Custom sidebar + raw Calendar |
+| Sidebar filter rows        | `CalendarSidebarToggleRow` | Mixed Checkbox styles         |
+
+Full audit + rules: [`locked-components.md`](./locked-components.md). Run `pnpm test` after changing locked components.
 
 ---
 
@@ -44,6 +60,8 @@ Read [`ui-system.md`](./ui-system.md) before writing any component, page, or mod
 ❌ Manual Button spinners — use `<Button loading>`
 ❌ Field error text without invalid ring on the control (use FormField / EntityForm errors)
 ❌ valid / success ring on every non-empty input — only explicit confirmation
+❌ Raw `<Calendar classNames={…}>` in apps/web for sidebar / jump-to-date — use `CalendarMiniPicker`
+❌ Stripping Combobox trigger styles for toolbar filters — wait for `appearance="toolbar"` or document in FilterToolbar only
 ```
 
 ---
@@ -87,7 +105,25 @@ Loading: pass `isLoading` to `CrudMainView` or use `PageSkeleton` at page level 
   />
 </ModulePage>
 
-// Complex entity / workspace (sub-entities, timeline, parties)
+// Multi-section record (many sections, but not separate work modes)
+<ModulePage
+  title={entity.name}
+  icon={clientsPageIcon()}
+  backTo="/clients"
+  actions={…}
+  layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}
+>
+  <AppSectionNavLayout items={sectionNav} activeKey={activeSection} onSelect={setActiveSection}>
+    {activeSection === 'overview' && <DetailView title="Client details" fields={[…]} />}
+    {activeSection === 'contacts' && (
+      <SectionCard title="Contacts" actions={<Button size="sm" variant="outline">Add</Button>}>
+        {contacts.map((contact) => <ListRow key={contact.id} title={contact.name} subtitle={contact.role} />)}
+      </SectionCard>
+    )}
+  </AppSectionNavLayout>
+</ModulePage>
+
+// True workspace modes (sub-entities, timeline, parties)
 <ModulePage title={entity.name} icon={casesPageIcon()} backTo="/cases" actions={…}>
   <Tabs value={activeTab} onValueChange={setActiveTab}>
     <TabsList>
@@ -115,6 +151,8 @@ Loading: pass `isLoading` to `CrudMainView` or use `PageSkeleton` at page level 
   </Tabs>
 </ModulePage>
 ```
+
+Tabs are not the default for complex pages. Use top tabs only when users intentionally switch between peer work modes. If the page is one record with many sections, use `AppSectionNavLayout`; if users work through a queue, use `SplitView`; if the page is document-first, make preview the dominant surface.
 
 ### Create / Edit Page
 
@@ -172,7 +210,7 @@ Every module must follow this layout. No deviation.
 modules/[name]/
 ├── [Entity]ListPage.tsx      // CrudMainView — filter, sort, paginate, export
 ├── [Entity]CreatePage.tsx    // ModulePage + EntityForm
-├── [Entity]DetailPage.tsx    // ModulePage + DetailView or Tabs
+├── [Entity]DetailPage.tsx    // ModulePage + DetailView / section nav / SplitView / true workspace tabs
 └── shared.tsx                // columns, formFields, rowActions, defaultValues
 ```
 
@@ -183,7 +221,9 @@ Never define these inline in a page component.
 
 ## Design Tokens — CSS Variables
 
-All design dimensions are centralized in `apps/web/src/styles/globals.css` and extended in `tailwind.config.ts`. Change there, everything updates.
+All design dimensions live in `apps/web/src/styles/globals.css` and `tailwind.config.ts`. **Architecture, alias map, and playground:** [`design-tokens.md`](./design-tokens.md).
+
+Three-layer colors: **neutral ramp** (edit) → **semantic roles** (use in components) → **brand/state** (edit). Shell chrome uses `APP_SHELL_SURFACE_CLASS` (`bg-card`).
 
 ```css
 --radius-card: 0.75rem; /* rounded-card — surface containers */
@@ -192,6 +232,8 @@ All design dimensions are centralized in `apps/web/src/styles/globals.css` and e
 --shadow-card: none; /* cards are flat on the page wash */
 --shadow-elevated: … /* dialogs, popovers, dropdowns only */;
 ```
+
+Tune interactively at `/showcase → Design tokens`, then copy CSS into `globals.css`.
 
 ```tsx
 // ✅ Semantic radius
@@ -209,18 +251,21 @@ All design dimensions are centralized in `apps/web/src/styles/globals.css` and e
 
 ### Colors
 
-Always use semantic tokens. Reject any generation that uses raw Tailwind palette colors.
+Always use semantic tokens. Reject any generation that uses raw Tailwind palette colors or raw neutral ramp steps for layout.
 
 ```tsx
 // ✅ Required
-className = 'text-foreground bg-background border-border';
+className = 'text-foreground bg-card border-border';
 className = 'text-muted-foreground';
 className = 'text-destructive';
+className = APP_SHELL_SURFACE_CLASS; // nav, header, chat
 
 // ❌ Banned
 className = 'text-gray-700 bg-white border-gray-200';
 className = 'text-red-500';
 className = 'bg-blue-50 border-blue-200';
+className = 'bg-neutral-200'; // use bg-muted for fills
+className = 'bg-sidebar-background'; // use APP_SHELL_SURFACE_CLASS
 ```
 
 ### Typography
@@ -399,6 +444,12 @@ Run through this list. If any item fails, fix it before considering the task com
 16. Every `ModulePage` / `CrudMainView` passes `icon={*PageIcon()}`
 17. Every pressable control has hover + active/focus feedback (`cursor-pointer` is not sufficient alone)
 18. Async buttons use `Button loading`; form errors use `EntityForm errors` / `FormField error` with invalid ring on controls (see `interactive-states.md`)
+19. Detail pages: ≤6 tabs; Overview first; more domains → section-nav or fewer tabs (see `ux-principles.md`)
+20. Filter toolbar: ≤4 default filters; advanced filters behind toggle (see `filter-toolbar.md`, `ux-principles.md`)
+21. No custom app navigation — sidebar sections + `CommandPalette` only; trim modules via `OrgProfile.enabledModules`
+22. Sidebar month picker uses `CalendarMiniPicker`; see [`locked-components.md`](./locked-components.md)
+
+`pnpm lint` enforces tab/filter limits via `oktavius/max-detail-tabs-triggers` and `oktavius/max-list-filters` (see `apps/web/eslint-rules/ux-limits.mjs`). Run `pnpm test` when touching `packages/base-ui` locked components.
 
 ---
 

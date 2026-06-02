@@ -20,11 +20,31 @@ export function sanitizeIntegerInput(value: string): string {
 
 /** Digits, one decimal separator, optional leading minus. */
 export function sanitizeDecimalInput(value: string): string {
-  let sanitized = value.replace(/[^\d.,-]/g, '');
-  sanitized = sanitized.replace(/,/g, '.');
+  const negative = value.trim().startsWith('-');
+  let sanitized = value.replace(/[^\d.,]/g, '');
 
-  const negative = sanitized.startsWith('-');
-  sanitized = sanitized.replace(/-/g, '');
+  const lastDot = sanitized.lastIndexOf('.');
+  const lastComma = sanitized.lastIndexOf(',');
+  const decimalSeparator =
+    lastDot !== -1 && lastComma !== -1 ? (lastDot > lastComma ? '.' : ',') : null;
+
+  if (decimalSeparator) {
+    const decimalIndex = sanitized.lastIndexOf(decimalSeparator);
+    const whole = sanitized.slice(0, decimalIndex).replace(/[.,]/g, '');
+    const fraction = sanitized.slice(decimalIndex + 1).replace(/[.,]/g, '');
+    sanitized = `${whole}.${fraction}`;
+  } else {
+    sanitized = sanitized.replace(/,/g, '.');
+
+    const dots = sanitized.match(/\./g)?.length ?? 0;
+    if (dots > 1) {
+      const groups = sanitized.split('.');
+      const looksLikeThousands = groups.slice(1).every((group) => group.length === 3);
+      sanitized = looksLikeThousands
+        ? groups.join('')
+        : `${groups.slice(0, -1).join('')}.${groups.at(-1) ?? ''}`;
+    }
+  }
 
   const dotIndex = sanitized.indexOf('.');
   if (dotIndex !== -1) {

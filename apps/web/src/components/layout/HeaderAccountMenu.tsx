@@ -13,7 +13,7 @@ import {
 
 import { useDemoData } from '@/app/demo-data';
 import { ChevronDownIcon, SettingsIcon, SignOutIcon, UserIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
 import {
   DesignMenuSection,
@@ -28,8 +28,7 @@ type HeaderAccountMenuProps = {
 
 export function HeaderAccountMenu({ compact = false, className }: HeaderAccountMenuProps) {
   const navigate = useNavigate();
-  const { users, getUserOrganizations, activeOrgId, organizations } = useDemoData();
-  const currentUser = users[0];
+  const { getUserOrganizations, activeOrgId, organizations, currentUser } = useDemoData();
 
   if (!currentUser) {
     return null;
@@ -42,7 +41,7 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
     userOrgs[0];
 
   const handleSignOut = () => {
-    toast.info('Signed out (demo)');
+    appToast.info('Signed out (demo)');
     navigate('/dashboard');
   };
 
@@ -56,7 +55,7 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
             compact ? 'w-9 justify-center px-0' : 'pl-1.5 pr-2',
             className,
           )}
-          aria-label="Open account menu"
+          aria-label={`Account menu, ${currentUser.name}`}
         >
           <Avatar
             label={currentUser.name}
@@ -76,19 +75,26 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-72">
-        <div className="px-2 py-2">
-          <div className="text-sm font-medium text-foreground">{currentUser.name}</div>
-          <div className="truncate text-xs text-muted-foreground">{currentUser.email}</div>
+        <DropdownMenuItem
+          onSelect={() => navigate('/profile')}
+          className="h-auto flex-col items-start gap-0.5 px-2 py-2 font-normal focus:bg-muted/50"
+        >
+          <span className="text-sm font-medium leading-tight text-foreground">
+            {currentUser.name}
+          </span>
+          <span className="w-full truncate text-xs leading-tight text-muted-foreground">
+            {currentUser.email}
+          </span>
           {activeOrg ? (
-            <div className="mt-1 truncate text-xs text-muted-foreground">
+            <span className="w-full truncate text-xs leading-tight text-muted-foreground/80">
               {activeOrg.name} · {activeOrg.environment}
-            </div>
+            </span>
           ) : (
-            <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+            <span className="text-xs leading-tight text-muted-foreground/80">
               {currentUser.role} · {currentUser.team}
-            </div>
+            </span>
           )}
-        </div>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 

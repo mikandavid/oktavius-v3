@@ -23,7 +23,6 @@ import { BackButton } from '@/components/common/BackButton';
 import { DetailView } from '@/components/common/DetailView';
 import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { OrgCustomRolesSection } from '@/components/admin/OrgCustomRolesSection';
-import { UserStatusBadge } from '@/components/admin/UserStatusBadge';
 import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
 import { CustomFieldsDetailSection } from '@/components/custom-fields';
 import { RelatedRecordsPanel } from '@/components/detail/RelatedRecordsPanel';
@@ -41,7 +40,8 @@ import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
 import { StorageFileLinkPickerDialog } from '@/components/storage/StorageFileLinkPickerDialog';
 import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import { CaseIcon, ProjectsIcon } from '@/lib/icons';
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
+import { USER_STATUS_VARIANT } from '@/modules/users/shared';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -99,7 +99,7 @@ export function DetailLayoutSection() {
             value={inlineValue}
             onSave={async (next) => {
               setInlineValue(next);
-              toast.success('Saved.');
+              appToast.success('Saved.');
             }}
           />
         </div>
@@ -108,7 +108,10 @@ export function DetailLayoutSection() {
       <ShowcaseBlock title="SplitView + queue" meta="Master-detail sidebar · ListRow variant=queue">
         <SplitView
           className="min-h-[280px] w-full rounded-card bg-card"
-          sidebarWidth="w-[min(100%,14rem)]"
+          persistKey="showcase-detail-layout-split"
+          defaultSidebarWidth={380}
+          minSidebarWidth={320}
+          maxSidebarWidth={680}
           sidebar={
             <ScrollArea className="h-full max-h-[280px]">
               <SplitViewQueue>
@@ -232,7 +235,7 @@ export function DetailLayoutSection() {
             activeAccountId={connectedAccountId}
             onSelectAccount={setConnectedAccountId}
             settingsLabel="Sync settings"
-            onOpenSettings={() => toast.info('Open calendar sync settings — demo.')}
+            onOpenSettings={() => appToast.info('Open calendar sync settings — demo.')}
           />
         </div>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -245,10 +248,9 @@ export function DetailLayoutSection() {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <UserStatusBadge status="active" />
-          <UserStatusBadge status="invited" />
-          <UserStatusBadge status="suspended" />
-          <UserStatusBadge status="inactive" />
+          {(['Active', 'Pending', 'Suspended'] as const).map((status) => (
+            <StatusBadge key={status} status={status} variantMap={USER_STATUS_VARIANT} />
+          ))}
         </div>
         <div className="mt-4">
           <OrgCustomRolesSection
@@ -306,7 +308,7 @@ export function DetailLayoutSection() {
             entityId="cli_1001"
             linkedNodeIds={['stor_1']}
             onLinked={() => {
-              toast.success('Files linked from storage library.');
+              appToast.success('Files linked from storage library.');
             }}
           />
           <EntityStoragePanel entityType="client" entityId="cli_1001" />

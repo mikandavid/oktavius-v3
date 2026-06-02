@@ -59,11 +59,11 @@ import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 
 ## When to use
 
-| Use section nav                                               | Use instead                                    |
-| ------------------------------------------------------------- | ---------------------------------------------- |
-| Settings / admin config with 3+ categories                    | Tabs when ≤4 flat sections on a detail record  |
-| Record detail with many sections (profile, compliance, docs…) | `<Tabs>` for simpler entities (clients, cases) |
-| Component showcase / long categorized pages                   | `<DetailView>` for single-screen records       |
+| Use section nav                                               | Use instead                                                 |
+| ------------------------------------------------------------- | ----------------------------------------------------------- |
+| Settings / admin config with 3+ categories                    | `DetailView` when the record is short enough for one scroll |
+| Record detail with many sections (profile, compliance, docs…) | Top tabs only when sections are peer work modes             |
+| Component showcase / long categorized pages                   | `<DetailView>` for single-screen records                    |
 
 ## App sidebar preference
 

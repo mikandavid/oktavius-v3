@@ -100,14 +100,14 @@ Common aliases: `PlusIcon` `EditIcon` `DeleteIcon` `BackIcon` `SearchIcon` `More
 ### Page Structure
 
 | Need                                 | Component                                                                  | Import                                                                                                                               |
-| ------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------- | -------------- | ----------------------------- |
+| ------------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Full page with header + content      | `<ModulePage>`                                                             | `@/components/common/PageLayout` — **always** pass `icon` (`*PageIcon()` from `@/lib/modulePageIcons`)                               |
 | List page (CRUD)                     | `<CrudMainView>`                                                           | Same header — pass `icon={clientsPageIcon()}` etc. from module `shared.tsx`                                                          |
 | Page back navigation                 | `<BackButton>`                                                             | `@/components/common/BackButton`                                                                                                     |
 | Record Edit / Delete (page header)   | `<IconEditButton>` `<IconDeleteButton>`                                    | `@/components/common/RecordIconButtons` — icon-only, `aria-label`, no visible text                                                   |
 | List header CTA / Export / secondary | `<PageHeaderExportButton>` `<PageHeaderCtaLink>` `<PageHeaderOutlineLink>` | `@/components/common/PageHeaderButtons` — all `size="sm"` (h-7); Export icon-only                                                    |
 | Read-only record detail              | `<DetailView>`                                                             | `@/components/common/DetailView`                                                                                                     |
-| Inline alert / tip / warning         | `<InfoBox tone="info                                                       | success                                                                                                                              | warning | destructive">` | `@/components/common/InfoBox` |
+| Inline alert / tip / warning         | `<InfoBox tone="info \| success \| warning \| destructive">`               | `@/components/common/InfoBox`                                                                                                        |
 | Empty list / zero state              | `<EmptyState>`                                                             | `@/components/common/EmptyState`                                                                                                     |
 | Destructive confirm                  | `<ConfirmActionDialog>`                                                    | `@/components/common/ConfirmActionDialog`                                                                                            |
 | Sub-entity add/edit dialog           | `<SubEntityFormDialog>`                                                    | `@/components/common/SubEntityFormDialog` — Dialog + EntityForm `surface="dialog"`                                                   |
@@ -249,8 +249,8 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<ListRow title subtitle meta leading trailing variant onClick>` | Item rows within a section (parties, tasks, events) — NOT a data table. `meta` = tier-6 IDs/timestamps                      |
 | `<InlineEmptyState text centered>`                               | Dashed-border "no items yet" inside a SectionCard                                                                           |
 | `<CollapsibleSection title badge actions>`                       | Long workspace forms, optional field groups                                                                                 |
-| `<Tabs>` `<TabsList>` `<TabsTrigger attention>` `<TabsContent>`  | Complex entity detail pages with multiple workspace sections                                                                |
-| `<SplitView sidebar sidebarWidth>`                               | Master-detail layout (list left, detail right) — always `w-full` on the split container                                     |
+| `<Tabs>` `<TabsList>` `<TabsTrigger attention>` `<TabsContent>`  | Detail workspaces with peer work modes; not the default for many ordinary sections                                          |
+| `<SplitView sidebar persistKey defaultSidebarWidth>`             | Resizable master-detail layout (list left, detail right) — always `w-full` on the split container                           |
 | `<SplitViewQueue>` + `ListRow variant="queue"`                   | Spaced sidebar queue (`gap-2 p-3`), not stacked `border-b` rows                                                             |
 | `<SettingsLayout items activeKey onSelect>`                      | Section nav + content panel (base-ui). In `apps/web` use `<AppSectionNavLayout>` — compacts app sidebar, independent scroll |
 | `<SettingsSection title description>`                            | Group of settings controls with heading                                                                                     |
@@ -260,7 +260,7 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 
 ### Master-detail (`SplitView`) pattern
 
-- **Container:** `<SplitView className="w-full min-h-[…]">` — fills module width; no extra outer border on the card (borderless surface rule).
+- **Container:** `<SplitView className="w-full min-h-[…]" persistKey="…" defaultSidebarWidth={400} minSidebarWidth={320}>` — fills module width; draggable separator; optional `localStorage` persistence. Width props are pixels, not percentages.
 - **Sidebar queue:** Wrap items in `<SplitViewQueue>` from `@/components/common/SplitViewQueue`. Each item is `<ListRow variant="queue" onClick={…}>` with `gap-2` between cards — never `divide-y` or `p-1` stacks of border-bottom rows.
 - **Selection:** `QUEUE_ITEM_SELECTED_CLASS` — muted background only; no ring or left accent bar.
 - **Detail header:** Title + meta line; **status/severity badges below meta**, not in a top-right `actions` cluster (same rule as `ModulePage` headers).
@@ -302,16 +302,18 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 
 ### Calendar / Planning (base-ui)
 
-| Component                | When to use                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------- |
-| `<CalendarView>`         | **Primary planner** — Day / Week / Month / Schedule with toolbar, colors, time grid, legend |
-| `<CalendarViewSwitcher>` | Standalone view toggle (embedded in CalendarView toolbar by default)                        |
-| `<CalendarTimeGrid>`     | Week or day time-slot grid (used internally; standalone if needed)                          |
-| `<CalendarSourceLegend>` | Sidebar calendar list with visibility toggles + color dots                                  |
-| `<SchedulerView>`        | Standalone week grid only — prefer `CalendarView view="week"`                               |
-| `<AgendaList>`           | Standalone schedule list — prefer `CalendarView view="agenda"`                              |
-| `<ResourceCalendar>`     | Staff / room columns by time                                                                |
-| `<DateRangePicker>`      | Event start + end date pair in forms                                                        |
+| Component                | When to use                                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `<CalendarView>`         | **Primary planner** — Day / Week / Month / Schedule with toolbar, colors, time grid, sidebar                         |
+| `<CalendarSidebar>`      | Left panel — team filters, calendar legend, jump-to-date (via `CalendarView showSidebar`)                            |
+| `<CalendarMiniPicker>`   | **Compact month grid** — sidebar jump-to-date; styling locked — see [`locked-components.md`](./locked-components.md) |
+| `<CalendarViewSwitcher>` | Standalone view toggle (embedded in CalendarView toolbar by default)                                                 |
+| `<CalendarTimeGrid>`     | Week or day time-slot grid (used internally; standalone if needed)                                                   |
+| `<CalendarSourceLegend>` | Sidebar calendar list with visibility toggles + color dots                                                           |
+| `<SchedulerView>`        | Standalone week grid only — prefer `CalendarView view="week"`                                                        |
+| `<AgendaList>`           | Standalone schedule list — prefer `CalendarView view="agenda"`                                                       |
+| `<ResourceCalendar>`     | Staff / room columns by time                                                                                         |
+| `<DateRangePicker>`      | Event start + end date pair in forms                                                                                 |
 
 Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use `calendarId` + source colors (Google-style solid fills). Week starts Monday. See [`calendar-components.md`](./calendar-components.md).
 
@@ -322,7 +324,7 @@ Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use 
 | ⌘K / header search       | `CommandPaletteProvider` + `useCommandPalette`                                    | `@/components/command/CommandPalette`                                         |
 | Org switcher             | `<OrganizationMenuSection>`                                                       | Inside profile dropdown (`HeaderAccountMenu`) — not a separate header control |
 | Notifications            | `<NotificationPanel>`                                                             | Header popover with `ListRow` items                                           |
-| Bulk CSV import          | `<BulkImportWizard>` / `<BulkImportTrigger>` / `<BulkImportDialog>`               | List page header — e.g. `/clients`, `/products`                               |
+| Bulk CSV import          | `<BulkImportWizard>` / `<BulkImportTrigger>`                                      | List page header — e.g. `/clients`, `/products`                               |
 | Active location          | `<ActiveLocationPicker>` `<ActiveLocationInfoButton>` `<LocationSitesDetailList>` | Header + settings; requires `ActiveLocationProvider`                          |
 | Calendar sync accounts   | `<ConnectedAccountsHeaderMenu>`                                                   | Header — connected email/calendar account switcher                            |
 | Settings language        | `<LanguageSelector>`                                                              | Settings general section (also in account menu via `LanguageMenuSection`)     |
@@ -369,11 +371,10 @@ See [`agent-components.md`](./agent-components.md).
 | App loading state           | `<AppShellSpinner>`                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/layout/AppShellSpinner`                         |
 | Location picker             | `<ActiveLocationPicker>` `<ActiveLocationInfoButton>`                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/layout/` · wrap app in `ActiveLocationProvider` |
 | Shortcut help               | `<ShortcutHelpDialog>`                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `@/components/layout/ShortcutHelpDialog`                      |
-| Date/time pair field        | `<DateTimePairField>`                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/forms/DateTimePairField`                        |
 | Recipient combobox          | `<RecipientCombobox>`                                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/forms/RecipientCombobox`                        |
 | Page file drop zone         | `<PageFileDrop>`                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/forms/PageFileDrop`                             |
 | Role selector               | `<RoleSelector>`                                                                                                                                                                                                                                                                                                                                                                                                                                                            | `@/components/admin/RoleSelector`                             |
-| User status badge           | `<UserStatusBadge>`                                                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/admin/UserStatusBadge`                          |
+| User status badge           | `<StatusBadge>` + `USER_STATUS_VARIANT` from `modules/users/shared.tsx`                                                                                                                                                                                                                                                                                                                                                                                                     | `@/components/feedback/StatusBadge`                           |
 | Org custom roles            | `<OrgCustomRolesSection>`                                                                                                                                                                                                                                                                                                                                                                                                                                                   | `@/components/admin/OrgCustomRolesSection`                    |
 | Message types               | `AgentMessage`, `AgentCardPayload`, …                                                                                                                                                                                                                                                                                                                                                                                                                                       | `@/components/agent/types`                                    |
 | Links + mentions in text    | `<FormattedText>` (used inside `StructuredContent`)                                                                                                                                                                                                                                                                                                                                                                                                                         | `@/components/common/FormattedText`                           |
@@ -394,11 +395,13 @@ Optional env: `VITE_GOOGLE_MAPS_EMBED_API_KEY` for official Embed API directions
 
 ### Documents (apps/web)
 
-| Need                    | Component                | Import                                        |
-| ----------------------- | ------------------------ | --------------------------------------------- |
-| Standalone file preview | `<DocumentPreview>`      | `@/components/documents/DocumentPreview`      |
-| PDF-focused panel       | `<PdfPreviewPanel>`      | `@/components/documents/PdfPreviewPanel`      |
-| List + preview split    | `<DocumentPreviewPanel>` | `@/components/documents/DocumentPreviewPanel` |
+Shared helpers: `documentPreviewUtils.ts` (download, list-row → preview), `documentPreviewDemoData.ts` (demo queue only).
+
+| Need                    | Component                          | Import                                        |
+| ----------------------- | ---------------------------------- | --------------------------------------------- |
+| Standalone file preview | `<DocumentPreview>`                | `@/components/documents/DocumentPreview`      |
+| Toolbar + preview       | `<PdfPreviewPanel>`                | `@/components/documents/PdfPreviewPanel`      |
+| List + preview split    | `<DocumentPreviewPanel files={…}>` | `@/components/documents/DocumentPreviewPanel` |
 
 ### Pickers (apps/web)
 
@@ -425,14 +428,14 @@ Optional env: `VITE_GOOGLE_MAPS_EMBED_API_KEY` for official Embed API directions
 ### Toast
 
 ```ts
-// Import from @/lib/toast (re-exports sonner)
-import { toast } from '@/lib/toast';
+import { appToast } from '@/lib/toast';
 
-toast.success('Record saved.');
-toast.error('Failed to save.');
-toast.warning('Expires in 7 days.');
-toast.info('3 items selected.');
-toast.promise(asyncFn(), { loading: 'Saving…', success: 'Saved!', error: 'Failed.' });
+appToast.success('Record saved.');
+appToast.error('Failed to save.');
+appToast.warning('Expires in 7 days.');
+appToast.info('3 items selected.');
+appToast.fromApiError(error);
+appToast.promise(asyncFn(), { loading: 'Saving…', success: 'Saved!', error: 'Failed.' });
 ```
 
 Toaster is mounted in `AppLayout` — never add it yourself.
@@ -542,17 +545,17 @@ All radius and shadow values are centralized in `globals.css` as CSS variables. 
 
 Always use semantic classes. Never use `rounded-lg` on named surfaces — use `rounded-card`.
 
-| Surface                | Classes                                                                   |
-| ---------------------- | ------------------------------------------------------------------------- |
-| `Card`                 | `rounded-card bg-card` (no border)                                        |
-| `SectionCard`          | borderless: heading + `border-b border-border/50` rule + content          |
-| `StatCard`             | `rounded-card bg-card` (no border)                                        |
-| CrudMainView container | `rounded-card bg-card` (no border)                                        |
-| `SplitView`            | borderless outer; `border-r border-border/50` between sidebar/content     |
-| `SettingsRow`          | borderless; rows separated by `border-b border-border/50 last:border-b-0` |
-| `AttachmentList`       | `divide-y divide-border/50` (no per-row card)                             |
+| Surface                | Classes                                                                          |
+| ---------------------- | -------------------------------------------------------------------------------- |
+| `Card`                 | `rounded-card bg-card` (no border)                                               |
+| `SectionCard`          | borderless: heading + `border-b border-border/50` rule + content                 |
+| `StatCard`             | `rounded-card bg-card` (no border)                                               |
+| CrudMainView container | `rounded-card bg-card` (no border)                                               |
+| `SplitView`            | borderless outer; draggable separator with `border-border/50` line between panes |
+| `SettingsRow`          | borderless; rows separated by `border-b border-border/50 last:border-b-0`        |
+| `AttachmentList`       | `divide-y divide-border/50` (no per-row card)                                    |
 
-**Borderless surface rule.** Cards are pure white (`--card: 100%`) on a `bg-muted/40` page wash — separation comes from contrast, not from borders. Never re-add a `border` class to `Card`, `StatCard`, `SectionCard`, `CrudMainView` table container, or `SplitView` outer.
+**Borderless surface rule.** Cards are pure white tiles (`bg-card` → neutral ramp) on a `bg-muted/40` page wash — separation comes from contrast, not from borders. Never re-add a `border` class to `Card`, `StatCard`, `SectionCard`, `CrudMainView` table container, or `SplitView` outer.
 
 **No drop shadows on card surfaces.** `shadow-card` is set to `none`. Only floating/overlay elements use shadows: dropdowns, dialogs, popovers, tooltips, the token editor panel (`shadow-elevated`).
 
@@ -564,15 +567,15 @@ Always use semantic classes. Never use `rounded-lg` on named surfaces — use `r
 
 Elevation through brightness — the closer something is to the user (interactive surfaces), the whiter it is.
 
-| Layer                     | Token / color                        | Example                                                              |
-| ------------------------- | ------------------------------------ | -------------------------------------------------------------------- |
-| App page wash             | `bg-muted/40` over white body        | Main content area — only place a tint is applied                     |
-| Sidebar                   | `bg-sidebar-background` (100% white) | Nav rail — flush with cards                                          |
-| Cards / panels / surfaces | `bg-card` (100% white, no border)    | `Card`, `StatCard`, `CrudMainView` container                         |
-| Inline sections (no card) | no bg, no border                     | `SectionCard`, `CollapsibleSection`, `SettingsRow`, `AttachmentList` |
-| Interactive inputs        | `bg-muted/60` (filled gray)          | `Input`, `Select`, `Textarea`, `Combobox`, `NumberInput`             |
-| Hover state on inputs     | `bg-muted/80`                        | Hovered input controls                                               |
-| Hover / muted fills       | `bg-muted` (93%)                     | Button hover, item hover states                                      |
+| Layer                     | Token / color                         | Example                                                              |
+| ------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
+| App page wash             | `bg-muted/40`                         | Main content — only background tint                                  |
+| Shell chrome              | `APP_SHELL_SURFACE_CLASS` (`bg-card`) | Nav rail, header, agent chat — one surface                           |
+| Cards / panels / surfaces | `bg-card` (aliases `neutral-0`)       | `Card`, `StatCard`, `CrudMainView`                                   |
+| Inline sections (no card) | no bg, no border                      | `SectionCard`, `CollapsibleSection`, `SettingsRow`, `AttachmentList` |
+| Interactive inputs        | `bg-muted/60` (filled gray)           | `Input`, `Select`, `Textarea`, `Combobox`, `NumberInput`             |
+| Hover state on inputs     | `bg-muted/80`                         | Hovered input controls                                               |
+| Hover / muted fills       | `bg-muted` (93%)                      | Button hover, item hover states                                      |
 
 **Rules:**
 
@@ -625,8 +628,9 @@ Import `PAGE_HEADER_ACTIONS_ROW` or wrap groups in `<PageHeaderActions>` from `@
 ### Detail page patterns
 
 - **Simple entity** (users, contacts): `ModulePage` + `DetailView` — flat sections in one scroll. **Do not nest `DetailView` inside `Tabs`** (it wraps a `Card`; use `SectionCard` in tab content instead).
-- **Complex entity / workspace** (cases, projects, clients with sub-entities): `ModulePage` + `Tabs` — each tab contains one or more `SectionCard` components.
-- Within tabs, use `ListRow` for sub-entity lists (parties, tasks, attachments). Use `CrudTable` only for independently sortable/paginated datasets.
+- **Long or multi-section record** (profile, compliance, settings-like details): `ModulePage` + `AppSectionNavLayout` — section navigation keeps sections discoverable.
+- **Complex entity / workspace with peer modes** (cases, projects, clients with sub-entities): `ModulePage` + `Tabs` only when the tabs are true work modes — each tab contains one or more `SectionCard` components.
+- Within tabs or section-nav panels, use `ListRow` for sub-entity lists (parties, tasks, attachments). Use `CrudTable` only for independently sortable/paginated datasets.
 
 ### Inline empty state vs page empty state
 
@@ -681,23 +685,25 @@ For managing sub-entity lists (parties, tasks, checklist items) inside a detail 
 
 ### Colors — use semantic tokens only
 
-| Token                                         | Use                                      |
-| --------------------------------------------- | ---------------------------------------- |
-| `text-foreground`                             | Primary text                             |
-| `text-muted-foreground`                       | Secondary / meta                         |
-| `bg-background`                               | Card / surface background (white)        |
-| `bg-muted/60`                                 | Input fill (normal state)                |
-| `bg-muted/80`                                 | Input fill (hover state)                 |
-| `bg-muted` / `bg-muted/40`                    | Subtle page fills, item hover states     |
-| `border-border`                               | Default borders                          |
-| `border-border/70`                            | Section dividers                         |
-| `text-destructive`                            | Errors, delete                           |
-| `text-success` / `text-warning` / `text-info` | Status colors                            |
-| `bg-teal` / `bg-orange`                       | Calendar categories, chart series        |
-| `neutral-50` … `neutral-950`                  | Theme ramp — calendar gray, viz only     |
-| `bg-primary text-primary-foreground`          | Default button (near-black / near-white) |
-| `bg-cta text-cta-foreground`                  | CTA button (brand violet)                |
-| `bg-accent text-accent-foreground`            | Accent backgrounds (light violet tint)   |
+Full architecture: [`design-tokens.md`](./design-tokens.md).
+
+| Token                                         | Use                                                          |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| `text-foreground`                             | Primary text                                                 |
+| `text-muted-foreground`                       | Secondary / meta                                             |
+| `bg-card`                                     | White tile surface — aliases neutral ramp                    |
+| `bg-muted/60`                                 | Input fill (normal state)                                    |
+| `bg-muted/80`                                 | Input fill (hover state)                                     |
+| `bg-muted` / `bg-muted/40`                    | Hover fills; `/40` = page wash only                          |
+| `border-border`                               | Default borders — aliases neutral ramp                       |
+| `text-destructive`                            | Errors, delete                                               |
+| `text-success` / `text-warning` / `text-info` | Status colors                                                |
+| `bg-teal` / `bg-orange`                       | Calendar categories, chart series                            |
+| `neutral-0` … `neutral-950`                   | Gray ramp — source of truth; viz/calendar only in components |
+| `APP_SHELL_SURFACE_CLASS`                     | Shared nav / header / chat background                        |
+| `bg-primary text-primary-foreground`          | Default button (near-black / near-white)                     |
+| `bg-cta text-cta-foreground`                  | CTA button (brand violet)                                    |
+| `bg-accent text-accent-foreground`            | Accent backgrounds (light violet tint)                       |
 
 **Tone helper:** `getSemanticToneClasses(tone, variant)` from `@oktavius/base-ui` — used by Badge, AlertBanner, StatusDot, Timeline, InfoBox, calendar fills. Do not invent local tone maps.
 
@@ -711,7 +717,7 @@ Each ERP module in `apps/web/src/modules/<name>/`:
 clients/
 ├── ClientsListPage.tsx    # CrudMainView — filter, sort, paginate, export
 ├── ClientCreatePage.tsx   # ModulePage + EntityForm
-├── ClientDetailPage.tsx   # ModulePage + DetailView or Tabs + action buttons
+├── ClientDetailPage.tsx   # ModulePage + DetailView / section nav / SplitView / true workspace tabs + action buttons
 └── shared.tsx             # columns (CrudColumn[]), formFields (FormField[]), header actions
 ```
 
@@ -719,7 +725,7 @@ clients/
 
 **Module page icon:** every `CrudMainView` and `ModulePage` must pass `icon`. Export `*PageIcon()` from `shared.tsx` (re-export from `@/lib/modulePageIcons`). User detail uses `userRecordPageIcon()` (`UserCircleIcon`); all other user routes use `usersPageIcon()`.
 
-**Detail page:** Simple records → `DetailView` with sections. Complex records → `Tabs` + `SectionCard` (never `DetailView` inside tabs). Never build custom field-row layouts.
+**Detail page:** Simple records → `DetailView` with sections. Many sections → `AppSectionNavLayout`. Queue workflows → `SplitView`. Peer workspace modes → `Tabs` + `SectionCard` (never `DetailView` inside tabs). Never build custom field-row layouts.
 
 **Form page:** All fields go through `EntityForm`. Group logically via `section`. Boolean fields (checkbox/switch) skip the outer `<Label>` — label is inline with the control.
 
@@ -741,74 +747,74 @@ Key routes: `/dashboard` `/showcase` `/users` `/users/new` `/users/:id` `/client
 
 ## Do / Don't
 
-| ✅ Do                                                                                                                    | ❌ Don't                                                                                            |
-| ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Import icons from `@/lib/icons`                                                                                          | Import from `@phosphor-icons/react` directly                                                        |
-| Use `CrudTable` / `CrudMainView` for all data grids                                                                      | Build custom `<table>` layouts                                                                      |
-| Keep `FilterToolbar` on one line — search + filters scale with `flex-nowrap`                                             | Stack search and filter dropdowns vertically or use multi-row filter grids                          |
-| Keep list tables inside the card (`max-w-full`, `columnStretch="all"`)                                                   | Tables wider than the workspace / horizontal page scroll                                            |
-| Use `EntityForm` with field registry                                                                                     | Build one-off form layouts                                                                          |
-| Use `DatePicker` with `mode` prop                                                                                        | Use `<input type="date">` natively                                                                  |
-| Use `Combobox` for **every** single-select dropdown (forms, filters, settings)                                           | `Select` / `<select>` / Radix select in app code                                                    |
-| Use `MultiSelect` for multiple choice                                                                                    | Multiple checkboxes scattered in form                                                               |
-| Use `TagsInput` for free-form arrays                                                                                     | Comma-separated text fields                                                                         |
-| Add `exportOptions` to `CrudMainView`                                                                                    | Wire export separately per module                                                                   |
-| Group form fields by `section`                                                                                           | Flat long single-section forms                                                                      |
-| Use semantic color tokens                                                                                                | Hard-code `text-gray-500`, `bg-white`                                                               |
-| Use `bg-muted/60` + `hover:bg-muted/80` on input surfaces                                                                | `border border-input bg-background` on inputs (retired)                                             |
-| Use `rounded-card` on all named surfaces (cards, list rows, panels)                                                      | `rounded-lg` on named surfaces                                                                      |
-| Use `variant="cta"` for page-header "New X" and dialog Save/Create                                                       | Use `variant="cta"` on full-page form submit (use `default`)                                        |
-| Use `variant="ghost"` for dialog Cancel / Back / dismiss actions                                                         | Use `outline` for Cancel in dialog footers                                                          |
-| Use `<EntityForm surface="dialog">` or `<DialogFormFooter>` inside Dialog — purple Save/Create                           | Hand-roll dialog footers with `variant="default"` on confirm                                        |
-| Pass `variant="destructive"` on `AlertDialogAction` / `ConfirmActionDialog` for deletes                                  | Use purple CTA on delete confirms                                                                   |
-| Use `variant="outline" size="sm"` for toolbar/filter reset buttons                                                       | Use default-size outline button next to compact controls                                            |
-| Use `StatusBadge` for all status rendering                                                                               | Inline ad-hoc badge per module                                                                      |
-| Use `ModulePage` for every route — always with `icon`                                                                    | Custom page shells or header rows without module icon                                               |
-| Put status / priority / stage tags in `subtitle`, not in `actions`                                                       | Status badges in the top-right header slot                                                          |
-| Use `<IconEditButton>` / `<IconDeleteButton>` in page header `actions`                                                   | Visible “Edit” / “Delete” text on header buttons                                                    |
-| Use `PageHeaderButtons` for list header actions (all h-7); Export icon-first                                             | Labeled Export or `size="default"`/`lg` in page header                                              |
-| Use `variant="cta"` for list-page “New X” in `CrudMainView` `headerActions`                                              | Status chips or icon Edit/Delete in list header actions                                             |
-| Use `SectionCard` for detail page content sections                                                                       | Nest `<Card>` inside page `<Card>`                                                                  |
-| Use `ListRow` for sub-entity item lists                                                                                  | Build custom bordered div rows per module                                                           |
-| Use `InlineEmptyState` inside `SectionCard`                                                                              | Custom "no items" paragraph styling                                                                 |
-| Use `CollapsibleSection` for long/optional field groups                                                                  | Always-expanded long forms                                                                          |
-| Use `Tabs` for complex entity workspace pages                                                                            | Multiple stacked accordion-style cards                                                              |
-| Use `border-border/60` for section card borders                                                                          | `border-border` (too heavy) or `border-gray-*`                                                      |
-| Use `StatCard` for all KPI / metric displays                                                                             | Custom div per module                                                                               |
-| Use `Timeline` for audit trail and activity                                                                              | Custom list markup per module                                                                       |
-| Use `toast` from `@/lib/toast` for action feedback                                                                       | `alert()`, inline banners for transient messages                                                    |
-| Use `StepperLayout` for multi-step creation flows                                                                        | Accordion or tab abuse for wizards                                                                  |
-| Use `SplitView` + `SplitViewQueue` + `ListRow variant="queue"` for master-detail sidebars                                | `divide-y` or tight `p-1` stacks in split sidebars                                                  |
-| Put severity/status badges under detail title/meta in split panels                                                       | Badges in top-right of split detail header                                                          |
-| Use `Tabs` for master-detail queue filters (Open/All)                                                                    | Loose filter `Button` groups above splits                                                           |
-| Use `SettingsLayout` + `SettingsRow` for settings pages                                                                  | Custom settings layout per module                                                                   |
-| Use `InlineEdit` for click-to-edit in detail views                                                                       | Full form modal for single-field edits                                                              |
-| Use `relation` field type for entity pickers                                                                             | Custom combobox wiring per form                                                                     |
-| Use `file` field type for document attachment                                                                            | Raw `<input type="file">` per module                                                                |
-| Use `Dialog` for form modals + large confirms                                                                            | `window.confirm()` or custom overlay                                                                |
-| Use `Tooltip` on all icon-only buttons                                                                                   | `title` attribute                                                                                   |
-| Use `Avatar` / `RecordVisual` with icon fallbacks for people and entities                                                | Ad-hoc `rounded-full bg-muted` divs or letter initials per module                                   |
-| Use `StatusDot` / `StatusDotLabel` for inline status                                                                     | Inline colored spans per module                                                                     |
-| Use `CountBadge` beside section titles and tab triggers                                                                  | Raw `<Badge>{count}</Badge>` per module                                                             |
-| Use `CopyButton` for clipboard actions                                                                                   | Custom copy logic per module                                                                        |
-| Use `ConfirmPopover` for row-level destructive actions                                                                   | `ConfirmActionDialog` for inline deletes                                                            |
-| Use `DateRangePicker` for start+end date fields                                                                          | Two unconnected DatePicker instances                                                                |
-| Use `ScrollArea` for bounded-height panels                                                                               | `overflow-y-auto` without styled scrollbar                                                          |
-| Use `NumberInput` for numeric fields needing thousands formatting                                                        | `<Input type="number">` for display-formatted amounts or integer counts                             |
-| Filter keystrokes in specialized fields (phone, postal, email, url)                                                      | Accept any characters and validate only on submit                                                   |
-| Use `MoneyText` for all currency display                                                                                 | Ad-hoc `Intl.NumberFormat` calls per component                                                      |
-| Use `formatDisplayDate` / `formatDisplayDateTime` from `@oktavius/base-ui` (or `@/lib/formatDate`) for all visible dates | `toLocaleDateString()`, `MMM d yyyy`, or per-module date helpers                                    |
-| Use `RelativeTime` for timestamps in feeds and detail views                                                              | Raw ISO or US date strings in UI                                                                    |
-| Use `AlertBanner` for page-top persistent notices                                                                        | `InfoBox` for site-wide banners                                                                     |
-| Use `AttachmentList` for all file attachment displays                                                                    | Custom file list markup per module                                                                  |
-| Use `PageSkeleton` / `DetailSkeleton` for page load states                                                               | Bare `<Skeleton>` lines scattered at page level                                                     |
-| Lead complex entity detail pages with an Overview tab (stats + timeline + party summary)                                 | Start directly on the first data tab                                                                |
-| Use `Dialog` + `EntityForm` for sub-entity add/edit (parties, tasks)                                                     | Inline editing rows or custom modal markup per module                                               |
-| Use `<ChecklistSection>` for tick-off checklists — done = strikethrough + muted label                                    | Checkbox-only done state or `StatusBadge` on checklist rows                                         |
-| Use `AgentMessageList` + result cards for agent structured output                                                        | Custom chat bubbles or nested cards per module                                                      |
-| Use `GoogleMapsPreview` inline on detail/route panels                                                                    | Dialog-only maps or raw Google URLs in iframes                                                      |
-| Use `GoogleMapsPreviewButton` in chat/compact rows; `extractGoogleMapsUrls` for link detection                           | Custom map modal markup per module                                                                  |
-| Use `DocumentPreview` / `PdfPreviewPanel` for file preview                                                               | Custom iframe/pdf viewers per module                                                                |
-| Use `MentionComposer` + `FormattedText` for @mentions                                                                    | Plain textarea with manual highlight styling                                                        |
-| Keep base-ui component APIs variant-based (`variant`, `size`, `tone`)                                                    | Add `*ClassName` / `triggerClassName` / `contentClassName` escape-hatch props to base-ui components |
-| Use `<TooltipProvider>` once (already in `AppLayout`)                                                                    | Add `<TooltipProvider>` inside individual components                                                |
+| ✅ Do                                                                                            | ❌ Don't                                                                                            |
+| ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Import icons from `@/lib/icons`                                                                  | Import from `@phosphor-icons/react` directly                                                        |
+| Use `CrudTable` / `CrudMainView` for all data grids                                              | Build custom `<table>` layouts                                                                      |
+| Keep `FilterToolbar` on one line — search + filters scale with `flex-nowrap`                     | Stack search and filter dropdowns vertically or use multi-row filter grids                          |
+| Keep list tables inside the card (`max-w-full`, `columnStretch="all"`)                           | Tables wider than the workspace / horizontal page scroll                                            |
+| Use `EntityForm` with field registry                                                             | Build one-off form layouts                                                                          |
+| Use `DatePicker` with `mode` prop                                                                | Use `<input type="date">` natively                                                                  |
+| Use `Combobox` for **every** single-select dropdown (forms, filters, settings)                   | `Select` / `<select>` / Radix select in app code                                                    |
+| Use `MultiSelect` for multiple choice                                                            | Multiple checkboxes scattered in form                                                               |
+| Use `TagsInput` for free-form arrays                                                             | Comma-separated text fields                                                                         |
+| Add `exportOptions` to `CrudMainView`                                                            | Wire export separately per module                                                                   |
+| Group form fields by `section`                                                                   | Flat long single-section forms                                                                      |
+| Use semantic color tokens                                                                        | Hard-code `text-gray-500`, `bg-white`                                                               |
+| Use `bg-muted/60` + `hover:bg-muted/80` on input surfaces                                        | `border border-input bg-background` on inputs (retired)                                             |
+| Use `rounded-card` on all named surfaces (cards, list rows, panels)                              | `rounded-lg` on named surfaces                                                                      |
+| Use `variant="cta"` for page-header "New X" and dialog Save/Create                               | Use `variant="cta"` on full-page form submit (use `default`)                                        |
+| Use `variant="ghost"` for dialog Cancel / Back / dismiss actions                                 | Use `outline` for Cancel in dialog footers                                                          |
+| Use `<EntityForm surface="dialog">` or `<DialogFormFooter>` inside Dialog — purple Save/Create   | Hand-roll dialog footers with `variant="default"` on confirm                                        |
+| Pass `variant="destructive"` on `AlertDialogAction` / `ConfirmActionDialog` for deletes          | Use purple CTA on delete confirms                                                                   |
+| Use `variant="outline" size="sm"` for toolbar/filter reset buttons                               | Use default-size outline button next to compact controls                                            |
+| Use `StatusBadge` for all status rendering                                                       | Inline ad-hoc badge per module                                                                      |
+| Use `ModulePage` for every route — always with `icon`                                            | Custom page shells or header rows without module icon                                               |
+| Put status / priority / stage tags in `subtitle`, not in `actions`                               | Status badges in the top-right header slot                                                          |
+| Use `<IconEditButton>` / `<IconDeleteButton>` in page header `actions`                           | Visible “Edit” / “Delete” text on header buttons                                                    |
+| Use `PageHeaderButtons` for list header actions (all h-7); Export icon-first                     | Labeled Export or `size="default"`/`lg` in page header                                              |
+| Use `variant="cta"` for list-page “New X” in `CrudMainView` `headerActions`                      | Status chips or icon Edit/Delete in list header actions                                             |
+| Use `SectionCard` for detail page content sections                                               | Nest `<Card>` inside page `<Card>`                                                                  |
+| Use `ListRow` for sub-entity item lists                                                          | Build custom bordered div rows per module                                                           |
+| Use `InlineEmptyState` inside `SectionCard`                                                      | Custom "no items" paragraph styling                                                                 |
+| Use `CollapsibleSection` for long/optional field groups                                          | Always-expanded long forms                                                                          |
+| Use `Tabs` only for peer workspace modes                                                         | Use top tabs as the default shape for every generated detail page                                   |
+| Use `border-border/60` for section card borders                                                  | `border-border` (too heavy) or `border-gray-*`                                                      |
+| Use `StatCard` for all KPI / metric displays                                                     | Custom div per module                                                                               |
+| Use `Timeline` for audit trail and activity                                                      | Custom list markup per module                                                                       |
+| Use `appToast` from `@/lib/toast` for action feedback                                            | `alert()`, inline banners for transient messages                                                    |
+| Use `StepperLayout` for multi-step creation flows                                                | Accordion or tab abuse for wizards                                                                  |
+| Use `SplitView` + `SplitViewQueue` + `ListRow variant="queue"` for master-detail sidebars        | `divide-y` or tight `p-1` stacks in split sidebars                                                  |
+| Put severity/status badges under detail title/meta in split panels                               | Badges in top-right of split detail header                                                          |
+| Use `Tabs` for master-detail queue filters (Open/All)                                            | Loose filter `Button` groups above splits                                                           |
+| Use `SettingsLayout` + `SettingsRow` for settings pages                                          | Custom settings layout per module                                                                   |
+| Use `InlineEdit` for click-to-edit in detail views                                               | Full form modal for single-field edits                                                              |
+| Use `relation` field type for entity pickers                                                     | Custom combobox wiring per form                                                                     |
+| Use `file` field type for document attachment                                                    | Raw `<input type="file">` per module                                                                |
+| Use `Dialog` for form modals + large confirms                                                    | `window.confirm()` or custom overlay                                                                |
+| Use `Tooltip` on all icon-only buttons                                                           | `title` attribute                                                                                   |
+| Use `Avatar` / `RecordVisual` with icon fallbacks for people and entities                        | Ad-hoc `rounded-full bg-muted` divs or letter initials per module                                   |
+| Use `StatusDot` / `StatusDotLabel` for inline status                                             | Inline colored spans per module                                                                     |
+| Use `CountBadge` beside section titles and tab triggers                                          | Raw `<Badge>{count}</Badge>` per module                                                             |
+| Use `CopyButton` for clipboard actions                                                           | Custom copy logic per module                                                                        |
+| Use `ConfirmPopover` for row-level destructive actions                                           | `ConfirmActionDialog` for inline deletes                                                            |
+| Use `DateRangePicker` for start+end date fields                                                  | Two unconnected DatePicker instances                                                                |
+| Use `ScrollArea` for bounded-height panels                                                       | `overflow-y-auto` without styled scrollbar                                                          |
+| Use `NumberInput` for numeric fields needing thousands formatting                                | `<Input type="number">` for display-formatted amounts or integer counts                             |
+| Filter keystrokes in specialized fields (phone, postal, email, url)                              | Accept any characters and validate only on submit                                                   |
+| Use `MoneyText` for all currency display                                                         | Ad-hoc `Intl.NumberFormat` calls per component                                                      |
+| Use `formatDisplayDate` / `formatDisplayDateTime` from `@oktavius/base-ui` for all visible dates | `toLocaleDateString()`, `MMM d yyyy`, or per-module date helpers                                    |
+| Use `RelativeTime` for timestamps in feeds and detail views                                      | Raw ISO or US date strings in UI                                                                    |
+| Use `AlertBanner` for page-top persistent notices                                                | `InfoBox` for site-wide banners                                                                     |
+| Use `AttachmentList` for all file attachment displays                                            | Custom file list markup per module                                                                  |
+| Use `PageSkeleton` / `DetailSkeleton` for page load states                                       | Bare `<Skeleton>` lines scattered at page level                                                     |
+| Lead complex entity detail pages with an Overview tab (stats + timeline + party summary)         | Start directly on the first data tab                                                                |
+| Use `Dialog` + `EntityForm` for sub-entity add/edit (parties, tasks)                             | Inline editing rows or custom modal markup per module                                               |
+| Use `<ChecklistSection>` for tick-off checklists — done = strikethrough + muted label            | Checkbox-only done state or `StatusBadge` on checklist rows                                         |
+| Use `AgentMessageList` + result cards for agent structured output                                | Custom chat bubbles or nested cards per module                                                      |
+| Use `GoogleMapsPreview` inline on detail/route panels                                            | Dialog-only maps or raw Google URLs in iframes                                                      |
+| Use `GoogleMapsPreviewButton` in chat/compact rows; `extractGoogleMapsUrls` for link detection   | Custom map modal markup per module                                                                  |
+| Use `DocumentPreview` / `PdfPreviewPanel` for file preview                                       | Custom iframe/pdf viewers per module                                                                |
+| Use `MentionComposer` + `FormattedText` for @mentions                                            | Plain textarea with manual highlight styling                                                        |
+| Keep base-ui component APIs variant-based (`variant`, `size`, `tone`)                            | Add `*ClassName` / `triggerClassName` / `contentClassName` escape-hatch props to base-ui components |
+| Use `<TooltipProvider>` once (already in `AppLayout`)                                            | Add `<TooltipProvider>` inside individual components                                                |

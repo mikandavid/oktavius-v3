@@ -9,8 +9,10 @@ import type { FilterDef } from '@/components/data/FilterToolbar';
 import type { FormField } from '@/components/forms/EntityForm';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { ProductRecord } from '@/app/demo-data';
+import { getAppCreateActionForProfile } from '@/lib/appNavModules';
 import { PlusIcon } from '@/lib/icons';
 import { productsPageIcon } from '@/lib/modulePageIcons';
+import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
 
 export { productsPageIcon };
 
@@ -112,18 +114,28 @@ export const PRODUCT_SAVED_VIEWS: SavedViewPreset[] = [
 ];
 
 export function ProductsHeaderAction() {
+  const profile = useOrgProfile();
+  const action = getAppCreateActionForProfile(profile, 'products') ?? {
+    label: 'New product',
+    path: '/products/new',
+  };
+
   return (
-    <PageHeaderCtaLink to="/products/new">
+    <PageHeaderCtaLink to={action.path}>
       <PlusIcon size={14} />
-      New product
+      {action.label}
     </PageHeaderCtaLink>
   );
 }
 
-export function ProductsListHeaderActions() {
+export function ProductsListHeaderActions({
+  onImport,
+}: {
+  onImport?: (file: File) => Promise<number | void>;
+}) {
   return (
     <>
-      <BulkImportTrigger entityLabel="products" />
+      <BulkImportTrigger entityLabel="products" onImport={onImport} />
       <ProductsHeaderAction />
     </>
   );

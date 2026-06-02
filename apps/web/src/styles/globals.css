@@ -7,37 +7,8 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --cta: 0.595 0.1488 293.77;
-    --cta-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 93%;
-    --muted-foreground: 0 0% 40%;
-    --accent: 0.955 0.035 293.77;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 98%;
-    --warning: 32 95% 44%;
-    --warning-foreground: 0 0% 9%;
-    --info: 221 83% 53%;
-    --info-foreground: 0 0% 98%;
-    --teal: 173 58% 39%;
-    --teal-foreground: 0 0% 98%;
-    --orange: 24 95% 53%;
-    --orange-foreground: 0 0% 98%;
-    --highlight: 240 20% 97.5%;
-    --highlight-foreground: 0 0% 9%;
-    /* Neutral ramp — theme-aware surface scale; prefer semantic roles (muted, border) in UI */
+    /* Neutral ramp — single source of truth for gray surfaces, text, and borders */
+    --neutral-0: 0 0% 100%;
     --neutral-50: 0 0% 98%;
     --neutral-100: 0 0% 96%;
     --neutral-200: 0 0% 93%;
@@ -49,8 +20,40 @@
     --neutral-800: 0 0% 15%;
     --neutral-900: 0 0% 9%;
     --neutral-950: 0 0% 4%;
-    --border: 0 0% 88%;
-    --input: 0 0% 85%;
+
+    /* Semantic surfaces — aliases into the neutral ramp (use roles in components, not raw steps) */
+    --background: var(--neutral-50);
+    --foreground: var(--neutral-950);
+    --card: var(--neutral-0);
+    --card-foreground: var(--neutral-950);
+    --popover: var(--neutral-0);
+    --popover-foreground: var(--neutral-950);
+    --primary: var(--neutral-900);
+    --primary-foreground: var(--neutral-50);
+    --secondary: var(--neutral-100);
+    --secondary-foreground: var(--neutral-950);
+    --muted: var(--neutral-200);
+    --muted-foreground: var(--neutral-600);
+    --highlight: 240 20% 97.5%;
+    --highlight-foreground: var(--neutral-950);
+    --border: var(--neutral-300);
+    --input: var(--neutral-300);
+    --cta: 0.595 0.1488 293.77;
+    --cta-foreground: 0 0% 98%;
+    --accent: 0.955 0.035 293.77;
+    --accent-foreground: var(--neutral-950);
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 98%;
+    --warning: 32 95% 44%;
+    --warning-foreground: var(--neutral-950);
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 98%;
+    --teal: 173 58% 39%;
+    --teal-foreground: 0 0% 98%;
+    --orange: 24 95% 53%;
+    --orange-foreground: 0 0% 98%;
     --ring: 0.595 0.1488 293.77;
     --radius: 0.875rem;
     --radius-card: 0.75rem;
@@ -60,13 +63,13 @@
     --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.04);
     --transition-base: 150ms;
     --transition-slow: 250ms;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 3.9%;
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--card-foreground);
     --sidebar-primary: 0.595 0.1488 293.77;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 0 0% 93.5%;
-    --sidebar-accent-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 85%;
+    --sidebar-accent: var(--neutral-200);
+    --sidebar-accent-foreground: var(--neutral-950);
+    --sidebar-border: var(--border);
     --sidebar-ring: 0.595 0.1488 293.77;
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Lora', ui-serif, Georgia, serif;
@@ -74,24 +77,38 @@
   }
 
   .dark {
-    --background: 240 6% 4%;
-    --foreground: 240 5% 93%;
-    --card: 240 5% 7%;
-    --card-foreground: 240 5% 93%;
-    --popover: 240 5% 9%;
-    --popover-foreground: 240 5% 93%;
-    --secondary: 240 4% 12%;
-    --secondary-foreground: 240 5% 93%;
-    --muted: 240 4% 10%;
-    --muted-foreground: 240 4% 55%;
+    /* Dark neutral ramp — 50 = deepest surface, 950 = primary text */
+    --neutral-0: 240 5% 9%;
+    --neutral-50: 240 6% 4%;
+    --neutral-100: 240 5% 7%;
+    --neutral-200: 240 5% 9%;
+    --neutral-300: 240 4% 10%;
+    --neutral-400: 240 4% 12%;
+    --neutral-500: 240 6% 14%;
+    --neutral-600: 240 5% 18%;
+    --neutral-700: 240 4% 38%;
+    --neutral-800: 240 4% 55%;
+    --neutral-900: 240 5% 86%;
+    --neutral-950: 240 5% 93%;
+
+    --background: var(--neutral-50);
+    --foreground: var(--neutral-950);
+    --card: var(--neutral-100);
+    --card-foreground: var(--neutral-950);
+    --popover: var(--neutral-200);
+    --popover-foreground: var(--neutral-950);
+    --primary: var(--neutral-900);
+    --primary-foreground: var(--neutral-50);
+    --secondary: var(--neutral-400);
+    --secondary-foreground: var(--neutral-950);
+    --muted: var(--neutral-300);
+    --muted-foreground: var(--neutral-800);
+    --highlight: var(--neutral-500);
+    --highlight-foreground: var(--neutral-950);
+    --border: var(--neutral-600);
+    --input: var(--neutral-600);
     --accent: 0.31 0.045 293.77;
-    --accent-foreground: 240 5% 93%;
-    --highlight: 240 6% 14%;
-    --highlight-foreground: 240 5% 93%;
-    --border: 240 5% 18%;
-    --input: 240 5% 16%;
-    --primary: 0 0% 92%;
-    --primary-foreground: 240 8% 8%;
+    --accent-foreground: var(--neutral-950);
     --cta: 0.595 0.1488 293.77;
     --cta-foreground: 0 0% 98%;
     --destructive: 0 62% 56%;
@@ -99,33 +116,22 @@
     --success: 142 52% 50%;
     --success-foreground: 0 0% 98%;
     --warning: 38 78% 54%;
-    --warning-foreground: 240 8% 8%;
+    --warning-foreground: var(--neutral-50);
     --info: 217 72% 60%;
     --info-foreground: 0 0% 98%;
     --teal: 173 42% 46%;
     --teal-foreground: 0 0% 98%;
     --orange: 24 78% 56%;
-    --orange-foreground: 240 8% 8%;
-    --neutral-50: 240 5% 93%;
-    --neutral-100: 240 5% 86%;
-    --neutral-200: 240 5% 18%;
-    --neutral-300: 240 5% 23%;
-    --neutral-400: 240 4% 38%;
-    --neutral-500: 240 4% 48%;
-    --neutral-600: 240 4% 58%;
-    --neutral-700: 240 4% 68%;
-    --neutral-800: 240 4% 78%;
-    --neutral-900: 240 5% 86%;
-    --neutral-950: 240 5% 93%;
+    --orange-foreground: var(--neutral-50);
     --ring: 0.595 0.1488 293.77;
     --shadow-elevated: 0 12px 40px -12px rgb(0 0 0 / 0.72), 0 0 0 1px hsl(240 5% 20% / 0.65);
-    --sidebar-background: 240 6% 5.5%;
-    --sidebar-foreground: 240 5% 91%;
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--card-foreground);
     --sidebar-primary: 0.595 0.1488 293.77;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 5% 11%;
-    --sidebar-accent-foreground: 240 5% 93%;
-    --sidebar-border: 240 5% 16%;
+    --sidebar-accent: var(--neutral-300);
+    --sidebar-accent-foreground: var(--neutral-950);
+    --sidebar-border: var(--border);
     --sidebar-ring: 0.595 0.1488 293.77;
     color-scheme: dark;
   }
@@ -177,6 +183,17 @@
   .crud-table-host .overflow-x-auto {
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Lytenyte defaults map panel fill to page wash — keep list grids white on bg-card shells */
+  .crud-table-host [data-ln-cell='true'],
+  .crud-table-host [data-ln-header-group='true'] {
+    background-color: hsl(var(--card));
+    color: hsl(var(--foreground));
+  }
+
+  .crud-table-host [data-ln-row='true'][data-ln-alternate='true'] [data-ln-cell='true'] {
+    background-color: hsl(var(--muted) / 0.18);
   }
 }
 

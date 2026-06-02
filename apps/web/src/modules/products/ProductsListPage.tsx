@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
-import { CrudMainView } from '@/components/data/CrudMainView';
-import { useListSavedViews } from '@/components/data/useListSavedViews';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { useDemoData } from '@/app/demo-data';
-import { useListPageState } from '@/lib/useListPageState';
+import {
+  StandardCrudListPage,
+  type StandardCrudListRequestParams,
+} from '@/components/data/StandardCrudListPage';
+import { useOrgNavPaths, useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
 
 import {
   PRODUCT_SAVED_VIEWS,
@@ -12,59 +15,49 @@ import {
   productFilters,
   productsPageIcon,
 } from './shared';
+import { importProductsFromFile } from './productImport';
 
 export function ProductsListPage() {
+  const api = useApiRegistry();
   const { products } = useDemoData();
-  const [rows, setRows] = useState(products);
-
-  useEffect(() => {
-    setRows(products);
-  }, [products]);
-
-  const list = useListPageState({
-    rows,
-    defaultSort: 'name',
-    filterKeys: ['status', 'category'],
-    searchKeys: ['sku', 'name', 'category', 'unit'],
-  });
-
-  const { toolbarTrailing } = useListSavedViews({
-    views: PRODUCT_SAVED_VIEWS,
-    filterKeys: ['status', 'category'],
-    onFilterChange: list.onFilterChange,
-    onReset: list.onReset,
-  });
+  const profile = useOrgProfile();
+  const nav = useOrgNavPaths();
+  const loadProducts = useCallback(
+    (params: StandardCrudListRequestParams) => api.products.list(params),
+    [api.products],
+  );
 
   return (
-    <CrudMainView
-      title="Products"
-      subtitle="Catalog items, pricing, and stock levels"
+    <StandardCrudListPage
+      title={profile.terminology.products}
+      subtitle={
+        profile.industryKey === 'funeral'
+          ? 'Leistungen, Särge, Urnen und Druck — aus Osiris-Seed'
+          : 'Catalog items and pricing'
+      }
       icon={productsPageIcon()}
-      headerActions={<ProductsListHeaderActions />}
-      toolbarTrailing={toolbarTrailing}
+      headerActions={
+        <ProductsListHeaderActions
+          onImport={(file) => importProductsFromFile(file, api.products)}
+        />
+      }
+      rows={products}
+      loadRows={loadProducts}
       columns={productColumns}
-      rows={list.paged}
-      sort={list.sort}
-      onSortChange={list.onSortChange}
-      search={list.search}
-      onSearchChange={list.onSearchChange}
-      searchPlaceholder="Search products"
       filters={productFilters}
-      values={list.values}
-      onFilterChange={list.onFilterChange}
-      onReset={list.onReset}
-      page={list.page}
-      pageSize={list.pageSize}
-      total={list.total}
-      totalPages={list.totalPages}
-      onPageChange={list.onPageChange}
+      savedViews={PRODUCT_SAVED_VIEWS}
+      defaultSort="name"
+      filterKeys={['status', 'category']}
+      searchKeys={['name', 'sku', 'category']}
+      searchPlaceholder="Search products"
       entityLabel="product"
-      getRowHref={(row) => `/products/${row.id}`}
-      onDeleteRows={(ids) => setRows((current) => current.filter((row) => !ids.includes(row.id)))}
-      exportOptions={{ fileName: 'products', label: 'Export' }}
-      allRows={list.filtered}
+      getRowHref={(row) => `${nav.products}/${row.id}`}
+      onDeleteRows={(ids) =>
+        Promise.all(ids.map((id) => api.products.delete(id))).then(() => undefined)
+      }
+      exportFileName="products"
       emptyTitle="No products found"
-      emptyDescription="Add a product or adjust your filters."
+      emptyDescription="Create a product or adjust your filters."
     />
   );
 }

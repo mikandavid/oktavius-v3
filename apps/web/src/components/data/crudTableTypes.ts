@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import type { PermissionRequirement } from '@/lib/permissions';
+
 import type { Breakpoint } from './gridUtils';
 
 export type ColumnType = 'text' | 'status' | 'date' | 'currency' | 'boolean' | 'badge';
@@ -17,6 +19,8 @@ export interface CrudColumn<T> {
   minWidth?: string | number;
   maxWidth?: string | number;
   truncate?: boolean;
+  /** Hide this generated/list column unless the active subject satisfies the requirement. */
+  permission?: PermissionRequirement;
   meta?: Record<string, unknown>;
 }
 
@@ -24,8 +28,10 @@ export interface CrudRowAction<T> {
   key: string;
   label: string;
   icon?: ReactNode;
-  onClick: (item: T) => void;
+  onClick: (item: T) => void | Promise<void>;
   destructive?: boolean;
+  /** Hide this custom row action unless the active subject satisfies the requirement. */
+  permission?: PermissionRequirement;
   hidden?: (item: T) => boolean;
   confirm?: {
     title: string;
@@ -38,8 +44,10 @@ export interface BulkAction {
   key: string;
   label: string;
   icon?: ReactNode;
-  onClick: (selectedIds: string[]) => void;
+  onClick: (selectedIds: string[]) => void | Promise<void>;
   destructive?: boolean;
+  /** Hide this custom bulk action unless the active subject satisfies the requirement. */
+  permission?: PermissionRequirement;
   minSelection?: number;
   maxSelection?: number;
   confirm?: {

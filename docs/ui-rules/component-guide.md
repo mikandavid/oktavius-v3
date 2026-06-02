@@ -13,11 +13,17 @@ exist here, it may not need to be built — check anti-patterns first.
 ```
 What am I building?
 │
-├── A page with multiple major topic areas (cases, projects, clients with sub-entities)
-│   └── ModulePage + Tabs → each tab contains SectionCard(s)
-│
-├── A simple entity detail page (users, contacts, basic records)
+├── A read-only or mostly-read entity detail page
 │   └── ModulePage + DetailView → flat sections in one scroll
+│
+├── A record with many sections the user scans in one pass
+│   └── ModulePage + AppSectionNavLayout → left section nav, content on the right
+│
+├── A queue or master-detail workflow
+│   └── ModulePage fillHeight + SplitView → list/queue left, active record right
+│
+├── A workspace with peer work modes users intentionally switch between
+│   └── ModulePage + Tabs → each tab contains SectionCard(s)
 │
 ├── A list of records
 │   └── ModulePage + CrudMainView (header + FilterToolbar + CrudTable + Pagination)
@@ -42,11 +48,23 @@ What am I building?
 
 ---
 
+## Page Anatomy Before Tabs
+
+Do not choose tabs just because a page has multiple areas. Pick the dominant workflow first:
+
+| Workflow                | Use                      | Why                                                            |
+| ----------------------- | ------------------------ | -------------------------------------------------------------- |
+| Read a record           | `DetailView`             | One scroll preserves context.                                  |
+| Scan many sections      | `AppSectionNavLayout`    | Section nav is better than hiding sections behind tabs.        |
+| Work through a queue    | `SplitView`              | Selection and detail stay visible together.                    |
+| Inspect documents/files | Preview-led split layout | The object being inspected is the main surface.                |
+| Switch peer modes       | `Tabs`                   | Modes are mutually exclusive and worth hiding from each other. |
+
 ## When to Use Tabs vs Stacked Sections
 
 **Use Tabs when:**
 
-- The entity has 3+ major domains of data (e.g. Overview, Parties, Documents, Settings)
+- The page has peer work modes (e.g. Overview, Activity, Files) rather than just many sections
 - Each domain has enough content to fill a screen on its own
 - Switching between domains is a common workflow step
 - The record is a workspace the user returns to repeatedly
@@ -63,6 +81,8 @@ What am I building?
 - 2 options (use a segmented control or just two SectionCards)
 - A choice between form and preview (use a toggle or inline mode)
 - Filter switching in a list (use FilterToolbar)
+- Hiding ordinary detail sections that should be scanned together
+- Making a generated page look organized when the actual workflow is unclear
 
 ---
 
@@ -227,11 +247,11 @@ What kind of feedback is this?
 
 ### Toast Rules
 
-- Use `toast.success` for completed actions (save, create, delete confirmed).
-- Use `toast.error` for failed server actions — also show error in form context if field-specific.
-- Use `toast.warning` for non-blocking warnings (expiry, capacity).
-- Use `toast.info` for neutral state changes (selection, mode switch).
-- Use `toast.promise` for async operations with loading/success/error states.
+- Use `appToast.success` for completed actions (save, create, delete confirmed).
+- Use `appToast.error` or `appToast.fromApiError` for failed server actions — also show error in form context if field-specific.
+- Use `appToast.warning` for non-blocking warnings (expiry, capacity).
+- Use `appToast.info` for neutral state changes (selection, mode switch).
+- Use `appToast.promise` for async operations with loading/success/error states.
 - Never use `alert()`. Never place a persistent toast for messages that belong in InfoBox.
 
 ---
@@ -242,7 +262,8 @@ What kind of feedback is this?
 What navigation element is this?
 │
 ├── Current location in a hierarchy → Breadcrumb (above page title on detail pages)
-├── Major sections within a detail workspace → Tabs + TabsList + TabsTrigger
+├── Peer work modes within a detail workspace → Tabs + TabsList + TabsTrigger
+├── Many sections within a record → AppSectionNavLayout
 ├── Settings categories → AppSectionNavLayout (section nav + content panel; compacts app sidebar)
 ├── Related entity quick-switch → SplitView sidebar
 └── Global module navigation → Sidebar (do not rebuild this per module)
