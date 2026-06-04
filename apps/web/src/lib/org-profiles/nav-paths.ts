@@ -5,10 +5,9 @@ export const KUNZ_NAV_PATHS: Partial<Record<OrgModuleId, string>> = {
   cases: '/funeral/cases',
   products: '/catalog',
   orders: '/sales',
-  documents: '/storage',
 };
 
-export const OSIRIS_FUNERAL_PATH_PREFIXES = ['/funeral', '/catalog', '/storage', '/sales'] as const;
+export const OSIRIS_FUNERAL_PATH_PREFIXES = ['/funeral', '/catalog', '/sales'] as const;
 
 export function isOsirisFuneralPath(pathname: string): boolean {
   return OSIRIS_FUNERAL_PATH_PREFIXES.some(

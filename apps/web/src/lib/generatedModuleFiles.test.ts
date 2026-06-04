@@ -286,7 +286,7 @@ describe('generated module file emitter', () => {
 
     expect(paths).toContain('src/generated/modules/clients/contract.ts');
     expect(paths).toContain('src/generated/modules/clients/routes.tsx');
-    expect(paths).toContain('src/generated/modules/superadmin/create-page.tsx');
+    expect(paths).toContain('src/generated/modules/users/create-page.tsx');
     expect(paths).toContain('src/generated/modules/orders/detail-page.tsx');
     expect(new Set(paths).size).toBe(paths.length);
   });
@@ -367,13 +367,10 @@ describe('generated module file emitter', () => {
         { cwd: process.cwd() },
       );
 
-      expect(stdout).toContain('Generated 10 module contract files.');
+      expect(stdout).toContain('Generated 9 module contract files.');
       await expect(
         readFile(join(rootDir, 'src/generated/modules/clients/contract.ts'), 'utf8'),
       ).resolves.toContain('GENERATED_CLIENTS_MODULE_CONTRACT');
-      await expect(
-        readFile(join(rootDir, 'src/generated/modules/superadmin/contract.ts'), 'utf8'),
-      ).resolves.toContain('GENERATED_SUPERADMIN_MODULE_CONTRACT');
     } finally {
       await rm(rootDir, { force: true, recursive: true });
     }
@@ -389,7 +386,7 @@ describe('generated module file emitter', () => {
         { cwd: process.cwd() },
       );
 
-      expect(stdout).toContain('Generated 49 module files.');
+      expect(stdout).toContain('Generated 44 module files.');
       await expect(
         readFile(join(rootDir, 'src/generated/modules/clients/routes.tsx'), 'utf8'),
       ).resolves.toContain('GENERATED_CLIENTS_ROUTES');

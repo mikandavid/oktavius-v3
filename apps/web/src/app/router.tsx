@@ -106,7 +106,6 @@ const AppNotFoundPage = lazyPage(
 const AIChatPage = lazyPage(() => import('@/modules/ai-chat/AIChatPage'), 'AIChatPage');
 const CalendarPage = lazyPage(() => import('@/modules/calendar/CalendarPage'), 'CalendarPage');
 const DashboardPage = lazyPage(() => import('@/modules/dashboard/DashboardPage'), 'DashboardPage');
-const DocumentsPage = lazyPage(() => import('@/modules/documents/DocumentsPage'), 'DocumentsPage');
 const EmailPage = lazyPage(() => import('@/modules/email/EmailPage'), 'EmailPage');
 const ProfilePage = lazyPage(() => import('@/modules/profile/ProfilePage'), 'ProfilePage');
 const ReportsPage = lazyPage(() => import('@/modules/reports/ReportsPage'), 'ReportsPage');
@@ -150,11 +149,9 @@ const appRouter = createBrowserRouter([
           },
           { path: '/profile', element: pageElement(ProfilePage) },
           { path: '/settings', element: protectedPageElement('settings', SettingsPage) },
-          { path: '/documents', element: pageElement(DocumentsPage) },
           { path: '/email', element: pageElement(EmailPage) },
           { path: '/calendar', element: pageElement(CalendarPage) },
           { path: '/access-denied', element: pageElement(AccessDeniedPage) },
-          { path: '/storage', element: pageElement(DocumentsPage) },
           { path: '*', element: pageElement(AppNotFoundPage) },
         ],
       },

@@ -18,14 +18,11 @@ import {
   ReportsIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
-  SuperadminIcon,
   TeamIcon,
   UserCircleIcon,
   UsersIcon,
   CalendarIcon,
-  DocumentIcon,
   EmailIcon,
-  TasksIcon,
   type IconProps,
 } from '@/lib/icons';
 
@@ -47,15 +44,12 @@ export const usersPageIcon = () => modulePageIcon(UsersIcon);
 export const userRecordPageIcon = () => modulePageIcon(UserCircleIcon);
 export const reportsPageIcon = () => modulePageIcon(ReportsIcon);
 export const settingsPageIcon = () => modulePageIcon(SettingsIcon);
-export const superadminPageIcon = () => modulePageIcon(SuperadminIcon);
 export const organizationPageIcon = () => modulePageIcon(OrganizationIcon);
 export const showcasePageIcon = () => modulePageIcon(SlidersHorizontalIcon);
 export const accessDeniedPageIcon = () => modulePageIcon(LockIcon);
 export const notFoundPageIcon = () => modulePageIcon(WarningIcon);
-export const documentsPageIcon = () => modulePageIcon(DocumentIcon);
 export const emailPageIcon = () => modulePageIcon(EmailIcon);
 export const calendarPageIcon = () => modulePageIcon(CalendarIcon);
-export const tasksPageIcon = () => modulePageIcon(TasksIcon);
 export const contactsPageIcon = () => modulePageIcon(UserCircleIcon);
 export const vendorsPageIcon = () => modulePageIcon(OrganizationIcon);
 export const leadsPageIcon = () => modulePageIcon(FunnelIcon);
