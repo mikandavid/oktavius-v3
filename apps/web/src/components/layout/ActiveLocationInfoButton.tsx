@@ -25,6 +25,7 @@ import {
 import { GlobeIcon, LocationIcon } from '@/lib/icons';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import type { LocationDetailItem } from '@/lib/locations/types';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(
@@ -39,6 +40,29 @@ function useIsMobile(breakpoint = 768) {
   }, [breakpoint]);
 
   return isMobile;
+}
+
+function osirisSiteToLocationDetail(site: {
+  id: string;
+  name: string;
+  isActive?: boolean;
+}): LocationDetailItem {
+  return {
+    id: site.id,
+    name: site.name,
+    isActive: site.isActive ?? true,
+    branchCode: null,
+    designation: null,
+    locality: null,
+    category: null,
+    phone: null,
+    mobilePhone: null,
+    fax: null,
+    companyName: null,
+    email: null,
+    street: null,
+    postalCode: null,
+  };
 }
 
 function LocationSingleSitePanel({
@@ -142,7 +166,21 @@ export function ActiveLocationInfoButton({ className }: { className?: string }) 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
-  const { activeLocationId, viewAllLocations, locations } = useActiveLocation();
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const activeLocationState = useActiveLocation();
+  const locations = useMemo(
+    () =>
+      osirisRuntime
+        ? (osirisRuntime.locationAccess?.sites ?? []).map(osirisSiteToLocationDetail)
+        : activeLocationState.locations,
+    [activeLocationState.locations, osirisRuntime],
+  );
+  const activeLocationId = osirisRuntime
+    ? osirisRuntime.activeSiteId
+    : activeLocationState.activeLocationId;
+  const viewAllLocations = osirisRuntime
+    ? Boolean(osirisRuntime.locationAccess?.canViewAllSites && !osirisRuntime.activeSiteId)
+    : activeLocationState.viewAllLocations;
 
   const selectedDetail = viewAllLocations
     ? null

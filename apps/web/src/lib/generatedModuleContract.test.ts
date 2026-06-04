@@ -47,7 +47,7 @@ describe('generated module contract validation', () => {
 
   it('requires installed generated modules to match the app nav manifest base path', () => {
     const violations = validate({
-      moduleId: 'documents',
+      moduleId: 'email',
       basePath: '/contacts',
     });
 

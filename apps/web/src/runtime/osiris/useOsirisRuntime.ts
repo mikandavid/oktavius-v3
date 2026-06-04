@@ -10,6 +10,10 @@ export type OsirisRuntimeContextValue = OsirisRuntimeState & {
 
 export const OsirisRuntimeContext = createContext<OsirisRuntimeContextValue | null>(null);
 
+export function useOptionalOsirisRuntime() {
+  return useContext(OsirisRuntimeContext);
+}
+
 export function useOsirisRuntime() {
   const context = useContext(OsirisRuntimeContext);
   if (!context) {

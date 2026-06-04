@@ -35,25 +35,14 @@ const FUNERAL_TERMINOLOGY: OrgTerminology = {
 const APEX_MODULES: OrgModuleId[] = [
   'dashboard',
   'ai-chat',
-  'documents',
   'email',
   'calendar',
-  'tasks',
   'reports',
   'settings',
   'showcase',
-  'superadmin',
 ];
 
-const KUNZ_MODULES: OrgModuleId[] = [
-  'dashboard',
-  'ai-chat',
-  'documents',
-  'email',
-  'calendar',
-  'tasks',
-  'settings',
-];
+const KUNZ_MODULES: OrgModuleId[] = ['dashboard', 'ai-chat', 'email', 'calendar', 'settings'];
 
 const KUNZ_LOCATIONS: LocationDetailItem[] = [
   {
@@ -223,8 +212,8 @@ export const ORG_PROFILES: Record<string, OrgProfile> = {
   },
 };
 
-export function getOrgProfile(orgId: string): OrgProfile {
-  return ORG_PROFILES[orgId] ?? ORG_PROFILES[ORG_APEX_ID];
+export function getOrgProfile(orgId: string | null | undefined): OrgProfile {
+  return orgId ? (ORG_PROFILES[orgId] ?? ORG_PROFILES[ORG_APEX_ID]) : ORG_PROFILES[ORG_APEX_ID];
 }
 
 export function isFuneralOrg(orgId: string): boolean {

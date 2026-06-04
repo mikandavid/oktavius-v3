@@ -7,7 +7,6 @@ import {
   DropdownMenuSubTrigger,
 } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -26,15 +25,24 @@ import {
 } from '@/lib/userPreferences';
 
 type OrganizationMenuSectionProps = {
-  userId: string;
+  activeOrgId: string | null;
+  organizations: readonly {
+    id: string;
+    name: string;
+    slug: string;
+  }[];
+  onSelectOrg?: (orgId: string) => void;
 };
 
-export function OrganizationMenuSection({ userId }: OrganizationMenuSectionProps) {
-  const { getUserOrganizations, activeOrgId, setActiveOrgId } = useDemoData();
-  const userOrgs = getUserOrganizations(userId);
-  const activeOrg = userOrgs.find((org) => org.id === activeOrgId) ?? userOrgs[0];
+export function OrganizationMenuSection({
+  activeOrgId,
+  onSelectOrg,
+  organizations,
+}: OrganizationMenuSectionProps) {
+  const activeOrg = organizations.find((org) => org.id === activeOrgId) ?? organizations[0];
+  const isReadOnly = !onSelectOrg;
 
-  if (userOrgs.length === 0) {
+  if (organizations.length === 0) {
     return null;
   }
 
@@ -44,20 +52,29 @@ export function OrganizationMenuSection({ userId }: OrganizationMenuSectionProps
       label="Organisation"
       hint={activeOrg?.name}
     >
-      {userOrgs.map((org) => {
+      {organizations.map((org) => {
         const isActive = org.id === activeOrg?.id;
         return (
           <DropdownMenuItem
             key={org.id}
             className="gap-2 py-2"
-            onSelect={() => setActiveOrgId(org.id)}
+            disabled={isReadOnly}
+            onSelect={(event) => {
+              if (isReadOnly) {
+                event.preventDefault();
+                return;
+              }
+              onSelectOrg(org.id);
+            }}
           >
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               {isActive ? <CheckIcon size={14} weight="bold" className="text-foreground" /> : null}
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm text-foreground">{org.name}</p>
-              <p className="text-xs text-muted-foreground">{org.environment}</p>
+              <p className="text-xs text-muted-foreground">
+                {isActive ? 'Active organization' : isReadOnly ? 'Switching unavailable' : org.slug}
+              </p>
             </div>
           </DropdownMenuItem>
         );

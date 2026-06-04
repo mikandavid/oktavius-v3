@@ -13,9 +13,9 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import { MouseTooltip, cn } from '@oktavius/base-ui';
 
+import { useDemoData } from '@/app/demo-data';
 import { CheckIcon, EditIcon, SortIcon, PanelLeftCloseIcon, PanelLeftIcon } from '@/lib/icons';
 
-import { useDemoData } from '@/app/demo-data';
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 import {
@@ -27,13 +27,16 @@ import {
   moduleLabelFor,
   visiblePathFor,
 } from '@/lib/appNavModules';
+import { getOrgProfile } from '@/lib/org-profiles/profiles';
 import type { OrgProfile } from '@/lib/org-profiles/types';
-import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
 import {
   canAccessAppNavItem,
   permissionSubjectFor,
   type PermissionSubject,
 } from '@/lib/permissions';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
+import { useUserPreferences } from '@/lib/userPreferences';
 
 import { useAppShellLayout } from './AppShellLayoutContext';
 import { BrandMark } from './BrandMark';
@@ -85,6 +88,20 @@ function buildVisibleAdminItems(profile: OrgProfile, subject: PermissionSubject)
     if (item.id === 'showcase' && !import.meta.env.DEV) return false;
     return isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject);
   });
+}
+
+function buildRuntimeOrgProfile(
+  activeOrganization: { id: string; name: string; slug: string } | undefined,
+): OrgProfile {
+  const fallback = getOrgProfile(activeOrganization?.id);
+  if (!activeOrganization || fallback.id === activeOrganization.id) return fallback;
+
+  return {
+    ...fallback,
+    id: activeOrganization.id,
+    slug: activeOrganization.slug,
+    name: activeOrganization.name,
+  };
 }
 
 function orderItems(items: AppNavModule[], preferredOrder: string[]) {
@@ -381,13 +398,20 @@ function SidebarContent({
 }: SidebarProps) {
   const { pathname } = useLocation();
   const { isSidebarCompact, toggleSidebarCollapsed } = useAppShellLayout();
-  const profile = useOrgProfile();
-  const { activeMembership, activeOrganization, currentUser } = useDemoData();
-  const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+  const { locale } = useUserPreferences();
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const demoData = useDemoData();
+  const activeOrgId = osirisRuntime?.activeOrgId ?? demoData.activeOrgId;
+  const organizations = osirisRuntime?.organizations ?? demoData.organizations;
+  const permissionSubject =
+    osirisRuntime?.permissionSubject ??
+    permissionSubjectFor(demoData.currentUser, demoData.activeMembership);
+  const activeOrganization = organizations.find((organization) => organization.id === activeOrgId);
+  const profile = useMemo(
+    () => getLocalizedOrgProfile(buildRuntimeOrgProfile(activeOrganization), locale),
+    [activeOrganization, locale],
   );
-  const brandTitle = profile.industryKey === 'funeral' ? activeOrganization.name : 'Oktavius ERP';
+  const brandTitle = activeOrganization?.name ?? 'Oktavius ERP';
   const visiblePrimaryItems = useMemo(
     () =>
       PRIMARY_NAV_ITEMS.map((item) => ({
@@ -534,18 +558,7 @@ function SidebarContent({
 
       <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
         <div>
-          {isExpanded ? (
-            <div className="mb-1.5 h-5 px-3">
-              <span
-                className={cn(
-                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
-                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-                )}
-              >
-                Main
-              </span>
-            </div>
-          ) : null}
+          <div className="mb-1.5 h-5 px-3" />
           <div className="space-y-0.5">
             {visiblePrimaryItems.map((item) => (
               <NavItemRow
@@ -559,17 +572,17 @@ function SidebarContent({
           </div>
         </div>
 
-        <div className={cn(isExpanded ? 'mt-4' : 'mt-2')}>
-          {isExpanded ? (
-            <div className="group/module-header mb-1.5 flex h-5 items-center justify-between px-3">
-              <span
-                className={cn(
-                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
-                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-                )}
-              >
-                Modules
-              </span>
+        <div className="mt-4">
+          <div className="group/module-header mb-1.5 flex h-5 items-center justify-between px-3">
+            <span
+              className={cn(
+                'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
+              )}
+            >
+              Modules
+            </span>
+            {isExpanded ? (
               <MouseTooltip content={isEditingModules ? 'Save order' : 'Edit order'}>
                 <button
                   type="button"
@@ -588,8 +601,8 @@ function SidebarContent({
                   )}
                 </button>
               </MouseTooltip>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
           <div className="space-y-0.5">
             {orderedModuleItems.map((item) => (
               <NavItemRow
@@ -610,19 +623,17 @@ function SidebarContent({
         </div>
 
         {visibleAdminItems.length > 0 ? (
-          <div className={cn(isExpanded ? 'mt-4' : 'mt-2')}>
-            {isExpanded ? (
-              <div className="mb-1.5 h-5 px-3">
-                <span
-                  className={cn(
-                    'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
-                    isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-                  )}
-                >
-                  Admin
-                </span>
-              </div>
-            ) : null}
+          <div className="mt-4">
+            <div className="mb-1.5 h-5 px-3">
+              <span
+                className={cn(
+                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
+                )}
+              >
+                Admin
+              </span>
+            </div>
             <div className="space-y-0.5">
               {visibleAdminItems.map((item) => (
                 <NavItemRow
