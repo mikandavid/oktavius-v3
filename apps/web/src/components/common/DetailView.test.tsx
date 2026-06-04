@@ -5,7 +5,7 @@ import { DetailView, type DetailFieldProps } from './DetailView';
 
 const demoData = vi.hoisted(() => ({
   currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'Member' as 'Member' | 'Admin' },
+  activeMembership: { role: 'member', permissions: [] as string[] },
 }));
 
 vi.mock('@/app/demo-data', () => ({
@@ -20,7 +20,7 @@ const fields: DetailFieldProps[] = [
 describe('DetailView permissioned fields', () => {
   beforeEach(() => {
     demoData.currentUser = { isSuperadmin: false };
-    demoData.activeMembership = { role: 'Member' };
+    demoData.activeMembership = { role: 'member', permissions: [] };
   });
 
   it('hides manager-only detail fields from member memberships', () => {
@@ -32,7 +32,7 @@ describe('DetailView permissioned fields', () => {
   });
 
   it('keeps manager-only detail fields for organization managers', () => {
-    demoData.activeMembership = { role: 'Admin' };
+    demoData.activeMembership = { role: 'admin', permissions: ['org.manage'] };
 
     const markup = renderToStaticMarkup(<DetailView title="Client" fields={fields} />);
 

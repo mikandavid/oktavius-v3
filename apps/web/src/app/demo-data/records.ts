@@ -35,6 +35,7 @@ export type OrgMembershipRecord = {
   orgId: string;
   userId: string;
   role: 'Owner' | 'Admin' | 'Member';
+  permissions: string[];
 };
 
 export type CaseType =

@@ -12,6 +12,7 @@ import {
 } from './permissions';
 
 function requirementName(requirement: PermissionRequirement) {
+  if (Array.isArray(requirement)) return requirement.join(',');
   return typeof requirement === 'function' ? 'custom' : requirement;
 }
 

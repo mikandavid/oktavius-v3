@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 
 import {
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -37,14 +35,7 @@ export function OrganizationMenuSection({ userId }: OrganizationMenuSectionProps
   const activeOrg = userOrgs.find((org) => org.id === activeOrgId) ?? userOrgs[0];
 
   if (userOrgs.length === 0) {
-    return (
-      <DropdownMenuItem asChild>
-        <Link to="/superadmin" className="gap-2 text-muted-foreground">
-          <OrganizationIcon size={14} />
-          Organisation
-        </Link>
-      </DropdownMenuItem>
-    );
+    return null;
   }
 
   return (
@@ -71,12 +62,6 @@ export function OrganizationMenuSection({ userId }: OrganizationMenuSectionProps
           </DropdownMenuItem>
         );
       })}
-      <DropdownMenuSeparator />
-      <DropdownMenuItem asChild>
-        <Link to="/superadmin" className="text-muted-foreground">
-          Manage organizations…
-        </Link>
-      </DropdownMenuItem>
     </AccountSubmenu>
   );
 }

@@ -29,7 +29,8 @@ describe('permissioned form fields', () => {
   it('hides manager-only fields from member memberships', () => {
     const permitted = filterPermittedFormFields(fields, {
       isSuperadmin: false,
-      orgRole: 'Member',
+      role: 'member',
+      permissions: [],
     });
 
     expect(permitted.map((field) => field.name)).toEqual(['name']);
@@ -38,7 +39,8 @@ describe('permissioned form fields', () => {
   it('keeps manager-only fields for organization managers', () => {
     const permitted = filterPermittedFormFields(fields, {
       isSuperadmin: false,
-      orgRole: 'Admin',
+      role: 'admin',
+      permissions: ['org.manage'],
     });
 
     expect(permitted.map((field) => field.name)).toEqual(['name', 'margin']);
@@ -48,7 +50,7 @@ describe('permissioned form fields', () => {
     const errors = validateFormFields(
       fields,
       { name: 'Apex', margin: '' },
-      { isSuperadmin: false, orgRole: 'Member' },
+      { isSuperadmin: false, role: 'member', permissions: [] },
     );
 
     expect(errors).toEqual({});

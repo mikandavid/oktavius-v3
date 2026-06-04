@@ -3487,19 +3487,64 @@ const INITIAL_ORGANIZATIONS: OrganizationRecord[] = [
   },
 ];
 
+const DEMO_MANAGER_PERMISSIONS = [
+  'org.manage',
+  'org.members.manage',
+  'records.delete',
+  'contacts.view',
+  'contacts.update',
+  'documents.view',
+  'email.view_own',
+  'calendar-v2.view',
+] as const;
+
+const DEMO_MEMBER_PERMISSIONS = [
+  'contacts.view',
+  'contacts.update',
+  'documents.view',
+  'email.view_own',
+  'calendar-v2.view',
+] as const;
+
+function demoPermissionsForRole(role: OrgMembershipRecord['role']) {
+  return [...(role === 'Member' ? DEMO_MEMBER_PERMISSIONS : DEMO_MANAGER_PERMISSIONS)];
+}
+
+function demoMembership(membership: Omit<OrgMembershipRecord, 'permissions'>): OrgMembershipRecord {
+  return {
+    ...membership,
+    permissions: demoPermissionsForRole(membership.role),
+  };
+}
+
 const INITIAL_ORG_MEMBERSHIPS: OrgMembershipRecord[] = [
-  { id: 'mbr_1', orgId: 'org_apex', userId: 'usr_1001', role: 'Owner' },
-  { id: 'mbr_2', orgId: 'org_demo', userId: 'usr_1001', role: 'Admin' },
-  { id: 'mbr_3', orgId: 'org_apex', userId: 'usr_1002', role: 'Admin' },
-  { id: 'mbr_4', orgId: 'org_west', userId: 'usr_1002', role: 'Member' },
-  { id: 'mbr_5', orgId: 'org_west', userId: 'usr_1003', role: 'Owner' },
-  { id: 'mbr_6', orgId: 'org_nordic', userId: 'usr_1002', role: 'Owner' },
-  { id: 'mbr_7', orgId: 'org_nordic', userId: 'usr_1003', role: 'Member' },
-  { id: 'mbr_8', orgId: 'org_alpine', userId: 'usr_1002', role: 'Owner' },
-  { id: 'mbr_kunz_1', orgId: ORG_KUNZ_ID, userId: 'usr_1001', role: 'Admin' },
-  { id: 'mbr_kunz_2', orgId: ORG_KUNZ_ID, userId: 'usr_kunz_owner', role: 'Owner' },
-  { id: 'mbr_kunz_3', orgId: ORG_KUNZ_ID, userId: 'usr_kunz_member1', role: 'Admin' },
-  { id: 'mbr_kunz_4', orgId: ORG_KUNZ_ID, userId: 'usr_kunz_member2', role: 'Member' },
+  demoMembership({ id: 'mbr_1', orgId: 'org_apex', userId: 'usr_1001', role: 'Owner' }),
+  demoMembership({ id: 'mbr_2', orgId: 'org_demo', userId: 'usr_1001', role: 'Admin' }),
+  demoMembership({ id: 'mbr_3', orgId: 'org_apex', userId: 'usr_1002', role: 'Admin' }),
+  demoMembership({ id: 'mbr_4', orgId: 'org_west', userId: 'usr_1002', role: 'Member' }),
+  demoMembership({ id: 'mbr_5', orgId: 'org_west', userId: 'usr_1003', role: 'Owner' }),
+  demoMembership({ id: 'mbr_6', orgId: 'org_nordic', userId: 'usr_1002', role: 'Owner' }),
+  demoMembership({ id: 'mbr_7', orgId: 'org_nordic', userId: 'usr_1003', role: 'Member' }),
+  demoMembership({ id: 'mbr_8', orgId: 'org_alpine', userId: 'usr_1002', role: 'Owner' }),
+  demoMembership({ id: 'mbr_kunz_1', orgId: ORG_KUNZ_ID, userId: 'usr_1001', role: 'Admin' }),
+  demoMembership({
+    id: 'mbr_kunz_2',
+    orgId: ORG_KUNZ_ID,
+    userId: 'usr_kunz_owner',
+    role: 'Owner',
+  }),
+  demoMembership({
+    id: 'mbr_kunz_3',
+    orgId: ORG_KUNZ_ID,
+    userId: 'usr_kunz_member1',
+    role: 'Admin',
+  }),
+  demoMembership({
+    id: 'mbr_kunz_4',
+    orgId: ORG_KUNZ_ID,
+    userId: 'usr_kunz_member2',
+    role: 'Member',
+  }),
 ];
 
 const INITIAL_USERS: UserRecord[] = [

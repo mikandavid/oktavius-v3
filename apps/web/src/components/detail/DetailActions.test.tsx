@@ -2,17 +2,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OrgMembershipRecord, UserRecord } from '@/app/demo-data';
-
 import { DetailActions, type DetailAction } from './DetailActions';
 import { DetailPageHeaderActions } from './DetailPageHeaderActions';
 
 const demoData = vi.hoisted<{
-  currentUser: Pick<UserRecord, 'isSuperadmin'>;
-  activeMembership: Pick<OrgMembershipRecord, 'role'>;
+  currentUser: { isSuperadmin: boolean };
+  activeMembership: { role: string; permissions: string[] };
 }>(() => ({
   currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'Member' },
+  activeMembership: { role: 'member', permissions: [] },
 }));
 
 vi.mock('@/app/demo-data', () => ({
@@ -27,7 +25,7 @@ const actions: DetailAction[] = [
 describe('DetailActions', () => {
   beforeEach(() => {
     demoData.currentUser = { isSuperadmin: false };
-    demoData.activeMembership = { role: 'Member' };
+    demoData.activeMembership = { role: 'member', permissions: [] };
   });
 
   it('hides manager-only custom actions from member memberships', () => {
@@ -38,7 +36,7 @@ describe('DetailActions', () => {
   });
 
   it('keeps manager-only custom actions for organization managers', () => {
-    demoData.activeMembership = { role: 'Admin' };
+    demoData.activeMembership = { role: 'admin', permissions: ['org.manage'] };
 
     const markup = renderToStaticMarkup(<DetailActions actions={actions} />);
 

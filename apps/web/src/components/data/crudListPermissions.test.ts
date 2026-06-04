@@ -26,7 +26,7 @@ describe('filterCrudListPermissions', () => {
       columns,
       rowActions,
       bulkActions,
-      subject: { isSuperadmin: false, orgRole: 'Member' },
+      subject: { isSuperadmin: false, role: 'member', permissions: [] },
     });
 
     expect(filtered.columns.map((column) => column.key)).toEqual(['name']);
@@ -39,7 +39,7 @@ describe('filterCrudListPermissions', () => {
       columns,
       rowActions,
       bulkActions,
-      subject: { isSuperadmin: false, orgRole: 'Admin' },
+      subject: { isSuperadmin: false, role: 'admin', permissions: ['org.manage'] },
     });
 
     expect(filtered.columns.map((column) => column.key)).toEqual(['name', 'margin']);

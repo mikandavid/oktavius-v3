@@ -9,7 +9,7 @@ import { buildStandardListCrudActions } from './standardListCrud';
 
 const demoData = vi.hoisted(() => ({
   currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'Admin' },
+  activeMembership: { role: 'admin', permissions: ['records.delete'] },
 }));
 
 vi.mock('@/app/demo-data', () => ({

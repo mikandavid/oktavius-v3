@@ -1,67 +1,71 @@
-import type { OrgMembershipRecord, UserRecord } from '@/app/demo-data';
+import {
+  canUseOsirisPermissionRequirement,
+  normalizeOsirisRole,
+} from '@/runtime/osiris/permissions';
+import type { OsirisPermissionRequirement, OsirisPermissionSubject } from '@/runtime/osiris/types';
 
 import type { AppNavModule } from './appNavModules';
 
-export type PermissionSubject = {
-  isSuperadmin?: boolean;
-  orgRole?: OrgMembershipRecord['role'] | null;
+export type PermissionSubject = OsirisPermissionSubject;
+export type PermissionRequirement = OsirisPermissionRequirement;
+
+type PermissionBearingNavModule = AppNavModule & {
+  permission?: PermissionRequirement;
 };
 
-export type PermissionRequirement =
-  | 'manageOrganization'
-  | 'deleteRecords'
-  | 'superadmin'
-  | ((subject: PermissionSubject) => boolean);
+function resolvePublicPermissionRequirement(
+  requirement: PermissionRequirement,
+): PermissionRequirement {
+  if (requirement === 'manageOrganization') return 'org.manage';
+  if (requirement === 'deleteRecords') return 'records.delete';
+
+  return requirement;
+}
 
 export function permissionSubjectFor(
-  user: Pick<UserRecord, 'isSuperadmin'>,
-  membership?: Pick<OrgMembershipRecord, 'role'> | null,
+  user: { isSuperadmin?: boolean; permissions?: readonly string[] },
+  membership?: { role?: string | null; permissions?: readonly string[] } | null,
 ): PermissionSubject {
   return {
     isSuperadmin: Boolean(user.isSuperadmin),
-    orgRole: membership?.role ?? null,
+    role: normalizeOsirisRole(membership?.role),
+    permissions: [...(membership?.permissions ?? user.permissions ?? [])],
   };
 }
 
 export function canManageOrganization(subject: PermissionSubject) {
-  return Boolean(
-    subject.isSuperadmin || subject.orgRole === 'Owner' || subject.orgRole === 'Admin',
-  );
+  return canUseOsirisPermissionRequirement(subject, 'org.manage');
 }
 
-export function canDeleteRecords(subject: PermissionSubject) {
-  return canManageOrganization(subject);
+export function canDeleteRecords(subject: PermissionSubject, permission = 'records.delete') {
+  return canUseOsirisPermissionRequirement(subject, permission);
 }
 
 export function canUsePermissionRequirement(
   subject: PermissionSubject,
   requirement?: PermissionRequirement,
 ) {
-  if (!requirement) return true;
-  if (typeof requirement === 'function') return requirement(subject);
-
-  if (requirement === 'manageOrganization') {
-    return canManageOrganization(subject);
-  }
-
-  if (requirement === 'deleteRecords') {
-    return canDeleteRecords(subject);
-  }
-
-  if (requirement === 'superadmin') {
-    return Boolean(subject.isSuperadmin);
-  }
-
-  return false;
+  return canUseOsirisPermissionRequirement(
+    subject,
+    requirement ? resolvePublicPermissionRequirement(requirement) : requirement,
+  );
 }
 
-export function canAccessAppNavItem(item: AppNavModule, subject: PermissionSubject) {
-  if (item.id === 'superadmin' || item.id === 'showcase') {
-    return Boolean(subject.isSuperadmin);
+export function canAccessAppNavItem(item: PermissionBearingNavModule, subject: PermissionSubject) {
+  if (item.id === 'showcase') {
+    return subject.isSuperadmin;
   }
 
-  if (item.section === 'admin' || item.id === 'users') {
-    return canManageOrganization(subject);
+  if (item.id === 'settings') {
+    return canUsePermissionRequirement(subject, 'org.manage');
+  }
+
+  if (item.id === 'users') {
+    return canUsePermissionRequirement(subject, 'org.members.manage');
+  }
+
+  if (item.permission) {
+    return canUsePermissionRequirement(subject, item.permission);
   }
 
   return true;

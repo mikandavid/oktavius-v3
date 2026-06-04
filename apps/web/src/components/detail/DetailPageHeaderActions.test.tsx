@@ -2,16 +2,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OrgMembershipRecord, UserRecord } from '@/app/demo-data';
-
 import { DetailPageHeaderActions } from './DetailPageHeaderActions';
 
 const demoData = vi.hoisted<{
-  currentUser: Pick<UserRecord, 'isSuperadmin'>;
-  activeMembership: Pick<OrgMembershipRecord, 'role'>;
+  currentUser: { isSuperadmin: boolean };
+  activeMembership: { role: string; permissions: string[] };
 }>(() => ({
   currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'Member' },
+  activeMembership: { role: 'member', permissions: [] },
 }));
 
 vi.mock('@/app/demo-data', () => ({
@@ -21,10 +19,10 @@ vi.mock('@/app/demo-data', () => ({
 describe('DetailPageHeaderActions', () => {
   beforeEach(() => {
     demoData.currentUser = { isSuperadmin: false };
-    demoData.activeMembership = { role: 'Member' };
+    demoData.activeMembership = { role: 'member', permissions: [] };
   });
 
-  it('keeps edit visible but hides delete for non-manager memberships', () => {
+  it('keeps edit visible but hides delete without record delete permission', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>
         <DetailPageHeaderActions onEdit={vi.fn()} onDelete={vi.fn()} />
@@ -35,8 +33,8 @@ describe('DetailPageHeaderActions', () => {
     expect(markup).not.toContain('aria-label="Delete"');
   });
 
-  it('shows delete for organization admins', () => {
-    demoData.activeMembership = { role: 'Admin' };
+  it('shows delete with record delete permission', () => {
+    demoData.activeMembership = { role: 'admin', permissions: ['records.delete'] };
 
     const markup = renderToStaticMarkup(
       <MemoryRouter>
