@@ -7,7 +7,6 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { TaskInbox, type TaskInboxItem } from '@/components/workflow/TaskInbox';
 import { useDemoData } from '@/app/demo-data';
 import { tasksPageIcon } from '@/lib/modulePageIcons';
-import { useOrgNavPaths } from '@/lib/org-profiles/useOrgProfile';
 import { appToast } from '@/lib/toast';
 
 import { buildTaskParentHref } from './taskRouting';
@@ -46,7 +45,6 @@ function toInboxItem(task: {
 export function TasksPage() {
   const navigate = useNavigate();
   const { tasks } = useDemoData();
-  const nav = useOrgNavPaths();
 
   const openTasks = useMemo(
     () => tasks.filter((task) => task.status !== 'Completed').map(toInboxItem),
@@ -59,7 +57,7 @@ export function TasksPage() {
     const task = tasks.find((entry) => entry.id === taskId);
     if (!task) return;
 
-    const path = buildTaskParentHref(task, nav);
+    const path = buildTaskParentHref(task);
     if (path) {
       navigate(path);
     } else {

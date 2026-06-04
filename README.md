@@ -37,4 +37,4 @@ The target shape follows the architecture defined in `../FE`.
 
 ## UI rules
 
-All frontend/UI documentation: [`docs/ui-rules/README.md`](docs/ui-rules/README.md). UX laws adapted for ERP (nav, tabs, filters): [`docs/ui-rules/ux-principles.md`](docs/ui-rules/ux-principles.md).
+All frontend/UI documentation: [`docs/ui-rules/README.md`](docs/ui-rules/README.md) — start with [`ui-system.md`](docs/ui-rules/ui-system.md) and [`patterns.md`](docs/ui-rules/patterns.md).

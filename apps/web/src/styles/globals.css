@@ -32,7 +32,7 @@
     --primary-foreground: var(--neutral-50);
     --secondary: var(--neutral-100);
     --secondary-foreground: var(--neutral-950);
-    --muted: var(--neutral-200);
+    --muted: var(--neutral-100);
     --muted-foreground: var(--neutral-600);
     --highlight: 240 20% 97.5%;
     --highlight-foreground: var(--neutral-950);

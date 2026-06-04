@@ -1,10 +1,6 @@
 import { useState } from 'react';
 
-import {
-  CalendarEventEditorDialog,
-  CalendarEventQuickCreate,
-  CalendarView,
-} from '@oktavius/base-ui';
+import { CalendarEventEditorDialog, CalendarView } from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { calendarPageIcon } from '@/lib/modulePageIcons';
@@ -44,18 +40,8 @@ export function CalendarPage() {
         className="min-h-[520px] rounded-card bg-card"
       />
 
-      <CalendarEventQuickCreate
-        draft={calendar.createDraft}
-        calendars={calendar.calendars}
-        teamMembers={calendar.teamMembers}
-        onOpenChange={(open) => {
-          if (!open) calendar.cancelEditor();
-        }}
-        onSave={calendar.confirmSave}
-      />
-
       <CalendarEventEditorDialog
-        draft={calendar.editDraft}
+        draft={calendar.editorDraft}
         calendars={calendar.calendars}
         teamMembers={calendar.teamMembers}
         onOpenChange={(open) => {

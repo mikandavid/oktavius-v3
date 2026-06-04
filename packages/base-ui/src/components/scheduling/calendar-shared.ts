@@ -96,6 +96,16 @@ export interface CalendarEventEditorDraft {
 /** @deprecated Use CalendarEventEditorDraft */
 export type CalendarCreateDraft = CalendarEventEditorDraft;
 
+/**
+ * Highlights a pending slot range in the time grid — used to keep the originating
+ * selection visible behind the event editor dialog.
+ */
+export interface CalendarPendingSlot {
+  day: Date;
+  startTime: string;
+  endTime: string;
+}
+
 export type CalendarEventClickHandler = (event: CalendarEvent, anchor: CalendarSlotAnchor) => void;
 
 export function eventClickAnchor(element: HTMLElement): CalendarSlotAnchor {

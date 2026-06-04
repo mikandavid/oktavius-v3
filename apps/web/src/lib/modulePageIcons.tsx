@@ -3,19 +3,23 @@ import type { ComponentType, ReactNode } from 'react';
 import {
   CaseIcon,
   ContractIcon,
+  FunnelIcon,
   HomeIcon,
   IncidentIcon,
   InvoiceIcon,
   LockIcon,
+  WarningIcon,
   OrderIcon,
   OrganizationIcon,
   ProductIcon,
   ProjectIcon,
   ProjectsIcon,
+  PurchasingIcon,
   ReportsIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
   SuperadminIcon,
+  TeamIcon,
   UserCircleIcon,
   UsersIcon,
   CalendarIcon,
@@ -47,7 +51,13 @@ export const superadminPageIcon = () => modulePageIcon(SuperadminIcon);
 export const organizationPageIcon = () => modulePageIcon(OrganizationIcon);
 export const showcasePageIcon = () => modulePageIcon(SlidersHorizontalIcon);
 export const accessDeniedPageIcon = () => modulePageIcon(LockIcon);
+export const notFoundPageIcon = () => modulePageIcon(WarningIcon);
 export const documentsPageIcon = () => modulePageIcon(DocumentIcon);
 export const emailPageIcon = () => modulePageIcon(EmailIcon);
 export const calendarPageIcon = () => modulePageIcon(CalendarIcon);
 export const tasksPageIcon = () => modulePageIcon(TasksIcon);
+export const contactsPageIcon = () => modulePageIcon(UserCircleIcon);
+export const vendorsPageIcon = () => modulePageIcon(OrganizationIcon);
+export const leadsPageIcon = () => modulePageIcon(FunnelIcon);
+export const staffPageIcon = () => modulePageIcon(TeamIcon);
+export const purchasingPageIcon = () => modulePageIcon(PurchasingIcon);

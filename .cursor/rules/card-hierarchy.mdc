@@ -21,7 +21,7 @@ Use `CARD_CONTENT_TIERS` from `@oktavius/base-ui` — never ad-hoc font sizes in
 | 5 Meta | Subtitles, secondary context |
 | 6 Micro | IDs, codes, audit footnotes |
 
-Full reference: `docs/ui-rules/hierarchy-system.md` § Card Content Tiers.
+Full reference: `docs/ui-rules/foundation.md` § Card content tiers.
 
 ## DetailView
 

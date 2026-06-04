@@ -1,0 +1,66 @@
+---
+description: Agent chat UI — messages, result cards, shell utilities
+globs: apps/web/src/components/agent/**/*,apps/web/src/components/layout/OsirisChatShell.tsx,apps/web/src/components/layout/AIChatSidebar.tsx,apps/web/src/components/layout/ChatComposer.tsx,apps/web/src/components/layout/MobileAgentLayout.tsx
+alwaysApply: false
+---
+
+# Agent chat components
+
+Canonical doc: `docs/ui-rules/agent-components.md`. Registry: `component-registry.md` (Agent / AI).
+
+## Message list
+
+Use `AgentMessageList` + types from `@/components/agent/types`. Roles: `user`, `assistant`, `tool`, `confirmation`, `card`.
+
+Assistant prose: `StructuredContent` (wraps `FormattedText` + `<oct-*>` blocks). Maps: `extractGoogleMapsUrls` + `GoogleMapsPreviewButton`.
+
+Backend UI on messages: `AgentMessage.ui` → `ChatUIComponent`. Page context: `AgentPageContextProvider` + `useRegisterAgentPageContext`.
+
+Structured results: `role: 'card'` + `AgentCardPayload` → `renderAgentCard()` from `@/components/agent/cards`.
+
+Tool UI payloads from backend: `ChatUIComponent` from `@/components/agent/UIComponentRegistry`.
+
+## Result cards
+
+| kind | Component |
+| ---- | --------- |
+| `entity-list` | `AgentEntityListCard` |
+| `entity-detail` | `AgentEntityDetailCard` |
+| `python` | `AgentPythonExecutionCard` |
+| `document` | `AgentGeneratedDocumentCard` |
+| `schedule` | `AgentScheduleCard` |
+| `skill-approval` | `AgentSkillApprovalCard` |
+| `financial` | `AgentFinancialCard` |
+| `search-results` | `AgentSearchResultsCard` |
+| `timeline` | `AgentTimelineCard` |
+| `action-items` | `AgentActionItemsCard` |
+| `active-timer` | `AgentActiveTimerCard` |
+| `planner` | `AgentPlannerCard` |
+| `memory` | `AgentMemoryCard` |
+| `project-summary` | `AgentProjectSummaryCard` |
+| `catalog-item` | `AgentCatalogItemCard` |
+| `doc-processing` | `AgentDocProcessingCard` |
+| `email-compose` | `AgentEmailComposeCard` |
+| `context-dump` | `AgentContextDumpCard` |
+| `sales-document` | `AgentSalesDocumentCard` |
+
+Wrap left-aligned rows in `AgentMessageShell`. User bubbles stay right-aligned without shell.
+
+## Shell
+
+- Empty thread: `AgentWelcomeScreen`
+- Loading: `AgentThinkingIndicator`
+- Attachments: `AgentFileAttachmentChip`; preview: `ChatFilePreviewDialog`
+- Editable title: `EditableConversationTitle`
+- Voice: `VoiceRecorder` + `RecordingBar`
+- Side panel: `ContentPanel`
+- Header settings: `AgentSettingsPopover`
+- Context: `ContextUsageIndicator`
+- Mobile page layout: `MobileAgentLayout`
+
+## Rules
+
+- Icons from `@/lib/icons` only.
+- No nested `SectionCard` in agent cards.
+- No `Select` in agent settings — `RadioGroupField` + `Switch`.
+- Extend `AgentCardPayload` + registry aliases — do not invent parallel card shapes per module.

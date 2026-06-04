@@ -2,6 +2,7 @@ import { Grid, useClientDataSource } from '@1771technologies/lytenyte-core';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
+import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
 import {
   Button,
@@ -794,10 +795,11 @@ export function CrudTable<T extends { id: string }>({
   }, [columnStateStorageKey, columns]);
 
   useEffect(() => {
-    if (!resolvedColumnStateStorageKey || typeof window === 'undefined') return;
+    if (!resolvedColumnStateStorageKey) return;
+    const storage = getWindowStorage('localStorage');
 
     try {
-      const raw = window.localStorage.getItem(resolvedColumnStateStorageKey);
+      const raw = safeStorageGet(storage, resolvedColumnStateStorageKey);
       if (!raw) return;
       const parsed = JSON.parse(raw) as PersistedColumnState;
       if (parsed?.v !== 1 || !Array.isArray(parsed.columns)) return;
@@ -814,12 +816,12 @@ export function CrudTable<T extends { id: string }>({
   }, [resolvedColumnStateStorageKey, structuralColumns, columnStretch]);
 
   useEffect(() => {
-    if (!resolvedColumnStateStorageKey || typeof window === 'undefined') return;
+    if (!resolvedColumnStateStorageKey) return;
     if (!userGridColumns || userGridColumns.length === 0) return;
 
     try {
       const serialized = JSON.stringify(toPersistedColumnState(userGridColumns, columnStretch));
-      window.localStorage.setItem(resolvedColumnStateStorageKey, serialized);
+      safeStorageSet(getWindowStorage('localStorage'), resolvedColumnStateStorageKey, serialized);
     } catch {
       // ignore storage errors
     }
@@ -947,7 +949,7 @@ export function CrudTable<T extends { id: string }>({
     );
   }
 
-  const gridReady = resolvedColumnStretch === 'none' || containerWidth > 0;
+  const gridReady = resolvedColumnStretch === 'none' || containerWidth > 0 || rows.length > 0;
 
   return (
     <div className="crud-table-host flex w-full max-w-full min-w-0 flex-col overflow-x-hidden">

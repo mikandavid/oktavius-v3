@@ -17,6 +17,7 @@ import { CheckIcon, EditIcon, SortIcon, PanelLeftCloseIcon, PanelLeftIcon } from
 
 import { useDemoData } from '@/app/demo-data';
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
+import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 import {
   ADMIN_NAV_ITEMS,
   MODULE_NAV_ITEMS,
@@ -51,9 +52,10 @@ const COLLAPSED_PILL_GAP_PX = 10;
 const ORG_HOME_PATH = '/dashboard';
 
 function readStoredModuleOrder() {
-  if (typeof window === 'undefined') return [];
+  const storage = getWindowStorage('localStorage');
+  if (!storage) return [];
   try {
-    const raw = window.localStorage.getItem(MODULE_ORDER_STORAGE_KEY);
+    const raw = safeStorageGet(storage, MODULE_ORDER_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
@@ -65,8 +67,7 @@ function readStoredModuleOrder() {
 }
 
 function writeStoredModuleOrder(order: string[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(MODULE_ORDER_STORAGE_KEY, JSON.stringify(order));
+  safeStorageSet(getWindowStorage('localStorage'), MODULE_ORDER_STORAGE_KEY, JSON.stringify(order));
 }
 
 function buildVisibleModuleItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {

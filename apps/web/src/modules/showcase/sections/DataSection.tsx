@@ -186,7 +186,7 @@ export function DataSection() {
           totalPages={list.totalPages}
           onPageChange={list.onPageChange}
           entityLabel="product"
-          getRowHref={(row) => `/products/${row.id}`}
+          getRowHref={() => '/showcase'}
           onDeleteRows={(ids) =>
             setRows((current) => current.filter((row) => !ids.includes(row.id)))
           }

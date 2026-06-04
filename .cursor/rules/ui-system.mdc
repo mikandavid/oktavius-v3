@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Oktavius UI system
 
-Canonical references: `docs/ui-rules/README.md` (index), `docs/ui-rules/component-registry.md`, and `docs/ui-rules/ux-principles.md` (nav, tabs, filters, chunking). When in doubt, use those — do not invent layouts.
+Canonical references: `docs/ui-rules/README.md`, `docs/ui-rules/ui-system.md`, `docs/ui-rules/patterns.md`, `docs/ui-rules/foundation.md`, `docs/ui-rules/component-registry.md`. When in doubt, use those — do not invent layouts.
 
 ## Stack constraints
 
@@ -29,7 +29,7 @@ Canonical references: `docs/ui-rules/README.md` (index), `docs/ui-rules/componen
 
 Every route uses `<ModulePage>`. Never build custom page headers or shells.
 
-For section-nav pages see `docs/ui-rules/section-nav.md` — use `AppSectionNavLayout`, not raw `SettingsLayout`.
+For section-nav pages see `docs/ui-rules/patterns.md` § Section nav — use `AppSectionNavLayout`, not raw `SettingsLayout`.
 
 **Module icon (required):** pass `icon={modulePageIcon()}` on every `ModulePage` and `CrudMainView`. Use helpers from `@/lib/modulePageIcons` or re-export in module `shared.tsx`. Standard: `size={20} weight="duotone"`, match sidebar nav icon.
 
@@ -41,8 +41,8 @@ For section-nav pages see `docs/ui-rules/section-nav.md` — use `AppSectionNavL
 - No `text-gray-*`, `bg-white`, or `rounded-lg` on named surfaces
 - No cards-in-cards — use `<SectionCard>` inside pages, not nested `<Card>`
 - **Card content hierarchy:** six fixed typography tiers via `CARD_CONTENT_TIERS` — primary record info large with icons, meta fields quiet. See `card-hierarchy` rule.
-- **Interactive affordances:** every pressable control needs hover + active/focus feedback and `cursor-pointer` — see `docs/ui-rules/visual-foundation.md` § Interactive Affordances
-- **Control states:** use primitive APIs for disabled, loading, invalid, valid — see `docs/ui-rules/interactive-states.md` and `interactive-states` rule
+- **Interactive affordances:** every pressable control needs hover + active/focus feedback and `cursor-pointer` — see `docs/ui-rules/foundation.md`
+- **Control states:** use primitive APIs for disabled, loading, invalid, valid — see `docs/ui-rules/foundation.md` and `interactive-states` rule
 
 ## Button hierarchy
 
@@ -58,8 +58,8 @@ For section-nav pages see `docs/ui-rules/section-nav.md` — use `AppSectionNavL
 ## App shell
 
 - Desktop: nav left · workspace center · chat right — never hide sidebar on desktop
-- **Nav:** Main · Modules (`enabledModules`, scrollable, reorderable) · Admin — no per-module nav; long lists → `⌘K` palette (`docs/ui-rules/ux-principles.md`)
-- **Section-nav pages:** app sidebar auto-compacts to icon rail; section nav + content scroll independently — see `docs/ui-rules/section-nav.md`
+- **Nav:** Main · Modules (`enabledModules`, scrollable, reorderable) · Admin — no per-module nav; long lists → `⌘K` palette (`docs/ui-rules/ui-system.md` § UX)
+- **Section-nav pages:** app sidebar auto-compacts to icon rail; section nav + content scroll independently — see `docs/ui-rules/patterns.md` § Section nav
 - Import layout classes from `@/components/common/pageChrome` (`FIELD_GROUP_LABEL_CLASS` for form section headings)
 - Toasts: `@/lib/toast` — Toaster already in `AppLayout`
 
@@ -67,7 +67,7 @@ For section-nav pages see `docs/ui-rules/section-nav.md` — use `AppSectionNavL
 
 Full index: `docs/ui-rules/README.md`
 
-`page-header` · `crud-table` · `filter-toolbar` · `combobox` · `date-format` · `calendar-components` · `split-view-master-detail` · `entity-form` · `module-pattern` · `detail-pages` · `section-nav` · `status-and-money` · `dialogs` · `checklist` · `card-hierarchy` · `interactive-states`
+Task recipes: `docs/ui-rules/patterns.md`. Domains: `agent-components`, `calendar-components`, `maps-components`, `locked-components`. Cursor rules: `card-hierarchy`, `interactive-states`, topic `.mdc` files.
 
 ## Lint (`pnpm lint`)
 

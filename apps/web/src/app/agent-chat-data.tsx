@@ -12,6 +12,8 @@ import {
 import { resolveAppNavModuleForProfile } from '@/lib/appNavModules';
 import { ORG_APEX_ID, getOrgProfile } from '@/lib/org-profiles/profiles';
 import type { OrgProfile } from '@/lib/org-profiles/types';
+import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
+import { useUserPreferences } from '@/lib/userPreferences';
 
 import { useDemoData } from './demo-data';
 
@@ -88,7 +90,7 @@ function buildWorkspaceIntro(params: {
     return `The ${clientLabel} workspace currently has ${params.clientCount} visible demo records.`;
   }
 
-  if (params.moduleId === 'cases' || params.moduleId === 'cases-board') {
+  if (params.moduleId === 'cases') {
     return `The ${caseLabel} workspace is active.`;
   }
 
@@ -103,7 +105,10 @@ function buildWorkspaceIntro(params: {
   return 'The current shell is still compact, so I am reading this as an operational coordination request.';
 }
 
-export function derivePromptSet(pathname?: string, profile = getOrgProfile(ORG_APEX_ID)) {
+export function derivePromptSet(
+  pathname?: string,
+  profile = getLocalizedOrgProfile(getOrgProfile(ORG_APEX_ID), 'en'),
+) {
   const moduleId = resolveAgentModule(pathname, profile);
   const clientLabel = workspaceLabel(profile, 'clients') ?? 'client';
 
@@ -115,7 +120,7 @@ export function derivePromptSet(pathname?: string, profile = getOrgProfile(ORG_A
     ];
   }
 
-  if (moduleId === 'cases' || moduleId === 'cases-board') {
+  if (moduleId === 'cases') {
     const caseLabel = workspaceLabel(profile, 'cases') ?? 'case';
     return [
       `Summarize ${caseLabel} urgency, stage, and pending owner actions.`,
@@ -156,7 +161,7 @@ export function deriveAssistantResponse(params: {
   activeConversation: ChatConversationRecord | null;
 }) {
   const lower = params.content.toLowerCase();
-  const profile = params.profile ?? getOrgProfile(ORG_APEX_ID);
+  const profile = params.profile ?? getLocalizedOrgProfile(getOrgProfile(ORG_APEX_ID), 'en');
   const moduleId = resolveAgentModule(params.pathname, profile);
   const intro = buildWorkspaceIntro({
     moduleId,
@@ -173,7 +178,7 @@ export function deriveAssistantResponse(params: {
     return `${intro} Prioritize churned and inactive accounts, then prospects with explicit notes. After that, queue renewal-sensitive active clients for outreach.`;
   }
 
-  if (lower.includes('case') || moduleId === 'cases' || moduleId === 'cases-board') {
+  if (lower.includes('case') || moduleId === 'cases') {
     return `${intro} Prioritize open deadlines, missing decisions, and owner handoffs before moving to routine follow-up.`;
   }
 
@@ -198,7 +203,8 @@ export function deriveAssistantResponse(params: {
 
 export function AgentChatProvider({ children }: { children: ReactNode }) {
   const { users, clients, activeOrgId } = useDemoData();
-  const profile = getOrgProfile(activeOrgId);
+  const { locale } = useUserPreferences();
+  const profile = getLocalizedOrgProfile(getOrgProfile(activeOrgId), locale);
   const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
   const [activeConversationId, setActiveConversationId] = useState(
     INITIAL_CONVERSATIONS[0]?.id ?? '',

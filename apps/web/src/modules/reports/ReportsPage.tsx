@@ -5,6 +5,7 @@ import { ChartCard, type ChartPoint } from '@oktavius/base-ui';
 import { createConfiguredReportStore } from '@/api/apiStoreConfig';
 import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_TABS_CONTENT_SCROLL_CLASS } from '@/components/common/pageChrome';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import {
   COMBO_DATA,
   MULTI_LINE_REVENUE,
@@ -43,7 +44,7 @@ function aggregateByMonth(items: Array<{ date: string; value: number }>): ChartP
 
 export function ReportsPage() {
   const { orders, invoices } = useDemoData();
-  const storage = typeof window === 'undefined' ? undefined : window.localStorage;
+  const storage = getWindowStorage('localStorage');
   const reportStore = useMemo(
     () =>
       createConfiguredReportStore({

@@ -1,0 +1,40 @@
+---
+description: Google Maps inline preview and dialog embed
+globs: apps/web/src/components/maps/**/*,apps/web/src/modules/**/*Detail*.tsx
+alwaysApply: false
+---
+
+# Map preview components
+
+Canonical doc: `docs/ui-rules/maps-components.md`.
+
+## Prefer inline
+
+**`GoogleMapsPreview`** for detail pages, route panels, location sections — no dialog required.
+
+**`GoogleMapsPreviewButton`** only when space is tight (chat, table row, message footer).
+
+## Embed URLs
+
+Use `resolveGoogleMapsEmbed()` — never iframe a raw `/maps/dir/…` share link.
+
+Optional env: `VITE_GOOGLE_MAPS_EMBED_API_KEY` for official Embed API directions.
+
+## Imports
+
+```tsx
+import {
+  GoogleMapsPreview,
+  GoogleMapsPreviewButton,
+  GoogleMapsDialog,
+  extractGoogleMapsUrls,
+} from '@/components/maps/GoogleMapsDialog';
+```
+
+Icons: `MapIcon`, `ExternalLinkIcon` from `@/lib/icons`.
+
+## Don't
+
+- Custom iframe embeds without `googleMapsEmbed.ts`
+- Nested card chrome around map preview
+- Third-party map SDKs for standard route/place display

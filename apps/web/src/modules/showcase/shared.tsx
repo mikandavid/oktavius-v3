@@ -6,6 +6,7 @@ export type ShowcaseSectionId =
   | 'overview'
   | 'design-tokens'
   | 'foundations'
+  | 'layouts'
   | 'inputs'
   | 'forms'
   | 'feedback'
@@ -16,7 +17,8 @@ export type ShowcaseSectionId =
   | 'agent'
   | 'documents'
   | 'calendar-charts'
-  | 'patterns';
+  | 'patterns'
+  | 'comms-ops';
 
 export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; description: string }> = [
   { key: 'overview', label: 'Overview', description: 'How to use this gallery' },
@@ -26,6 +28,11 @@ export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; descri
     description: 'Three-layer color system — neutral ramp, roles, live preview',
   },
   { key: 'foundations', label: 'Foundations', description: 'Buttons, badges, status, typography' },
+  {
+    key: 'layouts',
+    label: 'Layouts',
+    description: 'Layout primitives (Stack, Cluster, Split, Sidebar, Grid) + page templates',
+  },
   { key: 'inputs', label: 'Inputs', description: 'All control primitives and states' },
   { key: 'forms', label: 'Forms', description: 'EntityForm field registry' },
   { key: 'feedback', label: 'Feedback', description: 'Toasts, banners, empty & loading states' },
@@ -49,6 +56,11 @@ export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; descri
     description: 'Scheduling, KPI charts, report builder',
   },
   { key: 'patterns', label: 'ERP patterns', description: 'Kanban, stepper, tree, maps, import' },
+  {
+    key: 'comms-ops',
+    label: 'Comms & ops',
+    description: 'Time tracking, group chat, knowledge base, doc processing, notifications',
+  },
 ];
 
 export function ShowcaseBlock({

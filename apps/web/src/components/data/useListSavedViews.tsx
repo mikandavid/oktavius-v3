@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { SavedViewSelector, type SavedView } from '@/components/data/SavedViewSelector';
 import { appToast } from '@/lib/toast';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 
 import {
   createLocalSavedViewsStore,
@@ -36,7 +37,7 @@ export function useListSavedViews({
   store,
 }: UseListSavedViewsOptions) {
   const defaultId = views.find((view) => view.isDefault)?.id ?? views[0]?.id ?? '';
-  const storage = typeof window === 'undefined' ? undefined : window.localStorage;
+  const storage = getWindowStorage('localStorage');
   const localStore = useMemo(
     () => createLocalSavedViewsStore(storage, listKey),
     [storage, listKey],

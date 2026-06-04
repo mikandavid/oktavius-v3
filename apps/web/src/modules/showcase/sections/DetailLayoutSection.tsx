@@ -41,9 +41,14 @@ import { StorageFileLinkPickerDialog } from '@/components/storage/StorageFileLin
 import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import { CaseIcon, ProjectsIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
-import { USER_STATUS_VARIANT } from '@/modules/users/shared';
 
 import { ShowcaseBlock } from '../shared';
+
+const USER_STATUS_VARIANT = {
+  Active: 'success',
+  Pending: 'warning',
+  Suspended: 'destructive',
+} as const;
 
 const QUEUE_ITEMS = [
   { id: 'q1', title: 'CASE-2024-0892', subtitle: 'Billing dispute' },
@@ -66,9 +71,9 @@ export function DetailLayoutSection() {
       <ShowcaseBlock title="Page chrome" meta="Breadcrumb · BackButton">
         <div className="space-y-3">
           <Breadcrumb
-            items={[{ label: 'Clients', href: '/clients' }, { label: 'Apex Technologies GmbH' }]}
+            items={[{ label: 'Showcase', href: '/showcase' }, { label: 'Apex Technologies GmbH' }]}
           />
-          <BackButton to="/clients" label="Back to clients" />
+          <BackButton to="/showcase" label="Back to showcase" />
         </div>
       </ShowcaseBlock>
 
@@ -284,16 +289,16 @@ export function DetailLayoutSection() {
                 id: 'ord_1',
                 title: 'ORD-2024-0042',
                 subtitle: 'Confirmed',
-                href: '/orders/ord_1',
+                href: '/showcase',
               },
               {
                 id: 'ord_2',
                 title: 'ORD-2024-0048',
                 subtitle: 'Draft',
-                href: '/orders/ord_2',
+                href: '/showcase',
               },
             ]}
-            viewAllHref="/orders"
+            viewAllHref="/showcase"
           />
           <AuditTrailPanel entityType="client" entityId="cli_1001" />
           <div className="flex items-center gap-2">

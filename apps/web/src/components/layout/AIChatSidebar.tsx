@@ -5,29 +5,36 @@ import { MouseTooltip, cn } from '@oktavius/base-ui';
 import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { OctopusIcon } from '@/components/agent/OctopusIcon';
 import { ChevronLeftIcon } from '@/lib/icons';
+import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
 import { OsirisChatShell } from './OsirisChatShell';
 
 const CHAT_SIDEBAR_WIDTH_KEY = 'chat-sidebar-width';
 const CHAT_SIDEBAR_COLLAPSED_KEY = 'chat-sidebar-collapsed';
 const COLLAPSED_WIDTH = 48;
-const DEFAULT_WIDTH = 340;
-const MIN_WIDTH = 300;
-const MAX_WIDTH = 640;
-const DRAG_COLLAPSE_THRESHOLD = 120;
+const DEFAULT_WIDTH = 360;
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 900;
+const MAIN_CONTENT_MIN = 640;
+const DRAG_COLLAPSE_THRESHOLD = 140;
 
-const clampSidebarWidth = (value: number) => Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, value));
+const getViewportMax = () => {
+  if (typeof window === 'undefined') return MAX_WIDTH;
+  return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, window.innerWidth - MAIN_CONTENT_MIN));
+};
+
+const clampSidebarWidth = (value: number) => Math.max(MIN_WIDTH, Math.min(getViewportMax(), value));
 
 function readStoredSidebarWidth() {
-  if (typeof window === 'undefined') return DEFAULT_WIDTH;
-  const stored = window.localStorage.getItem(CHAT_SIDEBAR_WIDTH_KEY);
+  const storage = getWindowStorage('localStorage');
+  const stored = safeStorageGet(storage, CHAT_SIDEBAR_WIDTH_KEY);
   const parsed = stored ? Number.parseInt(stored, 10) : DEFAULT_WIDTH;
   return clampSidebarWidth(Number.isFinite(parsed) ? parsed : DEFAULT_WIDTH);
 }
 
 function readStoredCollapsedState() {
-  if (typeof window === 'undefined') return true;
-  const stored = window.localStorage.getItem(CHAT_SIDEBAR_COLLAPSED_KEY);
+  const storage = getWindowStorage('localStorage');
+  const stored = safeStorageGet(storage, CHAT_SIDEBAR_COLLAPSED_KEY);
   if (stored === null) return true;
   return stored === 'true';
 }
@@ -41,13 +48,18 @@ export function AIChatSidebar() {
   );
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(CHAT_SIDEBAR_WIDTH_KEY, String(width));
+    safeStorageSet(getWindowStorage('localStorage'), CHAT_SIDEBAR_WIDTH_KEY, String(width));
   }, [width]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(CHAT_SIDEBAR_COLLAPSED_KEY, String(collapsed));
+    const handleResize = () => setWidth((current) => clampSidebarWidth(current));
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    safeStorageSet(getWindowStorage('localStorage'), CHAT_SIDEBAR_COLLAPSED_KEY, String(collapsed));
   }, [collapsed]);
 
   useEffect(() => {
@@ -118,7 +130,7 @@ export function AIChatSidebar() {
           : {
               width: `${width}px`,
               minWidth: `${MIN_WIDTH}px`,
-              maxWidth: `${MAX_WIDTH}px`,
+              maxWidth: `min(${MAX_WIDTH}px, calc(100vw - ${MAIN_CONTENT_MIN}px))`,
             }
       }
     >

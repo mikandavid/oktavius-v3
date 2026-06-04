@@ -41,7 +41,7 @@ Never show full sub-entity lists on Overview.
 
 ## DetailView field hierarchy
 
-Use `importance: 'primary' | 'default' | 'meta'` on fields — not uniform grids. Primary facts get large hero treatment + `icon`; meta fields (IDs, audit) go in a quiet footer strip. See `docs/ui-rules/hierarchy-system.md` § Card Content Tiers.
+Use `importance: 'primary' | 'default' | 'meta'` on fields — not uniform grids. Primary facts get large hero treatment + `icon`; meta fields (IDs, audit) go in a quiet footer strip. See `docs/ui-rules/foundation.md` § Card content tiers.
 
 ## Sub-entity lists (Parties, Tasks, …)
 

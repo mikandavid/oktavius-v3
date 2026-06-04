@@ -1,0 +1,34 @@
+---
+description: Locked base-ui components — no ad-hoc classNames overrides on third-party wrappers
+globs: packages/base-ui/**/*.{tsx,ts},apps/web/src/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Locked components
+
+Full audit: `docs/ui-rules/locked-components.md`
+
+## Use these (styling locked inside)
+
+| Need | Component |
+| ---- | --------- |
+| Sidebar jump-to-date | `CalendarMiniPicker` |
+| Planner sidebar | `CalendarSidebar` |
+| Sidebar filter row | `CalendarSidebarToggleRow` |
+
+## Never in apps/web
+
+```tsx
+// ❌
+<Calendar classNames={{ nav: 'absolute …', week: 'flex w-full' }} />
+
+// ✅
+<CalendarMiniPicker selected={anchor} onSelect={setAnchor} />
+```
+
+## Planned locks (use documented workarounds until extracted)
+
+- **SplitView fill-height** → native `SplitView` with pixel widths (`defaultSidebarWidth`, `minSidebarWidth`, `maxSidebarWidth`), not percentage panels
+- **Combobox toolbar filter** → only via `FilterToolbar` ghost classes until `appearance="toolbar"`
+
+After editing locked files, run `pnpm test`.

@@ -7,12 +7,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
 
 function readStoredCollapsedState() {
-  if (typeof window === 'undefined') return false;
-  return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
+  const storage = getWindowStorage('localStorage');
+  return safeStorageGet(storage, SIDEBAR_STORAGE_KEY) === 'true';
 }
 
 type AppShellLayoutContextValue = {
@@ -45,9 +46,7 @@ export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
 
   const setSidebarCollapsed = useCallback((collapsed: boolean) => {
     setIsSidebarCollapsedState(collapsed);
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
-    }
+    safeStorageSet(getWindowStorage('localStorage'), SIDEBAR_STORAGE_KEY, String(collapsed));
   }, []);
 
   const toggleSidebarCollapsed = useCallback(() => {

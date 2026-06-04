@@ -2,15 +2,20 @@ import type {
   CaseChecklistItem,
   CaseRecord,
   ClientRecord,
+  ContactRecord,
   ContractRecord,
   IncidentRecord,
   InvoiceRecord,
+  LeadRecord,
   OrderRecord,
   OrganizationRecord,
   PartyRecord,
   ProductRecord,
   ProjectRecord,
+  PurchaseOrderRecord,
+  StaffRecord,
   UserRecord,
+  VendorRecord,
 } from '@/app/demo-data';
 
 export class ApiValidationError extends Error {
@@ -257,17 +262,127 @@ export type ProjectsHandlers = {
   delete: (id: string) => Promise<void>;
 };
 
+export type ContactsListParams = {
+  page?: string;
+  pageSize?: string;
+  sort?: string;
+  search?: string;
+  status?: string;
+  clientId?: string;
+};
+
+export type ContactsHandlers = {
+  list: (params: ContactsListParams) => Promise<ListResponse<ContactRecord>>;
+  get: (id: string) => Promise<ContactRecord | null>;
+  create: (input: Omit<ContactRecord, 'id' | 'createdAt' | 'orgId'>) => Promise<ContactRecord>;
+  update: (
+    id: string,
+    input: Partial<Omit<ContactRecord, 'id' | 'createdAt' | 'orgId'>>,
+  ) => Promise<ContactRecord>;
+  delete: (id: string) => Promise<void>;
+};
+
+export type VendorsListParams = {
+  page?: string;
+  pageSize?: string;
+  sort?: string;
+  search?: string;
+  status?: string;
+  category?: string;
+};
+
+export type VendorsHandlers = {
+  list: (params: VendorsListParams) => Promise<ListResponse<VendorRecord>>;
+  get: (id: string) => Promise<VendorRecord | null>;
+  create: (input: Omit<VendorRecord, 'id' | 'createdAt' | 'orgId'>) => Promise<VendorRecord>;
+  update: (
+    id: string,
+    input: Partial<Omit<VendorRecord, 'id' | 'createdAt' | 'orgId'>>,
+  ) => Promise<VendorRecord>;
+  delete: (id: string) => Promise<void>;
+};
+
+export type LeadsListParams = {
+  page?: string;
+  pageSize?: string;
+  sort?: string;
+  search?: string;
+  stage?: string;
+  assignedTo?: string;
+  source?: string;
+};
+
+export type LeadsHandlers = {
+  list: (params: LeadsListParams) => Promise<ListResponse<LeadRecord>>;
+  get: (id: string) => Promise<LeadRecord | null>;
+  create: (input: Omit<LeadRecord, 'id' | 'createdAt' | 'orgId'>) => Promise<LeadRecord>;
+  update: (
+    id: string,
+    input: Partial<Omit<LeadRecord, 'id' | 'createdAt' | 'orgId'>>,
+  ) => Promise<LeadRecord>;
+  updateStage: (id: string, stage: LeadRecord['stage']) => Promise<LeadRecord>;
+  delete: (id: string) => Promise<void>;
+};
+
+export type StaffListParams = {
+  page?: string;
+  pageSize?: string;
+  sort?: string;
+  search?: string;
+  status?: string;
+  department?: string;
+  employmentType?: string;
+};
+
+export type StaffHandlers = {
+  list: (params: StaffListParams) => Promise<ListResponse<StaffRecord>>;
+  get: (id: string) => Promise<StaffRecord | null>;
+  create: (input: Omit<StaffRecord, 'id' | 'createdAt' | 'orgId'>) => Promise<StaffRecord>;
+  update: (
+    id: string,
+    input: Partial<Omit<StaffRecord, 'id' | 'createdAt' | 'orgId'>>,
+  ) => Promise<StaffRecord>;
+  delete: (id: string) => Promise<void>;
+};
+
+export type PurchasingListParams = {
+  page?: string;
+  pageSize?: string;
+  sort?: string;
+  search?: string;
+  status?: string;
+  requestedBy?: string;
+};
+
+export type PurchasingHandlers = {
+  list: (params: PurchasingListParams) => Promise<ListResponse<PurchaseOrderRecord>>;
+  get: (id: string) => Promise<PurchaseOrderRecord | null>;
+  create: (
+    input: Omit<PurchaseOrderRecord, 'id' | 'poNumber' | 'createdAt' | 'orgId'>,
+  ) => Promise<PurchaseOrderRecord>;
+  update: (
+    id: string,
+    input: Partial<Omit<PurchaseOrderRecord, 'id' | 'poNumber' | 'createdAt' | 'orgId'>>,
+  ) => Promise<PurchaseOrderRecord>;
+  delete: (id: string) => Promise<void>;
+};
+
 export type DemoApiRegistry = {
   cases: CasesHandlers;
   caseChecklists: CaseChecklistsHandlers;
   clients: ClientsHandlers;
+  contacts: ContactsHandlers;
   contracts: ContractsHandlers;
   incidents: IncidentsHandlers;
   invoices: InvoicesHandlers;
+  leads: LeadsHandlers;
   orders: OrdersHandlers;
   organizations: OrganizationsHandlers;
   parties: PartiesHandlers;
   products: ProductsHandlers;
   projects: ProjectsHandlers;
+  purchasing: PurchasingHandlers;
+  staff: StaffHandlers;
   users: UsersHandlers;
+  vendors: VendorsHandlers;
 };

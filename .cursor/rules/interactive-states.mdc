@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Interactive control states
 
-Canonical doc: `docs/ui-rules/interactive-states.md`  
+Canonical doc: `docs/ui-rules/foundation.md` § Interactive states  
 Shared classes: `packages/base-ui/src/lib/controlStates.ts`
 
 ## Required props (use primitives — do not hand-roll)

@@ -1,5 +1,4 @@
 import {
-  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -203,10 +202,6 @@ export function SplitView({
     : resizable
       ? `${clampedSidebarWidth}px ${RESIZE_HANDLE_WIDTH}px minmax(0, 1fr)`
       : `${clampedSidebarWidth}px minmax(0, 1fr)`;
-  const sidebarStyle: CSSProperties | undefined = sidebarColumn
-    ? undefined
-    : { width: clampedSidebarWidth };
-
   return (
     <div
       ref={rootRef}
@@ -219,12 +214,11 @@ export function SplitView({
       <aside
         id={sidebarId}
         className={cn(
-          'flex min-h-0 min-w-0 flex-col overflow-x-hidden',
+          'flex min-h-0 min-w-0 w-full max-w-full flex-col overflow-x-hidden',
           resizable ? undefined : 'border-r border-border/50',
           sidebarScroll && 'overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]',
           sidebarClassName,
         )}
-        style={sidebarStyle}
       >
         {sidebar}
       </aside>

@@ -1,97 +1,41 @@
-# Oktavius v3 — UI rules
+# Oktavius UI rules
 
-Single source of truth for frontend UI conventions. For developers, designers, and coding agents. Tool-agnostic.
+Single source of truth for ERP frontend UI. Tool-agnostic.
 
-**Start here:** [`ui-system.md`](./ui-system.md) → relevant topic file → [`component-registry.md`](./component-registry.md) when picking components.
+## Read order
 
----
+1. **[`ui-system.md`](./ui-system.md)** — always apply (stack, shells, bans, UX limits, lint)
+2. **[`patterns.md`](./patterns.md)** — task-specific recipes (lists, forms, detail, dialogs, …)
+3. **[`foundation.md`](./foundation.md)** — hierarchy, tokens, control states (when tuning look & feel)
+4. **[`component-registry.md`](./component-registry.md)** — component catalog + imports
 
-## Core (read first)
+**Domains** (only when working in that area):
 
-| File                                               | Purpose                                                             |
-| -------------------------------------------------- | ------------------------------------------------------------------- |
-| [`ui-system.md`](./ui-system.md)                   | Stack, shells, visual tokens, buttons, app shell — **always apply** |
-| [`component-registry.md`](./component-registry.md) | Full component catalog, imports, do/don't table                     |
-| [`visual-foundation.md`](./visual-foundation.md)   | Colors, typography, spacing, borders, shadows, radius               |
-| [`design-tokens.md`](./design-tokens.md)           | Token architecture, aliases, playground, source files — **tune UI** |
-| [`interactive-states.md`](./interactive-states.md) | Hover, focus, disabled, loading, invalid, valid — control state API |
-| [`hierarchy-system.md`](./hierarchy-system.md)     | 6-level visual hierarchy + 6 card content tiers                     |
-| [`component-guide.md`](./component-guide.md)       | Decision trees — which component for which need                     |
-| [`anti-patterns.md`](./anti-patterns.md)           | Common mistakes with code examples                                  |
-| [`agent-contract.md`](./agent-contract.md)         | Hard bans, page templates, pre-submit checklist                     |
-| [`locked-components.md`](./locked-components.md)   | Purpose-built components — no ad-hoc style overrides                |
-| [`ux-principles.md`](./ux-principles.md)           | UX laws + ERP nav/filter/tab chunking — read before IA changes      |
+| File                                                 | Area                     |
+| ---------------------------------------------------- | ------------------------ |
+| [`agent-components.md`](./agent-components.md)       | Agent chat, cards, shell |
+| [`calendar-components.md`](./calendar-components.md) | Calendar / planner       |
+| [`maps-components.md`](./maps-components.md)         | Maps embed               |
+| [`email-module.md`](./email-module.md)               | Email workbench          |
+| [`locked-components.md`](./locked-components.md)     | Locked base-ui wrappers  |
 
----
+**Backlog:** [`gaps.md`](./gaps.md) — codegen / backend parity (not day-to-day UI rules).
 
-## Topic rules (by area)
+## Path quick lookup
 
-| File                                                           | When to read                                      |
-| -------------------------------------------------------------- | ------------------------------------------------- |
-| [`page-header.md`](./page-header.md)                           | Page headers, list/detail titles, actions slot    |
-| [`crud-table.md`](./crud-table.md)                             | List tables, column stretch, padding, list CRUD   |
-| [`filter-toolbar.md`](./filter-toolbar.md)                     | Search + filter row layout                        |
-| [`combobox.md`](./combobox.md)                                 | Single-select dropdowns                           |
-| [`date-format.md`](./date-format.md)                           | `DD.MM.YYYY` display standard                     |
-| [`calendar-components.md`](./calendar-components.md)           | `CalendarView`, events, planner UX                |
-| [`locked-components.md`](./locked-components.md)               | Locked variants — no ad-hoc third-party overrides |
-| [`split-view-master-detail.md`](./split-view-master-detail.md) | Master-detail layouts                             |
-| [`entity-form.md`](./entity-form.md)                           | Create/edit forms                                 |
-| [`interactive-states.md`](./interactive-states.md)             | Control states (loading, invalid, disabled)       |
-| [`module-pattern.md`](./module-pattern.md)                     | ERP module file structure                         |
-| [`detail-pages.md`](./detail-pages.md)                         | DetailView vs Tabs, Overview tab                  |
-| [`section-nav.md`](./section-nav.md)                           | Section nav layout, compact app sidebar           |
-| [`design-tokens.md`](./design-tokens.md)                       | Token layers, playground, alias map, tuning       |
-| [`status-and-money.md`](./status-and-money.md)                 | StatusBadge, MoneyText                            |
-| [`dialogs.md`](./dialogs.md)                                   | Modals and confirms                               |
-| [`checklist.md`](./checklist.md)                               | ChecklistSection done-state                       |
-| [`agent-components.md`](./agent-components.md)                 | Agent chat messages, result cards, shell          |
-| [`maps-components.md`](./maps-components.md)                   | Inline map preview and dialog embed               |
-| [`email-module.md`](./email-module.md)                         | Email workbench and reusable composer             |
+| You are editing                       | Read                                     |
+| ------------------------------------- | ---------------------------------------- |
+| Any `apps/web` UI                     | `ui-system.md`                           |
+| `modules/**` list/detail/form         | `patterns.md` + `module-pattern` section |
+| `components/data/**`                  | `patterns.md` § Lists                    |
+| `components/forms/**`                 | `patterns.md` § Forms                    |
+| `components/agent/**`                 | `agent-components.md`                    |
+| `lib/design-tokens/**` or `/showcase` | `foundation.md` § Tokens                 |
+| Picking a component                   | `component-registry.md`                  |
 
----
+## Maintenance
 
-## Reference
-
-| File                                               | Purpose                                                        |
-| -------------------------------------------------- | -------------------------------------------------------------- |
-| [`component-blocks.md`](./component-blocks.md)     | Reusable blocks modules should compose                         |
-| [`missing-components.md`](./missing-components.md) | Built vs still missing in the codebase                         |
-| [`../../eslint.config.js`](../../eslint.config.js) | Lint enforcement (`pnpm lint`) — includes UX tab/filter limits |
-
----
-
-## Path-based quick lookup
-
-| Path pattern                                    | Topic files                                                    |
-| ----------------------------------------------- | -------------------------------------------------------------- |
-| `apps/web/src/modules/**`                       | `module-pattern.md`, `detail-pages.md`, `page-header.md`       |
-| `apps/web/src/components/data/**`               | `crud-table.md`, `filter-toolbar.md`                           |
-| `apps/web/src/components/forms/**`              | `entity-form.md`, `combobox.md`                                |
-| `apps/web/src/components/agent/**`              | `agent-components.md`                                          |
-| `apps/web/src/components/maps/**`               | `maps-components.md`                                           |
-| `packages/base-ui/src/components/scheduling/**` | `calendar-components.md`, `locked-components.md`               |
-| `apps/web/src/lib/design-tokens/**`             | Token registry, aliases, playground editors                    |
-| Any `apps/web` UI file                          | `ui-system.md` + relevant topic above                          |
-| `/showcase → Design tokens`                     | Live playground — see [`design-tokens.md`](./design-tokens.md) |
-
----
-
-## Suggested read order
-
-1. `ui-system.md`
-2. [`design-tokens.md`](./design-tokens.md) when tuning colors, radius, or shell chrome
-3. [`ux-principles.md`](./ux-principles.md) when adding tabs, filters, nav items, or multi-step flows
-4. Topic file for your task (table, form, detail page, …)
-5. `component-registry.md` when choosing imports
-6. `anti-patterns.md` before inventing a layout
-7. `agent-contract.md` pre-submit checklist before finishing
-
----
-
-## Maintaining these rules
-
-1. Edit the relevant file in this folder only.
-2. Update this index when adding or renaming docs.
-3. Mirror to `.cursor/rules/*.mdc` if the team uses Cursor auto-rules.
-4. Add ESLint rules in `apps/web/eslint.config.js` when something should be machine-enforced.
+1. Edit the canonical file above — not duplicate prose elsewhere.
+2. Legacy filenames (`page-header.md`, `hierarchy-system.md`, …) are **redirect stubs** only.
+3. Mirror critical bans to `.cursor/rules/ui-system.mdc` when they must load in every session.
+4. Prefer ESLint in `apps/web/eslint.config.js` for enforceable limits.

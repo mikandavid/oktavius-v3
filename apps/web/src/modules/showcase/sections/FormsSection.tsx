@@ -301,7 +301,7 @@ export function FormsSection() {
           </TabsList>
           <TabsContent value="page" className="pt-3 text-sm text-muted-foreground">
             Full-page routes use <code className="text-xs">variant=&quot;default&quot;</code> on
-            submit. Open any module create page (e.g. /clients/new) to see the live pattern.
+            submit. Use generated module create pages to see the live pattern.
           </TabsContent>
           <TabsContent value="dialog" className="pt-3 text-sm text-muted-foreground">
             Dialogs use <code className="text-xs">surface=&quot;dialog&quot;</code> or{' '}

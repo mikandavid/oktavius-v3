@@ -1,0 +1,182 @@
+# UI patterns
+
+Task recipes. Core rules: [`ui-system.md`](./ui-system.md). Components: [`component-registry.md`](./component-registry.md).
+
+---
+
+## Module pattern {#module-pattern}
+
+```
+modules/<name>/
+├── shared.tsx          # columns, formFields, defaults, status maps, header CTA, *PageIcon
+├── <Name>sListPage.tsx # CrudMainView only
+├── <Name>CreatePage.tsx
+└── <Name>DetailPage.tsx
+```
+
+- `useListPageState()` for list state — don’t hand-roll filters/sort/page
+- Config lives in `shared.tsx` — not inline in pages
+- List: `entityLabel`, `getRowHref`, `exportOptions`, `headerActions`
+
+---
+
+## Page header {#page-header}
+
+- **Left:** `icon` (required) → optional `backTo` → `title` + `subtitle` (status/tags here)
+- **`actions`:** operational only — CTA, export, outline links, icon edit/delete
+- **Never in `actions`:** `StatusBadge`, stage chips, duplicate status
+- All header buttons: `size="sm"`; export icon-only (`PageHeaderExportButton`)
+- Order: Export → secondary → CTA last
+- Edit/delete: `IconEditButton` / `IconDeleteButton`, `aria-label`, no visible text
+
+---
+
+## Lists & CrudTable {#lists}
+
+**Width:** `columnStretch="all"` (default); no horizontal scroll; `hideBelow` on secondary columns; don’t persist pixel widths when stretching.
+
+**Alignment:** text/status/date left; currency/numbers right via `crudTableAlignClass`.
+
+**Padding:** use `crudTableColumnPaddingClass` — first col `pl-5`, last `pr-5`; toolbar/pagination `px-5`.
+
+**List CRUD (default on):** multiselect, row menu, bulk bar (`bg-sidebar-primary/[0.06]`). Opt out: `enableListCrud={false}`.
+
+---
+
+## Filter toolbar {#filter-toolbar}
+
+**One horizontal row** — `FILTER_TOOLBAR_SLOT_COUNT = 3` fixed slots + search + reset.
+
+```
+minmax(8rem, 1.5fr) repeat(3, minmax(6.5rem, 1fr)) auto
+```
+
+Unused filter slots: empty `h-9` placeholder. Reset always reserves width (`invisible` when inactive).
+
+---
+
+## Combobox {#combobox}
+
+All single-select: `<Combobox>` — forms, filters, settings. `EntityForm` `type: 'combobox'|'select'`.
+
+Multi-select: `<MultiSelect>`. `clearable={false}` for required “All” filter rows.
+
+---
+
+## Entity form {#entity-form}
+
+Always `<EntityForm>`. Surfaces: `page` (submit `default`) vs `dialog` (submit `cta`, `showHeader={false}` when parent has title).
+
+- Sections for 4+ fields; `colSpan: 2` for wide fields
+- Types: `combobox`, `country`, `currencySelect`, `vocabulary`, `radio`, `relation`, `phone`, `address`, …
+- Errors: `errors` prop or field `error`; invalid ring via `FormField`
+- Keystroke sanitization on number/currency/phone/email/url/postal — see registry `NumberInput` helpers
+
+Don’t: raw inputs in page forms; `cta` on full-page submit; native date/select.
+
+---
+
+## Detail pages {#detail-pages}
+
+| Workflow      | Pattern                    |
+| ------------- | -------------------------- |
+| Read record   | `DetailView` one scroll    |
+| Many sections | `AppSectionNavLayout`      |
+| Queue         | `SplitView` + `fillHeight` |
+| Peer modes    | `Tabs` + `SectionCard`     |
+| File inspect  | Preview-led `fillHeight`   |
+
+**Never** `DetailView` inside `Tabs`.
+
+**Overview tab (if tabs):** StatCards (≤6) → recent timeline → sub-entity previews (3–5 + “View all”).
+
+**Sub-entities:** `SectionCard` + `ListRow`; add/edit `SubEntityFormDialog`; empty `InlineEmptyState`; checklists `ChecklistSection`.
+
+Field `importance` + `CARD_CONTENT_TIERS` — see [`foundation.md`](./foundation.md).
+
+---
+
+## Section nav {#section-nav}
+
+`MODULE_PAGE_SECTION_NAV_CLASS` + `AppSectionNavLayout` (not raw `SettingsLayout`).
+
+- App sidebar auto-compacts; section nav + content scroll independently
+- Active: `bg-sidebar-primary/10` + `text-sidebar-primary`
+- No border/card around nav list
+- Mobile: horizontal tab row above content
+
+---
+
+## Split view {#split-view}
+
+```tsx
+<SplitView className="min-h-0 flex-1 w-full" persistKey="…" sidebarScroll
+  defaultSidebarWidth={400} minSidebarWidth={320} maxSidebarWidth={760} … />
+```
+
+- No border on split outer; pixels not `%` widths
+- Queue: `SplitViewQueue` + `ListRow variant="queue"` + `QUEUE_ITEM_SELECTED_CLASS`
+- Filters above split: shared `Tabs`, not button toggles
+- Badges under title/meta — not in header `actions`
+
+Fixed `min-h-[…]` only in showcase/dialogs — see [Fill height](#fill-height).
+
+---
+
+## Fill height {#fill-height}
+
+`ModulePage fillHeight` + `MODULE_TABS_FILL_CLASS` when panes need independent scroll. Don’t wrap split in extra `overflow-y-auto`.
+
+---
+
+## Dialogs {#dialogs}
+
+| Need        | Component                                      |
+| ----------- | ---------------------------------------------- |
+| Form modal  | `Dialog` + `EntityForm surface="dialog"`       |
+| Footer      | `DialogFormFooter` confirmVariant="cta"        |
+| Page delete | `ConfirmActionDialog` destructive              |
+| Row delete  | `ConfirmPopover` or CrudTable built-in confirm |
+
+Cancel: `ghost`. Save: `cta`. Toast via `@/lib/toast`.
+
+---
+
+## Status & money {#status-money}
+
+Tables: `type: 'status'` + `meta.variantMap` (helper `statusColumn`). Reuse map in subtitle/detail.
+
+Display: `<StatusBadge>`, `<MoneyText>` — never per-module formatters or colored `Badge`.
+
+---
+
+## Dates {#dates}
+
+Display: `formatDisplayDate` / `formatDisplayDateTime` — `DD.MM.YYYY`. Input: `DatePicker` / EntityForm date types.
+
+---
+
+## Checklist {#checklist}
+
+`<ChecklistSection items onToggle>` — done = checkbox + muted strikethrough + row opacity; `readOnly` on overview previews.
+
+---
+
+## Layouts {#layouts}
+
+Import chrome from `@/components/common/pageChrome` (`FIELD_GROUP_LABEL_CLASS`, gutter classes).
+
+**Blocks (compose, don’t reinvent):**
+
+| Job            | Block                                |
+| -------------- | ------------------------------------ |
+| List           | `CrudMainView`                       |
+| Record         | `DetailView` / section nav / split   |
+| Form           | `EntityForm` / `SubEntityFormDialog` |
+| Config table   | `SettingsTable`                      |
+| Metrics        | `StatCard`, `ChartCard`              |
+| Files          | `DocumentPreview`, `AttachmentList`  |
+| Maps           | `GoogleMapsPreview`                  |
+| Empty sub-list | `InlineEmptyState`                   |
+
+`SettingsTable` for small catalogs; `CrudMainView` for transactional lists.

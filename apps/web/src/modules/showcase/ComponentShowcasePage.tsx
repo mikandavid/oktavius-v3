@@ -20,9 +20,11 @@ import { FormsSection } from './sections/FormsSection';
 import { DesignTokensSection } from './sections/DesignTokensSection';
 import { FoundationsSection } from './sections/FoundationsSection';
 import { InputsSection } from './sections/InputsSection';
+import { LayoutsSection } from './sections/LayoutsSection';
 import { OverviewSection } from './sections/OverviewSection';
 import { PatternsSection } from './sections/PatternsSection';
 import { WorkflowSection } from './sections/WorkflowSection';
+import { CommsOpsSection } from './sections/CommsOpsSection';
 
 function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
   switch (section) {
@@ -32,6 +34,8 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
       return <DesignTokensSection />;
     case 'foundations':
       return <FoundationsSection />;
+    case 'layouts':
+      return <LayoutsSection />;
     case 'inputs':
       return <InputsSection />;
     case 'forms':
@@ -54,6 +58,8 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
       return <CalendarChartsSection />;
     case 'patterns':
       return <PatternsSection />;
+    case 'comms-ops':
+      return <CommsOpsSection />;
     default:
       return null;
   }
@@ -93,7 +99,13 @@ export function ComponentShowcasePage() {
           {activeMeta ? (
             <p className="shrink-0 text-sm text-muted-foreground">{activeMeta.description}</p>
           ) : null}
-          <div className={activeSection === 'design-tokens' ? 'min-h-0 flex-1' : undefined}>
+          <div
+            className={
+              activeSection === 'design-tokens'
+                ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
+                : undefined
+            }
+          >
             <ShowcaseSectionContent section={activeSection} />
           </div>
         </div>

@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
 export type UiLocale = 'de' | 'en' | 'fr';
 export type UiTheme = 'light' | 'dark' | 'system';
@@ -38,7 +39,8 @@ type UserPreferencesContextValue = {
 const UserPreferencesContext = createContext<UserPreferencesContextValue | null>(null);
 
 function readStoredLocale(): UiLocale {
-  const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+  const storage = getWindowStorage('localStorage');
+  const stored = safeStorageGet(storage, LOCALE_STORAGE_KEY);
   if (stored === 'de' || stored === 'en' || stored === 'fr') {
     return stored;
   }
@@ -46,7 +48,8 @@ function readStoredLocale(): UiLocale {
 }
 
 function readStoredTheme(): UiTheme {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  const storage = getWindowStorage('localStorage');
+  const stored = safeStorageGet(storage, THEME_STORAGE_KEY);
   if (stored === 'light' || stored === 'dark' || stored === 'system') {
     return stored;
   }
@@ -70,13 +73,13 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 
   const setLocale = useCallback((next: UiLocale) => {
     setLocaleState(next);
-    localStorage.setItem(LOCALE_STORAGE_KEY, next);
+    safeStorageSet(getWindowStorage('localStorage'), LOCALE_STORAGE_KEY, next);
     document.documentElement.lang = next;
   }, []);
 
   const setTheme = useCallback((next: UiTheme) => {
     setThemeState(next);
-    localStorage.setItem(THEME_STORAGE_KEY, next);
+    safeStorageSet(getWindowStorage('localStorage'), THEME_STORAGE_KEY, next);
     applyTheme(next);
   }, []);
 

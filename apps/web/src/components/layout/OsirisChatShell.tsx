@@ -42,6 +42,7 @@ import {
   PaperclipIcon,
   PlusIcon,
 } from '@/lib/icons';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
 
 import { ChatComposer } from './ChatComposer';
@@ -100,12 +101,7 @@ function mergeConversationMessages(currentMessages: AgentMessage[], nextMessages
 }
 
 function getChatStorage() {
-  if (typeof window === 'undefined') return undefined;
-  try {
-    return window.localStorage;
-  } catch {
-    return undefined;
-  }
+  return getWindowStorage('localStorage');
 }
 
 export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatShellProps) {
@@ -131,7 +127,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const [instructionUpdateMode, setInstructionUpdateMode] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [isMobilePageLayout, setIsMobilePageLayout] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
@@ -283,18 +279,14 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
         })
         .finally(() => {
           setIsAssistantPending(false);
-          const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-          if (viewport instanceof HTMLDivElement) {
-            viewport.scrollTop = viewport.scrollHeight;
-          }
+          const viewport = scrollRef.current?.parentElement;
+          if (viewport) viewport.scrollTop = viewport.scrollHeight;
         });
     }, 900);
 
     window.setTimeout(() => {
-      const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-      if (viewport instanceof HTMLDivElement) {
-        viewport.scrollTop = viewport.scrollHeight;
-      }
+      const viewport = scrollRef.current?.parentElement;
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }, 0);
   };
 
@@ -448,8 +440,11 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
         </div>
       </div>
 
-      <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
-        <div className={cn('flex w-full flex-col gap-4 px-4 py-4 md:px-6', fullWidthContentClass)}>
+      <ScrollArea className="min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          className={cn('flex w-full flex-col gap-4 px-4 py-4 md:px-6', fullWidthContentClass)}
+        >
           {activeConversation?.messages.length ? (
             <AgentMessageList
               messages={activeConversation.messages}

@@ -1,82 +1,134 @@
 # Oktavius UI system
 
-Canonical references: [`README.md`](./README.md) (index) and [`component-registry.md`](./component-registry.md). When in doubt, use those — do not invent layouts.
+**Index:** [`README.md`](./README.md). **Patterns:** [`patterns.md`](./patterns.md). **Catalog:** [`component-registry.md`](./component-registry.md).
+
+When in doubt, use these docs — do not invent layouts.
+
+---
 
 ## Stack constraints
 
-- React 19 + Tailwind v3 — semantic tokens only (`text-foreground`, `bg-muted/60`, `rounded-card`)
+- React 19 + Tailwind v3 — semantic tokens only
 - Icons: **`@/lib/icons` only** — never `@phosphor-icons/react`
-- Data grids: **`CrudMainView` / `CrudTable` only** — never custom `<table>`
+- Lists: **`CrudMainView` / `CrudTable` only** — never custom `<table>`
 - Single-select: **`Combobox` only** in `apps/web` — never `Select`
-- Dates in UI: **`formatDisplayDate` / `formatDisplayDateTime`** — `DD.MM.YYYY`
-- Currency in UI: **`<MoneyText>`** — no ad-hoc `formatMoney` helpers
+- Dates: **`formatDisplayDate` / `formatDisplayDateTime`** — `DD.MM.YYYY`
+- Currency: **`<MoneyText>`** — no ad-hoc `formatMoney`
 
-## Page shells
+---
 
-| Route type               | Shell                                                                                        |
-| ------------------------ | -------------------------------------------------------------------------------------------- |
-| List                     | `<CrudMainView>` + columns/formFields from `shared.tsx`                                      |
-| Create/edit              | `<ModulePage>` + `<EntityForm>`                                                              |
-| Detail (simple)          | `<ModulePage>` + `<DetailView>`                                                              |
-| Detail (many sections)   | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>`     |
-| Detail (workspace modes) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` — only when users switch between peer work modes |
-| Section nav              | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>`     |
+## Choose the page shell
 
-Every route uses `<ModulePage>`. Never build custom page headers or shells.
+| Need                             | Shell                                                                  |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| Entity list                      | `CrudMainView` + `shared.tsx` columns/formFields                       |
+| Create/edit                      | `ModulePage` + `EntityForm`                                            |
+| Simple detail                    | `ModulePage` + `DetailView`                                            |
+| Many sections (scan one record)  | `ModulePage` + `MODULE_PAGE_SECTION_NAV_CLASS` + `AppSectionNavLayout` |
+| Queue / master-detail            | `ModulePage fillHeight` + `SplitView`                                  |
+| Peer work modes (case workspace) | `ModulePage` + `Tabs` + `SectionCard` per tab — **last resort**        |
+| Settings / catalogs              | `AppSectionNavLayout` + `SettingsSection` / `SettingsRow`              |
 
-Section-nav pages: use `<AppSectionNavLayout>` (not raw `SettingsLayout`) — see [`section-nav.md`](./section-nav.md).
+Every route uses **`ModulePage`**. Never custom page headers.
 
-**Module icon (required):** pass `icon={modulePageIcon()}` on every `ModulePage` and `CrudMainView`. Use helpers from `@/lib/modulePageIcons` or re-export in module `shared.tsx`. Standard: `size={20} weight="duotone"`, match sidebar nav icon.
+**Module icon (required):** `icon={modulePageIcon()}` on every `ModulePage` and `CrudMainView` — `size={20} weight="duotone"`, match sidebar.
+
+Detail recipes: [`patterns.md`](./patterns.md#detail-pages).
+
+---
 
 ## Visual rules (non-negotiable)
 
-- **Color system:** three layers — neutral ramp → semantic roles → brand/state. See [`visual-foundation.md`](./visual-foundation.md#color-system). Tune grays via the ramp; use `bg-card` / `bg-muted` in components, not raw `neutral-*` for layout.
+See [`foundation.md`](./foundation.md) for hierarchy and tiers.
+
 - Surfaces: `rounded-card bg-card` — **no borders** on cards, `CrudMainView`, `SplitView` outer
-- Shell chrome: `APP_SHELL_SURFACE_CLASS` + `APP_SHELL_BORDER_CLASS` from `@/components/common/pageChrome` — nav, header, chat share `bg-card`
-- Inputs: `bg-muted/60` filled style — never `border border-input bg-background`
-- Page wash: `bg-muted/40` canvas; modules render white tiles on top
-- No `text-gray-*`, `bg-white`, or `rounded-lg` on named surfaces
-- No cards-in-cards — use `<SectionCard>` inside pages, not nested `<Card>`
-- **Interactive affordances:** every pressable control needs hover + active/focus feedback and `cursor-pointer` — see [`visual-foundation.md`](./visual-foundation.md#interactive-affordances)
+- Shell: `APP_SHELL_SURFACE_CLASS` + `APP_SHELL_BORDER_CLASS` from `pageChrome`
+- Inputs: `bg-muted/60` — never `border border-input bg-background`
+- Page wash: `bg-muted/40`; modules use white tiles on top
+- No `text-gray-*`, `bg-white`, `rounded-lg` on named surfaces
+- No cards-in-cards — `SectionCard` inside pages, not nested `Card`
+- Interactive: hover + focus + `cursor-pointer` on all pressables
+
+---
 
 ## Button hierarchy
 
 | Context               | Variant                                                       |
 | --------------------- | ------------------------------------------------------------- |
-| List header “New X”   | `cta` via `PageHeaderCtaLink`                                 |
+| List “New X”          | `cta` via `PageHeaderCtaLink`                                 |
 | Dialog Save / Create  | `cta` via `EntityForm surface="dialog"` or `DialogFormFooter` |
 | Dialog Cancel / Back  | `ghost`                                                       |
 | Full-page form submit | `default`                                                     |
 | Delete confirm        | `destructive` on `ConfirmActionDialog` / `AlertDialogAction`  |
 | Toolbar / secondary   | `outline` `size="sm"`                                         |
 
+At most **one** `variant="cta"` per header strip.
+
+---
+
 ## App shell
 
 - Desktop: nav left · workspace center · chat right — never hide sidebar on desktop
-- **Nav model:** Main (2) · Modules (org-filtered, scrollable, user-reorderable) · Admin (settings last) — see [`ux-principles.md`](./ux-principles.md#app-navigation-model-canonical)
-- **Command palette** (`⌘K`): preferred jump for infrequent modules when the sidebar list is long
-- **Section-nav pages:** app sidebar auto-compacts to icon rail; section nav + content scroll independently — see [`section-nav.md`](./section-nav.md)
-- Import layout classes from `@/components/common/pageChrome`
-- Toasts: `@/lib/toast` — Toaster already in `AppLayout`
+- **Nav:** Main (2) · Modules (`enabledModules`, scrollable, reorderable) · Admin — no per-module nav; long lists → `⌘K` palette
+- **Section-nav pages:** sidebar compacts to icon rail; section nav + content scroll independently — [`patterns.md`](./patterns.md#section-nav)
+- Toasts: `@/lib/toast` — Toaster in `AppLayout`
 
-## Design tokens
+---
 
-Canonical reference: [`design-tokens.md`](./design-tokens.md).
+## UX & chunking (ERP)
 
-- **Tune colors:** `/showcase → Design tokens` — sliders for neutral ramp, brand/state, radius, motion; live preview; copy CSS to `globals.css`
-- **Edit the ramp, not aliases** — `card`, `muted`, `border` derive from `neutral-*`; they are hidden in the playground
-- **Shell chrome:** always `APP_SHELL_SURFACE_CLASS` + `APP_SHELL_BORDER_CLASS` — never `bg-sidebar-background` or per-region tints
+Adapted for dense data — chunk **per screen**, not “cap total modules.”
 
-## Scoped rules (read when relevant)
+| Surface                        | Limit                                                 |
+| ------------------------------ | ----------------------------------------------------- |
+| Detail `<TabsTrigger>`         | ≤6 (ESLint `max-detail-tabs-triggers`)                |
+| List filters (`FilterToolbar`) | 3 slots (ESLint `max-list-filters`)                   |
+| `extraTabs` on workspace tabs  | ≤3                                                    |
+| Form section                   | 4–6 fields; more → new section / `CollapsibleSection` |
+| Visible table columns          | 5–7; rest via column picker                           |
+| `StatCard` row                 | ≤6                                                    |
+| Settings section nav           | ≤6 categories                                         |
 
-Full index: [`README.md`](./README.md)
+**Tabs are not the default for complexity.** Prefer `DetailView` → section nav → `SplitView` → preview-led layout → tabs only for peer modes.
 
-[`page-header.md`](./page-header.md) · [`crud-table.md`](./crud-table.md) · [`filter-toolbar.md`](./filter-toolbar.md) · [`combobox.md`](./combobox.md) · [`date-format.md`](./date-format.md) · [`calendar-components.md`](./calendar-components.md) · [`split-view-master-detail.md`](./split-view-master-detail.md) · [`entity-form.md`](./entity-form.md) · [`module-pattern.md`](./module-pattern.md) · [`detail-pages.md`](./detail-pages.md) · [`section-nav.md`](./section-nav.md) · [`design-tokens.md`](./design-tokens.md) · [`status-and-money.md`](./status-and-money.md) · [`dialogs.md`](./dialogs.md) · [`checklist.md`](./checklist.md)
+**Nav when many modules:** org `enabledModules`, user reorder, command palette — do not invent sub-menus without product approval.
+
+---
+
+## Hard bans (agents)
+
+```
+❌ Card/SectionCard nesting (same level)
+❌ border/shadow on Card, CrudMainView, SectionCard, SplitView outer
+❌ @phosphor-icons/react, Select, custom <table>, window.confirm
+❌ formatMoney, ad-hoc status Badge, raw palette colors, text-2xl+
+❌ rounded-lg/xl on surfaces; border-input on inputs
+❌ Multiple cta in one header; cta on full-page submit; default on dialog Save
+❌ TooltipProvider in components; arbitrary spacing (mt-7, px-11)
+❌ DetailView inside Tabs; manual Button spinners
+❌ Raw Calendar classNames in sidebar — use CalendarMiniPicker
+```
+
+Full pattern examples: [`patterns.md`](./patterns.md) + [`foundation.md`](./foundation.md).
+
+---
+
+## Pre-submit checklist
+
+- [ ] `ModulePage` / `CrudMainView` with `icon`
+- [ ] Correct shell (not tabs when section-nav fits)
+- [ ] `EntityForm` for forms; `Combobox` for selects
+- [ ] `StatusBadge` + shared `variantMap`; `MoneyText` for money
+- [ ] Header: status in `subtitle`; edit/delete icon-only
+- [ ] `pnpm lint` clean
+
+---
 
 ## Lint (`pnpm lint`)
 
-Enforced in `apps/web/eslint.config.js`:
+`apps/web/eslint.config.js`:
 
-- `@phosphor-icons/react` — only allowed in `src/lib/icons.ts`
-- `Select` / Radix select exports from `@oktavius/base-ui` — use `Combobox`
-- Forbidden Tailwind: `text-gray-*`, `bg-white`, `text-white`, raw palette scales (`blue-500`, `teal-600`, etc.), `rounded-lg` — use semantic tokens (`rounded-card`, `rounded-control`, `getSemanticToneClasses`)
+- `@phosphor-icons/react` — only `src/lib/icons.ts`
+- `Select` from `@oktavius/base-ui` — use `Combobox`
+- Forbidden Tailwind: `text-gray-*`, `bg-white`, raw scales, `rounded-lg`
+- Tab/filter UX limits (see table above)

@@ -18,6 +18,7 @@ import {
 import { WorkspaceLocationsOverview } from '@/components/settings/WorkspaceLocationsOverview';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import { DocumentIcon, NotificationsIcon, Settings2Icon } from '@/lib/icons';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { settingsPageIcon } from '@/lib/modulePageIcons';
 import { appToast } from '@/lib/toast';
 
@@ -36,7 +37,7 @@ export function SettingsPage() {
   const [approvalAlerts, setApprovalAlerts] = useState(true);
   const [formatLocale, setFormatLocale] = useState('de-AT');
   const [paymentTerms, setPaymentTerms] = useState(INITIAL_PAYMENT_TERMS);
-  const storage = typeof window === 'undefined' ? undefined : window.localStorage;
+  const storage = getWindowStorage('localStorage');
   const paymentTermsStore = useMemo(
     () =>
       createConfiguredCatalogOptionsStore({

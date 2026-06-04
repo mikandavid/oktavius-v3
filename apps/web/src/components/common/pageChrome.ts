@@ -47,7 +47,7 @@ export const MODULE_TABS_CONTENT_SCROLL_CLASS =
 
 /**
  * Field group / section divider label inside cards and forms.
- * @see docs/ui-rules/visual-foundation.md
+ * @see docs/ui-rules/foundation.md
  */
 export const FIELD_GROUP_LABEL_CLASS =
   'text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground';

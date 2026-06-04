@@ -67,6 +67,7 @@ export function RichTextEditor({
     extensions: editorExtensions,
     content: value,
     editable,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         'aria-label': ariaLabel ?? placeholder,

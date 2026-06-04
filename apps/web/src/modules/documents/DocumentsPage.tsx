@@ -30,7 +30,9 @@ import { EmailTemplatePicker } from '@/components/documents/EmailTemplatePicker'
 import { PageFileDrop } from '@/components/forms/PageFileDrop';
 import { TemplatePicker } from '@/components/documents/TemplatePicker';
 import { documentsPageIcon } from '@/lib/modulePageIcons';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
+import { useUserPreferences } from '@/lib/userPreferences';
 
 import { addGeneratedDocument, addUploadedDocuments, markDocumentSent } from './documentLifecycle';
 import { loadStoredDocuments, storeDocuments } from './documentStorage';
@@ -68,35 +70,30 @@ const EMAIL_TEMPLATES = [
 const KUNZ_DOC_TEMPLATES = [
   {
     id: 'tpl_ba',
-    name: 'Bestattungsauftrag digitalisieren',
-    description:
-      'Extrahiert Kundendaten und Leistungspositionen aus Bestattungsaufträgen (Kunz-Bestattungsauftrag).',
+    name: 'Funeral order digitization',
+    description: 'Extracts client and service data from funeral orders (Kunz funeral order flow).',
     category: 'Doc processing',
   },
 ];
 
-function getDocumentStorage() {
-  try {
-    return typeof window === 'undefined' ? undefined : window.localStorage;
-  } catch {
-    return undefined;
-  }
-}
-
 export function DocumentsPage() {
   const profile = useOrgProfile();
   const isFuneral = profile.industryKey === 'funeral';
+  const documentTemplates = isFuneral ? KUNZ_DOC_TEMPLATES : DOCUMENT_TEMPLATES;
   const [activeTab, setActiveTab] = useState('library');
+  const storage = getWindowStorage('localStorage');
   const initialFiles = useMemo(
-    () => loadStoredDocuments(getDocumentStorage(), DOCUMENT_PREVIEW_DEMO_FILES),
-    [],
+    () => loadStoredDocuments(storage, DOCUMENT_PREVIEW_DEMO_FILES),
+    [storage],
   );
   const [files, setFiles] = useState(initialFiles);
   const [selectedFileId, setSelectedFileId] = useState(initialFiles[0]?.id ?? '');
-  const [templateId, setTemplateId] = useState(DOCUMENT_TEMPLATES[0]?.id);
+  const [templateId, setTemplateId] = useState(documentTemplates[0]?.id);
   const [emailTemplateId, setEmailTemplateId] = useState(EMAIL_TEMPLATES[0]?.id);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
+  const { locale } = useUserPreferences();
+  const isGerman = locale === 'de';
 
   const handleFilesUpload = (uploads: File[]) => {
     const result = addUploadedDocuments({
@@ -111,8 +108,15 @@ export function DocumentsPage() {
   };
 
   useEffect(() => {
-    storeDocuments(getDocumentStorage(), files);
-  }, [files]);
+    storeDocuments(storage, files);
+  }, [files, storage]);
+
+  useEffect(() => {
+    const hasTemplate = documentTemplates.some((template) => template.id === templateId);
+    if (!hasTemplate) {
+      setTemplateId(documentTemplates[0]?.id);
+    }
+  }, [documentTemplates, templateId]);
 
   const headerActions = useMemo(
     () => (
@@ -132,7 +136,9 @@ export function DocumentsPage() {
         title={profile.terminology.documents}
         subtitle={
           isFuneral
-            ? 'Ablage, Bestattungsauftrag-Einlesen und Vorlagen — Bestattung Kunz Demo'
+            ? isGerman
+              ? 'Ablage, Bestattungsauftrag-Einlesen und Vorlagen — Bestattung Kunz Demo'
+              : 'Storage, funeral order import, and templates — Kunz demo'
             : 'Library, preview split-view, and generate/send workflows'
         }
         icon={documentsPageIcon()}
@@ -141,9 +147,19 @@ export function DocumentsPage() {
       >
         {isFuneral ? (
           <AlertBanner tone="info" className="shrink-0">
-            <strong className="font-medium">Bestattungsauftrag einlesen.</strong> Osiris flow
-            „Kunz-Bestattungsauftrag“: PDF hochladen → Felder in den Sterbefall übernehmen. In v3
-            als UI-Demo; Live-Anbindung folgt mit API/doc-processing.
+            {isGerman ? (
+              <>
+                <strong className="font-medium">Bestattungsauftrag einlesen.</strong> Osiris flow
+                „Kunz-Bestattungsauftrag“: PDF hochladen → Felder in den Sterbefall übernehmen. In
+                v3 als UI-Demo; Live-Anbindung folgt mit API/doc-processing.
+              </>
+            ) : (
+              <>
+                <strong className="font-medium">Import funeral orders.</strong> Osiris sample flow:
+                upload a PDF, then copy extracted fields into the case record. In v3 this is a UI
+                demo; API and doc-processing integration is planned.
+              </>
+            )}
           </AlertBanner>
         ) : null}
         <Tabs value={activeTab} onValueChange={setActiveTab} className={MODULE_TABS_FILL_CLASS}>
@@ -171,7 +187,7 @@ export function DocumentsPage() {
             <div className="space-y-4">
               <div className="grid gap-4 lg:grid-cols-2">
                 <TemplatePicker
-                  templates={isFuneral ? KUNZ_DOC_TEMPLATES : DOCUMENT_TEMPLATES}
+                  templates={documentTemplates}
                   value={templateId}
                   onChange={setTemplateId}
                   title="Document templates"
@@ -201,14 +217,14 @@ export function DocumentsPage() {
       <DocumentGenerateDialog
         open={generateOpen}
         onOpenChange={setGenerateOpen}
-        templates={DOCUMENT_TEMPLATES}
+        templates={documentTemplates}
         onGenerate={(payload) =>
           completeDocumentGeneration({
             payload,
             generateDocument: async (nextPayload) => {
               const result = addGeneratedDocument({
                 files,
-                templates: DOCUMENT_TEMPLATES,
+                templates: documentTemplates,
                 payload: nextPayload,
                 generatedAt: new Date().toISOString(),
               });
