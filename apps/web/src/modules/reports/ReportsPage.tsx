@@ -1,26 +1,27 @@
 import { useMemo } from 'react';
 
+import { useQuery } from '@tanstack/react-query';
 import { ChartCard, type ChartPoint } from '@oktavius/base-ui';
 
 import { createConfiguredReportStore } from '@/api/apiStoreConfig';
+import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_TABS_CONTENT_SCROLL_CLASS } from '@/components/common/pageChrome';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 import {
   COMBO_DATA,
   MULTI_LINE_REVENUE,
-  ORDER_STATUS_DATA,
   PIPELINE_FUNNEL,
   RADAR_KPIS,
   RADAR_SERIES,
   ReportBuilderPanel,
-  REVENUE_DATA,
   REVENUE_SERIES,
   STACKED_PIPELINE,
   TOP_CLIENTS,
 } from '@/components/reports/ReportBuilderPanel';
-import { useDemoData } from '@/app/demo-data';
 import { reportsPageIcon } from '@/lib/modulePageIcons';
+
+const REPORTS_PAGE_SIZE = '250';
 
 function sumAmounts(items: Array<{ amount?: string; total?: string }>, key: 'amount' | 'total') {
   return items.reduce((sum, item) => {
@@ -43,7 +44,7 @@ function aggregateByMonth(items: Array<{ date: string; value: number }>): ChartP
 }
 
 export function ReportsPage() {
-  const { orders, invoices } = useDemoData();
+  const api = useApiRegistry();
   const storage = getWindowStorage('localStorage');
   const reportStore = useMemo(
     () =>
@@ -54,6 +55,22 @@ export function ReportsPage() {
       }),
     [storage],
   );
+  const reportsQuery = useQuery({
+    queryKey: ['reports-page-summary'],
+    queryFn: async () => {
+      const [orders, invoices] = await Promise.all([
+        api.orders.list({ pageSize: REPORTS_PAGE_SIZE, sort: '-orderDate' }),
+        api.invoices.list({ pageSize: REPORTS_PAGE_SIZE, sort: '-issuedAt' }),
+      ]);
+
+      return {
+        orders: orders.data,
+        invoices: invoices.data,
+      };
+    },
+  });
+  const orders = reportsQuery.data?.orders ?? [];
+  const invoices = reportsQuery.data?.invoices ?? [];
 
   const ordersTrend = useMemo(
     () =>
@@ -64,6 +81,16 @@ export function ReportsPage() {
         })),
       ),
     [orders],
+  );
+  const revenueTrend = useMemo(
+    () =>
+      aggregateByMonth(
+        invoices.map((invoice) => ({
+          date: invoice.issuedAt,
+          value: Number.parseFloat(invoice.amount),
+        })),
+      ),
+    [invoices],
   );
 
   const paidVsOpen = useMemo(() => {
@@ -104,7 +131,7 @@ export function ReportsPage() {
             title="Revenue trend"
             meta="Issued invoice amounts by month"
             type="area"
-            data={REVENUE_DATA}
+            data={revenueTrend}
             valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
           />
           <ChartCard
@@ -158,7 +185,7 @@ export function ReportsPage() {
             title="Orders by status"
             meta="Current pipeline mix"
             type="bar"
-            data={ORDER_STATUS_DATA.length ? ORDER_STATUS_DATA : orderStatusMix}
+            data={orderStatusMix}
           />
           <ChartCard
             title="Pipeline by quarter"
