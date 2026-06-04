@@ -1,4 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
 
 import { ApiAuthorizationError, ApiValidationError, type ListResponse } from './demo-client';
 import { createHttpEntityHandlers, createHttpRegistry } from './httpRegistry';
@@ -23,6 +25,10 @@ const listResponse: ListResponse<Row> = {
   page: 1,
   pageSize: 10,
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('HTTP registry adapters', () => {
   it('builds list requests with query params and parses list responses', async () => {
@@ -151,5 +157,72 @@ describe('HTTP registry adapters', () => {
       method: 'GET',
       headers: undefined,
     });
+  });
+
+  it('adds Osiris auth and context headers through generated registry requests', async () => {
+    const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      response(listResponse),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const registry = createHttpRegistry({
+      baseUrl: '',
+      fetcher: createOsirisApiFetcher({
+        baseUrl: '/api',
+        getAccessToken: () => 'token_1',
+        getActiveOrgId: () => 'org_1',
+        getActiveSiteId: () => 'site_1',
+      }),
+      endpoints: {
+        clients: '/clients',
+        products: '/products',
+        cases: '/cases',
+        orders: '/orders',
+        invoices: '/invoices',
+        contracts: '/contracts',
+        incidents: '/incidents',
+        projects: '/projects',
+        users: '/users',
+        organizations: '/organizations',
+        parties: '/parties',
+        caseChecklists: '/case-checklists',
+        contacts: '/contacts',
+        vendors: '/vendors',
+        leads: '/leads',
+        staff: '/staff',
+        purchasing: '/purchasing',
+      },
+    });
+
+    await registry.contacts.list({ page: '1' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/contacts?page=1',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'GET',
+        headers: expect.any(Headers),
+      }),
+    );
+    const headers = fetch.mock.calls[0]?.[1]?.headers;
+    expect(headers).toBeInstanceOf(Headers);
+    if (!(headers instanceof Headers)) throw new Error('Expected fetch headers to be Headers.');
+    expect(headers.get('Authorization')).toBe('Bearer token_1');
+    expect(headers.get('X-Org-Id')).toBe('org_1');
+    expect(headers.get('X-Site-Id')).toBe('site_1');
+  });
+
+  it('preserves absolute URLs in Osiris fetcher requests', async () => {
+    const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      response(listResponse),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const fetcher = createOsirisApiFetcher({ baseUrl: '/api' });
+
+    await fetcher('https://api.example.test/contacts', { method: 'GET' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.example.test/contacts',
+      expect.objectContaining({ credentials: 'include' }),
+    );
   });
 });

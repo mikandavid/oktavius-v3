@@ -3,8 +3,10 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { DemoApiRegistry } from './demo-client';
 
+export type ApiRegistry = DemoApiRegistry;
+
 type ApiContextValue = {
-  registry: DemoApiRegistry;
+  registry: ApiRegistry;
 };
 
 const ApiContext = createContext<ApiContextValue | null>(null);
@@ -20,7 +22,7 @@ const queryClient = new QueryClient({
 
 type ApiProviderProps = {
   children: ReactNode;
-  registry: DemoApiRegistry;
+  registry: ApiRegistry;
 };
 
 export function ApiProvider({ children, registry }: ApiProviderProps) {
