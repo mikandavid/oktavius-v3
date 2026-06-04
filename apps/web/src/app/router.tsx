@@ -11,6 +11,9 @@ import { AppShellSpinner } from '@/components/layout/AppShellSpinner';
 import { ShortcutHelpProvider } from '@/components/layout/ShortcutHelpProvider';
 import { APP_NAV_MODULES, type AppNavRouteId } from '@/lib/appNavModules';
 import { canAccessAppNavItem, permissionSubjectFor } from '@/lib/permissions';
+import { useOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
+
+const USE_DEMO_RUNTIME = import.meta.env.VITE_OKTAVIUS_RUNTIME === 'demo';
 
 function lazyPage<TModule extends Record<TExport, ComponentType>, TExport extends keyof TModule>(
   loader: () => Promise<TModule>,
@@ -29,13 +32,63 @@ function pageElement(Page: ComponentType) {
   );
 }
 
-function ProtectedRoute({ routeId, children }: { routeId: AppNavRouteId; children: ReactNode }) {
+function DemoProtectedRoute({
+  routeId,
+  children,
+}: {
+  routeId: AppNavRouteId;
+  children: ReactNode;
+}) {
   const { activeMembership, currentUser } = useDemoData();
   const item = APP_NAV_MODULES.find((entry) => entry.id === routeId);
   const canAccess =
     item != null && canAccessAppNavItem(item, permissionSubjectFor(currentUser, activeMembership));
 
   return canAccess ? children : pageElement(AccessDeniedPage);
+}
+
+function OsirisProtectedRoute({
+  routeId,
+  children,
+}: {
+  routeId: AppNavRouteId;
+  children: ReactNode;
+}) {
+  const { permissionSubject, isLoading, error, reload } = useOsirisRuntime();
+
+  if (isLoading) {
+    return <AppShellSpinner label="Loading access…" />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center p-6">
+        <div className="max-w-md rounded-card border border-border bg-card p-5 text-card-foreground shadow-sm">
+          <h2 className="text-base font-semibold">Unable to load access</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+          <button
+            type="button"
+            className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            onClick={() => {
+              void reload();
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const item = APP_NAV_MODULES.find((entry) => entry.id === routeId);
+  const canAccess = item != null && canAccessAppNavItem(item, permissionSubject);
+
+  return canAccess ? children : pageElement(AccessDeniedPage);
+}
+
+function ProtectedRoute({ routeId, children }: { routeId: AppNavRouteId; children: ReactNode }) {
+  const RuntimeProtectedRoute = USE_DEMO_RUNTIME ? DemoProtectedRoute : OsirisProtectedRoute;
+  return <RuntimeProtectedRoute routeId={routeId}>{children}</RuntimeProtectedRoute>;
 }
 
 function protectedPageElement(routeId: AppNavRouteId, Page: ComponentType) {
@@ -62,19 +115,6 @@ const ComponentShowcasePage = lazyPage(
   () => import('@/modules/showcase/ComponentShowcasePage'),
   'ComponentShowcasePage',
 );
-const OrganizationCreatePage = lazyPage(
-  () => import('@/modules/superadmin/OrganizationCreatePage'),
-  'OrganizationCreatePage',
-);
-const OrganizationDetailPage = lazyPage(
-  () => import('@/modules/superadmin/OrganizationDetailPage'),
-  'OrganizationDetailPage',
-);
-const SuperadminPage = lazyPage(
-  () => import('@/modules/superadmin/SuperadminPage'),
-  'SuperadminPage',
-);
-const TasksPage = lazyPage(() => import('@/modules/tasks/TasksPage'), 'TasksPage');
 
 function AppRootProviders() {
   return (
@@ -110,16 +150,6 @@ const appRouter = createBrowserRouter([
           },
           { path: '/profile', element: pageElement(ProfilePage) },
           { path: '/settings', element: protectedPageElement('settings', SettingsPage) },
-          { path: '/superadmin', element: protectedPageElement('superadmin', SuperadminPage) },
-          {
-            path: '/superadmin/orgs/new',
-            element: protectedPageElement('superadmin', OrganizationCreatePage),
-          },
-          {
-            path: '/superadmin/orgs/:orgId',
-            element: protectedPageElement('superadmin', OrganizationDetailPage),
-          },
-          { path: '/tasks', element: pageElement(TasksPage) },
           { path: '/documents', element: pageElement(DocumentsPage) },
           { path: '/email', element: pageElement(EmailPage) },
           { path: '/calendar', element: pageElement(CalendarPage) },
