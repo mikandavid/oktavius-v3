@@ -36,7 +36,7 @@ Use `<EntityForm>` for every create/edit form. Never hand-roll field grids.
 - Booleans: `checkbox` or `switch` — label is inline, no outer `<Label>`
 - Dates stored as ISO strings — display handled by `DatePicker`
 - API / client errors: pass `errors={{ fieldName: 'Message' }}` to `EntityForm`
-- Validation: `FormField` forwards invalid ring — see `interactive-states.md`
+- Validation: `FormField` forwards invalid ring — see `docs/ui-rules/foundation.md` § Interactive states
 
 ## Don't
 

@@ -168,15 +168,83 @@ Import chrome from `@/components/common/pageChrome` (`FIELD_GROUP_LABEL_CLASS`, 
 
 **Blocks (compose, don’t reinvent):**
 
-| Job            | Block                                |
-| -------------- | ------------------------------------ |
-| List           | `CrudMainView`                       |
-| Record         | `DetailView` / section nav / split   |
-| Form           | `EntityForm` / `SubEntityFormDialog` |
-| Config table   | `SettingsTable`                      |
-| Metrics        | `StatCard`, `ChartCard`              |
-| Files          | `DocumentPreview`, `AttachmentList`  |
-| Maps           | `GoogleMapsPreview`                  |
-| Empty sub-list | `InlineEmptyState`                   |
+| Job             | Block                                |
+| --------------- | ------------------------------------ |
+| List            | `CrudMainView`                       |
+| Record          | `DetailView` / section nav / split   |
+| Form            | `EntityForm` / `SubEntityFormDialog` |
+| Config table    | `SettingsTable`                      |
+| Metrics         | `StatCard`, `ChartCard`              |
+| Files           | `DocumentPreview`, `AttachmentList`  |
+| Maps            | `GoogleMapsPreview`                  |
+| Email workbench | `@/components/email` + `SplitView`   |
+| Calendar        | `CalendarView` (`@oktavius/base-ui`) |
+| Empty sub-list  | `InlineEmptyState`                   |
 
 `SettingsTable` for small catalogs; `CrudMainView` for transactional lists.
+
+---
+
+## Component library map {#component-library}
+
+Reusable UI lives in two packages — **never** copy module-only markup when a library export exists.
+
+| Layer        | Path                | Use for                                                                     |
+| ------------ | ------------------- | --------------------------------------------------------------------------- |
+| **base-ui**  | `@oktavius/base-ui` | Primitives, `CalendarView`, `SplitView`, `EntityForm` field widgets, charts |
+| **apps/web** | `@/components/*`    | ERP blocks: data, agent, **email**, maps, documents, pickers, layout        |
+
+Import from the barrel (`@/components/email`, `@/components/maps/…`) or the registry — not from `modules/*/`.
+
+---
+
+## Calendar (base-ui) {#calendar}
+
+**Import:** `@oktavius/base-ui` — `CalendarView`, `CalendarEventEditorDialog`, `CalendarMiniPicker`, types `CalendarEvent`, `CalendarSource`.
+
+```tsx
+<CalendarView
+  anchor={anchor}
+  onAnchorChange={setAnchor}
+  view={view}
+  onViewChange={setView}
+  events={events}
+  calendars={sources}
+  showSidebar
+  onEventClick={…}
+  onSlotClick={…}
+/>
+```
+
+- Sidebar jump-to-date: **`CalendarMiniPicker`** only — never raw `<Calendar classNames={…}>` ([`locked-components.md`](./locked-components.md))
+- Prefer `CalendarView` over standalone `SchedulerView` / `AgendaList`
+- Module route (`/calendar`) is thin glue — planner UI is library-owned
+
+---
+
+## Email (apps/web) {#email}
+
+**Import:** `@/components/email` — composer, thread queue/detail, drafts helpers.
+
+| Component                               | Use                                      |
+| --------------------------------------- | ---------------------------------------- |
+| `EmailComposer`                         | Rich-text compose (inline or `embedded`) |
+| `EmailComposerDialog`                   | Reply / forward / new in modal           |
+| `EmailThreadQueue`                      | Folder list + thread list (sidebar)      |
+| `EmailThreadDetail`                     | Message stack + action bar               |
+| `buildReplyDraft` / `buildForwardDraft` | Prefill from thread                      |
+| `queueEmailSend`                        | Demo send pipeline                       |
+
+Workbench shell (any module):
+
+```tsx
+<ModulePage fillHeight icon={…}>
+  <SplitView persistKey="…" sidebar={<EmailThreadQueue … />}>
+    <EmailThreadDetail … />
+  </SplitView>
+</ModulePage>
+```
+
+- Composer hidden until Reply/Forward/New — not permanent under every thread
+- Pass `contactOptions` for address book; module keeps demo data / API wiring
+- `RecipientCombobox` + `RichTextEditor` from base-ui — already composed inside `EmailComposer`

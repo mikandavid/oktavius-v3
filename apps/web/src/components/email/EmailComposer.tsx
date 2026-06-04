@@ -5,8 +5,9 @@ import { AttachmentList, Button, Combobox, Input, RichTextEditor, cn } from '@ok
 import { RecipientCombobox } from '@/components/forms/RecipientCombobox';
 import { CloseIcon, PaperclipIcon, SendIcon } from '@/lib/icons';
 
-import { EMAIL_CONTACT_OPTIONS } from './demoData';
 import type { EmailAttachment, EmailDraft, EmailTemplate } from './types';
+
+export type EmailContactOption = { value: string; label: string; description?: string };
 
 type EmailComposerProps = {
   draft: EmailDraft;
@@ -17,6 +18,8 @@ type EmailComposerProps = {
   onDiscard?: () => void;
   attachments?: EmailAttachment[];
   onAttachmentsChange?: (attachments: EmailAttachment[]) => void;
+  /** Suggested recipients (address book); selected addresses are always included. */
+  contactOptions?: EmailContactOption[];
   sendDisabled?: boolean;
   /** When embedded inside a dialog or other framed surface, drop outer border/bg and the Send/Discard row. */
   embedded?: boolean;
@@ -30,9 +33,9 @@ function FieldLabel({ children }: { children: string }) {
   );
 }
 
-function buildRecipientOptions(selected: string[]) {
-  const merged = new Map<string, { value: string; label: string; description?: string }>();
-  EMAIL_CONTACT_OPTIONS.forEach((entry) => merged.set(entry.value, entry));
+function buildRecipientOptions(selected: string[], contactOptions: EmailContactOption[]) {
+  const merged = new Map<string, EmailContactOption>();
+  contactOptions.forEach((entry) => merged.set(entry.value, entry));
   selected.forEach((value) => {
     if (!merged.has(value)) merged.set(value, { value, label: value });
   });
@@ -48,6 +51,7 @@ export function EmailComposer({
   onDiscard,
   attachments = [],
   onAttachmentsChange,
+  contactOptions = [],
   sendDisabled = false,
   embedded = false,
 }: EmailComposerProps) {
@@ -55,9 +59,18 @@ export function EmailComposer({
   const [bccVisible, setBccVisible] = useState(false);
   const [bcc, setBcc] = useState<string[]>([]);
 
-  const toOptions = useMemo(() => buildRecipientOptions(draft.to), [draft.to]);
-  const ccOptions = useMemo(() => buildRecipientOptions(draft.cc), [draft.cc]);
-  const bccOptions = useMemo(() => buildRecipientOptions(bcc), [bcc]);
+  const toOptions = useMemo(
+    () => buildRecipientOptions(draft.to, contactOptions),
+    [contactOptions, draft.to],
+  );
+  const ccOptions = useMemo(
+    () => buildRecipientOptions(draft.cc, contactOptions),
+    [contactOptions, draft.cc],
+  );
+  const bccOptions = useMemo(
+    () => buildRecipientOptions(bcc, contactOptions),
+    [bcc, contactOptions],
+  );
 
   const handleAttach = () => {
     if (!onAttachmentsChange) return;

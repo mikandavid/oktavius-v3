@@ -81,7 +81,7 @@ export function OverviewSection() {
         header, chat) shares <strong className="font-medium">bg-card</strong>. Primary actions use{' '}
         <strong className="font-medium">variant="cta"</strong> (brand violet). Tune editable tokens
         live under <strong className="font-medium">Design tokens</strong> in this gallery (
-        <span className="text-xs">docs/ui-rules/design-tokens.md</span>).
+        <span className="text-xs">docs/ui-rules/foundation.md</span>).
       </InfoBox>
     </div>
   );

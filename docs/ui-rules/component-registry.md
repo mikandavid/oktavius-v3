@@ -228,7 +228,7 @@ footerAction={{ label: 'Manage teams', onClick: () => navigate('/teams') }}
 | `<ResourceCalendar>`     | Staff / room columns by time                                                                                         |
 | `<DateRangePicker>`      | Event start + end date pair in forms                                                                                 |
 
-Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use `calendarId` + source colors (Google-style solid fills). Week starts Monday. See [`calendar-components.md`](./calendar-components.md).
+Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use `calendarId` + source colors (Google-style solid fills). Week starts Monday. Rules: [`patterns.md`](./patterns.md#calendar) · [`locked-components.md`](./locked-components.md).
 
 ### App shell patterns (apps/web)
 
@@ -256,6 +256,24 @@ Shared types: `CalendarEvent`, `CalendarSource`, `CalendarColorKey`. Events use 
 | Catalog settings         | `<CatalogOptionsManager>`                                                         | Payment terms, case types, etc.                                               |
 | Saved list views         | `<SavedViewSelector>` + `useListSavedViews()`                                     | `CrudMainView` `toolbarTrailing` — `/clients`, `/products`                    |
 | RBAC blocked module      | `<AccessDeniedPage>`                                                              | `@/components/common/AccessDeniedPage` — `/access-denied`                     |
+
+### Email (apps/web)
+
+Import **`@/components/email`**. Rules: [`patterns.md`](./patterns.md#email).
+
+| Component                               | Use                                                            |
+| --------------------------------------- | -------------------------------------------------------------- |
+| `<EmailComposer>`                       | Compose UI — pass `contactOptions`, `embedded` in dialogs      |
+| `<EmailComposerDialog>`                 | Reply / forward / new message modal                            |
+| `<EmailThreadQueue>`                    | Folders + thread list for `SplitView` sidebar                  |
+| `<EmailThreadDetail>`                   | Messages + toolbar; pass `resolveHref` for linked records      |
+| `<EmailTemplatesDialog>`                | Template picker                                                |
+| `<LinkedEntityPill>`                    | Client/case/etc. chip in thread header                         |
+| `buildReplyDraft` / `buildForwardDraft` | Draft prefill from thread                                      |
+| `queueEmailSend`                        | Append outbound message (demo/local)                           |
+| Types                                   | `EmailThread`, `EmailDraft`, `EmailMessage`, `ComposerMode`, … |
+
+Module route `/email` wires demo storage only — reuse components on case/client detail or agent flows.
 
 ### Agent / AI chat (apps/web)
 
@@ -598,7 +616,7 @@ For managing sub-entity lists (parties, tasks, checklist items) inside a detail 
 
 ### Colors — use semantic tokens only
 
-Full architecture: [`design-tokens.md`](./design-tokens.md).
+Full architecture: [`foundation.md`](./foundation.md#color--tokens).
 
 | Token                                         | Use                                                          |
 | --------------------------------------------- | ------------------------------------------------------------ |

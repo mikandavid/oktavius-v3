@@ -1,4 +1,4 @@
-import type { EmailFolder, EmailTemplate, EmailThread } from './types';
+import type { EmailFolder, EmailTemplate, EmailThread } from '@/components/email';
 
 /**
  * Demo mailbox folders. In production this list is hydrated from the connected

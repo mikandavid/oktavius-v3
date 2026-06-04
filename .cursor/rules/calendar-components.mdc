@@ -7,7 +7,7 @@ alwaysApply: false
 # Calendar components
 
 Canonical registry: `docs/ui-rules/component-registry.md` (Calendar / Planning section).
-Full rules: `docs/ui-rules/calendar-components.md`
+Full rules: `docs/ui-rules/patterns.md` § Calendar
 
 ## Primary component
 

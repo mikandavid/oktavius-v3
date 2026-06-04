@@ -5,7 +5,7 @@ import {
   loadStoredEmailThreads,
   storeEmailThreads,
 } from './emailStorage';
-import type { EmailThread } from './types';
+import type { EmailThread } from '@/components/email';
 
 function createStorage(seed: Record<string, string> = {}): Storage {
   const values = new Map(Object.entries(seed));

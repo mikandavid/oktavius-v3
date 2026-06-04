@@ -39,4 +39,4 @@ import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 
 Auto-compacts to icon rail while section nav is visible. User preference restores on list routes.
 
-Full rules: `docs/ui-rules/section-nav.md`
+Full rules: `docs/ui-rules/patterns.md` § Section nav

@@ -29,7 +29,7 @@ On fill-height module pages:
 - Pass **`persistKey`** to remember user-resized sidebar width in `localStorage`.
 - Size props are pixels: `defaultSidebarWidth`, `minSidebarWidth`, `maxSidebarWidth`.
 - Default queue sizing is intentionally wide: `400 / 320 / 760`. Do not use sub-320px sidebars for queues; they make record titles unreadable and persisted layouts will keep the bad state.
-- Fixed heights only in showcase blocks / dialogs — see `docs/ui-rules/fill-height-pages.md`.
+- Fixed heights only in showcase blocks / dialogs — see `docs/ui-rules/patterns.md` § Fill height.
 
 ## Page shell
 

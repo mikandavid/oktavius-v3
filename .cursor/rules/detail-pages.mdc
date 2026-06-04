@@ -11,9 +11,9 @@ alwaysApply: false
 | Entity / workflow | Pattern |
 |---|---|
 | Simple record (users, contacts, basic config) | `<ModulePage>` + `<DetailView>` — one scroll, no tabs |
-| Long record with many sections (profile, compliance, settings-like details) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` — see `docs/ui-rules/section-nav.md` |
+| Long record with many sections (profile, compliance, settings-like details) | `<ModulePage layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}>` + `<AppSectionNavLayout>` — see `docs/ui-rules/patterns.md` § Section nav |
 | Operational workspace with peer modes (case workbench, project workspace) | `<ModulePage>` + `<Tabs>` + `<SectionCard>` per tab, only after the modes are genuinely separate workflows |
-| Queue or master-detail workflow | `<ModulePage fillHeight>` + `<SplitView>` — see `docs/ui-rules/split-view-master-detail.md` |
+| Queue or master-detail workflow | `<ModulePage fillHeight>` + `<SplitView>` — see `docs/ui-rules/patterns.md` § Split view |
 
 **Never put `<DetailView>` inside `<Tabs>`** — it nests a Card inside tab content. Use `SectionCard` + field rows, or a dedicated Details tab with inline `<dl>` layout.
 
@@ -56,7 +56,7 @@ Use `importance: 'primary' | 'default' | 'meta'` on fields — not uniform grids
 
 - Items: `<ListRow>` with `<Avatar leading>`, title, subtitle, trailing actions
 - Add/edit: `<SubEntityFormDialog>` from `@/components/common/SubEntityFormDialog` — never hand-roll dialog + form markup
-- Tick-off lists: `<ChecklistSection items onToggle>` — done = checkbox + **muted strikethrough label** + row opacity; `readOnly` for overview previews. See `docs/ui-rules/checklist.md`.
+- Tick-off lists: `<ChecklistSection items onToggle>` — done = checkbox + **muted strikethrough label** + row opacity; `readOnly` for overview previews. See `docs/ui-rules/patterns.md` § Checklist.
 - Empty sub-list: `<InlineEmptyState>` — not `<EmptyState>`
 
 ## Section titles

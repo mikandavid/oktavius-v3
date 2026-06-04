@@ -1,4 +1,4 @@
-import type { EmailMessage, EmailThread, EmailThreadStatus } from './types';
+import type { EmailMessage, EmailThread, EmailThreadStatus } from '@/components/email/types';
 
 export const EMAIL_THREADS_STORAGE_KEY = 'oktavius.email.threads';
 

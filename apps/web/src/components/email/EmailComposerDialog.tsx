@@ -10,7 +10,7 @@ import {
 
 import { PaperclipIcon } from '@/lib/icons';
 
-import { EmailComposer } from './EmailComposer';
+import { EmailComposer, type EmailContactOption } from './EmailComposer';
 import type { ComposerMode } from './emailActions';
 import type { EmailAttachment, EmailDraft, EmailTemplate } from './types';
 
@@ -31,6 +31,7 @@ export type EmailComposerDialogProps = {
   onClose: () => void;
   attachments?: EmailAttachment[];
   onAttachmentsChange?: (attachments: EmailAttachment[]) => void;
+  contactOptions?: EmailContactOption[];
 };
 
 /**
@@ -48,6 +49,7 @@ export function EmailComposerDialog({
   onClose,
   attachments,
   onAttachmentsChange,
+  contactOptions,
 }: EmailComposerDialogProps) {
   const open = mode !== 'closed';
   const title = open ? MODE_TITLE[mode as Exclude<ComposerMode, 'closed'>] : '';
@@ -77,6 +79,7 @@ export function EmailComposerDialog({
             embedded
             draft={draft}
             templates={templates}
+            contactOptions={contactOptions}
             onChange={onDraftChange}
             onApplyTemplate={onApplyTemplate}
             onSend={onSend}

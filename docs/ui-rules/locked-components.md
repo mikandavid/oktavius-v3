@@ -4,7 +4,7 @@ Components whose **styling and layout rules must not be overridden** in `apps/we
 
 **Agent rule:** If the need matches a row below, use that component. Do not restyle the generic wrapper.
 
-Related: [`calendar-components.md`](./calendar-components.md) · [`agent-contract.md`](./agent-contract.md)
+Related: [`calendar-components.md`](./calendar-components.md) · [`ui-system.md`](./ui-system.md#hard-bans-agents)
 
 ---
 

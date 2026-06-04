@@ -10,23 +10,24 @@ import {
 import { EmailIcon, PlusIcon, TemplatesIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
 
-import { EMAIL_FOLDERS, EMAIL_TEMPLATES, EMAIL_THREADS } from './demoData';
-import { EmailComposerDialog } from './EmailComposerDialog';
-import { EmailTemplatesDialog } from './EmailTemplatesDialog';
-import { EmailThreadDetail } from './EmailThreadDetail';
-import { EmailThreadQueue } from './EmailThreadQueue';
 import {
   buildForwardDraft,
   buildReplyDraft,
+  EmailComposerDialog,
+  EmailTemplatesDialog,
+  EmailThreadDetail,
+  EmailThreadQueue,
   queueEmailSend,
   type ComposerMode,
-} from './emailActions';
+  type EmailDraft,
+  type EmailTemplate,
+} from '@/components/email';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
+
+import { EMAIL_CONTACT_OPTIONS, EMAIL_FOLDERS, EMAIL_TEMPLATES, EMAIL_THREADS } from './demoData';
 import { resolveLinkedEntityHref } from './emailLinkedEntityRoutes';
 import { loadStoredEmailThreads, storeEmailThreads } from './emailStorage';
 import { emailPageIcon } from './shared';
-import type { EmailDraft, EmailTemplate } from './types';
-import { getWindowStorage } from '@/lib/storage/safeStorage';
-
 const EMPTY_DRAFT: EmailDraft = {
   to: [],
   cc: [],
@@ -264,6 +265,7 @@ export function EmailPage() {
         mode={composerMode}
         draft={draft}
         templates={EMAIL_TEMPLATES}
+        contactOptions={EMAIL_CONTACT_OPTIONS}
         onDraftChange={setDraft}
         onApplyTemplate={applyTemplate}
         onSend={sendDraft}
