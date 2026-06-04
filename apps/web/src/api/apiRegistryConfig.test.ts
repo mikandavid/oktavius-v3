@@ -67,6 +67,41 @@ describe('API registry configuration', () => {
     });
   });
 
+  it('can build an Osiris dynamic fetcher registry', async () => {
+    const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      response(listResponse),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const registry = createConfiguredApiRegistry({
+      demoRegistry,
+      env: {
+        VITE_OKTAVIUS_API_BASE_URL: '/api',
+      },
+      osiris: {
+        getAccessToken: () => 'token_1',
+        getActiveOrgId: () => 'org_1',
+        getActiveSiteId: () => 'site_1',
+      },
+    });
+
+    await registry.contacts.list({ page: '1' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/contacts?page=1',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'GET',
+        headers: expect.any(Headers),
+      }),
+    );
+    const headers = fetch.mock.calls[0]?.[1]?.headers;
+    expect(headers).toBeInstanceOf(Headers);
+    if (!(headers instanceof Headers)) throw new Error('Expected fetch headers to be Headers.');
+    expect(headers.get('Authorization')).toBe('Bearer token_1');
+    expect(headers.get('X-Org-Id')).toBe('org_1');
+    expect(headers.get('X-Site-Id')).toBe('site_1');
+  });
+
   it('documents the generated default endpoint map', () => {
     expect(DEFAULT_HTTP_REGISTRY_ENDPOINTS).toMatchObject({
       clients: '/clients',

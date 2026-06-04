@@ -4,6 +4,8 @@ import {
   type HttpRegistryEndpoints,
   type HttpRegistryFetcher,
 } from './httpRegistry';
+import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
+import type { OsirisApiClientOptions } from '@/runtime/osiris/apiClient';
 
 export const DEFAULT_HTTP_REGISTRY_ENDPOINTS: HttpRegistryEndpoints = {
   cases: '/cases',
@@ -30,17 +32,29 @@ export type ApiRegistryEnvironment = {
   VITE_OKTAVIUS_API_TOKEN?: string;
 };
 
+export type OsirisApiRegistryContextGetters = Omit<OsirisApiClientOptions, 'baseUrl'>;
+
 export function createConfiguredApiRegistry({
   demoRegistry,
   env,
   fetcher,
+  osiris,
 }: {
   demoRegistry: DemoApiRegistry;
   env: ApiRegistryEnvironment;
   fetcher?: HttpRegistryFetcher;
+  osiris?: OsirisApiRegistryContextGetters;
 }): DemoApiRegistry {
   const baseUrl = env.VITE_OKTAVIUS_API_BASE_URL?.trim();
   if (!baseUrl) return demoRegistry;
+
+  if (osiris) {
+    return createHttpRegistry({
+      baseUrl: '',
+      endpoints: DEFAULT_HTTP_REGISTRY_ENDPOINTS,
+      fetcher: createOsirisApiFetcher({ baseUrl, ...osiris }),
+    });
+  }
 
   const token = env.VITE_OKTAVIUS_API_TOKEN?.trim();
 

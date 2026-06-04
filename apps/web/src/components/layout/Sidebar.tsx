@@ -23,18 +23,12 @@ import {
   MODULE_NAV_ITEMS,
   PRIMARY_NAV_ITEMS,
   type AppNavModule,
-  isAppNavItemEnabled,
-  moduleLabelFor,
-  visiblePathFor,
+  buildVisibleAppNavItems,
 } from '@/lib/appNavModules';
 import { getOrgProfile } from '@/lib/org-profiles/profiles';
 import type { OrgProfile } from '@/lib/org-profiles/types';
 import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
-import {
-  canAccessAppNavItem,
-  permissionSubjectFor,
-  type PermissionSubject,
-} from '@/lib/permissions';
+import { permissionSubjectFor, type PermissionSubject } from '@/lib/permissions';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 import { useUserPreferences } from '@/lib/userPreferences';
 
@@ -74,20 +68,15 @@ function writeStoredModuleOrder(order: string[]) {
 }
 
 function buildVisibleModuleItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {
-  return MODULE_NAV_ITEMS.filter(
-    (item) => isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject),
-  ).map((item) => ({
-    ...item,
-    path: visiblePathFor(profile, item),
-    label: moduleLabelFor(profile, item),
-  }));
+  return buildVisibleAppNavItems(profile, subject, MODULE_NAV_ITEMS);
 }
 
 function buildVisibleAdminItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {
-  return ADMIN_NAV_ITEMS.filter((item) => {
-    if (item.id === 'showcase' && !import.meta.env.DEV) return false;
-    return isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject);
-  });
+  return buildVisibleAppNavItems(
+    profile,
+    subject,
+    ADMIN_NAV_ITEMS.filter((item) => item.id !== 'showcase' || import.meta.env.DEV),
+  );
 }
 
 function buildRuntimeOrgProfile(
@@ -413,13 +402,8 @@ function SidebarContent({
   );
   const brandTitle = activeOrganization?.name ?? 'Oktavius ERP';
   const visiblePrimaryItems = useMemo(
-    () =>
-      PRIMARY_NAV_ITEMS.map((item) => ({
-        ...item,
-        path: visiblePathFor(profile, item),
-        label: moduleLabelFor(profile, item),
-      })),
-    [profile],
+    () => buildVisibleAppNavItems(profile, permissionSubject, PRIMARY_NAV_ITEMS),
+    [permissionSubject, profile],
   );
   const visibleModuleItems = useMemo(
     () => buildVisibleModuleItems(profile, permissionSubject),

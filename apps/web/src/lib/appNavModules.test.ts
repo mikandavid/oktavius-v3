@@ -2,13 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   APP_NAV_MODULES,
+  PRIMARY_NAV_ITEMS,
+  buildVisibleAppNavItems,
   getAppCreateActionForProfile,
   getAppQuickActionsForProfile,
   isAppNavItemEnabled,
   isOrgModuleId,
-  resolveAppNavModule,
-  resolveAppNavModuleForProfile,
-  visiblePathFor,
 } from './appNavModules';
 import { ORG_APEX_ID, ORG_KUNZ_ID, ORG_PROFILES } from './org-profiles/profiles';
 import { getLocalizedOrgProfile } from './org-profiles/terminology';
@@ -41,21 +40,6 @@ describe('app navigation module manifest', () => {
     }
   });
 
-  it('applies profile path overrides to visible nav paths', () => {
-    const kunz = ORG_PROFILES[ORG_KUNZ_ID];
-    const documents = APP_NAV_MODULES.find((item) => item.id === 'documents');
-
-    expect(documents).toBeDefined();
-    expect(visiblePathFor(kunz, documents!)).toBe('/storage');
-  });
-
-  it('resolves profile override routes to the owning module', () => {
-    const kunz = ORG_PROFILES[ORG_KUNZ_ID];
-
-    expect(resolveAppNavModuleForProfile(kunz, '/storage')?.id).toBe('documents');
-    expect(resolveAppNavModuleForProfile(kunz, '/storage/generated_1')?.id).toBe('documents');
-  });
-
   it('keeps profile-disabled modules out of enabled navigation', () => {
     const apex = ORG_PROFILES[ORG_APEX_ID];
     const kunz = ORG_PROFILES[ORG_KUNZ_ID];
@@ -63,10 +47,6 @@ describe('app navigation module manifest', () => {
 
     expect(isAppNavItemEnabled(apex, moduleById.get('reports')!)).toBe(true);
     expect(isAppNavItemEnabled(kunz, moduleById.get('reports')!)).toBe(false);
-  });
-
-  it('keeps the default resolver working for default app routes', () => {
-    expect(resolveAppNavModule('/documents/generated_1')?.id).toBe('documents');
   });
 
   it('does not expose removed business CRUD modules', () => {
@@ -80,23 +60,48 @@ describe('app navigation module manifest', () => {
     }
   });
 
+  it('declares Osiris permission metadata for permissioned runtime modules', () => {
+    expect(
+      Object.fromEntries(APP_NAV_MODULES.map((item) => [item.id, item.permission])),
+    ).toMatchObject({
+      'ai-chat': 'agent-chat.view',
+      email: 'email.view_own',
+      calendar: 'calendar-v2.view',
+      reports: 'reports.view',
+    });
+  });
+
+  it('filters permissioned primary navigation items through Osiris permissions', () => {
+    const apex = getLocalizedOrgProfile(ORG_PROFILES[ORG_APEX_ID], 'en');
+    const baseSubject = { isSuperadmin: false, role: 'member', permissions: [] } as const;
+    const agentSubject = {
+      isSuperadmin: false,
+      role: 'member',
+      permissions: ['agent-chat.view'],
+    } as const;
+
+    expect(
+      buildVisibleAppNavItems(apex, baseSubject, PRIMARY_NAV_ITEMS).map((item) => item.id),
+    ).toEqual(['dashboard']);
+    expect(
+      buildVisibleAppNavItems(apex, agentSubject, PRIMARY_NAV_ITEMS).map((item) => item.id),
+    ).toEqual(['dashboard', 'ai-chat']);
+  });
+
   it('derives platform quick action paths', () => {
     const apex = ORG_PROFILES[ORG_APEX_ID];
     const kunz = getLocalizedOrgProfile(ORG_PROFILES[ORG_KUNZ_ID], 'en');
 
-    expect(getAppQuickActionsForProfile(apex)).toEqual([
-      { label: 'New organization', path: '/superadmin/orgs/new', routeId: 'superadmin' },
-    ]);
+    expect(getAppQuickActionsForProfile(apex)).toEqual([]);
     expect(getAppQuickActionsForProfile(kunz)).toEqual([]);
   });
 
-  it('exposes platform create actions only', () => {
+  it('exposes no platform create actions', () => {
     const apex = getLocalizedOrgProfile(ORG_PROFILES[ORG_APEX_ID], 'en');
 
-    expect(getAppCreateActionForProfile(apex, 'superadmin')).toMatchObject({
-      label: 'New organization',
-      path: '/superadmin/orgs/new',
-    });
+    expect(getAppQuickActionsForProfile(apex).map((action) => action.routeId)).not.toContain(
+      'superadmin',
+    );
     expect(getAppCreateActionForProfile(apex, 'clients')).toBeNull();
   });
 });

@@ -3,17 +3,18 @@ import type { ComponentType } from 'react';
 import {
   BotIcon,
   CalendarIcon,
-  DocumentIcon,
   EmailIcon,
   HomeIcon,
   ReportsIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
-  SuperadminIcon,
-  TasksIcon,
 } from '@/lib/icons';
 import type { IconProps } from '@/lib/icons';
 import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
+
+import { canAccessAppNavItem } from './permissions';
+import type { PermissionSubject } from './permissions';
+import type { PermissionRequirement } from './permissions';
 
 export type AppNavSection = 'primary' | 'modules' | 'admin';
 export type AppNavRouteId = OrgModuleId;
@@ -25,6 +26,7 @@ export type AppNavModule = {
   icon: ComponentType<IconProps>;
   section: AppNavSection;
   devOnly?: boolean;
+  permission?: PermissionRequirement;
   terminologyKey?: keyof OrgTerminology;
 };
 
@@ -44,27 +46,39 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     section: 'primary',
     terminologyKey: 'dashboard',
   },
-  { id: 'ai-chat', path: '/ai-chat', label: 'AI Chat', icon: BotIcon, section: 'primary' },
-  { id: 'tasks', path: '/tasks', label: 'Tasks', icon: TasksIcon, section: 'modules' },
   {
-    id: 'documents',
-    path: '/documents',
-    label: 'Documents',
-    icon: DocumentIcon,
+    id: 'ai-chat',
+    path: '/ai-chat',
+    label: 'AI Chat',
+    icon: BotIcon,
+    section: 'primary',
+    permission: 'agent-chat.view',
+  },
+  {
+    id: 'email',
+    path: '/email',
+    label: 'Email',
+    icon: EmailIcon,
     section: 'modules',
-    terminologyKey: 'documents',
+    permission: 'email.view_own',
   },
-  { id: 'email', path: '/email', label: 'Email', icon: EmailIcon, section: 'modules' },
-  { id: 'calendar', path: '/calendar', label: 'Calendar', icon: CalendarIcon, section: 'modules' },
-  { id: 'reports', path: '/reports', label: 'Reports', icon: ReportsIcon, section: 'modules' },
-  { id: 'settings', path: '/settings', label: 'Settings', icon: SettingsIcon, section: 'admin' },
   {
-    id: 'superadmin',
-    path: '/superadmin',
-    label: 'Superadmin',
-    icon: SuperadminIcon,
-    section: 'admin',
+    id: 'calendar',
+    path: '/calendar',
+    label: 'Calendar',
+    icon: CalendarIcon,
+    section: 'modules',
+    permission: 'calendar-v2.view',
   },
+  {
+    id: 'reports',
+    path: '/reports',
+    label: 'Reports',
+    icon: ReportsIcon,
+    section: 'modules',
+    permission: 'reports.view',
+  },
+  { id: 'settings', path: '/settings', label: 'Settings', icon: SettingsIcon, section: 'admin' },
   {
     id: 'showcase',
     path: '/showcase',
@@ -97,6 +111,20 @@ export function isAppNavItemEnabled(profile: OrgProfile, item: AppNavModule) {
   return !isOrgModuleId(item.id) || profile.enabledModules.includes(item.id);
 }
 
+export function buildVisibleAppNavItems(
+  profile: OrgProfile,
+  subject: PermissionSubject,
+  items: readonly AppNavModule[],
+): AppNavModule[] {
+  return items
+    .filter((item) => isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject))
+    .map((item) => ({
+      ...item,
+      path: visiblePathFor(profile, item),
+      label: moduleLabelFor(profile, item),
+    }));
+}
+
 export function resolveAppNavModule(pathname: string): AppNavModule | null {
   return (
     APP_NAV_MODULES.filter(
@@ -122,16 +150,8 @@ export function resolveAppNavModuleForProfile(
   );
 }
 
-export function getAppQuickActionsForProfile(profile: OrgProfile): AppQuickAction[] {
-  if (!profile.enabledModules.includes('superadmin')) return [];
-
-  return [
-    {
-      label: 'New organization',
-      path: '/superadmin/orgs/new',
-      routeId: 'superadmin',
-    },
-  ];
+export function getAppQuickActionsForProfile(_profile: OrgProfile): AppQuickAction[] {
+  return [];
 }
 
 export function getAppCreateActionForProfile(
