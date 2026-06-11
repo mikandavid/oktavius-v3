@@ -7,13 +7,20 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 import { useTranslation } from '@/core/i18n';
-import { Settings2Icon, UserCircleIcon } from '@/lib/icons';
+import { NotificationsIcon, Settings2Icon, UserCircleIcon } from '@/lib/icons';
 import { userRecordPageIcon } from '@/lib/modulePageIcons';
 import { appToast } from '@/lib/toast';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
+import { NotificationSettingsSection } from './NotificationSettingsSection';
+
 const PROFILE_NAV = [
   { key: 'account', label: 'Account', icon: <UserCircleIcon size={16} weight="duotone" /> },
+  {
+    key: 'notifications',
+    label: 'Notifications',
+    icon: <NotificationsIcon size={16} weight="duotone" />,
+  },
   {
     key: 'workspace',
     label: 'Workspace',
@@ -221,6 +228,10 @@ export function ProfilePage() {
               </div>
             </form>
           </SettingsSection>
+        ) : null}
+
+        {activeSection === 'notifications' ? (
+          <NotificationSettingsSection runtime={osirisRuntime?.notificationsRuntime} />
         ) : null}
 
         {activeSection === 'workspace' ? (

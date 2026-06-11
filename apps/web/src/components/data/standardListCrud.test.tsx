@@ -6,10 +6,13 @@ import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ActiveLocationProvider } from '@/lib/locations/ActiveLocationContext';
+import type { OsirisRuntimeState } from '@/runtime/osiris/types';
+import { OsirisRuntimeContext } from '@/runtime/osiris/useOsirisRuntime';
 
 import { StandardCrudListPage } from './StandardCrudListPage';
 import { buildStandardListCrudActions } from './standardListCrud';
 import { buildStandardCrudListRequestParams } from './standardCrudQuery';
+import type { SavedViewsRuntimeAdapter } from './savedViewsRuntime';
 
 const demoData = vi.hoisted(() => ({
   currentUser: { isSuperadmin: false },
@@ -111,6 +114,7 @@ type TestRow = {
 function renderStandardCrudListPage({
   loadRows,
   rows = [],
+  savedViewsRuntime,
   queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -128,11 +132,41 @@ function renderStandardCrudListPage({
     pageSize: number;
   }>;
   rows?: TestRow[];
+  savedViewsRuntime?: SavedViewsRuntimeAdapter;
   queryClient?: QueryClient;
 }) {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
+  const osirisRuntime: OsirisRuntimeState & {
+    isLoading: boolean;
+    error: Error | null;
+    reload: () => Promise<void>;
+  } = {
+    sessionStatus: 'authenticated',
+    currentUser: {
+      id: 'user_1',
+      email: 'anna@example.test',
+      fullName: 'Anna',
+      isSuperadmin: false,
+    },
+    organizations: [{ id: 'org_1', name: 'Kunz', slug: 'kunz' }],
+    memberships: [{ org_id: 'org_1', role: 'admin', is_active: true }],
+    activeOrgId: 'org_1',
+    activeSiteId: null,
+    permissions: ['records.delete'],
+    permissionSubject: {
+      isSuperadmin: false,
+      role: 'admin',
+      permissions: ['records.delete'],
+    },
+    locationAccess: null,
+    config: null,
+    ...(savedViewsRuntime ? { savedViewsRuntime } : {}),
+    isLoading: false,
+    error: null,
+    reload: async () => undefined,
+  };
   const router = createMemoryRouter(
     [
       {
@@ -140,24 +174,27 @@ function renderStandardCrudListPage({
         element: (
           <NuqsAdapter>
             <QueryClientProvider client={queryClient}>
-              <ActiveLocationProvider>
-                <StandardCrudListPage<TestRow>
-                  title="Clients"
-                  rows={rows}
-                  loadRows={loadRows}
-                  columns={[{ key: 'name', header: 'Name' }]}
-                  filters={[]}
-                  defaultSort="name"
-                  filterKeys={[]}
-                  searchKeys={['name']}
-                  searchPlaceholder="Search clients"
-                  entityLabel="client"
-                  getRowHref={(row) => `/clients/${row.id}`}
-                  exportFileName="clients"
-                  emptyTitle="No clients found"
-                  emptyDescription="Create a client or adjust your filters."
-                />
-              </ActiveLocationProvider>
+              <OsirisRuntimeContext.Provider value={osirisRuntime}>
+                <ActiveLocationProvider>
+                  <StandardCrudListPage<TestRow>
+                    title="Clients"
+                    rows={rows}
+                    loadRows={loadRows}
+                    columns={[{ key: 'name', header: 'Name' }]}
+                    filters={[]}
+                    savedViews={[{ id: 'all', label: 'All clients' }]}
+                    defaultSort="name"
+                    filterKeys={[]}
+                    searchKeys={['name']}
+                    searchPlaceholder="Search clients"
+                    entityLabel="client"
+                    getRowHref={(row) => `/clients/${row.id}`}
+                    exportFileName="clients"
+                    emptyTitle="No clients found"
+                    emptyDescription="Create a client or adjust your filters."
+                  />
+                </ActiveLocationProvider>
+              </OsirisRuntimeContext.Provider>
             </QueryClientProvider>
           </NuqsAdapter>
         ),
@@ -293,6 +330,24 @@ describe('StandardCrudListPage', () => {
     expect(rendered.container.querySelector('[data-loading]')?.getAttribute('data-loading')).toBe(
       'false',
     );
+  });
+
+  it('loads custom saved views from the Osiris runtime when available', async () => {
+    const savedViewsRuntime: SavedViewsRuntimeAdapter = {
+      fetchViews: vi.fn(async () => [
+        { id: 'custom_1', label: 'Active', filters: { status: 'active' } },
+      ]),
+      persistView: vi.fn(async () => undefined),
+      deleteView: vi.fn(async () => undefined),
+      shareView: vi.fn(async () => undefined),
+    };
+
+    const rendered = renderStandardCrudListPage({ savedViewsRuntime });
+    roots.push(rendered.root);
+
+    await waitForText(rendered.container, 'Go to page 2');
+
+    expect(savedViewsRuntime.fetchViews).toHaveBeenCalledWith({ listKey: 'clients' });
   });
 
   it('ignores cached server rows after remounting without a server loader', async () => {

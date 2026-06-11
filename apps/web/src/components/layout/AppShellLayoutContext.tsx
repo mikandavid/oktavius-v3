@@ -8,12 +8,11 @@ import {
   type ReactNode,
 } from 'react';
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
-
-const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
+import { SIDEBAR_COLLAPSED_STORAGE_KEY, useOptionalUserPreferences } from '@/lib/userPreferences';
 
 function readStoredCollapsedState() {
   const storage = getWindowStorage('localStorage');
-  return safeStorageGet(storage, SIDEBAR_STORAGE_KEY) === 'true';
+  return safeStorageGet(storage, SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
 }
 
 type AppShellLayoutContextValue = {
@@ -32,9 +31,13 @@ type AppShellLayoutContextValue = {
 const AppShellLayoutContext = createContext<AppShellLayoutContextValue | null>(null);
 
 export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
+  const userPreferences = useOptionalUserPreferences();
+  const preferredSidebarCollapsed = userPreferences?.sidebarCollapsedPreference ?? null;
   const [secondaryNavCount, setSecondaryNavCount] = useState(0);
   const [fillHeightPageCount, setFillHeightPageCount] = useState(0);
-  const [isSidebarCollapsed, setIsSidebarCollapsedState] = useState(readStoredCollapsedState);
+  const [isSidebarCollapsed, setIsSidebarCollapsedState] = useState(
+    () => preferredSidebarCollapsed ?? readStoredCollapsedState(),
+  );
   const [detailExpandedOverride, setDetailExpandedOverride] = useState(false);
 
   const hasSecondaryNav = secondaryNavCount > 0;
@@ -44,10 +47,27 @@ export function AppShellLayoutProvider({ children }: { children: ReactNode }) {
     setDetailExpandedOverride(false);
   }, [hasSecondaryNav]);
 
-  const setSidebarCollapsed = useCallback((collapsed: boolean) => {
-    setIsSidebarCollapsedState(collapsed);
-    safeStorageSet(getWindowStorage('localStorage'), SIDEBAR_STORAGE_KEY, String(collapsed));
-  }, []);
+  useEffect(() => {
+    if (preferredSidebarCollapsed != null) {
+      setIsSidebarCollapsedState(preferredSidebarCollapsed);
+    }
+  }, [preferredSidebarCollapsed]);
+
+  const setSidebarCollapsed = useCallback(
+    (collapsed: boolean) => {
+      setIsSidebarCollapsedState(collapsed);
+      if (userPreferences) {
+        userPreferences.setSidebarCollapsedPreference(collapsed);
+        return;
+      }
+      safeStorageSet(
+        getWindowStorage('localStorage'),
+        SIDEBAR_COLLAPSED_STORAGE_KEY,
+        String(collapsed),
+      );
+    },
+    [userPreferences],
+  );
 
   const toggleSidebarCollapsed = useCallback(() => {
     if (hasSecondaryNav) {

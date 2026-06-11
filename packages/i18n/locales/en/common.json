@@ -187,6 +187,7 @@
   "primary": "Primary",
   "secondary": "Secondary",
   "required": "Required",
+  "enabled": "Enabled",
   "disabled": "Disabled",
   "custom": "Custom",
   "basic": "Basic",

@@ -16,6 +16,9 @@ export function normalizeOsirisBootstrap(payload: OsirisBootstrapResponse): Osir
       email: payload.user.email,
       fullName: payload.profile?.full_name ?? null,
       isSuperadmin,
+      ...(typeof payload.profile?.preferred_language === 'string'
+        ? { preferredLanguage: payload.profile.preferred_language }
+        : {}),
     },
     organizations: payload.organizations,
     memberships: payload.memberships,

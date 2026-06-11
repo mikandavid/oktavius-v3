@@ -76,6 +76,7 @@ function Probe() {
       <div data-testid="error">{runtime.error?.message ?? 'none'}</div>
       <div data-testid="org">{runtime.activeOrgId ?? 'none'}</div>
       <div data-testid="site">{runtime.activeSiteId ?? 'all'}</div>
+      <div data-testid="language">{runtime.currentUser.preferredLanguage ?? 'none'}</div>
       <button
         type="button"
         onClick={() => {
@@ -162,6 +163,24 @@ function Probe() {
         }}
       >
         Deactivate location
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void Promise.resolve(runtime.savedViewsRuntime?.fetchViews({ listKey: 'clients' })).catch(
+            () => {},
+          );
+        }}
+      >
+        Load saved views
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void Promise.resolve(runtime.updatePreferredLanguage?.('de')).catch(() => {});
+        }}
+      >
+        Save language
       </button>
     </div>
   );
@@ -453,6 +472,54 @@ describe('OsirisAuthProvider active context switching', () => {
       body: JSON.stringify({ isActive: false }),
     });
     expect(fetchMock).toHaveBeenNthCalledWith(4, '/bootstrap', { credentials: 'include' });
+  });
+
+  it('exposes saved views persistence through the Osiris runtime', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(bootstrapOrg1Site1))
+      .mockResolvedValueOnce(
+        jsonResponse([{ id: 'custom_1', label: 'Active', filters: { status: 'active' } }]),
+      );
+
+    const rendered = await renderProvider();
+    roots.push(rendered.root);
+
+    await act(async () => {
+      rendered.container
+        .querySelectorAll('button')[9]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      await Promise.resolve();
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/generated-stores/saved-views/clients', {
+      method: 'GET',
+      credentials: 'include',
+    });
+  });
+
+  it('syncs preferred language into the current runtime user after saving it', async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(bootstrapOrg1Site1))
+      .mockResolvedValueOnce(jsonResponse({ success: true, language: 'de' }));
+
+    const rendered = await renderProvider();
+    roots.push(rendered.root);
+
+    expect(rendered.container.querySelector('[data-testid="language"]')?.textContent).toBe('none');
+
+    await act(async () => {
+      rendered.container
+        .querySelectorAll('button')[10]
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/i18n/user/language', {
+      body: JSON.stringify({ language: 'de' }),
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT',
+    });
+    expect(rendered.container.querySelector('[data-testid="language"]')?.textContent).toBe('de');
   });
 
   it('expires the runtime session when active context updates are unauthorized', async () => {

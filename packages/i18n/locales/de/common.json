@@ -184,6 +184,7 @@
   "primary": "Primär",
   "secondary": "Sekundär",
   "required": "Erforderlich",
+  "enabled": "Aktiviert",
   "disabled": "Deaktiviert",
   "custom": "Benutzerdefiniert",
   "basic": "Basis",

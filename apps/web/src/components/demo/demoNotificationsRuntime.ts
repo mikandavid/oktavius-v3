@@ -67,6 +67,8 @@ export function createDemoNotificationsRuntime(
       notifications = notifications.map((item) => ({ ...item, isRead: true }));
       emit();
     },
+    fetchSettings: async () => ({ modules: [] }),
+    updateSubscription: async () => undefined,
   };
 }
 

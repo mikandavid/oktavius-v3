@@ -35,7 +35,7 @@ export function AuthShell({
           <div className="auth-bg-oktavius__aurora" />
           <div className="auth-bg-oktavius__ribbon" />
           <div className="auth-bg-oktavius__grid" />
-          <div className="auth-bg-oktavius__grain" />
+          <div className="auth-bg-oktavius__flow" />
           <div className="auth-bg-oktavius__wash" />
         </div>
       ) : null}

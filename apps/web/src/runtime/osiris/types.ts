@@ -1,5 +1,7 @@
 import type { SearchRuntimeAdapter } from '@/lib/search/SearchRuntime';
 import type { NotificationsRuntimeAdapter } from '@/components/layout/NotificationsRuntime';
+import type { SavedViewsRuntimeAdapter } from '@/components/data/savedViewsRuntime';
+import type { UserPreferencesRuntimeAdapter } from '@/lib/userPreferences';
 
 import type {
   OsirisAcceptedInvitation,
@@ -81,6 +83,7 @@ export type OsirisRuntimeState = {
     email: string | null;
     fullName: string | null;
     isSuperadmin: boolean;
+    preferredLanguage?: string | null;
   };
   organizations: OsirisBootstrapResponse['organizations'];
   memberships: OsirisBootstrapResponse['memberships'];
@@ -128,5 +131,7 @@ export type OsirisRuntimeState = {
   locationAccess: OsirisLocationAccess | null;
   notificationsRuntime?: NotificationsRuntimeAdapter;
   searchRuntime?: SearchRuntimeAdapter;
+  savedViewsRuntime?: SavedViewsRuntimeAdapter;
+  userPreferencesRuntime?: UserPreferencesRuntimeAdapter;
   config: OsirisRuntimeConfig | null;
 };

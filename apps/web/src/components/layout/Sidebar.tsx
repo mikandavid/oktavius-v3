@@ -17,6 +17,7 @@ import { CheckIcon, EditIcon, SortIcon, PanelLeftCloseIcon, PanelLeftIcon } from
 
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
+import { MODULE_ORDER_STORAGE_KEY, useUserPreferences } from '@/lib/userPreferences';
 import {
   ADMIN_NAV_ITEMS,
   MODULE_NAV_ITEMS,
@@ -29,7 +30,6 @@ import type { OrgProfile } from '@/lib/org-profiles/types';
 import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
 import { EMPTY_PERMISSION_SUBJECT, type PermissionSubject } from '@/lib/permissions';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
-import { useUserPreferences } from '@/lib/userPreferences';
 import { useTranslation } from '@/core/i18n';
 
 import { useAppShellLayout } from './AppShellLayoutContext';
@@ -43,7 +43,6 @@ type SidebarProps = {
   onNavigate?: () => void;
 };
 
-const MODULE_ORDER_STORAGE_KEY = 'sidebar-modules-order-v1';
 const LABELS_VISIBLE_DELAY_MS = 80;
 const COLLAPSED_PILL_GAP_PX = 10;
 const ORG_HOME_PATH = '/dashboard';
@@ -403,7 +402,7 @@ function SidebarContent({
 }: SidebarProps) {
   const { pathname } = useLocation();
   const { isSidebarCompact, toggleSidebarCollapsed } = useAppShellLayout();
-  const { locale } = useUserPreferences();
+  const { locale, moduleOrderPreference, setModuleOrderPreference } = useUserPreferences();
   const { t } = useTranslation();
   const osirisRuntime = useOptionalOsirisRuntime();
   const activeOrgId = osirisRuntime?.activeOrgId ?? null;
@@ -427,18 +426,35 @@ function SidebarContent({
     () => buildVisibleAdminItems(profile, permissionSubject, t),
     [permissionSubject, profile, t],
   );
-  const [preferredModuleOrder, setPreferredModuleOrder] = useState<string[]>(readStoredModuleOrder);
+  const [preferredModuleOrder, setPreferredModuleOrder] = useState<string[]>(() =>
+    moduleOrderPreference.length > 0 ? moduleOrderPreference : readStoredModuleOrder(),
+  );
+  const preferredModuleOrderRef = useRef(preferredModuleOrder);
+
+  useEffect(() => {
+    preferredModuleOrderRef.current = preferredModuleOrder;
+  }, [preferredModuleOrder]);
+
+  useEffect(() => {
+    if (moduleOrderPreference.length > 0) {
+      preferredModuleOrderRef.current = moduleOrderPreference;
+      setPreferredModuleOrder(moduleOrderPreference);
+    }
+  }, [moduleOrderPreference]);
 
   useEffect(() => {
     const allowedIds = visibleModuleItems.map((item) => item.id);
     const allowed = new Set<string>(allowedIds);
     setPreferredModuleOrder((current) => {
       const filtered = current.filter((id) => allowed.has(id));
-      return filtered.length > 0 ? filtered : allowedIds;
+      const nextOrder = filtered.length > 0 ? filtered : allowedIds;
+      preferredModuleOrderRef.current = nextOrder;
+      return nextOrder;
     });
   }, [profile.id, visibleModuleItems]);
   const [isEditingModules, setIsEditingModules] = useState(false);
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  const draggingItemIdRef = useRef<string | null>(null);
   const [isLabelsVisible, setIsLabelsVisible] = useState(false);
   const brandRowRef = useRef<HTMLDivElement>(null);
   const collapseRowRef = useRef<HTMLDivElement>(null);
@@ -468,6 +484,11 @@ function SidebarContent({
 
   const orderedModuleItems = orderItems(visibleModuleItems, preferredModuleOrder);
 
+  const startModuleDrag = useCallback((itemId: string) => {
+    draggingItemIdRef.current = itemId;
+    setDraggingItemId(itemId);
+  }, []);
+
   const moveModuleItem = useCallback(
     (targetItemId: string) => {
       if (!draggingItemId || draggingItemId === targetItemId) return;
@@ -479,10 +500,27 @@ function SidebarContent({
       const nextIds = [...currentIds];
       const [movedId] = nextIds.splice(fromIndex, 1);
       nextIds.splice(toIndex, 0, movedId);
+      preferredModuleOrderRef.current = nextIds;
       setPreferredModuleOrder(nextIds);
     },
     [draggingItemId, orderedModuleItems],
   );
+
+  const finishModuleDrag = useCallback(() => {
+    const draggedItemId = draggingItemIdRef.current;
+    draggingItemIdRef.current = null;
+    setDraggingItemId(null);
+    if (draggedItemId) {
+      setModuleOrderPreference(preferredModuleOrderRef.current);
+    }
+  }, [setModuleOrderPreference]);
+
+  const toggleModuleEditing = useCallback(() => {
+    if (isEditingModules) {
+      setModuleOrderPreference(preferredModuleOrderRef.current);
+    }
+    setIsEditingModules((current) => !current);
+  }, [isEditingModules, setModuleOrderPreference]);
 
   const brandIsActive = pathname === ORG_HOME_PATH;
 
@@ -595,7 +633,7 @@ function SidebarContent({
                     !isEditingModules &&
                       'pointer-events-none opacity-0 group-hover/module-header:pointer-events-auto group-hover/module-header:opacity-100',
                   )}
-                  onClick={() => setIsEditingModules((current) => !current)}
+                  onClick={toggleModuleEditing}
                   aria-label={
                     isEditingModules
                       ? t('common.saveOrder', undefined, 'Save order')
@@ -621,9 +659,9 @@ function SidebarContent({
                 onNavigate={onNavigate}
                 draggable={isEditingModules && isExpanded}
                 isDragging={draggingItemId === item.id}
-                onDragStart={setDraggingItemId}
+                onDragStart={startModuleDrag}
                 onDragOver={moveModuleItem}
-                onDrop={() => setDraggingItemId(null)}
+                onDrop={finishModuleDrag}
                 dragHandleTitle={t('common.dragToReorder', undefined, 'Drag to reorder')}
               />
             ))}

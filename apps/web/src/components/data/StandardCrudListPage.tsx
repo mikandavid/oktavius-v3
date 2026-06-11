@@ -127,6 +127,10 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
   const serverList = hasServerLoader ? (serverListQuery.data ?? null) : null;
   const isLoadingServerList = serverListQuery.isLoading;
   const isFetchingServerList = serverListQuery.isFetching;
+  const shouldUseConfiguredSavedViewsStore =
+    !savedViewsStore && !osirisRuntime?.savedViewsRuntime && savedViews.length > 0;
+  const resolvedSavedViewsStore =
+    savedViewsStore ?? (shouldUseConfiguredSavedViewsStore ? defaultSavedViewsStore : undefined);
 
   const savedViewControls = useListSavedViews({
     views: savedViews,
@@ -135,7 +139,8 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
     values: list.values,
     onFilterChange: list.onFilterChange,
     onReset: list.onReset,
-    store: savedViews.length > 0 ? (savedViewsStore ?? defaultSavedViewsStore) : savedViewsStore,
+    store: resolvedSavedViewsStore,
+    runtime: osirisRuntime?.savedViewsRuntime,
   });
 
   return (

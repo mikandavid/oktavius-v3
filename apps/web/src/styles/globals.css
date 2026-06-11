@@ -167,8 +167,8 @@
     background: linear-gradient(
       115deg,
       hsl(var(--card)) 0%,
-      hsl(var(--muted) / 0.72) 46%,
-      hsl(var(--accent) / 0.46) 72%,
+      hsl(var(--muted) / 0.78) 42%,
+      hsl(var(--accent) / 0.42) 76%,
       hsl(var(--card)) 100%
     );
   }
@@ -197,36 +197,51 @@
     position: absolute;
     inset: -22% -18%;
     background:
-      linear-gradient(112deg, transparent 18%, hsl(var(--card) / 0.54) 25%, transparent 34%),
-      linear-gradient(126deg, transparent 44%, oklch(var(--cta) / 0.18) 50%, transparent 61%),
-      linear-gradient(138deg, transparent 63%, hsl(var(--teal) / 0.12) 70%, transparent 80%);
-    opacity: 0.72;
+      linear-gradient(112deg, transparent 15%, hsl(var(--card) / 0.58) 25%, transparent 38%),
+      linear-gradient(129deg, transparent 40%, oklch(var(--cta) / 0.16) 50%, transparent 64%),
+      linear-gradient(145deg, transparent 58%, hsl(var(--teal) / 0.12) 71%, transparent 83%);
+    opacity: 0.78;
     transform: translate3d(0, 0, 0);
     animation: auth-ribbon-shift 14s ease-in-out infinite alternate;
   }
 
   .auth-bg-oktavius__grid {
     position: absolute;
-    inset: 0;
+    inset: -12%;
     background-image:
-      linear-gradient(to right, hsl(var(--border) / 0.32) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.24) 1px, transparent 1px);
-    background-size: 56px 56px;
-    mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
-    opacity: 0.42;
+      linear-gradient(105deg, hsl(var(--border) / 0.2) 1px, transparent 1px),
+      linear-gradient(18deg, hsl(var(--border) / 0.16) 1px, transparent 1px);
+    background-position:
+      -32px 10px,
+      18px -24px;
+    background-size:
+      118px 82px,
+      154px 112px;
+    mask-image: linear-gradient(112deg, transparent 8%, black 34%, black 62%, transparent 88%);
+    opacity: 0.24;
+    transform: rotate(-4deg) scale(1.08);
   }
 
-  .auth-bg-oktavius__grain {
+  .auth-bg-oktavius__flow {
     position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(135deg, hsl(var(--foreground) / 0.035) 25%, transparent 25%),
-      linear-gradient(315deg, hsl(var(--foreground) / 0.025) 25%, transparent 25%);
-    background-position:
-      0 0,
-      10px 10px;
-    background-size: 20px 20px;
-    opacity: 0.28;
+    inset: -20%;
+    background:
+      linear-gradient(126deg, transparent 12%, hsl(var(--card) / 0.5) 26%, transparent 43%),
+      linear-gradient(151deg, transparent 39%, oklch(var(--cta) / 0.12) 53%, transparent 70%),
+      conic-gradient(
+        from 216deg at 38% 42%,
+        transparent 0deg,
+        hsl(var(--teal) / 0.1) 42deg,
+        transparent 96deg,
+        oklch(var(--cta) / 0.16) 156deg,
+        transparent 232deg,
+        hsl(var(--card) / 0.44) 298deg,
+        transparent 360deg
+      );
+    filter: blur(22px) saturate(1.08);
+    opacity: 0.82;
+    transform: rotate(-6deg) scale(1.04);
+    animation: auth-flow-breathe 16s ease-in-out infinite alternate;
   }
 
   .auth-bg-oktavius__wash {
@@ -255,6 +270,15 @@
     }
     100% {
       transform: translate3d(2%, 1%, 0) rotate(2deg);
+    }
+  }
+
+  @keyframes auth-flow-breathe {
+    0% {
+      transform: rotate(-8deg) scale(1.03) translate3d(-1%, 0, 0);
+    }
+    100% {
+      transform: rotate(-3deg) scale(1.08) translate3d(1%, -1%, 0);
     }
   }
 

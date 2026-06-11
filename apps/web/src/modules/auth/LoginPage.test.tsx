@@ -150,6 +150,14 @@ describe('LoginPage', () => {
     );
   });
 
+  it('uses the updated auth background without the old tiled grain layer', async () => {
+    const rendered = await renderLogin('/login');
+    roots.push(rendered.root);
+
+    expect(rendered.container.querySelector('.auth-bg-oktavius__grain')).toBeNull();
+    expect(rendered.container.querySelector('.auth-bg-oktavius__flow')).not.toBeNull();
+  });
+
   it('starts provider sign-in through the Osiris runtime', async () => {
     const rendered = await renderLogin('/login?redirect=%2Fsettings');
     roots.push(rendered.root);

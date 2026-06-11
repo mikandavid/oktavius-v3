@@ -14,6 +14,7 @@ describe('normalizeOsirisBootstrap', () => {
         is_super_admin: false,
         active_org_id: 'org_1',
         active_site_id: 'site_1',
+        preferred_language: 'de',
       },
       memberships: [
         { org_id: 'org_1', role: 'Admin', is_active: true },
@@ -58,6 +59,7 @@ describe('normalizeOsirisBootstrap', () => {
       email: 'anna@example.test',
       fullName: 'Anna',
       isSuperadmin: false,
+      preferredLanguage: 'de',
     });
     expect(result.organizations).toBe(payload.organizations);
     expect(result.memberships).toBe(payload.memberships);

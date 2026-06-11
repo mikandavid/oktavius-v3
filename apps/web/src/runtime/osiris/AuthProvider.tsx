@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
+import { createOsirisSavedViewsAdapter } from '@/components/data/osirisSavedViewsAdapter';
+
 import { joinOsirisApiBaseUrl, resolveOsirisApiBaseUrl } from './apiBaseUrl';
 import { createOsirisAuthClient } from './authClient';
 import { normalizeOsirisBootstrap } from './bootstrap';
@@ -7,6 +9,7 @@ import { createOsirisLocationAdminClient } from './locationAdminClient';
 import { createOsirisNotificationsRuntime } from './notificationsClient';
 import { createOsirisSearchRuntime } from './searchClient';
 import type { OsirisBootstrapResponse, OsirisRuntimeState, OsirisSessionStatus } from './types';
+import { createOsirisUserPreferencesRuntime } from './userPreferencesClient';
 import { OsirisRuntimeContext } from './useOsirisRuntime';
 import { createOsirisWorkspaceSettingsClient } from './workspaceSettingsClient';
 
@@ -20,6 +23,10 @@ const osirisNotificationsRuntime = createOsirisNotificationsRuntime({
   baseUrl: OSIRIS_API_BASE_URL,
 });
 const osirisSearchRuntime = createOsirisSearchRuntime({ baseUrl: OSIRIS_API_BASE_URL });
+const osirisSavedViewsRuntime = createOsirisSavedViewsAdapter({ baseUrl: OSIRIS_API_BASE_URL });
+const osirisUserPreferencesRuntime = createOsirisUserPreferencesRuntime({
+  baseUrl: OSIRIS_API_BASE_URL,
+});
 
 const EMPTY_STATE: OsirisRuntimeState = {
   sessionStatus: 'anonymous',
@@ -247,6 +254,13 @@ export function OsirisAuthProvider({ children }: { children: ReactNode }) {
 
   const updatePreferredLanguage = useCallback(async (language: string) => {
     await osirisAuthClient.updatePreferredLanguage(language);
+    setState((current) => ({
+      ...current,
+      currentUser: {
+        ...current.currentUser,
+        preferredLanguage: language,
+      },
+    }));
     setError(null);
   }, []);
 
@@ -396,6 +410,8 @@ export function OsirisAuthProvider({ children }: { children: ReactNode }) {
         expireSession,
         notificationsRuntime: osirisNotificationsRuntime,
         searchRuntime: osirisSearchRuntime,
+        savedViewsRuntime: osirisSavedViewsRuntime,
+        userPreferencesRuntime: osirisUserPreferencesRuntime,
         isLoading,
         error,
         reload,

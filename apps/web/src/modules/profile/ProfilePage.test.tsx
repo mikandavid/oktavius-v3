@@ -4,6 +4,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppShellLayoutProvider } from '@/components/layout/AppShellLayoutContext';
+import type {
+  NotificationSettings,
+  NotificationsRuntimeAdapter,
+} from '@/components/layout/NotificationsRuntime';
 import { TestI18nProvider } from '@/core/i18n';
 import {
   OsirisRuntimeContext,
@@ -64,6 +68,34 @@ function changeInput(input: HTMLInputElement, value: string) {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
+}
+
+async function changeSelect(select: HTMLSelectElement, value: string) {
+  await act(async () => {
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+    valueSetter?.call(select, value);
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+}
+
+function findButton(container: HTMLElement, label: string) {
+  return Array.from(container.querySelectorAll('button')).find(
+    (button) => button.textContent?.trim() === label,
+  );
+}
+
+async function waitForText(container: HTMLElement, expected: string) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    });
+
+    const text = container.textContent ?? '';
+    if (text.includes(expected)) return text;
+  }
+
+  return container.textContent ?? '';
 }
 
 describe('ProfilePage account settings', () => {
@@ -132,6 +164,76 @@ describe('ProfilePage account settings', () => {
     expect(baseRuntime.changePassword).toHaveBeenCalledWith({
       currentPassword: 'current-password',
       newPassword: 'new-password-123',
+    });
+  });
+
+  it('loads notification settings and updates channel subscriptions', async () => {
+    const notificationSettings: NotificationSettings = {
+      modules: [
+        {
+          moduleId: 'invoices',
+          moduleName: 'Invoices',
+          enabled: true,
+          categories: [
+            {
+              key: 'approval',
+              label: 'Approvals',
+              types: [
+                {
+                  key: 'invoice.approval_requested',
+                  title: 'Approval requested',
+                  description: 'An invoice needs review.',
+                  severity: 'info',
+                  channels: [
+                    {
+                      channel: 'in_app',
+                      allowed: true,
+                      supportsSummary: false,
+                      effectiveState: 'enabled',
+                      explicitState: 'inherited',
+                      defaultState: 'enabled',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const notificationsRuntime: NotificationsRuntimeAdapter = {
+      subscribe: () => () => {},
+      fetchNotifications: vi.fn(async () => []),
+      fetchUnreadCount: vi.fn(async () => 0),
+      markRead: vi.fn(async () => undefined),
+      markAllRead: vi.fn(async () => undefined),
+      fetchSettings: vi.fn(async () => notificationSettings),
+      updateSubscription: vi.fn(async () => undefined),
+    };
+    const rendered = await renderProfile({ ...baseRuntime, notificationsRuntime });
+    roots.push(rendered.root);
+
+    const notificationsButton = findButton(rendered.container, 'Notifications');
+    if (!notificationsButton) throw new Error('Expected Notifications section button.');
+
+    act(() => {
+      notificationsButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    await waitForText(rendered.container, 'Approval requested');
+
+    const select = rendered.container.querySelector('select');
+    if (!(select instanceof HTMLSelectElement)) {
+      throw new Error('Expected notification channel select.');
+    }
+
+    await changeSelect(select, 'disabled');
+
+    expect(notificationsRuntime.fetchSettings).toHaveBeenCalled();
+    expect(notificationsRuntime.updateSubscription).toHaveBeenCalledWith({
+      notificationTypeKey: 'invoice.approval_requested',
+      channel: 'in_app',
+      state: 'disabled',
     });
   });
 });
