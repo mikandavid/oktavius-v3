@@ -4,6 +4,8 @@ import { joinOsirisApiBaseUrl, resolveOsirisApiBaseUrl } from './apiBaseUrl';
 import { createOsirisAuthClient } from './authClient';
 import { normalizeOsirisBootstrap } from './bootstrap';
 import { createOsirisLocationAdminClient } from './locationAdminClient';
+import { createOsirisNotificationsRuntime } from './notificationsClient';
+import { createOsirisSearchRuntime } from './searchClient';
 import type { OsirisBootstrapResponse, OsirisRuntimeState, OsirisSessionStatus } from './types';
 import { OsirisRuntimeContext } from './useOsirisRuntime';
 import { createOsirisWorkspaceSettingsClient } from './workspaceSettingsClient';
@@ -14,6 +16,10 @@ const osirisWorkspaceSettingsClient = createOsirisWorkspaceSettingsClient({
   baseUrl: OSIRIS_API_BASE_URL,
 });
 const osirisLocationAdminClient = createOsirisLocationAdminClient({ baseUrl: OSIRIS_API_BASE_URL });
+const osirisNotificationsRuntime = createOsirisNotificationsRuntime({
+  baseUrl: OSIRIS_API_BASE_URL,
+});
+const osirisSearchRuntime = createOsirisSearchRuntime({ baseUrl: OSIRIS_API_BASE_URL });
 
 const EMPTY_STATE: OsirisRuntimeState = {
   sessionStatus: 'anonymous',
@@ -388,6 +394,8 @@ export function OsirisAuthProvider({ children }: { children: ReactNode }) {
         registerInvitation,
         signOut,
         expireSession,
+        notificationsRuntime: osirisNotificationsRuntime,
+        searchRuntime: osirisSearchRuntime,
         isLoading,
         error,
         reload,

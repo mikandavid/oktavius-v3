@@ -2,6 +2,7 @@ import { useCommandPalette } from '@/components/command/CommandPalette';
 import { cn } from '@oktavius/base-ui';
 
 import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { HeaderAccountMenu } from './HeaderAccountMenu';
 import { NotificationPanel } from './NotificationPanel';
@@ -11,6 +12,7 @@ const COMMAND_PALETTE_TRIGGER_CLASS =
 
 export function Header() {
   const { setOpen } = useCommandPalette();
+  const osirisRuntime = useOptionalOsirisRuntime();
 
   return (
     <header className={cn('shrink-0', APP_SHELL_SURFACE_CLASS)}>
@@ -24,7 +26,7 @@ export function Header() {
           <span className="truncate">Search modules, records, commands…</span>
         </button>
         <div className="ml-auto flex items-center gap-2">
-          <NotificationPanel />
+          <NotificationPanel runtime={osirisRuntime?.notificationsRuntime} />
           <HeaderAccountMenu compact />
         </div>
       </div>

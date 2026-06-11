@@ -20,7 +20,7 @@ function getDefaultFetcher(): ApiArrayStoreFetcher {
     throw new Error('No fetch implementation is available for API-backed generated stores.');
   }
 
-  return (input, init) => fetch(input, init);
+  return (input, init) => fetch(input, { ...init, credentials: 'include' });
 }
 
 async function requestJsonArray<T>(

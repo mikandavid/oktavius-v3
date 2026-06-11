@@ -1,4 +1,5 @@
 import type { SearchRuntimeAdapter } from '@/lib/search/SearchRuntime';
+import type { NotificationsRuntimeAdapter } from '@/components/layout/NotificationsRuntime';
 
 import type {
   OsirisAcceptedInvitation,
@@ -125,6 +126,7 @@ export type OsirisRuntimeState = {
   permissions: OsirisBootstrapResponse['permissions'];
   permissionSubject: OsirisPermissionSubject;
   locationAccess: OsirisLocationAccess | null;
+  notificationsRuntime?: NotificationsRuntimeAdapter;
   searchRuntime?: SearchRuntimeAdapter;
   config: OsirisRuntimeConfig | null;
 };
