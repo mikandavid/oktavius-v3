@@ -180,7 +180,12 @@ export function LoginPage() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          variant="cta"
+          className="w-full transition-transform hover:-translate-y-px hover:shadow-elevated"
+          disabled={isSubmitting}
+        >
           {isSubmitting ? t('auth.signingIn') : t('auth.login')}
         </Button>
       </form>
@@ -219,10 +224,6 @@ export function LoginPage() {
           {t('auth.continueWithMicrosoft')}
         </Button>
       </div>
-
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        {t('auth.inviteOnlyLoginHint')}
-      </p>
     </AuthShell>
   );
 }

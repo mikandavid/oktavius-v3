@@ -138,14 +138,14 @@ describe('LoginPage', () => {
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('renders provider login options and invitation guidance', async () => {
+  it('renders provider login options without extra guidance copy', async () => {
     const rendered = await renderLogin('/login');
     roots.push(rendered.root);
 
     expect(rendered.container.textContent).toContain('oder weiter mit');
     expect(rendered.container.textContent).toContain('Weiter mit Google');
     expect(rendered.container.textContent).toContain('Weiter mit Microsoft');
-    expect(rendered.container.textContent).toContain(
+    expect(rendered.container.textContent).not.toContain(
       'Benötigen Sie Zugriff? Bitten Sie Ihre Organisationsadministration um eine Einladung.',
     );
   });
