@@ -1,0 +1,26 @@
+{
+  "title": "Clients",
+  "newClient": "New Client",
+  "editClient": "Edit Client",
+  "clientDetails": "Client Details",
+  "deleteClient": "Delete Client",
+  "deleteRecordConfirm": "Delete this client?",
+  "noClientsFound": "No clients found. Create your first client to get started.",
+  "noClientsDescription": "Create your first client to get started.",
+
+  "statusLead": "Lead",
+  "statusActive": "Active",
+  "statusInactive": "Inactive",
+  "statusArchived": "Archived",
+
+  "typeIndividual": "Individual",
+  "typeCompany": "Company",
+  "typeGovernment": "Government Entity",
+  "typePartnership": "Partnership",
+
+  "contactInformation": "Contact Information",
+  "addressDetails": "Address",
+  "addressLine1": "Address Line 1",
+  "addressLine2": "Address Line 2",
+  "codeDescription": "Auto-generated if left blank"
+}

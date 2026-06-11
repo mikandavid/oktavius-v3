@@ -111,6 +111,9 @@ describe('generated module file emitter', () => {
       'import { useApiRegistry } from "../../../api/ApiProvider";',
     );
     expect(listPage?.content).toContain(
+      'import type { ListResponse } from "../../../api/contracts";',
+    );
+    expect(listPage?.content).toContain(
       'import { StandardCrudListPage, type StandardCrudListRequestParams } from "../../../components/data/StandardCrudListPage";',
     );
     expect(listPage?.content).toContain('const api = useApiRegistry();');

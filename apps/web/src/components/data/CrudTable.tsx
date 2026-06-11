@@ -19,6 +19,8 @@ import { cn } from '@oktavius/base-ui';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { EmptyState } from '@/components/common/EmptyState';
+import { EMPTY_PERMISSION_SUBJECT, permitted, type PermissionSubject } from '@/lib/permissions';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import {
   CRUD_TABLE_CELL_INNER_BASE,
@@ -186,7 +188,12 @@ function LoadingStateWithColumns<T>({
   );
 }
 
-function bulkActionVisible(action: BulkAction, selectedCount: number) {
+function bulkActionVisible(
+  action: BulkAction,
+  selectedCount: number,
+  permissionSubject: PermissionSubject,
+) {
+  if (!permitted(action.permission, permissionSubject)) return false;
   if (action.minSelection != null && selectedCount < action.minSelection) return false;
   if (action.maxSelection != null && selectedCount > action.maxSelection) return false;
   return true;
@@ -200,6 +207,7 @@ function BulkActionBar({
   onClear,
   onToggleAll,
   invokeBulkAction,
+  permissionSubject,
 }: {
   selectedCount: number;
   actions: BulkAction[];
@@ -208,8 +216,11 @@ function BulkActionBar({
   onClear: () => void;
   onToggleAll: () => void;
   invokeBulkAction: (action: BulkAction, ids: string[]) => void;
+  permissionSubject: PermissionSubject;
 }) {
-  const visibleActions = actions.filter((action) => bulkActionVisible(action, selectedCount));
+  const visibleActions = actions.filter((action) =>
+    bulkActionVisible(action, selectedCount, permissionSubject),
+  );
   if (selectedCount === 0 || visibleActions.length === 0) return null;
 
   const allRowsSelected = rowIds.length > 0 && rowIds.every((id) => selectedIds.includes(id));
@@ -400,6 +411,11 @@ export function CrudTable<T extends { id: string }>({
   columnStateStorageKey,
   gridRef,
 }: CrudTableProps<T>) {
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const permissionSubject = useMemo(
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
+  );
   const [confirmDialog, setConfirmDialog] = useState<
     | { mode: 'row'; action: CrudRowAction<T>; item: T }
     | { mode: 'bulk'; action: BulkAction; ids: string[] }
@@ -487,7 +503,19 @@ export function CrudTable<T extends { id: string }>({
   const selectedIds = controlledSelectedIds ?? internalSelectedIds;
   const setSelectedIds = onSelectionChange ?? setInternalSelectedIds;
   const rowIds = useMemo(() => rows.map((row) => row.id), [rows]);
-  const hasActions = rowActions.length > 0;
+  const permittedColumns = useMemo(
+    () => columns.filter((column) => permitted(column.permission, permissionSubject)),
+    [columns, permissionSubject],
+  );
+  const permittedRowActions = useMemo(
+    () => rowActions.filter((action) => permitted(action.permission, permissionSubject)),
+    [permissionSubject, rowActions],
+  );
+  const permittedBulkActions = useMemo(
+    () => bulkActions.filter((action) => permitted(action.permission, permissionSubject)),
+    [bulkActions, permissionSubject],
+  );
+  const hasActions = permittedRowActions.length > 0;
 
   const sortRef = useRef(sort);
   sortRef.current = sort;
@@ -499,8 +527,8 @@ export function CrudTable<T extends { id: string }>({
   setSelectedIdsRef.current = setSelectedIds;
   const rowIdsRef = useRef(rowIds);
   rowIdsRef.current = rowIds;
-  const rowActionsRef = useRef(rowActions);
-  rowActionsRef.current = rowActions;
+  const rowActionsRef = useRef(permittedRowActions);
+  rowActionsRef.current = permittedRowActions;
   const highlightedIdRef = useRef(highlightedId);
   highlightedIdRef.current = highlightedId;
   const onRowClickRef = useRef(onRowClick);
@@ -510,8 +538,10 @@ export function CrudTable<T extends { id: string }>({
 
   const visibleColumns = useMemo(() => {
     const effectiveWidth = resolveEffectiveTableWidth(containerWidth, viewportWidth);
-    return columns.filter((column) => !shouldHideForViewport(column.hideBelow, effectiveWidth));
-  }, [columns, containerWidth, viewportWidth]);
+    return permittedColumns.filter(
+      (column) => !shouldHideForViewport(column.hideBelow, effectiveWidth),
+    );
+  }, [permittedColumns, containerWidth, viewportWidth]);
 
   const effectiveTableWidth = resolveEffectiveTableWidth(containerWidth, viewportWidth);
   const useMobileLayout = effectiveTableWidth > 0 && effectiveTableWidth < BREAKPOINT_MIN_WIDTHS.sm;
@@ -790,9 +820,9 @@ export function CrudTable<T extends { id: string }>({
   const resolvedColumnStateStorageKey = useMemo(() => {
     if (columnStateStorageKey) return columnStateStorageKey;
     if (typeof window === 'undefined') return undefined;
-    const columnSignature = columns.map((column) => column.key).join('|');
+    const columnSignature = permittedColumns.map((column) => column.key).join('|');
     return `crud-table:${window.location.pathname}:${columnSignature}`;
-  }, [columnStateStorageKey, columns]);
+  }, [columnStateStorageKey, permittedColumns]);
 
   useEffect(() => {
     if (!resolvedColumnStateStorageKey) return;
@@ -955,12 +985,13 @@ export function CrudTable<T extends { id: string }>({
     <div className="crud-table-host flex w-full max-w-full min-w-0 flex-col overflow-x-hidden">
       <BulkActionBar
         selectedCount={selectedIds.length}
-        actions={bulkActions}
+        actions={permittedBulkActions}
         selectedIds={selectedIds}
         rowIds={rowIds}
         onClear={() => setSelectedIds([])}
         onToggleAll={() => setSelectedIds(toggleAllIds(rowIds, selectedIds))}
         invokeBulkAction={invokeBulkAction}
+        permissionSubject={permissionSubject}
       />
       {useMobileLayout ? (
         <CrudTableMobileList
@@ -969,7 +1000,7 @@ export function CrudTable<T extends { id: string }>({
           selectable={selectable}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
-          rowActions={rowActions}
+          rowActions={permittedRowActions}
           onRowClick={onRowClick}
           highlightedId={highlightedId}
           compact={compact}

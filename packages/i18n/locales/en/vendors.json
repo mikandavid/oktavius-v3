@@ -1,0 +1,26 @@
+{
+  "title": "Vendors",
+  "newVendor": "New Vendor",
+  "editVendor": "Edit Vendor",
+  "vendorDetails": "Vendor Details",
+  "deleteVendor": "Delete Vendor",
+  "deleteRecordConfirm": "Delete this vendor?",
+  "noVendorsFound": "No vendors found. Add your first vendor to get started.",
+
+  "statusActive": "Active",
+  "statusInactive": "Inactive",
+  "statusArchived": "Archived",
+
+  "typeIndividual": "Individual",
+  "typeCompany": "Company",
+  "typeGovernment": "Government Entity",
+  "typePartnership": "Partnership",
+
+  "contactInformation": "Contact Information",
+  "addressDetails": "Address",
+  "addressLine1": "Address Line 1",
+  "addressLine2": "Address Line 2",
+  "codeDescription": "Auto-generated if left blank",
+  "taxId": "Tax ID",
+  "searchVendors": "Search vendors…"
+}

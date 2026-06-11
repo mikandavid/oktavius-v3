@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   Avatar,
   Badge,
+  Button,
   CopyButton,
   ListRow,
   MoneyText,
@@ -15,11 +16,20 @@ import {
 import { CrudListShell } from '@/components/data/CrudListShell';
 import { SavedViewSelector } from '@/components/data/SavedViewSelector';
 import { statusColumn } from '@/components/data/columns';
-import type { CrudColumn } from '@/components/data/CrudTable';
+import {
+  CrudTable,
+  type BulkAction,
+  type CrudColumn,
+  type CrudRowAction,
+} from '@/components/data/CrudTable';
 import { useDemoData } from '@/app/demo-data';
 import type { ProductRecord } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
 import { appToast } from '@/lib/toast';
+import {
+  OsirisRuntimeContext,
+  type OsirisRuntimeContextValue,
+} from '@/runtime/osiris/useOsirisRuntime';
 
 import { ShowcaseBlock } from '../shared';
 
@@ -70,10 +80,69 @@ const SETTINGS_ROWS = [
   { id: '3', label: 'Due on receipt', code: 'DUE', active: false },
 ];
 
+const permissionRows = [
+  { id: 'perm_1', name: 'Northwind GmbH', owner: 'Mira Braun', internalMargin: '42%' },
+];
+
+const permissionColumns: CrudColumn<(typeof permissionRows)[number]>[] = [
+  { key: 'name', header: 'Client' },
+  { key: 'owner', header: 'Owner' },
+  { key: 'internalMargin', header: 'Internal margin', permission: 'demo.locked' },
+];
+
+const permissionRowActions: CrudRowAction<(typeof permissionRows)[number]>[] = [
+  {
+    key: 'audit',
+    label: 'Audit access',
+    permission: 'demo.locked',
+    onClick: () => {
+      appToast.info('Guarded row action');
+    },
+  },
+];
+
+const permissionBulkActions: BulkAction[] = [
+  {
+    key: 'bulk-audit',
+    label: 'Bulk audit',
+    permission: 'demo.locked',
+    onClick: () => {
+      appToast.info('Guarded bulk action');
+    },
+  },
+];
+
+function permissionRuntime(allowed: boolean): OsirisRuntimeContextValue {
+  return {
+    currentUser: {
+      id: 'showcase-user',
+      email: 'showcase@example.com',
+      fullName: 'Showcase User',
+      isSuperadmin: false,
+    },
+    organizations: [],
+    memberships: [],
+    activeOrgId: 'showcase-org',
+    activeSiteId: 'showcase-site',
+    permissions: allowed ? ['demo.locked'] : [],
+    permissionSubject: {
+      isSuperadmin: false,
+      role: 'member',
+      permissions: allowed ? ['demo.locked'] : [],
+    },
+    locationAccess: null,
+    config: null,
+    isLoading: false,
+    error: null,
+    reload: async () => {},
+  };
+}
+
 export function DataSection() {
   const { products } = useDemoData();
   const [rows, setRows] = useState(products);
   const [savedView, setSavedView] = useState('all');
+  const [permissionAllowed, setPermissionAllowed] = useState(false);
 
   useEffect(() => {
     setRows(products);
@@ -148,6 +217,33 @@ export function DataSection() {
           getRowId={(row) => row.id}
           emptyMessage="No rows"
         />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Permission-aware table"
+        meta="Column, row action, and bulk action use the same PermissionSubject"
+        actions={
+          <Button
+            size="sm"
+            variant={permissionAllowed ? 'default' : 'outline'}
+            onClick={() => setPermissionAllowed((current) => !current)}
+          >
+            {permissionAllowed ? 'Locked fields visible' : 'Locked fields hidden'}
+          </Button>
+        }
+      >
+        <OsirisRuntimeContext.Provider value={permissionRuntime(permissionAllowed)}>
+          <CrudTable
+            data={permissionRows}
+            columns={permissionColumns}
+            rowActions={permissionRowActions}
+            bulkActions={permissionBulkActions}
+            selectedIds={['perm_1']}
+            selectable
+            emptyTitle="No permission rows"
+            columnStateStorageKey="showcase-permission-table"
+          />
+        </OsirisRuntimeContext.Provider>
       </ShowcaseBlock>
 
       <ShowcaseBlock

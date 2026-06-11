@@ -5,21 +5,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DetailPageHeaderActions } from './DetailPageHeaderActions';
 
 const demoData = vi.hoisted<{
-  currentUser: { isSuperadmin: boolean };
-  activeMembership: { role: string; permissions: string[] };
+  permissionSubject: { isSuperadmin: boolean; role: 'admin' | 'member'; permissions: string[] };
 }>(() => ({
-  currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'member', permissions: [] },
+  permissionSubject: { isSuperadmin: false, role: 'member', permissions: [] },
 }));
 
-vi.mock('@/app/demo-data', () => ({
-  useDemoData: () => demoData,
+vi.mock('@/runtime/osiris/useOsirisRuntime', () => ({
+  useOptionalOsirisRuntime: () => demoData,
 }));
 
 describe('DetailPageHeaderActions', () => {
   beforeEach(() => {
-    demoData.currentUser = { isSuperadmin: false };
-    demoData.activeMembership = { role: 'member', permissions: [] };
+    demoData.permissionSubject = { isSuperadmin: false, role: 'member', permissions: [] };
   });
 
   it('keeps edit visible but hides delete without record delete permission', () => {
@@ -34,7 +31,11 @@ describe('DetailPageHeaderActions', () => {
   });
 
   it('shows delete with record delete permission', () => {
-    demoData.activeMembership = { role: 'admin', permissions: ['records.delete'] };
+    demoData.permissionSubject = {
+      isSuperadmin: false,
+      role: 'admin',
+      permissions: ['records.delete'],
+    };
 
     const markup = renderToStaticMarkup(
       <MemoryRouter>

@@ -11,11 +11,11 @@ import {
 } from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
-import { useDemoData } from '@/app/demo-data';
+import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { CaseIcon, InvoiceIcon, OrderIcon, ProjectsIcon } from '@/lib/icons';
 import { dashboardPageIcon } from '@/lib/modulePageIcons';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
-import { useUserPreferences } from '@/lib/userPreferences';
+import { useUserPreferences, type UiLocale } from '@/lib/userPreferences';
 
 function aggregateOrdersByMonth(orders: Array<{ orderDate: string; total: string }>): ChartPoint[] {
   const buckets = new Map<string, number>();
@@ -36,7 +36,7 @@ function aggregateOrdersByMonth(orders: Array<{ orderDate: string; total: string
 function aggregateCasesByStage(
   cases: Array<{ stage: string }>,
   stageOrder: readonly string[],
-  locale: 'de' | 'en' | 'fr',
+  locale: UiLocale,
 ): ChartPoint[] {
   const buckets = new Map<string, number>();
 
@@ -61,8 +61,13 @@ function aggregateCasesByStage(
 
 const FUNERAL_CASE_STAGES = ['Aufnahme', 'Planung', 'Durchführung', 'Abgeschlossen'] as const;
 const GENERIC_CASE_STAGES = ['Intake', 'Investigation', 'Resolution', 'Closed'] as const;
+const EMPTY_DASHBOARD_CLIENTS: unknown[] = [];
+const EMPTY_DASHBOARD_ORDERS: Array<{ orderDate: string; total: string }> = [];
+const EMPTY_DASHBOARD_CASES: Array<{ stage: string }> = [];
+const EMPTY_DASHBOARD_INVOICES: Array<{ status: string }> = [];
+const EMPTY_DASHBOARD_PRODUCTS: unknown[] = [];
 
-const CASE_STAGE_LABEL_MAP_BY_LOCALE = {
+const CASE_STAGE_LABEL_MAP_BY_LOCALE: Record<UiLocale, Record<string, string>> = {
   de: {
     Intake: 'Intake',
     Investigation: 'Investigation',
@@ -83,113 +88,26 @@ const CASE_STAGE_LABEL_MAP_BY_LOCALE = {
     Durchführung: 'Execution',
     Abgeschlossen: 'Closed',
   },
-  fr: {
-    Intake: 'Enregistrement',
-    Investigation: 'Enquête',
-    Resolution: 'Résolution',
-    Closed: 'Fermé',
-    Aufnahme: 'Admissibilité',
-    Planung: 'Planification',
-    Durchführung: 'Exécution',
-    Abgeschlossen: 'Terminé',
-  },
 };
 
-function localizeDashboardCaseStage(stage: string, locale: 'de' | 'en' | 'fr') {
+function localizeDashboardCaseStage(stage: string, locale: UiLocale) {
   const map = CASE_STAGE_LABEL_MAP_BY_LOCALE[locale];
-  return map[stage as keyof typeof map] ?? stage;
+  return map[stage] ?? stage;
 }
 
-const DASHBOARD_TEXT: Record<
-  'de' | 'en' | 'fr',
-  {
-    subtitle: string;
-    clientsDescription: string;
-    ordersDescription: string;
-    openCasesLabelPrefix: string;
-    openCasesSuffix: string;
-    productsDeltaLabel: string;
-    orderChartTitlePrefix: string;
-    orderChartMeta: string;
-    casesByStageLabel: string;
-    casesByStageMeta: string;
-    recentTitle: string;
-    recentMeta: string;
-  }
-> = {
-  de: {
-    subtitle: 'Unternehmensübersicht',
-    clientsDescription: 'Kontakte & Lieferanten',
-    ordersDescription: 'Verkaufsbelege',
-    openCasesLabelPrefix: 'Offene',
-    openCasesSuffix: 'gesamt',
-    productsDeltaLabel: 'Leistungen & Produkte',
-    orderChartTitlePrefix: 'Umsatz',
-    orderChartMeta: 'Monatliche Summen (Demo)',
-    casesByStageLabel: 'nach Status',
-    casesByStageMeta: 'Aufnahme · Planung · Durchführung',
-    recentTitle: 'Letzte Vorgänge',
-    recentMeta: 'Demo-Ereignisse',
-  },
-  en: {
-    subtitle: 'Overview',
-    clientsDescription: 'Active accounts',
-    ordersDescription: 'Sales records',
-    openCasesLabelPrefix: 'Open',
-    openCasesSuffix: 'total',
-    productsDeltaLabel: 'Services and products',
-    orderChartTitlePrefix: 'Sales',
-    orderChartMeta: 'Monthly totals from demo orders',
-    casesByStageLabel: 'by status',
-    casesByStageMeta: 'Open pipeline by stage',
-    recentTitle: 'Recent activity',
-    recentMeta: 'Sample workspace events',
-  },
-  fr: {
-    subtitle: 'Overview',
-    clientsDescription: 'Comptes actifs',
-    ordersDescription: 'Enregistrements de ventes',
-    openCasesLabelPrefix: 'Ouvert',
-    openCasesSuffix: 'total',
-    productsDeltaLabel: 'Services et produits',
-    orderChartTitlePrefix: 'Ventes',
-    orderChartMeta: 'Totaux mensuels des commandes de démonstration',
-    casesByStageLabel: 'par statut',
-    casesByStageMeta: 'Pipeline ouvert par étape',
-    recentTitle: 'Activité récente',
-    recentMeta: 'Événements d’échantillon',
-  },
-};
-
 export function DashboardPage() {
-  const { clients, orders, cases, invoices, products } = useDemoData();
+  const { ready } = usePreloadNamespaces(['dashboard']);
+  const clients = EMPTY_DASHBOARD_CLIENTS;
+  const orders = EMPTY_DASHBOARD_ORDERS;
+  const cases = EMPTY_DASHBOARD_CASES;
+  const invoices = EMPTY_DASHBOARD_INVOICES;
+  const products = EMPTY_DASHBOARD_PRODUCTS;
   const profile = useOrgProfile();
+  const { t } = useTranslation();
   const isFuneral = profile.industryKey === 'funeral';
   const { locale } = useUserPreferences();
-  const isGerman = locale === 'de';
-  const i18n = DASHBOARD_TEXT[locale];
   const stageOrder = isFuneral ? FUNERAL_CASE_STAGES : GENERIC_CASE_STAGES;
   const closedStage = stageOrder[stageOrder.length - 1];
-  const activityLabelMap = isFuneral
-    ? isGerman
-      ? {
-          event1: 'Bestattungsauftrag digitalisiert',
-          event2: 'Trauerfeier terminiert',
-          event3: 'Sterbefall in Planung',
-          event4: 'Vorsorge aktualisiert',
-        }
-      : {
-          event1: 'Funeral order digitized',
-          event2: 'Memorial service scheduled',
-          event3: 'Bereavement case in planning',
-          event4: 'Pre-need updated',
-        }
-    : {
-        event1: 'Invoice marked overdue',
-        event2: 'Order confirmed',
-        event3: 'Case escalated',
-        event4: 'New client added',
-      };
 
   const overdueInvoices = useMemo(
     () => invoices.filter((invoice) => invoice.status === 'Overdue').length,
@@ -205,85 +123,23 @@ export function DashboardPage() {
 
   const casesByStage = useMemo(
     () => aggregateCasesByStage(cases, stageOrder, locale),
-    [cases, isFuneral, locale, stageOrder],
+    [cases, locale, stageOrder],
   );
 
-  const activityEvents = useMemo(
-    () =>
-      isFuneral
-        ? [
-            {
-              id: 'evt_k1',
-              label: activityLabelMap.event1,
-              description: 'KUNZ-2026-0042 · Wallner Friedrich',
-              timestamp: '2026-05-13T10:30:00Z',
-              tone: 'success' as const,
-            },
-            {
-              id: 'evt_k2',
-              label: activityLabelMap.event2,
-              description: 'KUNZ-2026-0042 · Pfarrkirche Pitten',
-              timestamp: '2026-05-14T08:00:00Z',
-              tone: 'info' as const,
-            },
-            {
-              id: 'evt_k3',
-              label: activityLabelMap.event3,
-              description: 'KUNZ-2026-0038 · Huber Maria',
-              timestamp: '2026-05-08T14:20:00Z',
-              tone: 'default' as const,
-            },
-            {
-              id: 'evt_k4',
-              label: activityLabelMap.event4,
-              description: 'Hermine Wallner',
-              timestamp: '2026-04-18T09:15:00Z',
-              tone: 'default' as const,
-            },
-          ]
-        : [
-            {
-              id: 'evt_1',
-              label: 'Invoice marked overdue',
-              description: 'INV-2024-9012 · Donau Logistics AG',
-              timestamp: '2024-12-01T09:15:00Z',
-              tone: 'warning' as const,
-            },
-            {
-              id: 'evt_2',
-              label: 'Order confirmed',
-              description: 'SO-2024-1042 · Apex Technologies GmbH',
-              timestamp: '2024-11-02T14:20:00Z',
-              tone: 'success' as const,
-            },
-            {
-              id: 'evt_3',
-              label: 'Case escalated',
-              description: 'CASE-2024-0892 · Billing dispute',
-              timestamp: '2024-11-28T11:05:00Z',
-              tone: 'info' as const,
-            },
-            {
-              id: 'evt_4',
-              label: 'New client added',
-              description: 'Clara Sonnenschein · prospect',
-              timestamp: '2024-05-03T08:00:00Z',
-              tone: 'default' as const,
-            },
-          ],
-    [isFuneral],
-  );
+  const activityEvents = useMemo(() => [], []);
 
   const currencyFormatter = (value: number) => `€${value.toLocaleString('de-AT')}`;
+
+  if (!ready) return null;
+
+  const subtitle = isFuneral
+    ? `${profile.tagline} — ${t('dashboard.subtitleOverview')}`
+    : t('dashboard.subtitleWorkspace');
 
   return (
     <ModulePage
       title={profile.terminology.dashboard}
-      subtitle={
-        isFuneral
-          ? `${profile.tagline} — ${i18n.subtitle}`
-          : 'Workspace overview and recent activity'
-      }
+      subtitle={subtitle}
       icon={dashboardPageIcon()}
     >
       <div className={STAT_CARD_GRID_CLASS}>
@@ -291,34 +147,36 @@ export function DashboardPage() {
           label={profile.terminology.clients}
           value={String(clients.length)}
           icon={<ProjectsIcon size={18} weight="duotone" />}
-          description={isFuneral ? i18n.clientsDescription : 'Active accounts'}
+          description={t('dashboard.statClientsDescription')}
         />
         <StatCard
           label={profile.terminology.orders}
           value={String(orders.length)}
           icon={<OrderIcon size={18} weight="duotone" />}
-          description={isFuneral ? i18n.ordersDescription : 'All statuses'}
+          description={t('dashboard.statOrdersDescription')}
         />
         <StatCard
           label={
-            isFuneral ? `${i18n.openCasesLabelPrefix} ${profile.terminology.cases}` : 'Open cases'
+            isFuneral
+              ? `${t('dashboard.statOpenCases')} (${profile.terminology.cases})`
+              : t('dashboard.statOpenCases')
           }
           value={String(openCases)}
           icon={<CaseIcon size={18} weight="duotone" />}
-          delta={isFuneral ? `${cases.length} ${i18n.openCasesSuffix}` : `${cases.length} total`}
+          delta={`${cases.length} ${t('dashboard.statTotalSuffix')}`}
           trend="neutral"
         />
         <StatCard
-          label={isFuneral ? `${profile.terminology.products} articles` : 'Invoices overdue'}
+          label={isFuneral ? `${profile.terminology.products}` : t('dashboard.statInvoicesOverdue')}
           value={isFuneral ? String(products.length) : String(overdueInvoices)}
           icon={<InvoiceIcon size={18} weight="duotone" />}
           trend={!isFuneral && overdueInvoices > 0 ? 'down' : 'neutral'}
           delta={
             isFuneral
-              ? i18n.productsDeltaLabel
+              ? profile.terminology.products
               : overdueInvoices > 0
-                ? 'Needs attention'
-                : 'All clear'
+                ? t('dashboard.statNeedsAttention')
+                : t('dashboard.statAllClear')
           }
         />
       </div>
@@ -327,10 +185,10 @@ export function DashboardPage() {
         <ChartCard
           title={
             isFuneral
-              ? `${i18n.orderChartTitlePrefix} ${profile.terminology.orders}`
-              : 'Order volume'
+              ? `${t('dashboard.orderVolumeTitle')} — ${profile.terminology.orders}`
+              : t('dashboard.orderVolumeTitle')
           }
-          meta={isFuneral ? i18n.orderChartMeta : 'Monthly totals from demo orders'}
+          meta={t('dashboard.orderVolumeMeta')}
           type="bar"
           data={orderVolume}
           valueFormatter={currencyFormatter}
@@ -338,9 +196,11 @@ export function DashboardPage() {
 
         <SectionCard
           title={
-            isFuneral ? `${profile.terminology.cases} ${i18n.casesByStageLabel}` : 'Cases by stage'
+            isFuneral
+              ? `${profile.terminology.cases} — ${t('dashboard.casesByStageTitle')}`
+              : t('dashboard.casesByStageTitle')
           }
-          meta={isFuneral ? i18n.casesByStageMeta : 'Open pipeline by stage'}
+          meta={t('dashboard.casesByStageMeta')}
         >
           <SimpleBarChart
             data={casesByStage}
@@ -352,8 +212,8 @@ export function DashboardPage() {
       </div>
 
       <SectionCard
-        title={isFuneral ? i18n.recentTitle : 'Recent activity'}
-        meta={isFuneral ? i18n.recentMeta : 'Sample workspace events'}
+        title={t('dashboard.recentActivityTitle')}
+        meta={t('dashboard.recentActivityMeta')}
       >
         <Timeline events={activityEvents} />
       </SectionCard>

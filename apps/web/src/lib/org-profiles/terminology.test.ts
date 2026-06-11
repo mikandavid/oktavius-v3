@@ -8,7 +8,6 @@ const baseProfile: OrgProfile = {
   slug: 'test',
   name: 'Test Org',
   industryKey: 'funeral',
-  demoUserId: 'usr_test',
   enabledModules: [],
   terminology: {
     cases: 'Cases',

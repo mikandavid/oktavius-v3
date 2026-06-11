@@ -9,7 +9,9 @@ import {
   isAppNavItemEnabled,
   isOrgModuleId,
 } from './appNavModules';
-import { ORG_APEX_ID, ORG_KUNZ_ID, ORG_PROFILES } from './org-profiles/profiles';
+import { ORG_APEX_ID, ORG_KUNZ_ID } from '@/app/demo-data/orgIds';
+import { DEMO_ORG_PROFILES } from '@/app/demo-data/orgProfiles';
+
 import { getLocalizedOrgProfile } from './org-profiles/terminology';
 
 const REMOVED_BUSINESS_MODULE_IDS = [
@@ -35,14 +37,14 @@ describe('app navigation module manifest', () => {
       APP_NAV_MODULES.filter((item) => isOrgModuleId(item.id)).map((item) => item.id),
     );
 
-    for (const profile of Object.values(ORG_PROFILES)) {
+    for (const profile of Object.values(DEMO_ORG_PROFILES)) {
       expect(profile.enabledModules.every((id) => manifestIds.has(id))).toBe(true);
     }
   });
 
   it('keeps profile-disabled modules out of enabled navigation', () => {
-    const apex = ORG_PROFILES[ORG_APEX_ID];
-    const kunz = ORG_PROFILES[ORG_KUNZ_ID];
+    const apex = DEMO_ORG_PROFILES[ORG_APEX_ID];
+    const kunz = DEMO_ORG_PROFILES[ORG_KUNZ_ID];
     const moduleById = new Map(APP_NAV_MODULES.map((item) => [item.id, item]));
 
     expect(isAppNavItemEnabled(apex, moduleById.get('reports')!)).toBe(true);
@@ -53,7 +55,7 @@ describe('app navigation module manifest', () => {
     expect(APP_NAV_MODULES.map((item) => item.id)).not.toEqual(
       expect.arrayContaining(REMOVED_BUSINESS_MODULE_IDS),
     );
-    for (const profile of Object.values(ORG_PROFILES)) {
+    for (const profile of Object.values(DEMO_ORG_PROFILES)) {
       expect(profile.enabledModules).not.toEqual(
         expect.arrayContaining(REMOVED_BUSINESS_MODULE_IDS),
       );
@@ -72,7 +74,7 @@ describe('app navigation module manifest', () => {
   });
 
   it('filters permissioned primary navigation items through Osiris permissions', () => {
-    const apex = getLocalizedOrgProfile(ORG_PROFILES[ORG_APEX_ID], 'en');
+    const apex = getLocalizedOrgProfile(DEMO_ORG_PROFILES[ORG_APEX_ID], 'en');
     const baseSubject = { isSuperadmin: false, role: 'member', permissions: [] } as const;
     const agentSubject = {
       isSuperadmin: false,
@@ -89,15 +91,15 @@ describe('app navigation module manifest', () => {
   });
 
   it('derives platform quick action paths', () => {
-    const apex = ORG_PROFILES[ORG_APEX_ID];
-    const kunz = getLocalizedOrgProfile(ORG_PROFILES[ORG_KUNZ_ID], 'en');
+    const apex = DEMO_ORG_PROFILES[ORG_APEX_ID];
+    const kunz = getLocalizedOrgProfile(DEMO_ORG_PROFILES[ORG_KUNZ_ID], 'en');
 
     expect(getAppQuickActionsForProfile(apex)).toEqual([]);
     expect(getAppQuickActionsForProfile(kunz)).toEqual([]);
   });
 
   it('exposes no platform create actions', () => {
-    const apex = getLocalizedOrgProfile(ORG_PROFILES[ORG_APEX_ID], 'en');
+    const apex = getLocalizedOrgProfile(DEMO_ORG_PROFILES[ORG_APEX_ID], 'en');
 
     expect(getAppQuickActionsForProfile(apex).map((action) => action.routeId)).not.toContain(
       'superadmin',

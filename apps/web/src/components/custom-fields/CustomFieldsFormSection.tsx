@@ -36,6 +36,12 @@ function toFormValue(value: CustomFieldValues[string]): FormFieldValue {
   return value;
 }
 
+function stringArray(value: FormFieldValue): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
 function CustomFieldInput({
   definition,
   value,
@@ -85,7 +91,7 @@ function CustomFieldInput({
               value: option.value,
               label: option.label,
             }))}
-            value={Array.isArray(value) ? value : []}
+            value={stringArray(value)}
             placeholder={definition.placeholder ?? `Select ${definition.label.toLowerCase()}`}
             disabled={disabled}
             onChange={(next) => onChange(next)}

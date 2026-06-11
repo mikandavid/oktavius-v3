@@ -1,17 +1,26 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
-import type { ListResponse } from '@/api/demo-client';
+import type { ListResponse } from '@/api/contracts';
 import { createConfiguredSavedViewsStore } from '@/api/apiStoreConfig';
-import { useDemoData } from '@/app/demo-data';
-import { canDeleteRecords, permissionSubjectFor } from '@/lib/permissions';
+import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
+import { canDeleteRecords, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { useListPageState } from '@/lib/useListPageState';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { CrudMainView, type CrudColumn } from './CrudMainView';
 import type { BulkAction, CrudRowAction } from './CrudTable';
 import type { FilterDef } from './FilterToolbar';
 import type { SavedViewsStore } from './savedViewsStorage';
+import {
+  buildStandardCrudListQueryKey,
+  buildStandardCrudListRequestParams,
+  useStandardCrudServerList,
+  type StandardCrudListRequestParams,
+} from './standardCrudQuery';
 import { useListSavedViews, type SavedViewPreset } from './useListSavedViews';
-import { getWindowStorage } from '@/lib/storage/safeStorage';
+
+export type { StandardCrudListRequestParams } from './standardCrudQuery';
 
 type StandardCrudListPageProps<T extends { id: string } & Record<string, unknown>> = {
   title: ReactNode;
@@ -38,35 +47,6 @@ type StandardCrudListPageProps<T extends { id: string } & Record<string, unknown
   emptyDescription: string;
 };
 
-export type StandardCrudListRequestParams = {
-  page: string;
-  pageSize: string;
-  sort: string;
-  search: string;
-} & Record<string, string>;
-
-export function buildStandardCrudListRequestParams({
-  page,
-  pageSize,
-  sort,
-  search,
-  values,
-}: {
-  page: number;
-  pageSize: number;
-  sort: string;
-  search: string;
-  values: Record<string, string>;
-}): StandardCrudListRequestParams {
-  return {
-    page: String(page),
-    pageSize: String(pageSize),
-    sort,
-    search,
-    ...values,
-  };
-}
-
 export function StandardCrudListPage<T extends { id: string } & Record<string, unknown>>({
   title,
   subtitle,
@@ -91,10 +71,11 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
   emptyTitle,
   emptyDescription,
 }: StandardCrudListPageProps<T>) {
-  const { activeMembership, currentUser } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const { activeLocationId } = useActiveLocation();
   const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
   );
   const allowDeleteRows = canDeleteRecords(permissionSubject);
   const list = useListPageState({
@@ -103,8 +84,8 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
     filterKeys,
     searchKeys,
   });
-  const [serverList, setServerList] = useState<ListResponse<T> | null>(null);
-  const [isLoadingServerList, setIsLoadingServerList] = useState(false);
+  const hasServerLoader = Boolean(loadRows);
+  const requestedPage = hasServerLoader ? list.requestedPage : list.page;
   const valuesKey = JSON.stringify(list.values);
   const storage = getWindowStorage('localStorage');
   const defaultSavedViewsStore = useMemo(
@@ -120,7 +101,7 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
   const requestParams = useMemo(
     () =>
       buildStandardCrudListRequestParams({
-        page: list.page,
+        page: requestedPage,
         pageSize: list.pageSize,
         sort: list.sort,
         search: list.search,
@@ -129,34 +110,23 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
     // `list.values` is intentionally represented by a stable JSON key here so
     // server-backed lists do not refetch on unrelated renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [list.page, list.pageSize, list.sort, list.search, valuesKey],
+    [requestedPage, list.pageSize, list.sort, list.search, valuesKey],
   );
 
-  useEffect(() => {
-    if (!loadRows) {
-      setServerList(null);
-      setIsLoadingServerList(false);
-      return undefined;
-    }
-
-    let cancelled = false;
-    setIsLoadingServerList(true);
-    void loadRows(requestParams)
-      .then((response) => {
-        if (!cancelled) {
-          setServerList(response);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setIsLoadingServerList(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loadRows, requestParams]);
+  const serverListQuery = useStandardCrudServerList<T>({
+    enabled: hasServerLoader,
+    loadRows,
+    queryKey: buildStandardCrudListQueryKey({
+      resourceKey: exportFileName,
+      activeOrgId: osirisRuntime?.activeOrgId ?? null,
+      activeSiteId: activeLocationId,
+      requestParams,
+    }),
+    requestParams,
+  });
+  const serverList = hasServerLoader ? (serverListQuery.data ?? null) : null;
+  const isLoadingServerList = serverListQuery.isLoading;
+  const isFetchingServerList = serverListQuery.isFetching;
 
   const savedViewControls = useListSavedViews({
     views: savedViews,
@@ -189,7 +159,7 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
       rowActions={rowActions}
       bulkActions={bulkActions}
       isLoading={isLoadingServerList && !serverList}
-      isFetching={isLoadingServerList && Boolean(serverList)}
+      isFetching={isFetchingServerList && Boolean(serverList)}
       page={serverList?.page ?? list.page}
       pageSize={serverList?.pageSize ?? list.pageSize}
       total={serverList?.total ?? list.total}
@@ -200,7 +170,7 @@ export function StandardCrudListPage<T extends { id: string } & Record<string, u
       allowDeleteRows={allowDeleteRows}
       onDeleteRows={onDeleteRows}
       exportOptions={{ fileName: exportFileName, label: 'Export' }}
-      allRows={list.filtered}
+      allRows={hasServerLoader ? serverList?.data : list.filtered}
       emptyTitle={emptyTitle}
       emptyDescription={emptyDescription}
     />

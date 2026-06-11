@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
-export type UiLocale = 'de' | 'en' | 'fr';
+export type UiLocale = 'de' | 'en';
 export type UiTheme = 'light' | 'dark' | 'system';
 
 const LOCALE_STORAGE_KEY = 'oktavius.ui.locale';
@@ -18,7 +18,6 @@ const THEME_STORAGE_KEY = 'oktavius.ui.theme';
 const LOCALE_LABELS: Record<UiLocale, string> = {
   de: 'Deutsch',
   en: 'English',
-  fr: 'Français',
 };
 
 const THEME_LABELS: Record<UiTheme, string> = {
@@ -41,7 +40,7 @@ const UserPreferencesContext = createContext<UserPreferencesContextValue | null>
 function readStoredLocale(): UiLocale {
   const storage = getWindowStorage('localStorage');
   const stored = safeStorageGet(storage, LOCALE_STORAGE_KEY);
-  if (stored === 'de' || stored === 'en' || stored === 'fr') {
+  if (stored === 'de' || stored === 'en') {
     return stored;
   }
   return 'en';
@@ -125,7 +124,6 @@ export function useUserPreferences() {
 export const UI_LOCALE_OPTIONS: Array<{ value: UiLocale; label: string }> = [
   { value: 'de', label: LOCALE_LABELS.de },
   { value: 'en', label: LOCALE_LABELS.en },
-  { value: 'fr', label: LOCALE_LABELS.fr },
 ];
 
 export const UI_THEME_OPTIONS: Array<{ value: UiTheme; label: string }> = [

@@ -6,15 +6,13 @@ import { DetailActions, type DetailAction } from './DetailActions';
 import { DetailPageHeaderActions } from './DetailPageHeaderActions';
 
 const demoData = vi.hoisted<{
-  currentUser: { isSuperadmin: boolean };
-  activeMembership: { role: string; permissions: string[] };
+  permissionSubject: { isSuperadmin: boolean; role: 'admin' | 'member'; permissions: string[] };
 }>(() => ({
-  currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'member', permissions: [] },
+  permissionSubject: { isSuperadmin: false, role: 'member', permissions: [] },
 }));
 
-vi.mock('@/app/demo-data', () => ({
-  useDemoData: () => demoData,
+vi.mock('@/runtime/osiris/useOsirisRuntime', () => ({
+  useOptionalOsirisRuntime: () => demoData,
 }));
 
 const actions: DetailAction[] = [
@@ -24,8 +22,7 @@ const actions: DetailAction[] = [
 
 describe('DetailActions', () => {
   beforeEach(() => {
-    demoData.currentUser = { isSuperadmin: false };
-    demoData.activeMembership = { role: 'member', permissions: [] };
+    demoData.permissionSubject = { isSuperadmin: false, role: 'member', permissions: [] };
   });
 
   it('hides manager-only custom actions from member memberships', () => {
@@ -36,7 +33,11 @@ describe('DetailActions', () => {
   });
 
   it('keeps manager-only custom actions for organization managers', () => {
-    demoData.activeMembership = { role: 'admin', permissions: ['org.manage'] };
+    demoData.permissionSubject = {
+      isSuperadmin: false,
+      role: 'admin',
+      permissions: ['org.manage'],
+    };
 
     const markup = renderToStaticMarkup(<DetailActions actions={actions} />);
 

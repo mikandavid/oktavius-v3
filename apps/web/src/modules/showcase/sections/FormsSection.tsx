@@ -15,14 +15,43 @@ import { EntityForm, type FormField as EntityFormField } from '@/components/form
 import { JsonField } from '@/components/forms/JsonField';
 import { PageFileDrop } from '@/components/forms/PageFileDrop';
 import { RecipientCombobox } from '@/components/forms/RecipientCombobox';
+import { fieldRegistry, type FieldDefinition } from '@/lib/fields';
 import {
   buildCustomFieldDefaults,
   getCustomFieldDefinitions,
-  type CustomFieldValues,
-} from '@/lib/custom-fields';
+} from '@/lib/custom-fields/demoDefinitions';
+import { type CustomFieldValues } from '@/lib/custom-fields';
+import { withFieldErrors } from '@/lib/formValidation';
 import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';
+
+const customRatingDefinition: FieldDefinition = {
+  id: 'customRating',
+  renderer: ({ value, onChange, field }) => (
+    <div className="flex flex-wrap gap-2" aria-label={field.label}>
+      {[1, 2, 3, 4, 5].map((rating) => {
+        const active = Number(value ?? 0) >= rating;
+        return (
+          <Button
+            key={rating}
+            type="button"
+            size="icon"
+            variant={active ? 'default' : 'outline'}
+            aria-label={`${rating} of 5`}
+            onClick={() => onChange(rating)}
+          >
+            {rating}
+          </Button>
+        );
+      })}
+    </div>
+  ),
+};
+
+if (!fieldRegistry.get(customRatingDefinition.id)) {
+  fieldRegistry.register(customRatingDefinition);
+}
 
 const ALL_FIELD_TYPES: EntityFormField[] = [
   { name: 'name', label: 'Text', type: 'text', required: true, section: 'Text & contact' },
@@ -152,7 +181,7 @@ const CONDITIONAL_FIELDS: EntityFormField[] = [
     label: 'Enterprise code',
     type: 'text',
     section: 'Conditional',
-    visibleWhen: (values) => values.recordType === 'Enterprise',
+    visibleIf: (values) => values.recordType === 'Enterprise',
     validate: { required: true, message: 'Enterprise code is required for enterprise records.' },
   },
   {
@@ -161,7 +190,7 @@ const CONDITIONAL_FIELDS: EntityFormField[] = [
     type: 'combobox',
     options: ['Bronze', 'Silver', 'Gold'],
     section: 'Conditional',
-    visibleWhen: (values) => values.recordType === 'Enterprise',
+    visibleIf: (values) => values.recordType === 'Enterprise',
   },
 ];
 
@@ -171,8 +200,104 @@ type ConditionalFormValues = {
   supportTier: string;
 };
 
+const REGISTRY_FIELDS: EntityFormField[] = [
+  {
+    name: 'rating',
+    label: 'Priority rating',
+    type: 'customRating',
+    section: 'Custom field',
+  },
+  {
+    name: 'hasWindow',
+    label: 'Set delivery window',
+    type: 'switch',
+    section: 'Visibility',
+  },
+  {
+    name: 'start',
+    label: 'Start',
+    type: 'date',
+    section: 'Visibility',
+    visibleIf: (values) => values.hasWindow === true,
+    dependsOn: ['hasWindow'],
+  },
+  {
+    name: 'end',
+    label: 'End',
+    type: 'date',
+    section: 'Visibility',
+    visibleIf: (values) => values.hasWindow === true,
+    dependsOn: ['hasWindow', 'start'],
+    crossValidate: (values) =>
+      values.hasWindow === true && String(values.end) < String(values.start)
+        ? 'End must be after start.'
+        : null,
+  },
+];
+
+type RegistryFormValues = {
+  rating: number;
+  hasWindow: boolean;
+  start: string;
+  end: string;
+};
+
+type InvoiceLine = {
+  description: string;
+  quantity: string;
+  unitPrice: string;
+};
+
+type InvoiceFormValues = {
+  invoiceNumber: string;
+  lines: InvoiceLine[];
+};
+
+const INVOICE_FIELDS: EntityFormField[] = [
+  {
+    name: 'invoiceNumber',
+    label: 'Invoice number',
+    type: 'text',
+    section: 'Header',
+    required: true,
+  },
+  {
+    name: 'lines',
+    label: 'Line items',
+    type: 'repeating',
+    section: 'Lines',
+    colSpan: 2,
+    minItems: 1,
+    maxItems: 5,
+    addLabel: 'Add line',
+    reorderable: true,
+    itemFields: [
+      { name: 'description', label: 'Description', type: 'text', colSpan: 2, required: true },
+      { name: 'quantity', label: 'Qty', type: 'number', required: true },
+      { name: 'unitPrice', label: 'Unit price', type: 'currency', required: true },
+    ],
+    totals: (rows) => {
+      const total = rows.reduce((sum, row) => {
+        const quantity = Number(row.quantity ?? 0);
+        const unitPrice = Number(row.unitPrice ?? 0);
+        return sum + quantity * unitPrice;
+      }, 0);
+      return [{ label: 'Invoice total', value: `€${total.toFixed(2)}` }];
+    },
+  },
+];
+
+const INVOICE_DEFAULTS: InvoiceFormValues = {
+  invoiceNumber: 'INV-2026-001',
+  lines: [
+    { description: 'Consulting day', quantity: '2', unitPrice: '950' },
+    { description: 'Implementation package', quantity: '1', unitPrice: '2400' },
+  ],
+};
+
 export function FormsSection() {
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
+  const [simulateServerError, setSimulateServerError] = useState(false);
   const [submitted, setSubmitted] = useState<string | null>(null);
   const [eventDatetime, setEventDatetime] = useState('2024-12-05T10:00');
   const [recipients, setRecipients] = useState<string[]>(['maria.keller@apex.example']);
@@ -189,18 +314,27 @@ export function FormsSection() {
         title="EntityForm — all field types"
         meta="Full-page surface · submit uses variant=default"
         actions={
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              setErrors({
-                email: 'Invalid email address',
-                name: 'Name is required',
-              })
-            }
-          >
-            Show validation errors
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant={simulateServerError ? 'default' : 'outline'}
+              onClick={() => setSimulateServerError((current) => !current)}
+            >
+              Simulate server error
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                setErrors({
+                  email: 'Invalid email address',
+                  name: 'Name is required',
+                })
+              }
+            >
+              Show validation errors
+            </Button>
+          </div>
         }
       >
         <EntityForm<DemoFormValues>
@@ -211,11 +345,20 @@ export function FormsSection() {
           errors={errors}
           submitLabel="Save record"
           warnOnDirty
-          onSubmit={(values) => {
+          onSubmit={withFieldErrors((values) => {
             setErrors({});
+            if (simulateServerError) {
+              throw {
+                fieldErrors: {
+                  email: 'A record with this email already exists.',
+                  website: 'Website failed backend reachability validation.',
+                },
+                formError: 'Server rejected the record.',
+              };
+            }
             setSubmitted(values.name);
             appToast.success('Form submitted.');
-          }}
+          })}
         />
         {submitted ? (
           <p className="mt-3 text-xs text-muted-foreground">
@@ -226,7 +369,7 @@ export function FormsSection() {
 
       <ShowcaseBlock
         title="Conditional fields + client validation"
-        meta="visibleWhen · validate · warnOnDirty on submit"
+        meta="visibleIf · validate · warnOnDirty on submit"
       >
         <EntityForm<ConditionalFormValues>
           title="Conditional record"
@@ -236,6 +379,41 @@ export function FormsSection() {
           warnOnDirty
           onSubmit={() => {
             appToast.success('Conditional form passed validation.');
+          }}
+        />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Field registry extension"
+        meta="customRating · visibleIf · dependsOn · crossValidate"
+      >
+        <EntityForm<RegistryFormValues>
+          title="Registry-driven workflow"
+          fields={REGISTRY_FIELDS}
+          defaultValues={{
+            rating: 3,
+            hasWindow: true,
+            start: '2026-06-08',
+            end: '2026-06-10',
+          }}
+          submitLabel="Save workflow"
+          onSubmit={() => {
+            appToast.success('Registry form submitted.');
+          }}
+        />
+      </ShowcaseBlock>
+
+      <ShowcaseBlock
+        title="Repeating line items"
+        meta="repeating field · add/remove/reorder · min/max · totals"
+      >
+        <EntityForm<InvoiceFormValues>
+          title="Invoice draft"
+          fields={INVOICE_FIELDS}
+          defaultValues={INVOICE_DEFAULTS}
+          submitLabel="Save invoice"
+          onSubmit={() => {
+            appToast.success('Invoice lines submitted.');
           }}
         />
       </ShowcaseBlock>

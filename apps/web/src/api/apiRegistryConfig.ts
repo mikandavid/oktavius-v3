@@ -1,4 +1,4 @@
-import type { DemoApiRegistry } from './demo-client';
+import type { ApiRegistry } from './contracts';
 import {
   createHttpRegistry,
   type HttpRegistryEndpoints,
@@ -34,26 +34,38 @@ export type ApiRegistryEnvironment = {
 
 export type OsirisApiRegistryContextGetters = Omit<OsirisApiClientOptions, 'baseUrl'>;
 
+export function createOsirisApiRegistry({
+  env,
+  osiris,
+}: {
+  env: ApiRegistryEnvironment;
+  osiris: OsirisApiRegistryContextGetters;
+}): ApiRegistry {
+  const baseUrl = env.VITE_OKTAVIUS_API_BASE_URL?.trim() || undefined;
+
+  return createHttpRegistry({
+    baseUrl: '',
+    endpoints: DEFAULT_HTTP_REGISTRY_ENDPOINTS,
+    fetcher: createOsirisApiFetcher({ baseUrl, ...osiris }),
+  });
+}
+
 export function createConfiguredApiRegistry({
-  demoRegistry,
   env,
   fetcher,
   osiris,
 }: {
-  demoRegistry: DemoApiRegistry;
   env: ApiRegistryEnvironment;
   fetcher?: HttpRegistryFetcher;
   osiris?: OsirisApiRegistryContextGetters;
-}): DemoApiRegistry {
-  const baseUrl = env.VITE_OKTAVIUS_API_BASE_URL?.trim();
-  if (!baseUrl) return demoRegistry;
-
+}): ApiRegistry {
   if (osiris) {
-    return createHttpRegistry({
-      baseUrl: '',
-      endpoints: DEFAULT_HTTP_REGISTRY_ENDPOINTS,
-      fetcher: createOsirisApiFetcher({ baseUrl, ...osiris }),
-    });
+    return createOsirisApiRegistry({ env, osiris });
+  }
+
+  const baseUrl = env.VITE_OKTAVIUS_API_BASE_URL?.trim();
+  if (!baseUrl) {
+    throw new Error('VITE_OKTAVIUS_API_BASE_URL is required for API registry.');
   }
 
   const token = env.VITE_OKTAVIUS_API_TOKEN?.trim();

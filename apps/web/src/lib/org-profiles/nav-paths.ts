@@ -1,7 +1,6 @@
 import type { OrgModuleId } from './types';
 
-/** Osiris-style paths used by Bestattung Kunz (and other funeral tenants). */
-export const KUNZ_NAV_PATHS: Partial<Record<OrgModuleId, string>> = {
+export const FUNERAL_NAV_PATHS: Partial<Record<OrgModuleId, string>> = {
   cases: '/funeral/cases',
   products: '/catalog',
   orders: '/sales',

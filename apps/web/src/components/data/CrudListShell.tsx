@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { useDemoData } from '@/app/demo-data';
-import { permissionSubjectFor } from '@/lib/permissions';
+import { EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { CrudTable, type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
 import { filterCrudListPermissions } from './crudListPermissions';
@@ -84,11 +84,11 @@ export function CrudListShell<T extends { id: string }>({
   className,
 }: CrudListShellProps<T>) {
   const navigate = useNavigate();
-  const { activeMembership, currentUser } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
   );
 
   const resolvedOnRowClick =

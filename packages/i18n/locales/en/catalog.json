@@ -1,0 +1,20 @@
+{
+  "catalog": "Catalog",
+  "newCatalogItem": "New Catalog Item",
+  "itemDetails": "Item Details",
+  "purchasePrice": "Purchase Price",
+  "salePrice": "Sale Price",
+  "taxRate": "Tax Rate",
+  "margin": "Margin",
+  "currentStock": "Current Stock",
+  "minStockLevel": "Min Stock Level",
+  "inStock": "In Stock",
+  "stock": "Stock",
+  "searchCatalog": "Search catalog...",
+  "product": "Product",
+  "service": "Service",
+  "material": "Material",
+  "emptyState": "No catalog items found",
+  "emptyStateDescription": "Add your first product, service, or material to get started.",
+  "deleteConfirm": "Delete this catalog item?"
+}

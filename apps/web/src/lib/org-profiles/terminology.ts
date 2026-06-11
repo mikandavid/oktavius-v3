@@ -2,9 +2,14 @@ import type { UiLocale } from '@/lib/userPreferences';
 
 import type { OrgIndustryKey, OrgProfile, OrgTerminology } from './types';
 
-const FALLBACK_LOCALE: UiLocale = 'en';
+type OrgTerminologyLocale = UiLocale | 'fr';
 
-const TERMINOLOGY_BY_INDUSTRY: Record<OrgIndustryKey, Record<UiLocale, OrgTerminology>> = {
+const FALLBACK_LOCALE: OrgTerminologyLocale = 'en';
+
+const TERMINOLOGY_BY_INDUSTRY: Record<
+  OrgIndustryKey,
+  Record<OrgTerminologyLocale, OrgTerminology>
+> = {
   generic: {
     en: {
       cases: 'Cases',
@@ -79,11 +84,11 @@ const TERMINOLOGY_BY_INDUSTRY: Record<OrgIndustryKey, Record<UiLocale, OrgTermin
 
 const warnedMissingKeys = new Set<string>();
 
-function isKnownLocale(locale: string | undefined): locale is UiLocale {
+function isKnownLocale(locale: string | undefined): locale is OrgTerminologyLocale {
   return locale === 'en' || locale === 'de' || locale === 'fr';
 }
 
-function normalizeLocale(locale: string | undefined): UiLocale {
+function normalizeLocale(locale: string | undefined): OrgTerminologyLocale {
   if (isKnownLocale(locale)) return locale;
   if (import.meta.env.DEV) {
     const key = `locale:${locale}`;
@@ -99,7 +104,7 @@ function normalizeLocale(locale: string | undefined): UiLocale {
 
 function warnMissingTranslation(
   industryKey: OrgIndustryKey,
-  locale: UiLocale,
+  locale: OrgTerminologyLocale,
   termKey: keyof OrgTerminology,
 ) {
   const key = `term:${industryKey}:${locale}:${termKey}`;

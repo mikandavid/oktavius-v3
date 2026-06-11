@@ -7,6 +7,7 @@ import {
   filterPermittedFormFields,
   normalizeFormSubmissionFailure,
   validateFormFields,
+  withFieldErrors,
 } from './formValidation';
 
 const fields: FormField[] = [
@@ -88,6 +89,39 @@ describe('form submission validation failures', () => {
         email: 'Email is already in use.',
       },
       message: 'Could not save client.',
+    });
+  });
+
+  it('normalizes server field error contracts', () => {
+    const failure = normalizeFormSubmissionFailure({
+      fieldErrors: {
+        'lines.0.description': 'Description is required.',
+        invoiceNumber: 'Invoice number is already used.',
+      },
+      formError: 'Invoice could not be saved.',
+    });
+
+    expect(failure).toEqual({
+      errors: {
+        'lines.0.description': 'Description is required.',
+        invoiceNumber: 'Invoice number is already used.',
+      },
+      message: 'Invoice could not be saved.',
+    });
+  });
+
+  it('wraps submit handlers and rethrows server field errors as form validation errors', async () => {
+    const submit = withFieldErrors(async () => {
+      throw {
+        fieldErrors: { email: 'Email is already in use.' },
+        formError: 'Client could not be saved.',
+      };
+    });
+
+    await expect(submit({ email: 'demo@oktavius.test' })).rejects.toMatchObject({
+      name: 'FormSubmissionValidationError',
+      errors: { email: 'Email is already in use.' },
+      message: 'Client could not be saved.',
     });
   });
 

@@ -1,6 +1,6 @@
-import { useDemoData } from '@/app/demo-data';
 import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
-import { canDeleteRecords, permissionSubjectFor } from '@/lib/permissions';
+import { canDeleteRecords, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { DetailActions, type DetailAction } from './DetailActions';
 
@@ -22,8 +22,9 @@ export function DetailPageHeaderActions({
   onDelete,
   deleteLabel = 'Delete',
 }: DetailPageHeaderActionsProps) {
-  const { activeMembership, currentUser } = useDemoData();
-  const canDelete = canDeleteRecords(permissionSubjectFor(currentUser, activeMembership));
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const permissionSubject = osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT;
+  const canDelete = canDeleteRecords(permissionSubject);
 
   return (
     <div className="flex items-center gap-2">

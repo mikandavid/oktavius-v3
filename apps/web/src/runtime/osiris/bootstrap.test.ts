@@ -32,7 +32,23 @@ describe('normalizeOsirisBootstrap', () => {
         orgSiteCount: 1,
         sites: [{ id: 'site_1', name: 'Vienna', isActive: true }],
       },
-      config: { featureFlags: { contacts: true } },
+      config: {
+        org: {
+          id: 'org_1',
+          name: 'Oktavius Demo',
+          slug: 'oktavius-demo',
+          industryKey: 'general',
+          industryName: 'General',
+          enabledModules: ['contacts'],
+          theme: {},
+          settings: {},
+          logoUrl: null,
+        },
+        terminology: {},
+        permissions: ['contacts.view', 'contacts.update'],
+        preferences: {},
+        agentAccess: true,
+      },
     } satisfies OsirisBootstrapResponse;
 
     const result = normalizeOsirisBootstrap(payload);
@@ -46,7 +62,8 @@ describe('normalizeOsirisBootstrap', () => {
     expect(result.organizations).toBe(payload.organizations);
     expect(result.memberships).toBe(payload.memberships);
     expect(result.permissions).toBe(payload.permissions);
-    expect(result.config).toBe(payload.config);
+    expect(result.config?.org?.enabledModules).toEqual(['contacts']);
+    expect(result.config?.org?.settings.dateTime.dateFormat).toBe('DD.MM.YYYY');
     expect(result.locationAccess).toBe(payload.locationAccess);
     expect(result.activeOrgId).toBe('org_1');
     expect(result.activeSiteId).toBe('site_1');

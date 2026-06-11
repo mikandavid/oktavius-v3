@@ -14,9 +14,9 @@ import {
   type RecordVisualProps,
 } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
 import type { PermissionRequirement } from '@/lib/permissions';
-import { canUsePermissionRequirement, permissionSubjectFor } from '@/lib/permissions';
+import { canUsePermissionRequirement, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 export type DetailFieldProps = BaseDetailFieldProps & {
   /** Hide the field unless the active subject satisfies this requirement. */
@@ -51,10 +51,10 @@ export function DetailView({
   identityMeta?: ReactNode;
   identityTrailing?: ReactNode;
 }) {
-  const { activeMembership, currentUser } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
   const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
   );
   const permittedFields = useMemo(
     () =>

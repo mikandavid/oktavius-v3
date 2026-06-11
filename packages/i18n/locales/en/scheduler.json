@@ -1,0 +1,8 @@
+{
+  "notifications": {
+    "agentActivationCompleted": {
+      "title": "Scheduled agent activations",
+      "description": "Receive a summary when a scheduled agent task finishes."
+    }
+  }
+}

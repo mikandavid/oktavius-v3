@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 
 import { Button, buttonVariants, cn, type ButtonProps } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
 import type { PermissionRequirement } from '@/lib/permissions';
-import { canUsePermissionRequirement, permissionSubjectFor } from '@/lib/permissions';
+import { canUsePermissionRequirement, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 type DetailActionVariant = Extract<ButtonProps['variant'], 'outline' | 'ghost' | 'cta'>;
 
@@ -33,10 +33,10 @@ function isActionHidden(action: DetailAction) {
 }
 
 export function usePermittedDetailActions(actions: DetailAction[] = []) {
-  const { activeMembership, currentUser } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
   const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
   );
 
   return useMemo(

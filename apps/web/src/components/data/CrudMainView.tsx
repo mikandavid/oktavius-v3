@@ -6,6 +6,11 @@ import { PageHeaderActions, PageHeaderExportButton } from '@/components/common/P
 
 import { CrudListShell, type CrudListShellProps } from './CrudListShell';
 import { type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
+import {
+  chooseExportStrategy,
+  exportColumnsForRuntime,
+  type ExportRuntimeAdapter,
+} from './exportRuntime';
 import { exportToXlsx } from './exportGrid';
 
 export type { BulkAction, CrudColumn, CrudRowAction };
@@ -17,6 +22,12 @@ type ExportOptions = {
   sheetName?: string;
   label?: string;
   onExport?: () => void | Promise<void>;
+  runtime?: ExportRuntimeAdapter;
+  resourceKey?: string;
+  rowCountThreshold?: number;
+  filters?: Record<string, string>;
+  search?: string;
+  sort?: string;
 };
 
 type CrudMainViewProps<T extends { id: string }> = CrudListShellProps<T> & {
@@ -50,6 +61,26 @@ export function CrudMainView<T extends { id: string }>({
         await exportOptions.onExport();
       } else {
         const exportData = (allRows ?? rows) as unknown as Record<string, unknown>[];
+        const strategy = chooseExportStrategy({
+          runtime: exportOptions.runtime,
+          rowCount: exportData.length,
+          threshold: exportOptions.rowCountThreshold,
+        });
+
+        if (strategy === 'server' && exportOptions.runtime) {
+          await exportOptions.runtime.startExport({
+            resourceKey: exportOptions.resourceKey ?? exportOptions.fileName,
+            fileName: exportOptions.fileName,
+            columns: exportColumnsForRuntime(
+              columns as unknown as CrudColumn<Record<string, unknown>>[],
+            ),
+            filters: exportOptions.filters,
+            search: exportOptions.search,
+            sort: exportOptions.sort,
+          });
+          return;
+        }
+
         await exportToXlsx(
           exportData,
           columns as unknown as CrudColumn<Record<string, unknown>>[],

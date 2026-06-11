@@ -8,6 +8,7 @@ import tseslint from 'typescript-eslint';
 import noForbiddenTailwindClasses from './apps/web/eslint-rules/no-forbidden-tailwind-classes.mjs';
 import maxDetailTabsTriggers from './apps/web/eslint-rules/max-detail-tabs-triggers.mjs';
 import maxListFilters from './apps/web/eslint-rules/max-list-filters.mjs';
+import noBareJsxStrings from './apps/web/eslint-rules/no-bare-jsx-strings.mjs';
 
 const selectImportRestriction = {
   name: '@oktavius/base-ui',
@@ -34,6 +35,7 @@ const oktaviusUiPlugin = {
     'no-forbidden-tailwind-classes': noForbiddenTailwindClasses,
     'max-detail-tabs-triggers': maxDetailTabsTriggers,
     'max-list-filters': maxListFilters,
+    'no-bare-jsx-strings': noBareJsxStrings,
   },
 };
 
@@ -87,6 +89,7 @@ export default tseslint.config(
     ignores: ['**/showcase/**'],
     rules: {
       'oktavius/max-list-filters': 'error',
+      'oktavius/no-bare-jsx-strings': 'warn',
     },
   },
   {

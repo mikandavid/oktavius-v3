@@ -1,0 +1,84 @@
+{
+  "common": {
+    "title": "Property Management",
+    "loading": "Loading...",
+    "empty": "No data available",
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "actions": "Actions"
+  },
+  "portfolio": {
+    "title": "Portfolio",
+    "description": "Manage buildings and units",
+    "buildingCode": "Building Code",
+    "buildingName": "Building Name",
+    "unitNumber": "Unit",
+    "floor": "Floor",
+    "usageType": "Usage Type",
+    "createBuilding": "Create Building",
+    "createUnit": "Create Unit",
+    "buildings": "Buildings",
+    "units": "Units"
+  },
+  "parties": {
+    "title": "Parties",
+    "description": "Manage tenants, owners and contracts",
+    "tenants": "Tenants",
+    "owners": "Owners",
+    "contracts": "Contracts",
+    "contractNumber": "Contract Number",
+    "portalContexts": "Portal Contexts"
+  },
+  "vendors": {
+    "title": "Vendors",
+    "description": "Building defaults and trade vendors",
+    "tradeType": "Trade",
+    "vendorName": "Vendor",
+    "createVendor": "Create Vendor",
+    "defaults": "Building Defaults"
+  },
+  "maintenance": {
+    "title": "Maintenance",
+    "description": "Assets, intervals and maintenance tasks",
+    "assets": "Assets",
+    "tasks": "Tasks",
+    "buildingId": "Building ID",
+    "dueOn": "Due Date",
+    "status": "Status",
+    "generateTask": "Generate Task",
+    "markCompleted": "Mark Completed"
+  },
+  "cases": {
+    "title": "Cases",
+    "description": "Damage reports and inquiries",
+    "reportCase": "Report Case",
+    "myCases": "My Cases",
+    "allCases": "All cases",
+    "status": "Status",
+    "priority": "Priority",
+    "type": "Type",
+    "typeDamage": "Damage",
+    "typeInquiry": "Inquiry",
+    "statusTriaged": "Triaged",
+    "statusAssigned": "Assigned",
+    "statusInProgress": "In Progress",
+    "statusResolved": "Resolved",
+    "statusClosed": "Closed",
+    "reopen": "Reopen",
+    "transition": "Change Status",
+    "scope": "Context",
+    "createSuccess": "Case created",
+    "reopenSuccess": "Case reopened",
+    "transitionSuccess": "Case status updated"
+  },
+  "portal": {
+    "title": "Portal",
+    "description": "Tenant and owner portal",
+    "selectContext": "Select context",
+    "documents": "Documents",
+    "download": "Download",
+    "reportDamage": "Report damage",
+    "inquiry": "General inquiry"
+  }
+}

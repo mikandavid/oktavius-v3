@@ -2,18 +2,17 @@ import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 
-import { useDemoData } from '@/app/demo-data';
 import { AgentPageContextProvider } from '@/components/agent/page-context';
 import { CommandPaletteProvider } from '@/components/command/CommandPalette';
 import { RouteErrorPage } from '@/components/errors/AppErrorPage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AppShellSpinner } from '@/components/layout/AppShellSpinner';
 import { ShortcutHelpProvider } from '@/components/layout/ShortcutHelpProvider';
+import { ModuleErrorBoundary } from '@/core/errors/ModuleErrorBoundary';
 import { APP_NAV_MODULES, type AppNavRouteId } from '@/lib/appNavModules';
-import { canAccessAppNavItem, permissionSubjectFor } from '@/lib/permissions';
+import { canAccessAppNavItem } from '@/lib/permissions';
+import { OsirisAccessGate } from '@/runtime/osiris/OsirisAccessGate';
 import { useOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
-
-const USE_DEMO_RUNTIME = import.meta.env.VITE_OKTAVIUS_RUNTIME === 'demo';
 
 function lazyPage<TModule extends Record<TExport, ComponentType>, TExport extends keyof TModule>(
   loader: () => Promise<TModule>,
@@ -32,28 +31,11 @@ function pageElement(Page: ComponentType) {
   );
 }
 
-function DemoProtectedRoute({
-  routeId,
-  children,
-}: {
-  routeId: AppNavRouteId;
-  children: ReactNode;
-}) {
-  const { activeMembership, currentUser } = useDemoData();
-  const item = APP_NAV_MODULES.find((entry) => entry.id === routeId);
-  const canAccess =
-    item != null && canAccessAppNavItem(item, permissionSubjectFor(currentUser, activeMembership));
-
-  return canAccess ? children : pageElement(AccessDeniedPage);
+function modulePageElement(moduleId: string, Page: ComponentType) {
+  return <ModuleErrorBoundary moduleId={moduleId}>{pageElement(Page)}</ModuleErrorBoundary>;
 }
 
-function OsirisProtectedRoute({
-  routeId,
-  children,
-}: {
-  routeId: AppNavRouteId;
-  children: ReactNode;
-}) {
+function ProtectedRoute({ routeId, children }: { routeId: AppNavRouteId; children: ReactNode }) {
   const { permissionSubject, isLoading, error, reload } = useOsirisRuntime();
 
   if (isLoading) {
@@ -86,13 +68,12 @@ function OsirisProtectedRoute({
   return canAccess ? children : pageElement(AccessDeniedPage);
 }
 
-function ProtectedRoute({ routeId, children }: { routeId: AppNavRouteId; children: ReactNode }) {
-  const RuntimeProtectedRoute = USE_DEMO_RUNTIME ? DemoProtectedRoute : OsirisProtectedRoute;
-  return <RuntimeProtectedRoute routeId={routeId}>{children}</RuntimeProtectedRoute>;
-}
-
 function protectedPageElement(routeId: AppNavRouteId, Page: ComponentType) {
-  return <ProtectedRoute routeId={routeId}>{pageElement(Page)}</ProtectedRoute>;
+  return (
+    <ModuleErrorBoundary moduleId={routeId}>
+      <ProtectedRoute routeId={routeId}>{pageElement(Page)}</ProtectedRoute>
+    </ModuleErrorBoundary>
+  );
 }
 
 const AccessDeniedPage = lazyPage(
@@ -103,6 +84,21 @@ const AppNotFoundPage = lazyPage(
   () => import('@/components/common/AppNotFoundPage'),
   'AppNotFoundPage',
 );
+const LoginPage = lazyPage(() => import('@/modules/auth/LoginPage'), 'LoginPage');
+const ForgotPasswordPage = lazyPage(
+  () => import('@/modules/auth/AuthPlaceholderPage'),
+  'ForgotPasswordPage',
+);
+const ResetPasswordPage = lazyPage(
+  () => import('@/modules/auth/AuthPlaceholderPage'),
+  'ResetPasswordPage',
+);
+const SignUpPage = lazyPage(() => import('@/modules/auth/AuthPlaceholderPage'), 'SignUpPage');
+const AuthCallbackPage = lazyPage(
+  () => import('@/modules/auth/AuthPlaceholderPage'),
+  'AuthCallbackPage',
+);
+const InvitePage = lazyPage(() => import('@/modules/auth/AuthPlaceholderPage'), 'InvitePage');
 const AIChatPage = lazyPage(() => import('@/modules/ai-chat/AIChatPage'), 'AIChatPage');
 const CalendarPage = lazyPage(() => import('@/modules/calendar/CalendarPage'), 'CalendarPage');
 const DashboardPage = lazyPage(() => import('@/modules/dashboard/DashboardPage'), 'DashboardPage');
@@ -131,14 +127,24 @@ const appRouter = createBrowserRouter([
   {
     element: <AppRootProviders />,
     children: [
+      { path: '/login', element: pageElement(LoginPage) },
+      { path: '/forgot-password', element: pageElement(ForgotPasswordPage) },
+      { path: '/reset-password', element: pageElement(ResetPasswordPage) },
+      { path: '/signup', element: pageElement(SignUpPage) },
+      { path: '/auth/callback', element: pageElement(AuthCallbackPage) },
+      { path: '/invite/:token', element: pageElement(InvitePage) },
       {
-        element: <AppLayout />,
+        element: (
+          <OsirisAccessGate>
+            <AppLayout />
+          </OsirisAccessGate>
+        ),
         errorElement: <RouteErrorPage />,
         children: [
           { path: '/', element: <Navigate to="/dashboard" replace /> },
-          { path: '/dashboard', element: pageElement(DashboardPage) },
-          { path: '/reports', element: pageElement(ReportsPage) },
-          { path: '/ai-chat', element: pageElement(AIChatPage) },
+          { path: '/dashboard', element: modulePageElement('dashboard', DashboardPage) },
+          { path: '/reports', element: modulePageElement('reports', ReportsPage) },
+          { path: '/ai-chat', element: modulePageElement('ai-chat', AIChatPage) },
           {
             path: '/showcase',
             element: import.meta.env.DEV ? (
@@ -147,12 +153,12 @@ const appRouter = createBrowserRouter([
               <Navigate to="/dashboard" replace />
             ),
           },
-          { path: '/profile', element: pageElement(ProfilePage) },
+          { path: '/profile', element: modulePageElement('profile', ProfilePage) },
           { path: '/settings', element: protectedPageElement('settings', SettingsPage) },
-          { path: '/email', element: pageElement(EmailPage) },
-          { path: '/calendar', element: pageElement(CalendarPage) },
-          { path: '/access-denied', element: pageElement(AccessDeniedPage) },
-          { path: '*', element: pageElement(AppNotFoundPage) },
+          { path: '/email', element: modulePageElement('email', EmailPage) },
+          { path: '/calendar', element: modulePageElement('calendar', CalendarPage) },
+          { path: '/access-denied', element: modulePageElement('access-denied', AccessDeniedPage) },
+          { path: '*', element: modulePageElement('not-found', AppNotFoundPage) },
         ],
       },
     ],

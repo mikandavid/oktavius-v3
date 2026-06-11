@@ -11,7 +11,6 @@ import {
   SettingsLayout,
   SettingsRow,
   SettingsSection,
-  SplitView,
   Switch,
   Tabs,
   TabsContent,
@@ -26,6 +25,7 @@ import { OrgCustomRolesSection } from '@/components/admin/OrgCustomRolesSection'
 import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
 import { CustomFieldsDetailSection } from '@/components/custom-fields';
 import { RelatedRecordsPanel } from '@/components/detail/RelatedRecordsPanel';
+import { ResponsiveDetailLayout } from '@/components/detail/ResponsiveDetailLayout';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { ActiveLocationInfoButton } from '@/components/layout/ActiveLocationInfoButton';
 import { ActiveLocationPicker } from '@/components/layout/ActiveLocationPicker';
@@ -57,7 +57,6 @@ const QUEUE_ITEMS = [
 ];
 
 export function DetailLayoutSection() {
-  const [activeQueue, setActiveQueue] = useState('q1');
   const [activeTab, setActiveTab] = useState('overview');
   const [settingsKey, setSettingsKey] = useState('general');
   const [inlineValue, setInlineValue] = useState('Apex Technologies GmbH');
@@ -110,14 +109,18 @@ export function DetailLayoutSection() {
         </div>
       </ShowcaseBlock>
 
-      <ShowcaseBlock title="SplitView + queue" meta="Master-detail sidebar · ListRow variant=queue">
-        <SplitView
-          className="min-h-[280px] w-full rounded-card bg-card"
+      <ShowcaseBlock
+        title="ResponsiveDetailLayout + queue"
+        meta="URL-backed master-detail · mobile stack"
+      >
+        <ResponsiveDetailLayout
+          className="min-h-[280px]"
           persistKey="showcase-detail-layout-split"
           defaultSidebarWidth={380}
           minSidebarWidth={320}
           maxSidebarWidth={680}
-          sidebar={
+          defaultSelectedId="q1"
+          master={({ selectedId, select }) => (
             <ScrollArea className="h-full max-h-[280px]">
               <SplitViewQueue>
                 {QUEUE_ITEMS.map((item) => (
@@ -126,33 +129,37 @@ export function DetailLayoutSection() {
                     variant="queue"
                     title={item.title}
                     subtitle={item.subtitle}
-                    onClick={() => setActiveQueue(item.id)}
-                    className={item.id === activeQueue ? QUEUE_ITEM_SELECTED_CLASS : undefined}
-                    aria-current={item.id === activeQueue ? 'true' : undefined}
+                    onClick={() => select(item.id)}
+                    className={item.id === selectedId ? QUEUE_ITEM_SELECTED_CLASS : undefined}
+                    aria-current={item.id === selectedId ? 'true' : undefined}
                   />
                 ))}
               </SplitViewQueue>
             </ScrollArea>
-          }
-        >
-          <div className="space-y-2 p-4">
-            <div className="flex items-start gap-3">
-              <RecordVisual kind="icon" icon={<CaseIcon size={16} weight="duotone" />} size="md" />
-              <div>
-                <h3 className="text-sm font-semibold">
-                  {QUEUE_ITEMS.find((i) => i.id === activeQueue)?.title}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  {QUEUE_ITEMS.find((i) => i.id === activeQueue)?.subtitle}
-                </p>
-                <div className="mt-2 flex gap-2">
-                  <StatusBadge status="High" variantMap={{ High: 'warning' }} />
-                  <StatusBadge status="Investigation" variantMap={{ Investigation: 'info' }} />
+          )}
+          detail={({ selectedId }) => {
+            const activeItem = QUEUE_ITEMS.find((item) => item.id === selectedId) ?? QUEUE_ITEMS[0];
+            return (
+              <div className="space-y-2 p-4">
+                <div className="flex items-start gap-3">
+                  <RecordVisual
+                    kind="icon"
+                    icon={<CaseIcon size={16} weight="duotone" />}
+                    size="md"
+                  />
+                  <div>
+                    <h3 className="text-sm font-semibold">{activeItem.title}</h3>
+                    <p className="text-xs text-muted-foreground">{activeItem.subtitle}</p>
+                    <div className="mt-2 flex gap-2">
+                      <StatusBadge status="High" variantMap={{ High: 'warning' }} />
+                      <StatusBadge status="Investigation" variantMap={{ Investigation: 'info' }} />
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </SplitView>
+            );
+          }}
+        />
       </ShowcaseBlock>
 
       <ShowcaseBlock

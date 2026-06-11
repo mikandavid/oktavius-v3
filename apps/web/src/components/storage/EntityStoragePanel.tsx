@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   AttachmentList,
+  type Attachment,
   Button,
   CollapsibleSection,
   formatDisplayDate,
@@ -10,21 +11,31 @@ import {
 } from '@oktavius/base-ui';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
-import { StorageFileLinkPickerDialog } from '@/components/storage/StorageFileLinkPickerDialog';
 import {
-  STORAGE_GROUP_LABELS,
-  getDemoEntityStorage,
-  type EntityStorageFile,
-} from '@/lib/storage/demoEntityStorage';
-import { DEMO_GLOBAL_STORAGE } from '@/lib/storage/demoGlobalStorage';
+  StorageFileLinkPickerDialog,
+  type StorageLinkNode,
+} from '@/components/storage/StorageFileLinkPickerDialog';
 import { DocumentIcon, LinkIcon, PlusIcon, UploadIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
+
+export type EntityStorageFile = Attachment & {
+  group: 'generated' | 'email' | 'images' | 'documents' | 'other';
+};
+
+const STORAGE_GROUP_LABELS: Record<EntityStorageFile['group'], string> = {
+  generated: 'Generated documents',
+  email: 'Emails',
+  images: 'Images & scans',
+  documents: 'Documents',
+  other: 'Other files',
+};
 
 type EntityStoragePanelProps = {
   entityType: string;
   entityId: string;
   title?: string;
   files?: EntityStorageFile[];
+  availableNodes?: StorageLinkNode[];
   readOnly?: boolean;
   className?: string;
 };
@@ -37,23 +48,55 @@ function groupFiles(files: EntityStorageFile[]) {
   return grouped;
 }
 
+function openStorageFile(attachment: Attachment) {
+  if (!attachment.url) {
+    appToast.info('File preview is not available.');
+    return;
+  }
+
+  window.open(attachment.url, '_blank', 'noopener,noreferrer');
+}
+
+function storageGroupForNode(node: StorageLinkNode): EntityStorageFile['group'] {
+  if (node.mimeType?.startsWith('image/')) return 'images';
+  if (node.mimeType === 'application/pdf') return 'documents';
+  return 'other';
+}
+
+function storageNodeToFile(node: StorageLinkNode): EntityStorageFile {
+  return {
+    id: node.id,
+    name: node.name,
+    size: node.fileSizeBytes,
+    mimeType: node.mimeType,
+    uploadedAt: node.updatedAt,
+    uploadedBy: 'Storage library',
+    group: storageGroupForNode(node),
+    url: undefined,
+  };
+}
+
 export function EntityStoragePanel({
   entityType,
   entityId,
   title = 'Files & attachments',
   files,
+  availableNodes = [],
   readOnly = false,
   className,
 }: EntityStoragePanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [localFiles, setLocalFiles] = useState<EntityStorageFile[]>(
-    () => files ?? getDemoEntityStorage(entityType, entityId),
-  );
+  const [localFiles, setLocalFiles] = useState<EntityStorageFile[]>(() => files ?? []);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [linkPickerOpen, setLinkPickerOpen] = useState(false);
   const [linkedNodeIds, setLinkedNodeIds] = useState<string[]>([]);
 
   const grouped = useMemo(() => groupFiles(localFiles), [localFiles]);
+  const canLinkFromStorage = availableNodes.length > 0;
+
+  useEffect(() => {
+    if (files) setLocalFiles(files);
+  }, [files]);
 
   const handleUpload = (fileList: FileList | null) => {
     if (!fileList?.length || readOnly) return;
@@ -95,7 +138,18 @@ export function EntityStoragePanel({
                 <UploadIcon size={14} />
                 Upload
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setLinkPickerOpen(true)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={!canLinkFromStorage}
+                onClick={() => {
+                  if (!canLinkFromStorage) {
+                    appToast.info('Storage source is not connected.');
+                    return;
+                  }
+                  setLinkPickerOpen(true);
+                }}
+              >
                 <LinkIcon size={14} />
                 Link
               </Button>
@@ -143,7 +197,7 @@ export function EntityStoragePanel({
                   attachments={groupFiles}
                   readOnly={readOnly}
                   onDelete={readOnly ? undefined : (id) => setPendingDeleteId(id)}
-                  onOpen={(attachment) => appToast.info(`Open ${attachment.name} — demo only.`)}
+                  onOpen={openStorageFile}
                 />
               </CollapsibleSection>
             ))}
@@ -168,24 +222,21 @@ export function EntityStoragePanel({
         onOpenChange={setLinkPickerOpen}
         entityType={entityType}
         entityId={entityId}
+        nodes={availableNodes}
         linkedNodeIds={[...linkedNodeIds, ...localFiles.map((file) => file.id)]}
         onLinked={(nodeIds) => {
-          const linked = DEMO_GLOBAL_STORAGE.filter((node) => nodeIds.includes(node.id));
-          const nextFiles: EntityStorageFile[] = linked.map((node) => ({
-            id: node.id,
-            name: node.name,
-            size: node.fileSizeBytes,
-            mimeType: node.mimeType,
-            uploadedAt: node.updatedAt,
-            uploadedBy: 'Storage library',
-            group: node.mimeType?.startsWith('image/')
-              ? 'images'
-              : node.mimeType === 'application/pdf'
-                ? 'documents'
-                : 'other',
-          }));
-          setLinkedNodeIds((current) => [...new Set([...current, ...nodeIds])]);
-          setLocalFiles((current) => [...nextFiles, ...current]);
+          const nodesById = new Map(availableNodes.map((node) => [node.id, node]));
+          const nextFiles = nodeIds
+            .map((nodeId) => nodesById.get(nodeId))
+            .filter((node): node is StorageLinkNode => Boolean(node))
+            .map(storageNodeToFile);
+          if (nextFiles.length === 0) return;
+          const validNodeIds = nextFiles.map((file) => file.id);
+          setLinkedNodeIds((current) => [...new Set([...current, ...validNodeIds])]);
+          setLocalFiles((current) => {
+            const existingIds = new Set(current.map((file) => file.id));
+            return [...nextFiles.filter((file) => !existingIds.has(file.id)), ...current];
+          });
         }}
       />
     </>

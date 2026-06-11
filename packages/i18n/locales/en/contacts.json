@@ -1,0 +1,107 @@
+{
+  "title": "Contacts",
+  "newContact": "New Contact",
+  "editContact": "Edit Contact",
+  "contactDetails": "Contact Details",
+  "deleteContact": "Delete Contact",
+  "deleteRecordConfirm": "Delete this contact?",
+  "noContactsFound": "No contacts yet",
+  "noContactsDescription": "Add your first contact to start building your network.",
+  "quickCreateContact": "Create contact",
+
+  "bulkImport": {
+    "customFieldsNotInWizard": "Custom field columns are not included in this import; add them on each contact after import."
+  },
+  "form": {
+    "sectionTagsNotes": "Tags & notes",
+    "sectionSocial": "Social & web",
+    "showCustomFields": "Custom fields…",
+    "hideCustomFields": "Hide custom fields"
+  },
+  "contactInformation": "Contact Information",
+  "addressDetails": "Address",
+  "addressLine1": "Address Line 1",
+  "addressLine2": "Address Line 2",
+  "fields": {
+    "addressLine1": "Address Line 1",
+    "addressLine2": "Address Line 2",
+    "postalCode": "Postal code",
+    "city": "City",
+    "state": "State",
+    "country": "Country"
+  },
+  "isBusiness": "Business contact",
+  "isBusinessDescription": "Enable this for companies and other B2B counterparties.",
+  "contactKind": "Contact type",
+  "typePersonal": "Personal",
+  "typeBusiness": "Business",
+  "typePerson": "Person",
+  "linkedin": "LinkedIn",
+  "linkedinPlaceholder": "linkedin.com/in/username",
+  "location": "Location",
+  "locationPlaceholder": "No location",
+  "mobile": "Mobile",
+  "fax": "Fax",
+  "clientCode": "Client code",
+  "contactType": "Type",
+  "contactTypePlaceholder": "e.g. Customer, Supplier",
+  "contactCategory": "Category",
+  "categories": {
+    "primary": "Primary",
+    "misc": "Other",
+    "contractingClient": "Contracting client",
+    "funeralCemetery": "Cemetery",
+    "funeralParish": "Parish / church",
+    "funeralStoneMason": "Stone mason",
+    "funeralGardener": "Florist / gardener",
+    "funeralGraveDigger": "Grave digger",
+    "funeralCrematorium": "Crematorium",
+    "funeralInsurance": "Insurance"
+  },
+  "contactCategoryPlaceholder": "Select or create a category",
+  "addCategory": "+ Add category",
+  "addCategoryPlaceholder": "New category name",
+  "searchContacts": "Search contacts…",
+  "filterCityPlaceholder": "City (contains, case-insensitive)",
+  "filterCountryPlaceholder": "Country (contains, case-insensitive)",
+  "filterLocationHint": "Only contacts with this site assigned are shown (address alone does not count).",
+  "searchBusinessContacts": "Search business contacts…",
+  "noBusinessContacts": "No business contacts found",
+  "tagsPlaceholder": "Add a tag…",
+  "creditRisk": {
+    "title": "Credit risk",
+    "nonBusiness": "Mark this contact as a business contact to enable PD writeback.",
+    "probabilityOfDefault": "Probability of Default",
+    "riskBand": "Risk band",
+    "paymentGoal": "Payment goal",
+    "paymentGoalDays": "{{count}} days",
+    "internalCreditScore": "Internal credit score",
+    "lastConfirmed": "Last confirmed",
+    "noAssessment": "No confirmed PD assessment has been written back to this contact yet.",
+    "history": "Assessment history",
+    "noHistory": "No confirmed assessments yet."
+  },
+  "generatedDocuments": "Generated Documents",
+  "linkedFuneralCases": {
+    "title": "Linked funeral cases",
+    "empty": "This contact is not linked to any funeral cases yet.",
+    "openCase": "Open case"
+  },
+  "linkedEntities": {
+    "title": "Linked records",
+    "empty": "This contact is not linked to any other records yet.",
+    "open": "Open",
+    "kind": {
+      "salesDocument": "Sales document",
+      "purchaseDocument": "Purchase document",
+      "calendarEvent": "Calendar event",
+      "funeralCase": "Funeral case"
+    }
+  },
+  "notifications": {
+    "contactCreated": {
+      "title": "New contact created",
+      "description": "Get notified when a new contact is created."
+    }
+  }
+}

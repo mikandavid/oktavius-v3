@@ -1,0 +1,26 @@
+{
+  "title": "Lieferanten",
+  "newVendor": "Neuer Lieferant",
+  "editVendor": "Lieferant bearbeiten",
+  "vendorDetails": "Lieferantendetails",
+  "deleteVendor": "Lieferant löschen",
+  "deleteRecordConfirm": "Diesen Lieferanten löschen?",
+  "noVendorsFound": "Keine Lieferanten gefunden. Fügen Sie Ihren ersten Lieferanten hinzu.",
+
+  "statusActive": "Aktiv",
+  "statusInactive": "Inaktiv",
+  "statusArchived": "Archiviert",
+
+  "typeIndividual": "Einzelperson",
+  "typeCompany": "Unternehmen",
+  "typeGovernment": "Behörde",
+  "typePartnership": "Partnerschaft",
+
+  "contactInformation": "Kontaktinformationen",
+  "addressDetails": "Adresse",
+  "addressLine1": "Adresszeile 1",
+  "addressLine2": "Adresszeile 2",
+  "codeDescription": "Wird automatisch generiert wenn leer",
+  "taxId": "Steuernummer",
+  "searchVendors": "Lieferanten suchen…"
+}

@@ -1,4 +1,5 @@
 import { normalizeOsirisRole } from './permissions';
+import { normalizeOsirisRuntimeConfig } from './runtimeConfig';
 import type { OsirisBootstrapResponse, OsirisRuntimeState } from './types';
 
 export function normalizeOsirisBootstrap(payload: OsirisBootstrapResponse): OsirisRuntimeState {
@@ -27,6 +28,6 @@ export function normalizeOsirisBootstrap(payload: OsirisBootstrapResponse): Osir
       permissions: payload.permissions,
     },
     locationAccess: payload.locationAccess ?? null,
-    config: payload.config,
+    config: normalizeOsirisRuntimeConfig(payload.config),
   };
 }

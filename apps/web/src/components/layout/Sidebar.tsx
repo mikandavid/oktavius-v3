@@ -13,7 +13,6 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import { MouseTooltip, cn } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
 import { CheckIcon, EditIcon, SortIcon, PanelLeftCloseIcon, PanelLeftIcon } from '@/lib/icons';
 
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
@@ -28,9 +27,10 @@ import {
 import { getOrgProfile } from '@/lib/org-profiles/profiles';
 import type { OrgProfile } from '@/lib/org-profiles/types';
 import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
-import { permissionSubjectFor, type PermissionSubject } from '@/lib/permissions';
+import { EMPTY_PERMISSION_SUBJECT, type PermissionSubject } from '@/lib/permissions';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 import { useUserPreferences } from '@/lib/userPreferences';
+import { useTranslation } from '@/core/i18n';
 
 import { useAppShellLayout } from './AppShellLayoutContext';
 import { BrandMark } from './BrandMark';
@@ -67,23 +67,39 @@ function writeStoredModuleOrder(order: string[]) {
   safeStorageSet(getWindowStorage('localStorage'), MODULE_ORDER_STORAGE_KEY, JSON.stringify(order));
 }
 
-function buildVisibleModuleItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {
-  return buildVisibleAppNavItems(profile, subject, MODULE_NAV_ITEMS);
+type TranslateFn = (
+  key: string,
+  _params?: Record<string, string | number>,
+  fallback?: string,
+) => string;
+
+function buildVisibleModuleItems(
+  profile: OrgProfile,
+  subject: PermissionSubject,
+  translate: TranslateFn,
+): AppNavModule[] {
+  return buildVisibleAppNavItems(profile, subject, MODULE_NAV_ITEMS, translate);
 }
 
-function buildVisibleAdminItems(profile: OrgProfile, subject: PermissionSubject): AppNavModule[] {
+function buildVisibleAdminItems(
+  profile: OrgProfile,
+  subject: PermissionSubject,
+  translate: TranslateFn,
+): AppNavModule[] {
   return buildVisibleAppNavItems(
     profile,
     subject,
     ADMIN_NAV_ITEMS.filter((item) => item.id !== 'showcase' || import.meta.env.DEV),
+    translate,
   );
 }
 
 function buildRuntimeOrgProfile(
   activeOrganization: { id: string; name: string; slug: string } | undefined,
 ): OrgProfile {
-  const fallback = getOrgProfile(activeOrganization?.id);
-  if (!activeOrganization || fallback.id === activeOrganization.id) return fallback;
+  if (!activeOrganization) return getOrgProfile(undefined);
+
+  const fallback = getOrgProfile(activeOrganization.id);
 
   return {
     ...fallback,
@@ -388,13 +404,11 @@ function SidebarContent({
   const { pathname } = useLocation();
   const { isSidebarCompact, toggleSidebarCollapsed } = useAppShellLayout();
   const { locale } = useUserPreferences();
+  const { t } = useTranslation();
   const osirisRuntime = useOptionalOsirisRuntime();
-  const demoData = useDemoData();
-  const activeOrgId = osirisRuntime?.activeOrgId ?? demoData.activeOrgId;
-  const organizations = osirisRuntime?.organizations ?? demoData.organizations;
-  const permissionSubject =
-    osirisRuntime?.permissionSubject ??
-    permissionSubjectFor(demoData.currentUser, demoData.activeMembership);
+  const activeOrgId = osirisRuntime?.activeOrgId ?? null;
+  const organizations = osirisRuntime?.organizations ?? [];
+  const permissionSubject = osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT;
   const activeOrganization = organizations.find((organization) => organization.id === activeOrgId);
   const profile = useMemo(
     () => getLocalizedOrgProfile(buildRuntimeOrgProfile(activeOrganization), locale),
@@ -402,16 +416,16 @@ function SidebarContent({
   );
   const brandTitle = activeOrganization?.name ?? 'Oktavius ERP';
   const visiblePrimaryItems = useMemo(
-    () => buildVisibleAppNavItems(profile, permissionSubject, PRIMARY_NAV_ITEMS),
-    [permissionSubject, profile],
+    () => buildVisibleAppNavItems(profile, permissionSubject, PRIMARY_NAV_ITEMS, t),
+    [permissionSubject, profile, t],
   );
   const visibleModuleItems = useMemo(
-    () => buildVisibleModuleItems(profile, permissionSubject),
-    [permissionSubject, profile],
+    () => buildVisibleModuleItems(profile, permissionSubject, t),
+    [permissionSubject, profile, t],
   );
   const visibleAdminItems = useMemo(
-    () => buildVisibleAdminItems(profile, permissionSubject),
-    [permissionSubject, profile],
+    () => buildVisibleAdminItems(profile, permissionSubject, t),
+    [permissionSubject, profile, t],
   );
   const [preferredModuleOrder, setPreferredModuleOrder] = useState<string[]>(readStoredModuleOrder);
 
@@ -564,10 +578,16 @@ function SidebarContent({
                 isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
               )}
             >
-              Modules
+              {t('common.modules', undefined, 'Modules')}
             </span>
             {isExpanded ? (
-              <MouseTooltip content={isEditingModules ? 'Save order' : 'Edit order'}>
+              <MouseTooltip
+                content={
+                  isEditingModules
+                    ? t('common.saveOrder', undefined, 'Save order')
+                    : t('common.editOrder', undefined, 'Edit order')
+                }
+              >
                 <button
                   type="button"
                   className={cn(
@@ -576,7 +596,11 @@ function SidebarContent({
                       'pointer-events-none opacity-0 group-hover/module-header:pointer-events-auto group-hover/module-header:opacity-100',
                   )}
                   onClick={() => setIsEditingModules((current) => !current)}
-                  aria-label={isEditingModules ? 'Save order' : 'Edit order'}
+                  aria-label={
+                    isEditingModules
+                      ? t('common.saveOrder', undefined, 'Save order')
+                      : t('common.editOrder', undefined, 'Edit order')
+                  }
                 >
                   {isEditingModules ? (
                     <CheckIcon size={12} className="mx-auto" />
@@ -600,7 +624,7 @@ function SidebarContent({
                 onDragStart={setDraggingItemId}
                 onDragOver={moveModuleItem}
                 onDrop={() => setDraggingItemId(null)}
-                dragHandleTitle="Drag to reorder"
+                dragHandleTitle={t('common.dragToReorder', undefined, 'Drag to reorder')}
               />
             ))}
           </div>
@@ -615,7 +639,7 @@ function SidebarContent({
                   isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
                 )}
               >
-                Admin
+                {t('common.admin', undefined, 'Admin')}
               </span>
             </div>
             <div className="space-y-0.5">
@@ -640,7 +664,11 @@ function SidebarContent({
               type="button"
               className="flex h-8 w-full items-center gap-3 rounded-md px-3 py-1.5 text-sidebar-foreground/40 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground active:bg-sidebar-foreground/[0.08] active:scale-[0.98]"
               onClick={toggleCollapsed}
-              aria-label={isSidebarCompact ? 'Expand sidebar' : 'Compact sidebar'}
+              aria-label={
+                isSidebarCompact
+                  ? t('common.expandSidebar', undefined, 'Expand sidebar')
+                  : t('common.compactSidebar', undefined, 'Compact sidebar')
+              }
             >
               {isSidebarCompact ? (
                 <PanelLeftIcon className="h-4 w-4 shrink-0" />
@@ -655,7 +683,9 @@ function SidebarContent({
                     : 'pointer-events-none w-0 select-none opacity-0',
                 )}
               >
-                {isSidebarCompact ? 'Expand' : 'Compact'}
+                {isSidebarCompact
+                  ? t('common.expand', undefined, 'Expand')
+                  : t('common.compact', undefined, 'Compact')}
               </span>
             </button>
           ) : (
@@ -667,7 +697,11 @@ function SidebarContent({
             >
               <button
                 type="button"
-                aria-label={isSidebarCompact ? 'Expand sidebar' : 'Compact sidebar'}
+                aria-label={
+                  isSidebarCompact
+                    ? t('common.expandSidebar', undefined, 'Expand sidebar')
+                    : t('common.compactSidebar', undefined, 'Compact sidebar')
+                }
                 className={cn(
                   'mx-auto flex h-8 w-8 items-center justify-center rounded-full',
                   collapseFlyout.open && 'bg-sidebar-foreground/[0.08] text-sidebar-foreground',
@@ -685,7 +719,11 @@ function SidebarContent({
               <SidebarNavPill
                 anchorRef={collapseRowRef}
                 open={collapseFlyout.open}
-                label={isSidebarCompact ? 'Expand sidebar' : 'Compact sidebar'}
+                label={
+                  isSidebarCompact
+                    ? t('common.expandSidebar', undefined, 'Expand sidebar')
+                    : t('common.compactSidebar', undefined, 'Compact sidebar')
+                }
                 isActive={false}
                 onClick={toggleCollapsed}
                 onPointerEnter={collapseFlyout.show}

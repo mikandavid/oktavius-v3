@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
 
-import { ApiAuthorizationError, ApiValidationError, type ListResponse } from './demo-client';
+import { ApiAuthorizationError, ApiValidationError, type ListResponse } from './contracts';
 import { createHttpEntityHandlers, createHttpRegistry } from './httpRegistry';
 
 type Row = {
@@ -125,6 +125,27 @@ describe('HTTP registry adapters', () => {
     } satisfies Partial<ApiAuthorizationError>);
   });
 
+  it('normalizes non-JSON authorization responses instead of surfacing JSON parse errors', async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response('<html>Forbidden</html>', {
+          status: 403,
+          statusText: 'Forbidden',
+          headers: { 'Content-Type': 'text/html' },
+        }),
+    );
+    const handlers = createHttpEntityHandlers<Row, Record<string, string>, Omit<Row, 'id'>>({
+      basePath: '/api/clients',
+      fetcher,
+    });
+
+    await expect(handlers.delete('row_1')).rejects.toMatchObject({
+      name: 'ApiAuthorizationError',
+      message: 'DELETE /api/clients/row_1 is not allowed.',
+      requirement: 'unknown',
+    } satisfies Partial<ApiAuthorizationError>);
+  });
+
   it('creates a full generated registry from endpoint descriptors', async () => {
     const fetcher = vi.fn(async () => response(listResponse));
     const registry = createHttpRegistry({
@@ -224,5 +245,31 @@ describe('HTTP registry adapters', () => {
       'https://api.example.test/contacts',
       expect.objectContaining({ credentials: 'include' }),
     );
+  });
+
+  it('notifies the Osiris runtime when generated requests receive 401 responses', async () => {
+    const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      response({ message: 'Unauthorized.' }, { status: 401, statusText: 'Unauthorized' }),
+    );
+    const onUnauthorized = vi.fn();
+    vi.stubGlobal('fetch', fetch);
+    const fetcher = createOsirisApiFetcher({ baseUrl: '/api', onUnauthorized });
+
+    await fetcher('/contacts', { method: 'GET' });
+
+    expect(onUnauthorized).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not expire the Osiris runtime for permission-only 403 responses', async () => {
+    const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      response({ message: 'Forbidden.' }, { status: 403, statusText: 'Forbidden' }),
+    );
+    const onUnauthorized = vi.fn();
+    vi.stubGlobal('fetch', fetch);
+    const fetcher = createOsirisApiFetcher({ baseUrl: '/api', onUnauthorized });
+
+    await fetcher('/contacts', { method: 'GET' });
+
+    expect(onUnauthorized).not.toHaveBeenCalled();
   });
 });

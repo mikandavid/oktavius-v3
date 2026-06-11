@@ -3,7 +3,10 @@ import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
 
 import { Button } from '@oktavius/base-ui';
 
-import { getChunkLoadRecoveryState, registerChunkLoadReload } from '@/lib/chunkLoadRecovery';
+import {
+  getChunkLoadRecoveryState,
+  registerChunkLoadReload,
+} from '@/core/errors/chunkLoadRecovery';
 
 type AppErrorPageProps = {
   error?: unknown;

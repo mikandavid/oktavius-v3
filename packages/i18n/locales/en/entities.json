@@ -1,0 +1,16 @@
+{
+  "invoice": "Invoice",
+  "invoices": "Invoices",
+  "user": "User",
+  "users": "Users",
+  "organization": "Organization",
+  "organizations": "Organizations",
+  "role": "Role",
+  "roles": "Roles",
+  "vendor": "Vendor",
+  "vendors": "Vendors",
+  "bill": "Bill",
+  "bills": "Bills",
+  "module": "Module",
+  "modules": "Modules"
+}

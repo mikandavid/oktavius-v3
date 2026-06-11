@@ -1,4 +1,4 @@
-import { ApiValidationError } from '@/api/demo-client';
+import { ApiValidationError } from '@/api/contracts';
 import type { FormSubmissionFailure, FormSubmissionResult } from '@/lib/formValidation';
 
 export function apiValidationErrorToFormFailure(error: unknown): FormSubmissionFailure | null {

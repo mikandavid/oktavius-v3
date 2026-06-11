@@ -7,21 +7,30 @@ import { createConfiguredReportStore } from '@/api/apiStoreConfig';
 import { useApiRegistry } from '@/api/ApiProvider';
 import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_TABS_CONTENT_SCROLL_CLASS } from '@/components/common/pageChrome';
+import { ReportBuilderPanel } from '@/components/reports/ReportBuilderPanel';
+import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
-import {
-  COMBO_DATA,
-  MULTI_LINE_REVENUE,
-  PIPELINE_FUNNEL,
-  RADAR_KPIS,
-  RADAR_SERIES,
-  ReportBuilderPanel,
-  REVENUE_SERIES,
-  STACKED_PIPELINE,
-  TOP_CLIENTS,
-} from '@/components/reports/ReportBuilderPanel';
 import { reportsPageIcon } from '@/lib/modulePageIcons';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 const REPORTS_PAGE_SIZE = '250';
+
+type ReportOrder = {
+  id: string;
+  orderDate: string;
+  total: string;
+  status: string;
+};
+
+type ReportInvoice = {
+  id: string;
+  issuedAt: string;
+  amount: string;
+  status: string;
+};
+
+const EMPTY_REPORT_ORDERS: ReportOrder[] = [];
+const EMPTY_REPORT_INVOICES: ReportInvoice[] = [];
 
 function sumAmounts(items: Array<{ amount?: string; total?: string }>, key: 'amount' | 'total') {
   return items.reduce((sum, item) => {
@@ -45,6 +54,10 @@ function aggregateByMonth(items: Array<{ date: string; value: number }>): ChartP
 
 export function ReportsPage() {
   const api = useApiRegistry();
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const activeOrgId = osirisRuntime?.activeOrgId ?? null;
+  const { activeLocationId, viewAllLocations } = useActiveLocation();
+  const activeSiteScope = viewAllLocations ? null : activeLocationId;
   const storage = getWindowStorage('localStorage');
   const reportStore = useMemo(
     () =>
@@ -56,7 +69,7 @@ export function ReportsPage() {
     [storage],
   );
   const reportsQuery = useQuery({
-    queryKey: ['reports-page-summary'],
+    queryKey: ['scope', activeOrgId, activeSiteScope, 'reports-page-summary'],
     queryFn: async () => {
       const [orders, invoices] = await Promise.all([
         api.orders.list({ pageSize: REPORTS_PAGE_SIZE, sort: '-orderDate' }),
@@ -64,13 +77,13 @@ export function ReportsPage() {
       ]);
 
       return {
-        orders: orders.data,
-        invoices: invoices.data,
+        orders: orders.data as ReportOrder[],
+        invoices: invoices.data as ReportInvoice[],
       };
     },
   });
-  const orders = reportsQuery.data?.orders ?? [];
-  const invoices = reportsQuery.data?.invoices ?? [];
+  const orders = reportsQuery.data?.orders ?? EMPTY_REPORT_ORDERS;
+  const invoices = reportsQuery.data?.invoices ?? EMPTY_REPORT_INVOICES;
 
   const ordersTrend = useMemo(
     () =>
@@ -135,37 +148,11 @@ export function ReportsPage() {
             valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
           />
           <ChartCard
-            title="Revenue vs margin"
-            meta="Multi-line comparison"
-            type="multi-line"
-            multiSeriesData={MULTI_LINE_REVENUE}
-            series={REVENUE_SERIES}
-            valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
-          />
-          <ChartCard
-            title="Orders + revenue"
-            meta="Volume vs value"
-            type="combo"
-            comboData={COMBO_DATA}
-            barLabel="Orders"
-            lineLabel="Revenue"
-            valueFormatter={(value) =>
-              value > 500 ? `€${value.toLocaleString('de-AT')}` : String(value)
-            }
-          />
-          <ChartCard
             title="Order value trend"
             meta="Order totals by month"
             type="line"
             data={ordersTrend}
             valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
-          />
-          <ChartCard
-            title="Top clients"
-            meta="Revenue share"
-            type="horizontal-bar"
-            data={TOP_CLIENTS}
-            valueFormatter={(value) => `€${value}k`}
           />
           <ChartCard
             title="Invoice collection"
@@ -175,29 +162,10 @@ export function ReportsPage() {
             valueFormatter={(value) => `€${value.toLocaleString('de-AT')}`}
           />
           <ChartCard
-            title="Team KPIs"
-            meta="Actual vs target"
-            type="radar"
-            radarData={RADAR_KPIS}
-            series={RADAR_SERIES}
-          />
-          <ChartCard
             title="Orders by status"
             meta="Current pipeline mix"
             type="bar"
             data={orderStatusMix}
-          />
-          <ChartCard
-            title="Pipeline by quarter"
-            meta="Stacked new / active / won"
-            type="stacked-bar"
-            stackedData={STACKED_PIPELINE}
-          />
-          <ChartCard
-            title="Sales funnel"
-            meta="Lead to won conversion"
-            type="funnel"
-            funnelData={PIPELINE_FUNNEL}
           />
           <ChartCard
             title="Collection rate"

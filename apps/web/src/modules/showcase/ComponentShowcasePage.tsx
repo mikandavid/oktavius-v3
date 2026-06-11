@@ -16,13 +16,17 @@ import { DetailLayoutSection } from './sections/DetailLayoutSection';
 import { DialogsSection } from './sections/DialogsSection';
 import { DocumentsSection } from './sections/DocumentsSection';
 import { FeedbackSection } from './sections/FeedbackSection';
+import { ErrorsSection } from './sections/ErrorsSection';
 import { FormsSection } from './sections/FormsSection';
 import { DesignTokensSection } from './sections/DesignTokensSection';
 import { FoundationsSection } from './sections/FoundationsSection';
 import { InputsSection } from './sections/InputsSection';
 import { LayoutsSection } from './sections/LayoutsSection';
+import { MultiTenantSection } from './sections/MultiTenantSection';
 import { OverviewSection } from './sections/OverviewSection';
 import { PatternsSection } from './sections/PatternsSection';
+import { SettingsShowcaseSection } from './sections/SettingsSection';
+import { ResponsiveDetailSection } from './sections/ResponsiveDetailSection';
 import { WorkflowSection } from './sections/WorkflowSection';
 import { CommsOpsSection } from './sections/CommsOpsSection';
 
@@ -42,10 +46,18 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
       return <FormsSection />;
     case 'feedback':
       return <FeedbackSection />;
+    case 'errors':
+      return <ErrorsSection />;
     case 'dialogs':
       return <DialogsSection />;
     case 'data':
       return <DataSection />;
+    case 'multi-tenant':
+      return <MultiTenantSection />;
+    case 'settings':
+      return <SettingsShowcaseSection />;
+    case 'responsive-detail':
+      return <ResponsiveDetailSection />;
     case 'detail-layout':
       return <DetailLayoutSection />;
     case 'workflow':

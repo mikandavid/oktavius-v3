@@ -23,7 +23,6 @@ vi.mock('@/lib/org-profiles/useOrgProfile', () => ({
     slug: 'apex',
     name: 'Apex',
     industryKey: 'generic',
-    demoUserId: 'usr_admin',
     enabledModules: ['clients'],
     terminology: {
       cases: 'Cases',

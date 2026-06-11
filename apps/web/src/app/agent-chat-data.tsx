@@ -10,12 +10,10 @@ import {
 } from 'react';
 
 import { resolveAppNavModuleForProfile } from '@/lib/appNavModules';
-import { ORG_APEX_ID, getOrgProfile } from '@/lib/org-profiles/profiles';
-import type { OrgProfile } from '@/lib/org-profiles/types';
+import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
 import { useUserPreferences } from '@/lib/userPreferences';
-
-import { useDemoData } from './demo-data';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 export type ChatRole = 'user' | 'assistant';
 export type ChatConversationStatus = 'Live' | 'Queued' | 'Ready';
@@ -65,6 +63,38 @@ const makeMessage = (role: ChatRole, content: string, createdAt = new Date().toI
 
 const INITIAL_CONVERSATIONS: ChatConversationRecord[] = [];
 
+const NEUTRAL_TERMINOLOGY: OrgTerminology = {
+  cases: 'Cases',
+  casesSingular: 'Case',
+  clients: 'Clients',
+  clientsSingular: 'Client',
+  products: 'Products',
+  orders: 'Orders',
+  projects: 'Projects',
+  documents: 'Documents',
+  dashboard: 'Dashboard',
+};
+
+const DEFAULT_AGENT_MODULES: OrgModuleId[] = [
+  'dashboard',
+  'ai-chat',
+  'email',
+  'calendar',
+  'reports',
+  'settings',
+];
+
+const NEUTRAL_ORG_PROFILE: OrgProfile = {
+  id: 'workspace',
+  slug: 'workspace',
+  name: 'Workspace',
+  industryKey: 'generic',
+  enabledModules: DEFAULT_AGENT_MODULES,
+  terminology: NEUTRAL_TERMINOLOGY,
+  locations: [],
+  tagline: '',
+};
+
 function workspaceLabel(profile: OrgProfile, moduleId: string) {
   if (moduleId === 'clients') return profile.terminology.clientsSingular.toLowerCase();
   if (moduleId === 'cases') return profile.terminology.casesSingular.toLowerCase();
@@ -87,7 +117,7 @@ function buildWorkspaceIntro(params: {
   const productLabel = workspaceLabel(params.profile, 'products') ?? 'products';
 
   if (params.moduleId === 'clients') {
-    return `The ${clientLabel} workspace currently has ${params.clientCount} visible demo records.`;
+    return `The ${clientLabel} workspace currently has ${params.clientCount} visible records.`;
   }
 
   if (params.moduleId === 'cases') {
@@ -99,7 +129,7 @@ function buildWorkspaceIntro(params: {
   }
 
   if (params.moduleId === 'users') {
-    return `The user workspace currently has ${params.userCount} visible demo records.`;
+    return `The user workspace currently has ${params.userCount} visible records.`;
   }
 
   return 'The current shell is still compact, so I am reading this as an operational coordination request.';
@@ -107,7 +137,7 @@ function buildWorkspaceIntro(params: {
 
 export function derivePromptSet(
   pathname?: string,
-  profile = getLocalizedOrgProfile(getOrgProfile(ORG_APEX_ID), 'en'),
+  profile = getLocalizedOrgProfile(NEUTRAL_ORG_PROFILE, 'en'),
 ) {
   const moduleId = resolveAgentModule(pathname, profile);
   const clientLabel = workspaceLabel(profile, 'clients') ?? 'client';
@@ -161,7 +191,7 @@ export function deriveAssistantResponse(params: {
   activeConversation: ChatConversationRecord | null;
 }) {
   const lower = params.content.toLowerCase();
-  const profile = params.profile ?? getLocalizedOrgProfile(getOrgProfile(ORG_APEX_ID), 'en');
+  const profile = params.profile ?? getLocalizedOrgProfile(NEUTRAL_ORG_PROFILE, 'en');
   const moduleId = resolveAgentModule(params.pathname, profile);
   const intro = buildWorkspaceIntro({
     moduleId,
@@ -202,9 +232,23 @@ export function deriveAssistantResponse(params: {
 }
 
 export function AgentChatProvider({ children }: { children: ReactNode }) {
-  const { users, clients, activeOrgId } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const users: unknown[] = [];
+  const clients: unknown[] = [];
   const { locale } = useUserPreferences();
-  const profile = getLocalizedOrgProfile(getOrgProfile(activeOrgId), locale);
+  const baseProfile = useMemo(() => {
+    const activeOrganization = osirisRuntime?.organizations.find(
+      (organization) => organization.id === osirisRuntime.activeOrgId,
+    );
+
+    return {
+      ...NEUTRAL_ORG_PROFILE,
+      id: activeOrganization?.id ?? osirisRuntime?.activeOrgId ?? NEUTRAL_ORG_PROFILE.id,
+      slug: activeOrganization?.slug ?? NEUTRAL_ORG_PROFILE.slug,
+      name: activeOrganization?.name ?? NEUTRAL_ORG_PROFILE.name,
+    };
+  }, [osirisRuntime?.activeOrgId, osirisRuntime?.organizations]);
+  const profile = useMemo(() => getLocalizedOrgProfile(baseProfile, locale), [baseProfile, locale]);
   const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
   const [activeConversationId, setActiveConversationId] = useState(
     INITIAL_CONVERSATIONS[0]?.id ?? '',

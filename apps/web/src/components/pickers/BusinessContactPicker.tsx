@@ -1,8 +1,4 @@
 import { EntityPicker, type EntityPickerValue } from '@/components/pickers/EntityPicker';
-import {
-  searchDemoBusinessContacts,
-  type DemoBusinessContact,
-} from '@/lib/pickers/demoBusinessContacts';
 
 export type BusinessContactPickerValue = {
   id: string;
@@ -17,7 +13,7 @@ type BusinessContactPickerProps = {
   id?: string;
 };
 
-function toPickerValue(contact: DemoBusinessContact): EntityPickerValue {
+function toPickerValue(contact: BusinessContactPickerValue): EntityPickerValue {
   return {
     id: contact.id,
     label: contact.name,
@@ -25,7 +21,6 @@ function toPickerValue(contact: DemoBusinessContact): EntityPickerValue {
   };
 }
 
-/** Async combobox for business (company) contacts — demo search over static data. */
 export function BusinessContactPicker({
   value,
   onChange,
@@ -49,9 +44,7 @@ export function BusinessContactPicker({
           email: next.description ?? null,
         });
       }}
-      searchEntities={async (query) =>
-        searchDemoBusinessContacts(query).map((contact) => toPickerValue(contact))
-      }
+      searchEntities={async () => (value ? [toPickerValue(value)] : [])}
     />
   );
 }

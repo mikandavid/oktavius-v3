@@ -50,6 +50,9 @@ importers:
       '@oktavius/base-ui':
         specifier: workspace:*
         version: link:../../packages/base-ui
+      '@oktavius/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@oktavius/reference-data':
         specifier: workspace:*
         version: link:../../packages/reference-data
@@ -256,6 +259,15 @@ importers:
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@22.19.19)(jsdom@26.1.0)
+
+  packages/i18n:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.19.19
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
 
   packages/reference-data:
     dependencies:

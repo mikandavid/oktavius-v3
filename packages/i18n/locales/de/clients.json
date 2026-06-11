@@ -1,0 +1,26 @@
+{
+  "title": "Kunden",
+  "newClient": "Neuer Kunde",
+  "editClient": "Kunde bearbeiten",
+  "clientDetails": "Kundendetails",
+  "deleteClient": "Kunde löschen",
+  "deleteRecordConfirm": "Diesen Kunden löschen?",
+  "noClientsFound": "Keine Kunden gefunden. Erstellen Sie Ihren ersten Kunden.",
+  "noClientsDescription": "Erstellen Sie Ihren ersten Kunden, um zu beginnen.",
+
+  "statusLead": "Interessent",
+  "statusActive": "Aktiv",
+  "statusInactive": "Inaktiv",
+  "statusArchived": "Archiviert",
+
+  "typeIndividual": "Einzelperson",
+  "typeCompany": "Unternehmen",
+  "typeGovernment": "Behörde",
+  "typePartnership": "Partnerschaft",
+
+  "contactInformation": "Kontaktinformationen",
+  "addressDetails": "Adresse",
+  "addressLine1": "Adresszeile 1",
+  "addressLine2": "Adresszeile 2",
+  "codeDescription": "Wird automatisch generiert wenn leer"
+}

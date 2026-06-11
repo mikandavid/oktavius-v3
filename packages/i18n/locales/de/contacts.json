@@ -1,0 +1,107 @@
+{
+  "title": "Kontakte",
+  "newContact": "Neuer Kontakt",
+  "editContact": "Kontakt bearbeiten",
+  "contactDetails": "Kontaktdetails",
+  "deleteContact": "Kontakt löschen",
+  "deleteRecordConfirm": "Diesen Kontakt löschen?",
+  "noContactsFound": "Noch keine Kontakte",
+  "noContactsDescription": "Fügen Sie Ihren ersten Kontakt hinzu, um Ihr Netzwerk aufzubauen.",
+  "quickCreateContact": "Kontakt anlegen",
+
+  "bulkImport": {
+    "customFieldsNotInWizard": "Spalten für benutzerdefinierte Felder sind im Import nicht enthalten; pflegen Sie diese nach dem Import im Kontakt."
+  },
+  "form": {
+    "sectionTagsNotes": "Tags & Notizen",
+    "sectionSocial": "Web & soziale Medien",
+    "showCustomFields": "Benutzerdefinierte Felder…",
+    "hideCustomFields": "Benutzerdefinierte Felder ausblenden"
+  },
+  "contactInformation": "Kontaktinformationen",
+  "addressDetails": "Adresse",
+  "addressLine1": "Adresszeile 1",
+  "addressLine2": "Adresszeile 2",
+  "fields": {
+    "addressLine1": "Adresszeile 1",
+    "addressLine2": "Adresszeile 2",
+    "postalCode": "Postleitzahl",
+    "city": "Stadt",
+    "state": "Bundesland",
+    "country": "Land"
+  },
+  "isBusiness": "Geschäftskontakt",
+  "isBusinessDescription": "Aktivieren Sie dies für Unternehmen und andere B2B-Kontakte.",
+  "contactKind": "Kontaktart",
+  "typePersonal": "Privat",
+  "typeBusiness": "Geschäftlich",
+  "typePerson": "Privat",
+  "linkedin": "LinkedIn",
+  "linkedinPlaceholder": "linkedin.com/in/benutzername",
+  "location": "Standort",
+  "locationPlaceholder": "Kein Standort",
+  "mobile": "Mobil",
+  "fax": "Fax",
+  "clientCode": "Kundennummer",
+  "contactType": "Kategorie",
+  "contactTypePlaceholder": "z. B. Kunde, Lieferant",
+  "contactCategory": "Kategorie",
+  "categories": {
+    "primary": "Primär",
+    "misc": "Sonstiges",
+    "contractingClient": "Auftraggeber",
+    "funeralCemetery": "Friedhof",
+    "funeralParish": "Pfarre / Kirche",
+    "funeralStoneMason": "Steinmetz",
+    "funeralGardener": "Blumen / Gärtner",
+    "funeralGraveDigger": "Totengräber",
+    "funeralCrematorium": "Krematorium",
+    "funeralInsurance": "Versicherung"
+  },
+  "contactCategoryPlaceholder": "Kategorie auswahlen oder neu anlegen",
+  "addCategory": "+ Kategorie hinzufugen",
+  "addCategoryPlaceholder": "Neuer Kategoriename",
+  "searchContacts": "Kontakte suchen…",
+  "filterCityPlaceholder": "Stadt (Teiltext, Groß/Klein egal)",
+  "filterCountryPlaceholder": "Land (Teiltext, Groß/Klein egal)",
+  "filterLocationHint": "Es werden nur Kontakte mit diesem zugewiesenen Standort angezeigt (Adresse allein zählt nicht).",
+  "searchBusinessContacts": "Geschäftskontakte suchen…",
+  "noBusinessContacts": "Keine Geschäftskontakte gefunden",
+  "tagsPlaceholder": "Tag hinzufügen…",
+  "creditRisk": {
+    "title": "Bonitätsrisiko",
+    "nonBusiness": "Markieren Sie diesen Kontakt als Geschäftskontakt, um den PD-Writeback zu aktivieren.",
+    "probabilityOfDefault": "Ausfallwahrscheinlichkeit",
+    "riskBand": "Risikoband",
+    "paymentGoal": "Zahlungsziel",
+    "paymentGoalDays": "{{count}} Tage",
+    "internalCreditScore": "Interner Bonitätsscore",
+    "lastConfirmed": "Zuletzt bestätigt",
+    "noAssessment": "Für diesen Kontakt wurde noch keine bestätigte PD-Bewertung zurückgeschrieben.",
+    "history": "Bewertungsverlauf",
+    "noHistory": "Noch keine bestätigten Bewertungen."
+  },
+  "generatedDocuments": "Erstellte Dokumente",
+  "linkedFuneralCases": {
+    "title": "Verknüpfte Trauerfälle",
+    "empty": "Dieser Kontakt ist noch mit keinem Trauerfall verknüpft.",
+    "openCase": "Fall öffnen"
+  },
+  "linkedEntities": {
+    "title": "Verknüpfte Einträge",
+    "empty": "Dieser Kontakt ist noch mit keinen weiteren Einträgen verknüpft.",
+    "open": "Öffnen",
+    "kind": {
+      "salesDocument": "Verkaufsbeleg",
+      "purchaseDocument": "Einkaufsbeleg",
+      "calendarEvent": "Kalendereintrag",
+      "funeralCase": "Trauerfall"
+    }
+  },
+  "notifications": {
+    "contactCreated": {
+      "title": "Neuer Kontakt angelegt",
+      "description": "Benachrichtigung erhalten, wenn ein neuer Kontakt angelegt wird."
+    }
+  }
+}

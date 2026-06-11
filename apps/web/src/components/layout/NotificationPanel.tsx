@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   Button,
@@ -12,44 +12,36 @@ import {
 
 import { NotificationsIcon } from '@/lib/icons';
 
-type NotificationItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  time: string;
-  isRead: boolean;
-};
-
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'n1',
-    title: 'Contract renewal due',
-    subtitle: 'Apex Technologies · in 7 days',
-    time: '2h ago',
-    isRead: false,
-  },
-  {
-    id: 'n2',
-    title: 'Import completed',
-    subtitle: '42 clients added from sample.csv',
-    time: 'Yesterday',
-    isRead: false,
-  },
-  {
-    id: 'n3',
-    title: 'User invitation accepted',
-    subtitle: 'Markus Leitner joined West Region Branch',
-    time: 'Mon',
-    isRead: true,
-  },
-];
+import {
+  EMPTY_NOTIFICATIONS_RUNTIME,
+  type NotificationItem,
+  type NotificationsRuntimeAdapter,
+} from './NotificationsRuntime';
 
 type NotificationPanelProps = {
   className?: string;
+  runtime?: NotificationsRuntimeAdapter;
 };
 
-export function NotificationPanel({ className }: NotificationPanelProps) {
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+export function NotificationPanel({
+  className,
+  runtime = EMPTY_NOTIFICATIONS_RUNTIME,
+}: NotificationPanelProps) {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void runtime.fetchNotifications().then((nextNotifications) => {
+      if (!cancelled) setNotifications(nextNotifications);
+    });
+    const unsubscribe = runtime.subscribe((event) => {
+      if (!cancelled) setNotifications(event.notifications);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [runtime]);
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.isRead).length,
@@ -57,13 +49,11 @@ export function NotificationPanel({ className }: NotificationPanelProps) {
   );
 
   const markRead = (id: string) => {
-    setNotifications((current) =>
-      current.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
-    );
+    void runtime.markRead(id);
   };
 
   const markAllRead = () => {
-    setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
+    void runtime.markAllRead();
   };
 
   return (

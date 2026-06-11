@@ -1,0 +1,197 @@
+{
+  "title": "Fahrtenbuch",
+  "subtitle": "Import, classification, and manual review",
+  "tabs": {
+    "upload": "Upload",
+    "review": "Review",
+    "files": "Files",
+    "settings": "Settings"
+  },
+  "summary": {
+    "manualRequired": "Open review",
+    "km": "{{km}} km"
+  },
+  "drive": {
+    "kmValue": "{{km}} km",
+    "openRoute": "Show drive",
+    "distanceComparison": "Driven: {{driven}} km · Google route: {{optimal}} km",
+    "distanceWarning": "Warning: {{percent}}% above the Google route (limit: {{threshold}}%)",
+    "routeKnownPointsHint": "The map shows the Google route between start and destination; the actual driven route is not known."
+  },
+  "tags": {
+    "vacation": "Vacation"
+  },
+  "exports": {
+    "excel": "Excel",
+    "pdf": "PDF",
+    "selectDriver": "Select a driver first"
+  },
+  "classification": {
+    "business": "Business",
+    "private": "Private",
+    "unclear": "Unclear"
+  },
+  "referenceType": {
+    "hq": "HQ",
+    "business": "Project/customer",
+    "home": "Private address",
+    "detected_work": "Detected work address"
+  },
+  "upload": {
+    "dropTitle": "Drop CSV or Excel files",
+    "dropHint": "Multiple monthly exports can be processed together.",
+    "start": "Process",
+    "processing": "Processing",
+    "uploading": "Uploading …",
+    "progress": "{{progress}} %",
+    "sizeKb": "{{size}} KB",
+    "done": "Fahrtenbuch processed",
+    "failed": "Processing failed",
+    "processingStarted": "Upload complete — processing in the background.",
+    "processingInBackground": "{{formattedCount}} process running in the background …",
+    "processingInBackground_plural": "{{formattedCount}} processes running in the background …"
+  },
+  "filters": {
+    "driver": "Driver",
+    "allDrivers": "All drivers",
+    "allClassifications": "All classifications",
+    "dateFrom": "Date from",
+    "dateTo": "Date to",
+    "search": "Search address or project",
+    "onlyUnclear": "Only unclear"
+  },
+  "review": {
+    "driver": "Driver",
+    "time": "Time",
+    "route": "Route",
+    "auto": "Automatic",
+    "final": "Final",
+    "manual": "Manual",
+    "classification": "Classification",
+    "commentPlaceholder": "Comment",
+    "saveManual": "Save manual decision",
+    "saveChanges": "Save changes",
+    "saved": "Manual decision saved",
+    "empty": "No drives found",
+    "page": "Page {{page}} of {{total}}",
+    "dialogDescription": "Please review unclear drives and assign them.",
+    "titleForFile": "Review – {{file}}"
+  },
+  "openReview": {
+    "label": "Open review",
+    "button": "Review {{formattedCount}} drive",
+    "button_plural": "Review {{formattedCount}} drives",
+    "allClear": "All drives classified",
+    "dialogTitle": "Open review"
+  },
+  "calendar": {
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today",
+    "dayTooltip": "{{count}} drives · {{km}} km · {{business}} business · {{private}} private · {{unclear}} unclear",
+    "needsReviewTooltip": "{{count}} need review",
+    "legendIntensity": "Drives",
+    "legendNeedsReview": "Needs review",
+    "weekday": {
+      "mo": "Mo",
+      "tu": "Tu",
+      "we": "We",
+      "th": "Th",
+      "fr": "Fr",
+      "sa": "Sa",
+      "su": "Su"
+    }
+  },
+  "day": {
+    "prev": "Previous day",
+    "next": "Next day",
+    "allDrivers": "All drivers",
+    "summary": "{{count}} drives · {{business}} business · {{private}} private · {{unclear}} unclear"
+  },
+  "files": {
+    "meta": "{{driver}} · {{date}}",
+    "driveCount": "{{count}} drives",
+    "download": "Download",
+    "exportMissing": "Export missing",
+    "openDetails": "Show drives",
+    "openDetailsFor": "Show drives from {{file}}",
+    "detailDescription": "{{count}} drives · {{driver}} · {{business}} business · {{private}} private · {{unclear}} unclear",
+    "loading": "Loading files",
+    "loadFailed": "Files could not be loaded",
+    "empty": "No stored Fahrtenbuch files found",
+    "deleted": "File deleted",
+    "deleteTitle": "Delete this file?",
+    "deleteDescription": "The drives in \"{{file}}\" will also be removed."
+  },
+  "settings": {
+    "rules": "Rules",
+    "references": "Reference addresses",
+    "suggestions": "Suggestions",
+    "strictRadius": "Strict radius (m)",
+    "looseRadius": "Loose radius (m)",
+    "cutoffStart": "Private cutoff from",
+    "cutoffEnd": "Private cutoff to",
+    "workdayStart": "Workday from",
+    "workdayEnd": "Workday to",
+    "consecutiveDays": "Consecutive-day threshold",
+    "geocoderProvider": "Geocoder provider",
+    "holidayRegion": "Holiday calendar",
+    "outsideHoursHandling": "Known work address outside hours",
+    "insideWorkdayUnknownHandling": "Unknown during workday",
+    "geocoderApiKey": "Geocoder API key",
+    "weekendOverride": "Weekends and holidays automatically private",
+    "learnBusinessAddresses": "Learn manually business addresses",
+    "holidayOverride": "Vacation automatically private",
+    "saved": "Settings saved",
+    "referenceName": "Name",
+    "referenceDriver": "Driver",
+    "referenceAddress": "Address",
+    "addReference": "Add address",
+    "referenceSaved": "Reference address saved",
+    "noSuggestions": "No suggestions",
+    "suggestionMeta": "{{driver}} · {{count}} drives",
+    "promote": "Promote",
+    "reprocessNote": "Settings changes only apply to new uploads. Existing drives can be re-classified separately.",
+    "reprocessAll": "Re-classify all drives",
+    "reprocessRunning": "Re-processing …",
+    "reprocessConfirmTitle": "Re-classify all drives?",
+    "reprocessConfirmDescription": "This re-runs the automatic classification over all existing drives using the current settings. Manual overrides will be preserved. The operation may take several minutes depending on data volume.",
+    "reprocessConfirmAction": "Re-classify",
+    "reprocessDone": "{{count}} drives re-classified ({{preserved}} manual overrides preserved).",
+    "hints": {
+      "insideWorkdayUnknownHandling": "How to handle a drive inside the workday window when no reliable known address is found."
+    }
+  },
+  "driverMappings": {
+    "title": "Driver mapping",
+    "empty": "No drivers found",
+    "saved": "Mapping saved",
+    "unmapped": "Not mapped",
+    "selectStaff": "Select employee",
+    "createStaff": "Create employee",
+    "staffCreated": "Employee created and linked",
+    "ignore": "Ignore",
+    "status": {
+      "auto_matched": "Automatic",
+      "manual": "Manual",
+      "unmatched": "Open",
+      "ignored": "Ignored"
+    }
+  },
+  "suggestions": {
+    "title_plural": "New addresses detected",
+    "ignore": "Ignore",
+    "addAsProject": "Create project",
+    "title": "Project title",
+    "projectNumber": "Project number",
+    "description": "Description",
+    "createProject": "Create project",
+    "projectCreated": "Project created",
+    "dismissed": "Suggestion dismissed",
+    "existingProject": "Existing project: {{project}}",
+    "alreadyExistsDismissed": "Existing project found; suggestion completed"
+  },
+  "monthlyDrives": {
+    "title": "Drives this month"
+  }
+}

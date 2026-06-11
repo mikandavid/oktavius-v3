@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { SplitView } from '@oktavius/base-ui';
+import { InlineEmptyState, SplitView } from '@oktavius/base-ui';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import {
   PageHeaderCtaButton,
   PageHeaderOutlineButton,
 } from '@/components/common/PageHeaderButtons';
+import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { EmailIcon, PlusIcon, TemplatesIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
 
@@ -19,12 +20,14 @@ import {
   EmailThreadQueue,
   queueEmailSend,
   type ComposerMode,
+  type EmailContactOption,
   type EmailDraft,
+  type EmailFolder,
   type EmailTemplate,
+  type EmailThread,
 } from '@/components/email';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 
-import { EMAIL_CONTACT_OPTIONS, EMAIL_FOLDERS, EMAIL_TEMPLATES, EMAIL_THREADS } from './demoData';
 import { resolveLinkedEntityHref } from './emailLinkedEntityRoutes';
 import { loadStoredEmailThreads, storeEmailThreads } from './emailStorage';
 import { emailPageIcon } from './shared';
@@ -36,10 +39,27 @@ const EMPTY_DRAFT: EmailDraft = {
   attachments: [],
 };
 
+const DEFAULT_EMAIL_FOLDERS: EmailFolder[] = [
+  { id: 'inbox', label: 'Inbox', kind: 'inbox' },
+  { id: 'sent', label: 'Sent', kind: 'sent' },
+  { id: 'drafts', label: 'Drafts', kind: 'drafts' },
+  { id: 'archive', label: 'Archive', kind: 'archive' },
+  { id: 'spam', label: 'Spam', kind: 'spam' },
+  { id: 'trash', label: 'Trash', kind: 'trash' },
+];
+
+const EMPTY_EMAIL_THREADS: EmailThread[] = [];
+const EMPTY_EMAIL_TEMPLATES: EmailTemplate[] = [];
+const EMPTY_EMAIL_CONTACT_OPTIONS: EmailContactOption[] = [];
+
 export function EmailPage() {
+  const { ready } = usePreloadNamespaces(['email']);
+  const { t } = useTranslation();
   const storage = getWindowStorage('localStorage');
-  const [threads, setThreads] = useState(() => loadStoredEmailThreads(storage, EMAIL_THREADS));
-  const [activeThreadId, setActiveThreadId] = useState(EMAIL_THREADS[0]?.id ?? '');
+  const [threads, setThreads] = useState(() =>
+    loadStoredEmailThreads(storage, EMPTY_EMAIL_THREADS),
+  );
+  const [activeThreadId, setActiveThreadId] = useState('');
   const [draft, setDraft] = useState<EmailDraft>(EMPTY_DRAFT);
   const [composerMode, setComposerMode] = useState<ComposerMode>('closed');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -50,6 +70,7 @@ export function EmailPage() {
     () => threads.find((thread) => thread.id === activeThreadId) ?? threads[0],
     [activeThreadId, threads],
   );
+  const hasEmailDataSource = threads.length > 0;
 
   const closeComposer = () => {
     setComposerMode('closed');
@@ -84,6 +105,10 @@ export function EmailPage() {
   };
 
   const startNewDraft = () => {
+    if (!hasEmailDataSource) {
+      appToast.info('Email data source is not connected.');
+      return;
+    }
     setComposerMode('new');
     setDraft(EMPTY_DRAFT);
   };
@@ -179,7 +204,10 @@ export function EmailPage() {
   };
 
   const sendDraft = () => {
-    if (!activeThread) return;
+    if (!activeThread) {
+      appToast.info('Email data source is not connected.');
+      return;
+    }
     try {
       const result = queueEmailSend({
         threads,
@@ -199,6 +227,8 @@ export function EmailPage() {
     }
   };
 
+  if (!ready) return null;
+
   return (
     <ModulePage
       fillHeight
@@ -209,11 +239,11 @@ export function EmailPage() {
         <>
           <PageHeaderOutlineButton type="button" onClick={() => setTemplatesDialogOpen(true)}>
             <TemplatesIcon size={14} />
-            Templates
+            {t('email.templates')}
           </PageHeaderOutlineButton>
-          <PageHeaderCtaButton type="button" onClick={startNewDraft}>
+          <PageHeaderCtaButton type="button" onClick={startNewDraft} disabled={!hasEmailDataSource}>
             <PlusIcon size={14} />
-            Compose
+            {t('email.compose')}
           </PageHeaderCtaButton>
         </>
       }
@@ -229,7 +259,7 @@ export function EmailPage() {
         sidebar={
           <EmailThreadQueue
             threads={threads}
-            folders={EMAIL_FOLDERS}
+            folders={DEFAULT_EMAIL_FOLDERS}
             activeFolderId={activeFolderId}
             onFolderChange={handleFolderChange}
             activeId={activeThread?.id ?? ''}
@@ -256,16 +286,22 @@ export function EmailPage() {
           />
         ) : (
           <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
-            <EmailIcon size={16} className="mr-2" />
-            No thread selected.
+            {hasEmailDataSource ? (
+              <>
+                <EmailIcon size={16} className="mr-2" />
+                {t('email.noThreadSelected')}
+              </>
+            ) : (
+              <InlineEmptyState text="Email data source is not connected." centered />
+            )}
           </div>
         )}
       </SplitView>
       <EmailComposerDialog
         mode={composerMode}
         draft={draft}
-        templates={EMAIL_TEMPLATES}
-        contactOptions={EMAIL_CONTACT_OPTIONS}
+        templates={EMPTY_EMAIL_TEMPLATES}
+        contactOptions={EMPTY_EMAIL_CONTACT_OPTIONS}
         onDraftChange={setDraft}
         onApplyTemplate={applyTemplate}
         onSend={sendDraft}
@@ -275,7 +311,7 @@ export function EmailPage() {
       />
       <EmailTemplatesDialog
         open={templatesDialogOpen}
-        templates={EMAIL_TEMPLATES}
+        templates={EMPTY_EMAIL_TEMPLATES}
         onOpenChange={setTemplatesDialogOpen}
         onUseTemplate={useTemplate}
       />

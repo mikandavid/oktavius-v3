@@ -1,21 +1,9 @@
-import { useMemo, useState } from 'react';
+import type { SettingsTableColumn } from '@oktavius/base-ui';
 
-import {
-  Button,
-  SectionCard,
-  SettingsTable,
-  applyOrderedIds,
-  nextSortOrder,
-  sortBySortOrder,
-  type SettingsTableColumn,
-} from '@oktavius/base-ui';
-
-import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
-import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
-import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { type FormField } from '@/components/forms/EntityForm';
-import { PlusIcon } from '@/lib/icons';
+import { type FormField, type FormFieldValue } from '@/components/forms/EntityForm';
+
+import { CatalogBlockManager, nextSortOrder } from './CatalogBlockManager';
 
 export interface CatalogOption {
   id: string;
@@ -73,6 +61,14 @@ function toFormValues(option: CatalogOption): CatalogFormValues {
   };
 }
 
+function asCatalogFormValues(values: Record<string, FormFieldValue>): CatalogFormValues {
+  return {
+    label: String(values.label ?? ''),
+    code: String(values.code ?? ''),
+    active: Boolean(values.active),
+  };
+}
+
 function toCatalogOption(
   values: CatalogFormValues,
   id: string,
@@ -89,10 +85,25 @@ function toCatalogOption(
   };
 }
 
-function sortCatalogOptions(options: CatalogOption[], orderable: boolean): CatalogOption[] {
-  if (orderable) return sortBySortOrder(options);
-  return [...options].sort((a, b) => a.label.localeCompare(b.label));
-}
+const columns: SettingsTableColumn<CatalogOption>[] = [
+  {
+    key: 'label',
+    header: 'Label',
+    cell: (row) => <span className="font-medium text-foreground">{row.label}</span>,
+  },
+  {
+    key: 'code',
+    header: 'Code',
+    cell: (row) => <span className="text-muted-foreground">{row.code ?? '-'}</span>,
+  },
+  {
+    key: 'active',
+    header: 'Status',
+    cell: (row) => (
+      <StatusBadge status={row.active ? 'Active' : 'Inactive'} variantMap={CATALOG_STATUS_MAP} />
+    ),
+  },
+];
 
 type CatalogOptionsManagerBaseProps = {
   title: string;
@@ -114,7 +125,7 @@ export type CatalogOptionsManagerProps =
       onReorder?: never;
     });
 
-/** Settings block for user-editable catalog values (payment terms, case types, etc.). */
+/** Backwards-compatible payment-term catalog wrapper over the generic CatalogBlockManager. */
 export function CatalogOptionsManager({
   title,
   description,
@@ -125,119 +136,32 @@ export function CatalogOptionsManager({
   onReorder,
   className,
 }: CatalogOptionsManagerProps) {
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editingOption, setEditingOption] = useState<CatalogOption | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CatalogOption | null>(null);
-
-  const sorted = useMemo(() => sortCatalogOptions(options, orderable), [options, orderable]);
-
-  const openCreate = () => {
-    setEditingOption(null);
-    setEditorOpen(true);
-  };
-
-  const openEdit = (option: CatalogOption) => {
-    setEditingOption(option);
-    setEditorOpen(true);
-  };
-
-  const columns: SettingsTableColumn<CatalogOption>[] = [
-    {
-      key: 'label',
-      header: 'Label',
-      cell: (row) => <span className="font-medium text-foreground">{row.label}</span>,
-    },
-    {
-      key: 'code',
-      header: 'Code',
-      cell: (row) => <span className="text-muted-foreground">{row.code ?? '—'}</span>,
-    },
-    {
-      key: 'active',
-      header: 'Status',
-      cell: (row) => (
-        <StatusBadge status={row.active ? 'Active' : 'Inactive'} variantMap={CATALOG_STATUS_MAP} />
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      headerClassName: 'w-24',
-      cell: (row) => (
-        <div
-          className="flex items-center justify-end gap-1"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <IconEditButton label={`Edit ${row.label}`} onClick={() => openEdit(row)} />
-          <IconDeleteButton label={`Delete ${row.label}`} onClick={() => setDeleteTarget(row)} />
-        </div>
-      ),
-    },
-  ];
-
   return (
-    <SectionCard
+    <CatalogBlockManager<CatalogOption>
       title={title}
-      meta={description}
-      className={className}
-      actions={
-        <Button type="button" variant="outline" size="sm" onClick={openCreate}>
-          <PlusIcon size={14} className="mr-1.5" />
-          Add option
-        </Button>
+      description={description}
+      rows={options}
+      columns={columns}
+      formFields={catalogFormFields}
+      emptyValues={emptyFormValues}
+      toFormValues={toFormValues}
+      fromFormValues={(values, context) =>
+        toCatalogOption(
+          asCatalogFormValues(values),
+          context.id,
+          options,
+          context.editingRow,
+          orderable,
+        )
       }
-    >
-      <SettingsTable
-        columns={columns}
-        rows={sorted}
-        getRowId={(row) => row.id}
-        onRowClick={openEdit}
-        onReorder={
-          orderable && onReorder
-            ? (orderedIds) => onReorder(applyOrderedIds(options, orderedIds))
-            : undefined
-        }
-        emptyMessage="No catalog options yet. Add the first entry."
-      />
-
-      <SubEntityFormDialog<CatalogFormValues>
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        title={editingOption ? 'Edit option' : 'Add option'}
-        description="Catalog values appear in module dropdowns and filters."
-        fields={catalogFormFields}
-        defaultValues={editingOption ? toFormValues(editingOption) : emptyFormValues()}
-        submitLabel={editingOption ? 'Save' : 'Create'}
-        onSubmit={(values) => {
-          onSave(
-            toCatalogOption(
-              values,
-              editingOption?.id ?? `cat_${Date.now()}`,
-              options,
-              editingOption,
-              orderable,
-            ),
-          );
-          setEditingOption(null);
-        }}
-      />
-
-      {deleteTarget ? (
-        <ConfirmActionDialog
-          open
-          onOpenChange={(open) => {
-            if (!open) setDeleteTarget(null);
-          }}
-          title={`Delete ${deleteTarget.label}?`}
-          description="This removes the catalog option from pickers. Existing records keep their stored value."
-          confirmLabel="Delete"
-          onConfirm={() => {
-            onDelete(deleteTarget.id);
-            setDeleteTarget(null);
-          }}
-        />
-      ) : null}
-    </SectionCard>
+      orderable={orderable}
+      onCreate={onSave}
+      onUpdate={(_id, option) => onSave(option)}
+      onDelete={onDelete}
+      onReorder={orderable ? onReorder : undefined}
+      className={className}
+      getRowLabel={(row) => row.label}
+    />
   );
 }
 

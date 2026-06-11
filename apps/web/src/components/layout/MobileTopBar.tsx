@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 
 import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
 import { useCommandPalette } from '@/components/command/CommandPalette';
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
@@ -21,8 +20,7 @@ type MobileTopBarProps = {
 export function MobileTopBar({ onToggleSidebar, showChatLink = true }: MobileTopBarProps) {
   const { setOpen } = useCommandPalette();
   const profile = useOrgProfile();
-  const { activeOrganization } = useDemoData();
-  const brandTitle = profile.industryKey === 'funeral' ? activeOrganization.name : 'Oktavius ERP';
+  const brandTitle = profile.industryKey === 'funeral' ? profile.name : 'Oktavius ERP';
 
   return (
     <div

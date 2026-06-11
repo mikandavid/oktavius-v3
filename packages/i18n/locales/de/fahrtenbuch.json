@@ -1,0 +1,197 @@
+{
+  "title": "Fahrtenbuch",
+  "subtitle": "Import, Klassifizierung und manuelle Prüfung",
+  "tabs": {
+    "upload": "Upload",
+    "review": "Prüfung",
+    "files": "Dateien",
+    "settings": "Einstellungen"
+  },
+  "summary": {
+    "manualRequired": "Offene Prüfung",
+    "km": "{{km}} km"
+  },
+  "drive": {
+    "kmValue": "{{km}} km",
+    "openRoute": "Fahrt anzeigen",
+    "distanceComparison": "Gefahren: {{driven}} km · Google-Route: {{optimal}} km",
+    "distanceWarning": "Warnung: {{percent}} % über der Google-Route (Grenze: {{threshold}} %)",
+    "routeKnownPointsHint": "Die Karte zeigt die Google-Route zwischen Start und Ziel; die tatsächlich gefahrene Strecke ist nicht bekannt."
+  },
+  "tags": {
+    "vacation": "Urlaub"
+  },
+  "exports": {
+    "excel": "Excel",
+    "pdf": "PDF",
+    "selectDriver": "Bitte zuerst einen Fahrer auswählen"
+  },
+  "classification": {
+    "business": "Geschäftlich",
+    "private": "Privat",
+    "unclear": "Unklar"
+  },
+  "referenceType": {
+    "hq": "Standort",
+    "business": "Projekt/Kunde",
+    "home": "Privatadresse",
+    "detected_work": "Erkannte Arbeitsadresse"
+  },
+  "upload": {
+    "dropTitle": "CSV- oder Excel-Dateien ablegen",
+    "dropHint": "Mehrere monatliche Exporte können gemeinsam verarbeitet werden.",
+    "start": "Verarbeiten",
+    "processing": "Verarbeitung läuft",
+    "uploading": "Wird hochgeladen …",
+    "progress": "{{progress}} %",
+    "sizeKb": "{{size}} KB",
+    "done": "Fahrtenbuch wurde verarbeitet",
+    "failed": "Verarbeitung fehlgeschlagen",
+    "processingStarted": "Upload abgeschlossen — Verarbeitung läuft im Hintergrund.",
+    "processingInBackground": "{{formattedCount}} Verarbeitung läuft im Hintergrund …",
+    "processingInBackground_plural": "{{formattedCount}} Verarbeitungen laufen im Hintergrund …"
+  },
+  "filters": {
+    "driver": "Fahrer",
+    "allDrivers": "Alle Fahrer",
+    "allClassifications": "Alle Klassifizierungen",
+    "dateFrom": "Datum von",
+    "dateTo": "Datum bis",
+    "search": "Adresse oder Projekt suchen",
+    "onlyUnclear": "Nur Unklar"
+  },
+  "review": {
+    "driver": "Fahrer",
+    "time": "Zeitraum",
+    "route": "Strecke",
+    "auto": "Automatik",
+    "final": "Final",
+    "manual": "Manuell",
+    "classification": "Klassifizierung",
+    "commentPlaceholder": "Kommentar",
+    "saveManual": "Manuelle Entscheidung speichern",
+    "saveChanges": "Änderungen speichern",
+    "saved": "Manuelle Entscheidung gespeichert",
+    "empty": "Keine Fahrten gefunden",
+    "page": "Seite {{page}} von {{total}}",
+    "dialogDescription": "Bitte überprüfen Sie unklare Fahrten und ordnen Sie sie zu.",
+    "titleForFile": "Prüfung – {{file}}"
+  },
+  "openReview": {
+    "label": "Offene Prüfung",
+    "button": "{{formattedCount}} Fahrten prüfen",
+    "button_plural": "{{formattedCount}} Fahrten prüfen",
+    "allClear": "Alle Fahrten zugeordnet",
+    "dialogTitle": "Offene Prüfung"
+  },
+  "calendar": {
+    "prevMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "today": "Heute",
+    "dayTooltip": "{{count}} Fahrten · {{km}} km · {{business}} Geschäftlich · {{private}} Privat · {{unclear}} Unklar",
+    "needsReviewTooltip": "{{count}} zu prüfen",
+    "legendIntensity": "Fahrten",
+    "legendNeedsReview": "Zu prüfen",
+    "weekday": {
+      "mo": "Mo",
+      "tu": "Di",
+      "we": "Mi",
+      "th": "Do",
+      "fr": "Fr",
+      "sa": "Sa",
+      "su": "So"
+    }
+  },
+  "day": {
+    "prev": "Vorheriger Tag",
+    "next": "Nächster Tag",
+    "allDrivers": "Alle Fahrer",
+    "summary": "{{count}} Fahrten · {{business}} Geschäftlich · {{private}} Privat · {{unclear}} Unklar"
+  },
+  "files": {
+    "meta": "{{driver}} · {{date}}",
+    "driveCount": "{{count}} Fahrten",
+    "download": "Herunterladen",
+    "exportMissing": "Export fehlt",
+    "openDetails": "Fahrten anzeigen",
+    "openDetailsFor": "Fahrten aus {{file}} anzeigen",
+    "detailDescription": "{{count}} Fahrten · {{driver}} · {{business}} Geschäftlich · {{private}} Privat · {{unclear}} Unklar",
+    "loading": "Dateien werden geladen",
+    "loadFailed": "Dateien konnten nicht geladen werden",
+    "empty": "Keine gespeicherten Fahrtenbuch-Dateien gefunden",
+    "deleted": "Datei gelöscht",
+    "deleteTitle": "Datei wirklich löschen?",
+    "deleteDescription": "Die Fahrten in \"{{file}}\" werden ebenfalls entfernt."
+  },
+  "settings": {
+    "rules": "Regeln",
+    "references": "Referenzadressen",
+    "suggestions": "Vorschläge",
+    "strictRadius": "Strikter Radius (m)",
+    "looseRadius": "Lockerer Radius (m)",
+    "cutoffStart": "Privat-Grenze von",
+    "cutoffEnd": "Privat-Grenze bis",
+    "workdayStart": "Arbeitstag von",
+    "workdayEnd": "Arbeitstag bis",
+    "consecutiveDays": "Schwellwert Folgetage",
+    "geocoderProvider": "Geocoder Provider",
+    "holidayRegion": "Feiertagskalender",
+    "outsideHoursHandling": "Bekannte Arbeitsadresse außerhalb der Zeit",
+    "insideWorkdayUnknownHandling": "Unbekannt im Arbeitszeitfenster",
+    "geocoderApiKey": "Geocoder API-Key",
+    "weekendOverride": "Wochenende und Feiertage automatisch Privat",
+    "learnBusinessAddresses": "Manuell geschäftliche Adressen lernen",
+    "holidayOverride": "Urlaub automatisch Privat",
+    "saved": "Einstellungen gespeichert",
+    "referenceName": "Name",
+    "referenceDriver": "Fahrer",
+    "referenceAddress": "Adresse",
+    "addReference": "Adresse hinzufügen",
+    "referenceSaved": "Referenzadresse gespeichert",
+    "noSuggestions": "Keine Vorschläge vorhanden",
+    "suggestionMeta": "{{driver}} · {{count}} Fahrten",
+    "promote": "Übernehmen",
+    "reprocessNote": "Einstellungsänderungen gelten nur für neue Uploads. Bestehende Fahrten können separat neu klassifiziert werden.",
+    "reprocessAll": "Alle Fahrten neu klassifizieren",
+    "reprocessRunning": "Wird neu verarbeitet …",
+    "reprocessConfirmTitle": "Alle Fahrten neu klassifizieren?",
+    "reprocessConfirmDescription": "Diese Aktion läuft die automatische Klassifizierung über alle bestehenden Fahrten mit den aktuellen Einstellungen erneut aus. Manuell überschriebene Entscheidungen bleiben erhalten. Der Vorgang kann je nach Datenmenge einige Minuten dauern.",
+    "reprocessConfirmAction": "Neu klassifizieren",
+    "reprocessDone": "{{count}} Fahrten neu klassifiziert ({{preserved}} manuelle Entscheidungen behalten).",
+    "hints": {
+      "insideWorkdayUnknownHandling": "Wie eine Fahrt innerhalb des Arbeitszeitfensters behandelt wird, wenn keine sichere bekannte Adresse gefunden wird."
+    }
+  },
+  "driverMappings": {
+    "title": "Fahrer-Zuordnung",
+    "empty": "Keine Fahrer gefunden",
+    "saved": "Zuordnung gespeichert",
+    "unmapped": "Nicht zugeordnet",
+    "selectStaff": "Mitarbeiter auswählen",
+    "createStaff": "Mitarbeiter anlegen",
+    "staffCreated": "Mitarbeiter angelegt und verknüpft",
+    "ignore": "Ignorieren",
+    "status": {
+      "auto_matched": "Automatisch",
+      "manual": "Manuell",
+      "unmatched": "Offen",
+      "ignored": "Ignoriert"
+    }
+  },
+  "suggestions": {
+    "title_plural": "Neue Adressen entdeckt",
+    "ignore": "Ignorieren",
+    "addAsProject": "Als Projekt anlegen",
+    "title": "Projekttitel",
+    "projectNumber": "Projektnummer",
+    "description": "Beschreibung",
+    "createProject": "Projekt anlegen",
+    "projectCreated": "Projekt angelegt",
+    "dismissed": "Vorschlag verworfen",
+    "existingProject": "Bestehendes Projekt: {{project}}",
+    "alreadyExistsDismissed": "Bestehendes Projekt gefunden; Vorschlag erledigt"
+  },
+  "monthlyDrives": {
+    "title": "Fahrten im Monat"
+  }
+}

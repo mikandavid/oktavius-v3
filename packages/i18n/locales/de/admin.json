@@ -1,0 +1,13 @@
+{
+  "role": "Rolle",
+  "roleOwner": "Inhaber",
+  "roleOwnerDesc": "Volle Kontrolle über die Organisation",
+  "roleAdmin": "Administrator",
+  "roleAdminDesc": "Benutzer und Einstellungen verwalten",
+  "roleMember": "Mitglied",
+  "roleMemberDesc": "Standardzugriff",
+  "roleViewer": "Betrachter",
+  "roleViewerDesc": "Nur-Lesen-Zugriff",
+  "superAdmin": "Superadministrator",
+  "customRoles": "Benutzerdefinierte Rollen"
+}

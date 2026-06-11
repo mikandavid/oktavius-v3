@@ -36,7 +36,20 @@ vi.mock('@/components/reports/ReportBuilderPanel', () => ({
   REVENUE_SERIES: [],
   STACKED_PIPELINE: [],
   TOP_CLIENTS: [],
+  // eslint-disable-next-line oktavius/no-bare-jsx-strings
   ReportBuilderPanel: () => <section>Report builder</section>,
+}));
+
+vi.mock('@/app/demo-data', () => ({
+  useDemoData: () => ({ activeOrgId: 'org_1' }),
+  useOptionalDemoData: () => ({ activeOrgId: 'org_1' }),
+}));
+
+vi.mock('@/lib/locations/ActiveLocationContext', () => ({
+  useActiveLocation: () => ({
+    activeLocationId: 'site_1',
+    viewAllLocations: false,
+  }),
 }));
 
 function listResponse<T>(data: T[]): ListResponse<T> {

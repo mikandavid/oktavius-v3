@@ -70,6 +70,7 @@ Always `<EntityForm>`. Surfaces: `page` (submit `default`) vs `dialog` (submit `
 - Sections for 4+ fields; `colSpan: 2` for wide fields
 - Types: `combobox`, `country`, `currencySelect`, `vocabulary`, `radio`, `relation`, `phone`, `address`, …
 - Errors: `errors` prop or field `error`; invalid ring via `FormField`
+- Server validation contract: `{ fieldErrors: { 'path.to.field': 'message' }, formError?: 'top-level' }`; wrap submit handlers with `withFieldErrors(...)` when catching backend errors.
 - Keystroke sanitization on number/currency/phone/email/url/postal — see registry `NumberInput` helpers
 
 Don’t: raw inputs in page forms; `cta` on full-page submit; native date/select.

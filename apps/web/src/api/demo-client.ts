@@ -17,34 +17,10 @@ import type {
   UserRecord,
   VendorRecord,
 } from '@/app/demo-data';
+import type { ListResponse } from './contracts';
 
-export class ApiValidationError extends Error {
-  readonly fieldErrors: Record<string, string>;
-
-  constructor(message: string, fieldErrors: Record<string, string>) {
-    super(message);
-    this.name = 'ApiValidationError';
-    this.fieldErrors = fieldErrors;
-  }
-}
-
-export class ApiAuthorizationError extends Error {
-  readonly requirement: string;
-
-  constructor(message: string, requirement: string) {
-    super(message);
-    this.name = 'ApiAuthorizationError';
-    this.requirement = requirement;
-  }
-}
-
-export type ListResponse<T> = {
-  data: T[];
-  total: number;
-  totalPages: number;
-  page: number;
-  pageSize: number;
-};
+export { ApiAuthorizationError, ApiValidationError } from './contracts';
+export type { ApiCrudResourceHandlers, ApiRegistry, ListResponse } from './contracts';
 
 export type ClientsListParams = {
   page?: string;

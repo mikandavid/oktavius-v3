@@ -11,7 +11,6 @@ import {
   cn,
 } from '@oktavius/base-ui';
 
-import { useDemoData } from '@/app/demo-data';
 import { ChevronDownIcon, SettingsIcon, SignOutIcon, UserIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
@@ -30,33 +29,35 @@ type HeaderAccountMenuProps = {
 export function HeaderAccountMenu({ compact = false, className }: HeaderAccountMenuProps) {
   const navigate = useNavigate();
   const osirisRuntime = useOptionalOsirisRuntime();
-  const demoData = useDemoData();
 
-  const currentUser = osirisRuntime?.currentUser ?? demoData.currentUser;
+  const currentUser = osirisRuntime?.currentUser?.id ? osirisRuntime.currentUser : null;
   if (!currentUser) {
     return null;
   }
 
-  const activeOrgId = osirisRuntime?.activeOrgId ?? demoData.activeOrgId;
-  const organizations = osirisRuntime?.organizations ?? demoData.organizations;
-  const memberships = osirisRuntime?.memberships ?? demoData.orgMemberships;
-  const userLabel =
-    'fullName' in currentUser
-      ? (currentUser.fullName ?? currentUser.email ?? 'User')
-      : currentUser.name;
+  const activeOrgId = osirisRuntime?.activeOrgId ?? null;
+  const organizations = osirisRuntime?.organizations ?? [];
+  const memberships = osirisRuntime?.memberships ?? [];
+  const userLabel = currentUser.fullName ?? currentUser.email ?? 'User';
   const activeOrg = organizations.find((org) => org.id === activeOrgId) ?? organizations[0];
-  const activeMembership = memberships.find((membership) =>
-    'org_id' in membership
-      ? membership.org_id === activeOrg?.id
-      : membership.orgId === activeOrg?.id,
-  );
+  const activeMembership = memberships.find((membership) => membership.org_id === activeOrg?.id);
   const roleLabel = activeMembership?.role ?? null;
-  const isOsirisRuntime = Boolean(osirisRuntime);
-
-  const handleDemoSignOut = () => {
-    appToast.info('Signed out (demo)');
-    navigate('/dashboard');
-  };
+  const setActiveOrgId = osirisRuntime?.setActiveOrgId;
+  const switchOrganization = setActiveOrgId
+    ? (orgId: string) => {
+        void Promise.resolve(setActiveOrgId(orgId)).catch((error: unknown) => {
+          appToast.fromApiError(error, 'Organization could not be switched.');
+        });
+      }
+    : undefined;
+  const signOut = osirisRuntime?.signOut;
+  const handleSignOut = signOut
+    ? () => {
+        void signOut().catch((error: unknown) => {
+          appToast.fromApiError(error, 'Sign out failed.');
+        });
+      }
+    : undefined;
 
   return (
     <DropdownMenu>
@@ -116,8 +117,8 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
         </DropdownMenuItem>
         <OrganizationMenuSection
           activeOrgId={activeOrg?.id ?? activeOrgId}
-          onSelectOrg={isOsirisRuntime ? undefined : demoData.setActiveOrgId}
           organizations={organizations}
+          onSelectOrg={switchOrganization}
         />
         <LanguageMenuSection />
         <DesignMenuSection />
@@ -125,18 +126,18 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
-          disabled={isOsirisRuntime}
+          disabled={!handleSignOut}
           onSelect={(event) => {
-            if (isOsirisRuntime) {
+            if (!handleSignOut) {
               event.preventDefault();
               return;
             }
-            handleDemoSignOut();
+            handleSignOut();
           }}
           className="gap-2"
         >
           <SignOutIcon size={14} />
-          {isOsirisRuntime ? 'Sign out unavailable' : 'Sign out'}
+          Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

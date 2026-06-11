@@ -1,4 +1,4 @@
-import type { ChangeEvent, FormEvent, ReactNode } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, type DefaultValues, type Path, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,34 +10,15 @@ import type {
   ReferenceDataMode,
   VocabularyKey,
 } from '@oktavius/reference-data';
-import { buildCountryOptions } from '@oktavius/reference-data';
 import {
-  AddressField,
   type AddressValue,
   Button,
-  Checkbox,
-  Combobox,
   type ComboboxOption,
-  DatePicker,
-  type DatePickerMode,
-  EMPTY_ADDRESS,
-  FileInput,
   FormField as FormFieldControl,
-  Input,
   Label,
-  MultiSelect,
-  type MultiSelectOption,
-  NumberInput,
-  PhoneInput,
-  RadioGroupField,
   SectionCard,
   SettingsRow,
-  Switch,
-  TagsInput,
-  Textarea,
   cn,
-  sanitizeEmailInput,
-  sanitizeUrlInput,
 } from '@oktavius/base-ui';
 
 import {
@@ -45,7 +26,6 @@ import {
   useCurrencyOptions,
   usePhoneCountries,
   useVocabularyOptionsMap,
-  type VocabularyOptionsMap,
 } from '@/lib/reference-data';
 import { useUserPreferences } from '@/lib/userPreferences';
 import {
@@ -56,14 +36,13 @@ import {
   normalizeFormSubmissionFailure,
 } from '@/lib/formValidation';
 import type { PermissionRequirement } from '@/lib/permissions';
-import { permissionSubjectFor } from '@/lib/permissions';
+import { EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
 import { buildFormZodSchema } from '@/lib/buildFormZodSchema';
-import { useDemoData } from '@/app/demo-data';
 import { FIELD_GROUP_LABEL_CLASS } from '@/components/common/pageChrome';
-import { GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
-import { buildGoogleMapsSearchUrlFromAddress } from '@/components/maps/googleMapsEmbed';
+import { usePreloadNamespaces } from '@/core/i18n';
+import { fieldRegistry, type FieldRenderContext } from '@/lib/fields';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { JsonField } from './JsonField';
 import { useFormDirtyGuard } from './useFormDirtyGuard';
 import { useFormLeaveBlocker } from './useFormLeaveBlocker';
 
@@ -96,7 +75,8 @@ export type FieldType =
   | 'file'
   | 'address'
   | 'vocabulary'
-  | 'json';
+  | 'json'
+  | 'repeating';
 
 export type { FieldValidationRule };
 
@@ -105,6 +85,7 @@ export type FormFieldValue =
   | boolean
   | number
   | string[]
+  | Array<Record<string, FormFieldValue>>
   | File
   | AddressValue
   | null
@@ -113,7 +94,7 @@ export type FormFieldValue =
 export type FormField = {
   name: string;
   label: string;
-  type: FieldType;
+  type: FieldType | (string & {});
   autoComplete?: string;
   required?: boolean;
   /** string[] for select/combobox with plain labels; ComboboxOption[] for description/disabled support */
@@ -160,8 +141,26 @@ export type FormField = {
   vocabulary?: VocabularyKey;
   /** `vocabulary`: render as radio instead of combobox */
   vocabularyDisplay?: 'combobox' | 'radio';
+  /** `repeating`: schema for each inline row. */
+  itemFields?: FormField[];
+  /** `repeating`: minimum number of rows. */
+  minItems?: number;
+  /** `repeating`: maximum number of rows. */
+  maxItems?: number;
+  /** `repeating`: add-row button label. */
+  addLabel?: string;
+  /** `repeating`: show row reorder controls. */
+  reorderable?: boolean;
+  /** `repeating`: optional footer totals derived from current rows. */
+  totals?: (rows: Array<Record<string, FormFieldValue>>) => { label: string; value: string }[];
   /** Hide the field when this returns false. */
   visibleWhen?: (values: Record<string, FormFieldValue>) => boolean;
+  /** Hide the field when this returns false. Alias used by field registry consumers. */
+  visibleIf?: (values: Record<string, unknown>) => boolean;
+  /** Field names that influence visibility or custom rendering. */
+  dependsOn?: string[];
+  /** Cross-field validation hook. Return an error message for this field or null when valid. */
+  crossValidate?: (values: Record<string, unknown>) => string | null;
   /** Hide the field unless the active subject satisfies this requirement. */
   permission?: PermissionRequirement;
   /** Client-side validation rules applied on submit. */
@@ -209,7 +208,7 @@ export type EntityFormAutoSaveOptions<T extends Record<string, FormFieldValue>> 
   onSave?: (values: T) => FormSubmissionResult | Promise<FormSubmissionResult>;
 };
 
-function isAddressValue(value: FormFieldValue): value is AddressValue {
+export function isAddressValue(value: FormFieldValue): value is AddressValue {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -248,7 +247,7 @@ function serializeAutosaveValues(values: Record<string, FormFieldValue>) {
 
 // ─── Field Renderer ───────────────────────────────────────────────────────────
 
-function parseNumericBound(value?: string): number | undefined {
+export function parseNumericBound(value?: string): number | undefined {
   if (value == null || value === '') return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : undefined;
@@ -259,346 +258,29 @@ function FieldInput({
   value,
   onChange,
   inputId,
-  locale,
-  defaultCountryOptions,
-  defaultPhoneCountries,
-  defaultCurrencyOptions,
-  vocabularyOptions,
+  values,
+  context,
 }: {
   field: FormField;
   value: FormFieldValue;
   onChange: (value: FormFieldValue) => void;
   inputId: string;
-  locale: string;
-  defaultCountryOptions: CountryOption[];
-  defaultPhoneCountries: PhoneCountry[];
-  defaultCurrencyOptions: CurrencyOption[];
-  vocabularyOptions: VocabularyOptionsMap;
+  values: Record<string, FormFieldValue>;
+  context: FieldRenderContext;
 }) {
-  const strValue = String(value ?? '');
-  const boolValue = Boolean(value);
-  const textLikeAutoComplete = field.autoComplete ?? 'off';
-  const shouldDisableSpellcheck = field.type === 'email' || field.type === 'url';
-
-  switch (field.type) {
-    case 'textarea':
-      return (
-        <Textarea
-          id={inputId}
-          name={field.name}
-          value={strValue}
-          placeholder={field.placeholder}
-          autoComplete={textLikeAutoComplete}
-          spellCheck={shouldDisableSpellcheck ? false : undefined}
-          disabled={field.disabled}
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
-        />
-      );
-
-    case 'select':
-    case 'combobox':
-    case 'relation': {
-      const opts: ComboboxOption[] = (field.options ?? []).map((o) =>
-        typeof o === 'string' ? { value: o, label: o } : o,
-      );
-      return (
-        <Combobox
-          id={inputId}
-          options={opts}
-          value={strValue || undefined}
-          placeholder={field.placeholder ?? `Select ${field.label.toLowerCase()}`}
-          disabled={field.disabled}
-          asyncItems={field.asyncItems}
-          onCreate={field.onCreate}
-          footerAction={field.footerAction}
-          onChange={(v) => onChange(v ?? '')}
-        />
-      );
-    }
-
-    case 'multiselect': {
-      const opts: MultiSelectOption[] = (field.options ?? []).map((o) =>
-        typeof o === 'string' ? { value: o, label: o } : o,
-      );
-      const arrValue = Array.isArray(value) ? value : [];
-      return (
-        <MultiSelect
-          id={inputId}
-          options={opts}
-          value={arrValue}
-          placeholder={field.placeholder ?? `Select ${field.label.toLowerCase()}`}
-          disabled={field.disabled}
-          onChange={(v) => onChange(v)}
-        />
-      );
-    }
-
-    case 'tags': {
-      const arrValue = Array.isArray(value) ? value : [];
-      return (
-        <TagsInput
-          id={inputId}
-          value={arrValue}
-          placeholder={field.placeholder ?? 'Add tag…'}
-          disabled={field.disabled}
-          onChange={(v) => onChange(v)}
-        />
-      );
-    }
-
-    case 'radio': {
-      const opts = (field.options ?? []).map((o) =>
-        typeof o === 'string' ? { value: o, label: o } : o,
-      );
-      return (
-        <RadioGroupField
-          id={inputId}
-          options={opts}
-          value={strValue || undefined}
-          disabled={field.disabled}
-          orientation={field.radioOrientation}
-          onChange={(v) => onChange(v)}
-        />
-      );
-    }
-
-    case 'vocabulary': {
-      if (!field.vocabulary) {
-        return (
-          <Input
-            id={inputId}
-            value={strValue}
-            disabled={field.disabled}
-            placeholder={field.placeholder}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
-          />
-        );
-      }
-
-      const opts = vocabularyOptions[field.vocabulary];
-      if (field.vocabularyDisplay === 'radio') {
-        return (
-          <RadioGroupField
-            id={inputId}
-            options={opts}
-            value={strValue || undefined}
-            disabled={field.disabled}
-            orientation={field.radioOrientation}
-            onChange={(v) => onChange(v)}
-          />
-        );
-      }
-
-      return (
-        <Combobox
-          id={inputId}
-          options={opts}
-          value={strValue || undefined}
-          placeholder={field.placeholder ?? `Select ${field.label.toLowerCase()}`}
-          disabled={field.disabled}
-          onChange={(v) => onChange(v ?? '')}
-        />
-      );
-    }
-
-    case 'phone':
-      return (
-        <PhoneInput
-          id={inputId}
-          value={strValue}
-          disabled={field.disabled}
-          placeholder={field.placeholder ?? 'Local number'}
-          countries={field.phoneCountries ?? defaultPhoneCountries}
-          onChange={(v) => onChange(v)}
-        />
-      );
-
-    case 'address': {
-      const addressValue = isAddressValue(value) ? value : EMPTY_ADDRESS;
-      const mapsUrl = buildGoogleMapsSearchUrlFromAddress(addressValue);
-      return (
-        <div className="space-y-2">
-          <AddressField
-            id={inputId}
-            value={addressValue}
-            countries={field.countries ?? defaultCountryOptions}
-            disabled={field.disabled}
-            onChange={(v) => onChange(v)}
-          />
-          {mapsUrl ? (
-            <GoogleMapsPreviewButton
-              url={mapsUrl}
-              label="Preview address"
-              title={`${field.label} map preview`}
-            />
-          ) : null}
-        </div>
-      );
-    }
-
-    case 'country': {
-      const countryOptions: ComboboxOption[] =
-        field.countries ?? buildCountryOptions(locale, field.countryMode ?? 'all');
-      return (
-        <Combobox
-          id={inputId}
-          options={countryOptions}
-          value={strValue || undefined}
-          placeholder={field.placeholder ?? 'Select country…'}
-          searchPlaceholder="Search country…"
-          disabled={field.disabled}
-          onChange={(v) => onChange(v ?? '')}
-        />
-      );
-    }
-
-    case 'currencySelect': {
-      const currencyOpts = field.currencyOptions ?? defaultCurrencyOptions;
-      return (
-        <Combobox
-          id={inputId}
-          options={currencyOpts}
-          value={strValue || undefined}
-          placeholder={field.placeholder ?? 'Select currency…'}
-          searchPlaceholder="Search currency…"
-          disabled={field.disabled}
-          onChange={(v) => onChange(v ?? '')}
-        />
-      );
-    }
-
-    case 'checkbox':
-      return (
-        <Checkbox
-          id={inputId}
-          checked={boolValue}
-          disabled={field.disabled}
-          onCheckedChange={(checked) => onChange(Boolean(checked))}
-        />
-      );
-
-    case 'switch':
-      return (
-        <Switch
-          id={inputId}
-          checked={boolValue}
-          disabled={field.disabled}
-          onCheckedChange={(checked) => onChange(Boolean(checked))}
-        />
-      );
-
-    case 'date':
-    case 'time':
-    case 'datetime': {
-      const modeMap: Record<string, DatePickerMode> = {
-        date: 'date',
-        time: 'time',
-        datetime: 'datetime',
-      };
-      return (
-        <DatePicker
-          id={inputId}
-          value={strValue || undefined}
-          mode={modeMap[field.type]}
-          placeholder={field.placeholder}
-          disabled={field.disabled}
-          minuteStep={field.minuteStep}
-          onChange={(v) => onChange(v ?? '')}
-        />
-      );
-    }
-
-    case 'currency': {
-      const symbol = field.currencySymbol ?? '€';
-      return (
-        <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground">
-            {symbol}
-          </span>
-          <NumberInput
-            id={inputId}
-            value={strValue}
-            locale={locale}
-            decimals={2}
-            placeholder={field.placeholder ?? '0.00'}
-            disabled={field.disabled}
-            min={parseNumericBound(field.min)}
-            max={parseNumericBound(field.max)}
-            className="pl-7"
-            onChange={(v) => onChange(v)}
-          />
-        </div>
-      );
-    }
-
-    case 'number':
-      return (
-        <NumberInput
-          id={inputId}
-          value={strValue}
-          locale={locale}
-          decimals={0}
-          placeholder={field.placeholder}
-          disabled={field.disabled}
-          min={parseNumericBound(field.min)}
-          max={parseNumericBound(field.max)}
-          onChange={(v) => onChange(v)}
-        />
-      );
-
-    case 'file': {
-      const fileValue = value instanceof File ? value : null;
-      return (
-        <FileInput
-          id={inputId}
-          value={fileValue}
-          accept={field.accept}
-          disabled={field.disabled}
-          placeholder={field.placeholder}
-          onChange={(f: File | null) => onChange(f)}
-        />
-      );
-    }
-
-    case 'json':
-      return (
-        <JsonField
-          id={inputId}
-          value={strValue}
-          placeholder={field.placeholder}
-          disabled={field.disabled}
-          onChange={(next) => onChange(next)}
-        />
-      );
-
-    default: {
-      const inputType = field.type === 'email' || field.type === 'url' ? field.type : 'text';
-      return (
-        <Input
-          type={inputType}
-          id={inputId}
-          name={field.name}
-          value={strValue}
-          placeholder={field.placeholder}
-          autoComplete={textLikeAutoComplete}
-          spellCheck={shouldDisableSpellcheck ? false : undefined}
-          disabled={field.disabled}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            const raw = e.target.value;
-            if (field.type === 'email') {
-              onChange(sanitizeEmailInput(raw));
-              return;
-            }
-            if (field.type === 'url') {
-              onChange(sanitizeUrlInput(raw));
-              return;
-            }
-            onChange(raw);
-          }}
-        />
-      );
-    }
+  const definition = fieldRegistry.get(field.type);
+  if (!definition) {
+    return null;
   }
+
+  return definition.renderer({
+    value,
+    onChange,
+    field,
+    formValues: values,
+    inputId,
+    context,
+  });
 }
 
 // ─── EntityForm ───────────────────────────────────────────────────────────────
@@ -608,22 +290,14 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
   values,
   errors,
   set,
-  locale,
-  defaultCountryOptions,
-  defaultPhoneCountries,
-  defaultCurrencyOptions,
-  vocabularyOptions,
+  fieldContext,
   surface = 'page',
 }: {
   fields: FormField[];
   values: T;
   errors?: Partial<Record<keyof T & string, string>>;
   set: (name: string, value: FormFieldValue) => void;
-  locale: string;
-  defaultCountryOptions: CountryOption[];
-  defaultPhoneCountries: PhoneCountry[];
-  defaultCurrencyOptions: CurrencyOption[];
-  vocabularyOptions: VocabularyOptionsMap;
+  fieldContext: FieldRenderContext;
   surface?: 'page' | 'dialog';
 }) {
   const visibleFields = useMemo(() => filterVisibleFields(fields, values), [fields, values]);
@@ -666,11 +340,8 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
                         field={field}
                         value={values[field.name]}
                         inputId={inputId}
-                        locale={locale}
-                        defaultCountryOptions={defaultCountryOptions}
-                        defaultPhoneCountries={defaultPhoneCountries}
-                        defaultCurrencyOptions={defaultCurrencyOptions}
-                        vocabularyOptions={vocabularyOptions}
+                        values={values}
+                        context={fieldContext}
                         onChange={(v) => set(field.name, v)}
                       />
                     </SettingsRow>
@@ -694,11 +365,8 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
                         field={field}
                         value={values[field.name]}
                         inputId={inputId}
-                        locale={locale}
-                        defaultCountryOptions={defaultCountryOptions}
-                        defaultPhoneCountries={defaultPhoneCountries}
-                        defaultCurrencyOptions={defaultCurrencyOptions}
-                        vocabularyOptions={vocabularyOptions}
+                        values={values}
+                        context={fieldContext}
                         onChange={(v) => set(field.name, v)}
                       />
                       <Label htmlFor={inputId} className="text-sm font-medium text-foreground">
@@ -734,11 +402,8 @@ function EntityFormFields<T extends Record<string, FormFieldValue>>({
                     field={field}
                     value={values[field.name]}
                     inputId={inputId}
-                    locale={locale}
-                    defaultCountryOptions={defaultCountryOptions}
-                    defaultPhoneCountries={defaultPhoneCountries}
-                    defaultCurrencyOptions={defaultCurrencyOptions}
-                    vocabularyOptions={vocabularyOptions}
+                    values={values}
+                    context={fieldContext}
                     onChange={(v) => set(field.name, v)}
                   />
                 </FormFieldControl>
@@ -770,15 +435,16 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   skipClientValidation = false,
   autoSave = false,
 }: EntityFormProps<T>) {
+  usePreloadNamespaces(['forms']);
   const allowNavigationRef = useRef(false);
   const [submissionErrors, setSubmissionErrors] = useState<
     Partial<Record<keyof T & string, string>>
   >({});
   const [submissionMessage, setSubmissionMessage] = useState<string | undefined>();
-  const { activeMembership, currentUser } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
   const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
   );
   const permittedFields = useMemo(
     () => filterPermittedFormFields(fields, permissionSubject),
@@ -812,6 +478,22 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   const defaultPhoneCountries = usePhoneCountries();
   const defaultCurrencyOptions = useCurrencyOptions();
   const vocabularyOptions = useVocabularyOptionsMap();
+  const fieldContext = useMemo<FieldRenderContext>(
+    () => ({
+      locale,
+      defaultCountryOptions,
+      defaultPhoneCountries,
+      defaultCurrencyOptions,
+      vocabularyOptions,
+    }),
+    [
+      defaultCountryOptions,
+      defaultCurrencyOptions,
+      defaultPhoneCountries,
+      locale,
+      vocabularyOptions,
+    ],
+  );
 
   useFormDirtyGuard({ enabled: warnOnDirty, isDirty });
   useFormLeaveBlocker({
@@ -941,11 +623,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
         values={values}
         errors={mergedErrors}
         set={set}
-        locale={locale}
-        defaultCountryOptions={defaultCountryOptions}
-        defaultPhoneCountries={defaultPhoneCountries}
-        defaultCurrencyOptions={defaultCurrencyOptions}
-        vocabularyOptions={vocabularyOptions}
+        fieldContext={fieldContext}
         surface={surface}
       />
       {renderAfterFields ? renderAfterFields({ values, set, errors: mergedErrors }) : null}

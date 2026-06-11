@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { ORG_KUNZ_ID, ORG_PROFILES } from '@/lib/org-profiles/profiles';
+import { ORG_KUNZ_ID } from '@/app/demo-data/orgIds';
+import { DEMO_ORG_PROFILES } from '@/app/demo-data/orgProfiles';
 
 import { deriveAssistantResponse, derivePromptSet } from './agent-chat-data';
 
-const kunz = ORG_PROFILES[ORG_KUNZ_ID];
+const kunz = DEMO_ORG_PROFILES[ORG_KUNZ_ID];
 
 describe('agent chat page context', () => {
   it('treats removed business module paths as generic workspace context', () => {

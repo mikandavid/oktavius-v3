@@ -1,5 +1,7 @@
 import { toast as sonnerToast, type ExternalToast, type ToasterProps } from 'sonner';
 
+import { formatUserFacingApiError } from './userFacingApiError';
+
 type ToastOptions = ExternalToast;
 
 function resolveMessage(error: unknown): string {
@@ -23,7 +25,7 @@ export const appToast = {
     return sonnerToast.warning(message, options);
   },
   fromApiError(error: unknown, fallback = 'Request failed.') {
-    return sonnerToast.error(resolveMessage(error) || fallback);
+    return sonnerToast.error(formatUserFacingApiError(error, { fallback }));
   },
   promise: sonnerToast.promise.bind(sonnerToast),
 };

@@ -11,8 +11,7 @@ import {
 } from 'react';
 
 import { ApiProvider } from '@/api/ApiProvider';
-import { createConfiguredApiRegistry } from '@/api/apiRegistryConfig';
-import type { DemoApiRegistry } from '@/api/demo-client';
+import type { ApiRegistry } from '@/api/contracts';
 import { buildCaseChecklistsDemoHandlers } from '@/api/demo-handlers/case-checklists';
 import { buildCasesDemoHandlers } from '@/api/demo-handlers/cases';
 import { buildClientsDemoHandlers } from '@/api/demo-handlers/clients';
@@ -31,9 +30,13 @@ import { buildStaffDemoHandlers } from '@/api/demo-handlers/staff';
 import { buildUsersDemoHandlers } from '@/api/demo-handlers/users';
 import { buildVendorsDemoHandlers } from '@/api/demo-handlers/vendors';
 import { withPermissionedDemoApiRegistry } from '@/lib/apiPermissions';
-import { ORG_APEX_ID, ORG_DEMO_ID, ORG_KUNZ_ID, getOrgProfile } from '@/lib/org-profiles/profiles';
 import { permissionSubjectFor } from '@/lib/permissions';
-import { getWindowStorage, safeStorageSet } from '@/lib/storage/safeStorage';
+import {
+  getWindowStorage,
+  safeStorageGet,
+  safeStorageRemove,
+  safeStorageSet,
+} from '@/lib/storage/safeStorage';
 
 import {
   KUNZ_CASE_CHECKLISTS,
@@ -47,6 +50,8 @@ import {
   KUNZ_TASKS,
   KUNZ_USERS,
 } from './demo-data/kunz-seed';
+import { ORG_APEX_ID, ORG_DEMO_ID, ORG_KUNZ_ID } from './demo-data/orgIds';
+import { getDemoOrgProfile } from './demo-data/orgProfiles';
 
 export type {
   CaseChecklistItem,
@@ -168,6 +173,8 @@ type DemoDataContextValue = {
   orgMemberships: OrgMembershipRecord[];
   activeOrgId: string;
   setActiveOrgId: (orgId: string) => void;
+  activeSiteId: string | null;
+  setActiveSiteId: (siteId: string | null) => void;
   currentUser: UserRecord;
   activeMembership: OrgMembershipRecord | null;
   activeOrganization: OrganizationRecord;
@@ -237,18 +244,44 @@ function resolveActiveOrgId(orgId: string) {
   return ORG_SCOPE_ALIASES[orgId] ?? orgId;
 }
 
-function tagOrg<T extends OrgScoped>(rows: T[], orgId: string): T[] {
-  return rows.map((row) => ({ ...row, orgId: row.orgId ?? orgId }));
+function defaultSiteIdForOrg(orgId: string): string | null {
+  return getDemoOrgProfile(orgId).locations[0]?.id ?? null;
 }
 
-function filterForOrg<T extends OrgScoped>(rows: T[], orgId: string): T[] {
+function readStoredSiteId(orgId: string): string | null {
+  if (typeof window === 'undefined') return defaultSiteIdForOrg(orgId);
+  const stored = safeStorageGet(getWindowStorage('localStorage'), 'oktavius.activeLocationId');
+  const locations = getDemoOrgProfile(orgId).locations;
+  if (stored && locations.some((location) => location.id === stored)) {
+    return stored;
+  }
+  return defaultSiteIdForOrg(orgId);
+}
+
+function tagOrg<T extends OrgScoped>(rows: T[], orgId: string): T[] {
+  const locations = getDemoOrgProfile(orgId).locations;
+  return rows.map((row, index) => ({
+    ...row,
+    orgId: row.orgId ?? orgId,
+    siteId: row.siteId ?? locations[index % Math.max(locations.length, 1)]?.id ?? null,
+  }));
+}
+
+function filterForOrg<T extends OrgScoped>(rows: T[], orgId: string, siteId?: string | null): T[] {
   const scopedOrgId = resolveActiveOrgId(orgId);
-  return rows.filter((row) => {
+  const orgRows = rows.filter((row) => {
     const rowOrgId = row.orgId ?? ORG_APEX_ID;
     if (orgId === ORG_DEMO_ID) {
       return rowOrgId === ORG_APEX_ID || rowOrgId === ORG_DEMO_ID;
     }
     return rowOrgId === scopedOrgId;
+  });
+  if (!siteId) return orgRows;
+
+  return orgRows.filter((row) => {
+    const rowOrgId = row.orgId ?? scopedOrgId;
+    const rowSiteId = row.siteId ?? defaultSiteIdForOrg(rowOrgId);
+    return rowSiteId === siteId;
   });
 }
 
@@ -3599,34 +3632,49 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
     if (params.get('org') === 'oktavius-demo') return ORG_DEMO_ID;
     return ORG_APEX_ID;
   });
+  const [activeSiteId, setActiveSiteIdState] = useState<string | null>(() =>
+    readStoredSiteId(activeOrgId),
+  );
+  const setActiveSiteId = useCallback((siteId: string | null) => {
+    setActiveSiteIdState(siteId);
+    const storage = getWindowStorage('localStorage');
+    if (siteId) {
+      safeStorageSet(storage, 'oktavius.activeLocationId', siteId);
+    } else {
+      safeStorageRemove(storage, 'oktavius.activeLocationId');
+    }
+  }, []);
   const setActiveOrgId = useCallback((orgId: string) => {
     setActiveOrgIdState((current) => (current === orgId ? current : orgId));
     safeStorageSet(getWindowStorage('sessionStorage'), 'oktavius.demoActiveOrgId', orgId);
-    const profile = getOrgProfile(orgId);
-    const defaultLocationId = profile.locations[0]?.id;
+    const defaultLocationId = defaultSiteIdForOrg(orgId);
     if (defaultLocationId) {
+      setActiveSiteIdState(defaultLocationId);
       safeStorageSet(
         getWindowStorage('localStorage'),
         'oktavius.activeLocationId',
         defaultLocationId,
       );
+    } else {
+      setActiveSiteIdState(null);
+      safeStorageRemove(getWindowStorage('localStorage'), 'oktavius.activeLocationId');
     }
   }, []);
   const [clients, setClients] = useState<ClientRecord[]>([
     ...tagOrg(INITIAL_CLIENTS, ORG_APEX_ID),
-    ...KUNZ_CLIENTS,
+    ...tagOrg(KUNZ_CLIENTS, ORG_KUNZ_ID),
   ]);
   const clientsRef = useRef(clients);
   clientsRef.current = clients;
   const [products, setProducts] = useState<ProductRecord[]>([
     ...tagOrg(INITIAL_PRODUCTS, ORG_APEX_ID),
-    ...KUNZ_PRODUCTS,
+    ...tagOrg(KUNZ_PRODUCTS, ORG_KUNZ_ID),
   ]);
   const productsRef = useRef(products);
   productsRef.current = products;
   const [cases, setCases] = useState<CaseRecord[]>([
     ...tagOrg(INITIAL_CASES, ORG_APEX_ID),
-    ...KUNZ_CASES,
+    ...tagOrg(KUNZ_CASES, ORG_KUNZ_ID),
   ]);
   const casesRef = useRef(cases);
   casesRef.current = cases;
@@ -3644,7 +3692,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   invoicesRef.current = invoices;
   const [orders, setOrders] = useState<OrderRecord[]>([
     ...tagOrg(INITIAL_ORDERS, ORG_APEX_ID),
-    ...KUNZ_ORDERS,
+    ...tagOrg(KUNZ_ORDERS, ORG_KUNZ_ID),
   ]);
   const ordersRef = useRef(orders);
   ordersRef.current = orders;
@@ -3660,13 +3708,13 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   incidentsRef.current = incidents;
   const [projects, setProjects] = useState<ProjectRecord[]>([
     ...tagOrg(INITIAL_PROJECTS, ORG_APEX_ID),
-    ...KUNZ_PROJECTS,
+    ...tagOrg(KUNZ_PROJECTS, ORG_KUNZ_ID),
   ]);
   const projectsRef = useRef(projects);
   projectsRef.current = projects;
   const [contacts, setContacts] = useState<ContactRecord[]>([
     ...tagOrg(INITIAL_CONTACTS, ORG_APEX_ID),
-    ...KUNZ_CONTACTS,
+    ...tagOrg(KUNZ_CONTACTS, ORG_KUNZ_ID),
   ]);
   const contactsRef = useRef(contacts);
   contactsRef.current = contacts;
@@ -3684,7 +3732,10 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
   );
   const purchaseOrdersRef = useRef(purchaseOrders);
   purchaseOrdersRef.current = purchaseOrders;
-  const allTasks = useMemo(() => [...tagOrg(INITIAL_TASKS, ORG_APEX_ID), ...KUNZ_TASKS], []);
+  const allTasks = useMemo(
+    () => [...tagOrg(INITIAL_TASKS, ORG_APEX_ID), ...tagOrg(KUNZ_TASKS, ORG_KUNZ_ID)],
+    [],
+  );
 
   const value = useMemo<DemoDataContextValue>(() => {
     const removeByIds = <T extends { id: string }>(
@@ -3721,7 +3772,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    const orgProfile = getOrgProfile(activeOrgId);
+    const orgProfile = getDemoOrgProfile(activeOrgId);
     const activeOrganization =
       organizations.find((org) => org.id === activeOrgId) ?? organizations[0]!;
     const currentUser = users.find((user) => user.id === orgProfile.demoUserId) ?? users[0]!;
@@ -3730,20 +3781,20 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         (membership) => membership.orgId === activeOrgId && membership.userId === currentUser.id,
       ) ?? null;
 
-    const orgClients = filterForOrg(clients, activeOrgId);
-    const orgProducts = filterForOrg(products, activeOrgId);
-    const orgCases = filterForOrg(cases, activeOrgId);
-    const orgOrders = filterForOrg(orders, activeOrgId);
-    const orgProjects = filterForOrg(projects, activeOrgId);
-    const orgInvoices = filterForOrg(invoices, activeOrgId);
-    const orgContracts = filterForOrg(contracts, activeOrgId);
-    const orgIncidents = filterForOrg(incidents, activeOrgId);
-    const orgTasks = filterForOrg(allTasks, activeOrgId);
-    const orgContacts = filterForOrg(contacts, activeOrgId);
-    const orgVendors = filterForOrg(vendors, activeOrgId);
-    const orgLeads = filterForOrg(leads, activeOrgId);
-    const orgStaff = filterForOrg(staff, activeOrgId);
-    const orgPurchaseOrders = filterForOrg(purchaseOrders, activeOrgId);
+    const orgClients = filterForOrg(clients, activeOrgId, activeSiteId);
+    const orgProducts = filterForOrg(products, activeOrgId, activeSiteId);
+    const orgCases = filterForOrg(cases, activeOrgId, activeSiteId);
+    const orgOrders = filterForOrg(orders, activeOrgId, activeSiteId);
+    const orgProjects = filterForOrg(projects, activeOrgId, activeSiteId);
+    const orgInvoices = filterForOrg(invoices, activeOrgId, activeSiteId);
+    const orgContracts = filterForOrg(contracts, activeOrgId, activeSiteId);
+    const orgIncidents = filterForOrg(incidents, activeOrgId, activeSiteId);
+    const orgTasks = filterForOrg(allTasks, activeOrgId, activeSiteId);
+    const orgContacts = filterForOrg(contacts, activeOrgId, activeSiteId);
+    const orgVendors = filterForOrg(vendors, activeOrgId, activeSiteId);
+    const orgLeads = filterForOrg(leads, activeOrgId, activeSiteId);
+    const orgStaff = filterForOrg(staff, activeOrgId, activeSiteId);
+    const orgPurchaseOrders = filterForOrg(purchaseOrders, activeOrgId, activeSiteId);
     const orgCaseIds = new Set(orgCases.map((entry) => entry.id));
     const orgParties = parties.filter((party) => !party.caseId || orgCaseIds.has(party.caseId));
     const orgCaseChecklists = caseChecklists.filter((item) => orgCaseIds.has(item.caseId));
@@ -3773,6 +3824,8 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       orgMemberships,
       activeOrgId,
       setActiveOrgId,
+      activeSiteId,
+      setActiveSiteId,
       currentUser,
       activeMembership,
       activeOrganization,
@@ -3794,6 +3847,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         const next: ClientRecord = {
           id: `cli_${Date.now()}`,
           orgId: activeOrgId,
+          siteId: activeSiteId ?? defaultSiteIdForOrg(activeOrgId),
           createdAt: new Date().toISOString().slice(0, 10),
           ...input,
         };
@@ -3827,7 +3881,12 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       },
       products: orgProducts,
       createProduct: (input) => {
-        const next: ProductRecord = { id: `prd_${Date.now()}`, orgId: activeOrgId, ...input };
+        const next: ProductRecord = {
+          id: `prd_${Date.now()}`,
+          orgId: activeOrgId,
+          siteId: activeSiteId ?? defaultSiteIdForOrg(activeOrgId),
+          ...input,
+        };
         setProducts((current) => [next, ...current]);
         return next;
       },
@@ -3873,6 +3932,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
         const next: CaseRecord = {
           id: `case_${Date.now()}`,
           orgId: activeOrgId,
+          siteId: activeSiteId ?? defaultSiteIdForOrg(activeOrgId),
           caseNumber,
           openedAt: new Date().toISOString().slice(0, 10),
           slaStatus: 'ok',
@@ -3972,7 +4032,9 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
     organizations,
     orgMemberships,
     activeOrgId,
+    activeSiteId,
     setActiveOrgId,
+    setActiveSiteId,
     clients,
     products,
     cases,
@@ -3991,10 +4053,11 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
     purchaseOrders,
   ]);
 
-  const demoRegistry = useMemo<DemoApiRegistry>(() => {
-    const getScopedRows = <T extends OrgScoped>(rows: T[]) => filterForOrg(rows, activeOrgId);
+  const demoRegistry = useMemo<ApiRegistry>(() => {
+    const getScopedRows = <T extends OrgScoped>(rows: T[]) =>
+      filterForOrg(rows, activeOrgId, activeSiteId);
 
-    const apiOrgProfile = getOrgProfile(activeOrgId);
+    const apiOrgProfile = getDemoOrgProfile(activeOrgId);
     const apiCurrentUser =
       usersRef.current.find((user) => user.id === apiOrgProfile.demoUserId) ?? usersRef.current[0]!;
     const apiActiveMembership =
@@ -4006,7 +4069,7 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       {
         cases: buildCasesDemoHandlers({
           activeOrgId,
-          industryKey: getOrgProfile(activeOrgId).industryKey,
+          industryKey: getDemoOrgProfile(activeOrgId).industryKey,
           getCases: () => getScopedRows(casesRef.current),
           getClients: () => getScopedRows(clientsRef.current),
           setCases,
@@ -4091,11 +4154,8 @@ export function DemoDataProvider({ children }: { children: ReactNode }) {
       permissionSubjectFor(apiCurrentUser, apiActiveMembership),
     );
 
-    return createConfiguredApiRegistry({
-      demoRegistry: permissionedDemoRegistry,
-      env: import.meta.env,
-    });
-  }, [activeOrgId, orgMemberships]);
+    return permissionedDemoRegistry as unknown as ApiRegistry;
+  }, [activeOrgId, activeSiteId, orgMemberships]);
 
   return (
     <DemoDataContext.Provider value={value}>
@@ -4110,4 +4170,8 @@ export function useDemoData() {
     throw new Error('useDemoData must be used inside DemoDataProvider');
   }
   return context;
+}
+
+export function useOptionalDemoData() {
+  return useContext(DemoDataContext);
 }

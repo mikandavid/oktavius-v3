@@ -1,0 +1,8 @@
+{
+  "notifications": {
+    "agentActivationCompleted": {
+      "title": "Geplante Agenten-Aktivierungen",
+      "description": "Erhalten Sie eine Zusammenfassung, wenn eine geplante Agenten-Aufgabe abgeschlossen ist."
+    }
+  }
+}

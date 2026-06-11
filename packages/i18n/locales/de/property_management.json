@@ -1,0 +1,84 @@
+{
+  "common": {
+    "title": "Hausverwaltung",
+    "loading": "Lädt...",
+    "empty": "Keine Daten verfügbar",
+    "create": "Erstellen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "actions": "Aktionen"
+  },
+  "portfolio": {
+    "title": "Bestand",
+    "description": "Gebäude und Einheiten verwalten",
+    "buildingCode": "Gebäudecode",
+    "buildingName": "Gebäudename",
+    "unitNumber": "Einheit",
+    "floor": "Stockwerk",
+    "usageType": "Nutzungsart",
+    "createBuilding": "Gebäude anlegen",
+    "createUnit": "Einheit anlegen",
+    "buildings": "Gebäude",
+    "units": "Einheiten"
+  },
+  "parties": {
+    "title": "Parteien",
+    "description": "Mieter, Eigentümer und Verträge verwalten",
+    "tenants": "Mieter",
+    "owners": "Eigentümer",
+    "contracts": "Verträge",
+    "contractNumber": "Vertragsnummer",
+    "portalContexts": "Portal-Kontexte"
+  },
+  "vendors": {
+    "title": "Zulieferer",
+    "description": "Standard-Zulieferer je Gebäude und Gewerk",
+    "tradeType": "Gewerk",
+    "vendorName": "Zulieferer",
+    "createVendor": "Zulieferer anlegen",
+    "defaults": "Gebäude-Standards"
+  },
+  "maintenance": {
+    "title": "Wartung",
+    "description": "Anlagen, Intervalle und Wartungsaufgaben",
+    "assets": "Anlagen",
+    "tasks": "Aufgaben",
+    "buildingId": "Gebäude-ID",
+    "dueOn": "Fällig am",
+    "status": "Status",
+    "generateTask": "Aufgabe erzeugen",
+    "markCompleted": "Als erledigt markieren"
+  },
+  "cases": {
+    "title": "Meldungen",
+    "description": "Schadensmeldungen und Anfragen",
+    "reportCase": "Meldung erfassen",
+    "myCases": "Meine Meldungen",
+    "allCases": "Alle Meldungen",
+    "status": "Status",
+    "priority": "Priorität",
+    "type": "Typ",
+    "typeDamage": "Schaden",
+    "typeInquiry": "Anfrage",
+    "statusTriaged": "Triage",
+    "statusAssigned": "Zugewiesen",
+    "statusInProgress": "In Bearbeitung",
+    "statusResolved": "Gelöst",
+    "statusClosed": "Geschlossen",
+    "reopen": "Wieder öffnen",
+    "transition": "Status ändern",
+    "scope": "Kontext",
+    "createSuccess": "Meldung erstellt",
+    "reopenSuccess": "Meldung wieder geöffnet",
+    "transitionSuccess": "Status aktualisiert"
+  },
+  "portal": {
+    "title": "Portal",
+    "description": "Portal für Mieter und Eigentümer",
+    "selectContext": "Kontext auswählen",
+    "documents": "Dokumente",
+    "download": "Herunterladen",
+    "reportDamage": "Schaden melden",
+    "inquiry": "Allgemeine Anfrage"
+  }
+}

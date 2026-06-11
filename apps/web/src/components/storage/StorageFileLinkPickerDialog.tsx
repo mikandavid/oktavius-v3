@@ -15,12 +15,16 @@ import {
 
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { formatBytes } from '@/lib/formatBytes';
-import {
-  DEMO_GLOBAL_STORAGE,
-  searchDemoGlobalStorage,
-  type GlobalStorageNode,
-} from '@/lib/storage/demoGlobalStorage';
 import { appToast } from '@/lib/toast';
+
+export type StorageLinkNode = {
+  id: string;
+  name: string;
+  fileSizeBytes: number;
+  mimeType?: string;
+  uploadStatus: 'ready' | 'processing' | 'failed';
+  updatedAt: string;
+};
 
 export type StorageFileLinkPickerDialogProps = {
   open: boolean;
@@ -28,8 +32,15 @@ export type StorageFileLinkPickerDialogProps = {
   entityType: string;
   entityId: string;
   linkedNodeIds: string[];
+  nodes?: StorageLinkNode[];
   onLinked?: (nodeIds: string[]) => void | Promise<void>;
 };
+
+function searchStorageNodes(nodes: StorageLinkNode[], query: string): StorageLinkNode[] {
+  const normalized = query.trim().toLowerCase();
+  if (normalized.length < 2) return nodes;
+  return nodes.filter((node) => node.name.toLowerCase().includes(normalized));
+}
 
 export function StorageFileLinkPickerDialog({
   open,
@@ -37,6 +48,7 @@ export function StorageFileLinkPickerDialog({
   entityType,
   entityId,
   linkedNodeIds,
+  nodes: availableNodes = [],
   onLinked,
 }: StorageFileLinkPickerDialogProps) {
   void entityType;
@@ -47,10 +59,7 @@ export function StorageFileLinkPickerDialog({
   const [linking, setLinking] = useState(false);
 
   const linkedSet = useMemo(() => new Set(linkedNodeIds), [linkedNodeIds]);
-  const nodes = useMemo(
-    () => (query.trim().length >= 2 ? searchDemoGlobalStorage(query) : DEMO_GLOBAL_STORAGE),
-    [query],
-  );
+  const nodes = useMemo(() => searchStorageNodes(availableNodes, query), [availableNodes, query]);
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const newLinkCount = useMemo(
     () => selectedIds.filter((id) => !linkedSet.has(id)).length,
@@ -101,7 +110,7 @@ export function StorageFileLinkPickerDialog({
               {nodes.length === 0 ? (
                 <InlineEmptyState text="No files match your search." centered />
               ) : (
-                nodes.map((node: GlobalStorageNode) => {
+                nodes.map((node: StorageLinkNode) => {
                   const alreadyLinked = linkedSet.has(node.id);
                   const notReady = node.uploadStatus !== 'ready';
                   const disabledPick = alreadyLinked || notReady;

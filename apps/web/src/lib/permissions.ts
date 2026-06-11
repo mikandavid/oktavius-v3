@@ -9,6 +9,12 @@ import type { AppNavModule } from './appNavModules';
 export type PermissionSubject = OsirisPermissionSubject;
 export type PermissionRequirement = OsirisPermissionRequirement;
 
+export const EMPTY_PERMISSION_SUBJECT: PermissionSubject = {
+  isSuperadmin: false,
+  role: null,
+  permissions: [],
+};
+
 type PermissionBearingNavModule = AppNavModule & {
   permission?: PermissionRequirement;
 };
@@ -51,6 +57,13 @@ export function canUsePermissionRequirement(
   );
 }
 
+export function permitted(
+  requirement: PermissionRequirement | undefined,
+  subject: PermissionSubject,
+) {
+  return canUsePermissionRequirement(subject, requirement);
+}
+
 export function canAccessAppNavItem(item: PermissionBearingNavModule, subject: PermissionSubject) {
   if (item.id === 'showcase') {
     return subject.isSuperadmin;
@@ -65,7 +78,7 @@ export function canAccessAppNavItem(item: PermissionBearingNavModule, subject: P
   }
 
   if (item.permission) {
-    return canUsePermissionRequirement(subject, item.permission);
+    return permitted(item.permission, subject);
   }
 
   return true;

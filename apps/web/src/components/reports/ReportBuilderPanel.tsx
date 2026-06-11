@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import {
   Button,
-  ChartCard,
   Combobox,
   Input,
+  InlineEmptyState,
   SectionCard,
   SettingsRow,
   type ChartCardType,
@@ -43,140 +43,6 @@ const CHART_TYPE_OPTIONS: Array<{ value: ChartCardType; label: string }> = [
   { value: 'funnel', label: 'Funnel' },
   { value: 'sparkline', label: 'Sparkline' },
 ];
-
-const REVENUE_DATA = [
-  { label: 'Jul', value: 32000 },
-  { label: 'Aug', value: 38500 },
-  { label: 'Sep', value: 41200 },
-  { label: 'Oct', value: 39800 },
-  { label: 'Nov', value: 45100 },
-  { label: 'Dec', value: 51340 },
-];
-
-const ORDER_STATUS_DATA = [
-  { label: 'Draft', value: 4 },
-  { label: 'Confirmed', value: 11 },
-  { label: 'Fulfilled', value: 18 },
-  { label: 'Cancelled', value: 2 },
-];
-
-const PIPELINE_FUNNEL = [
-  { label: 'Leads', value: 120 },
-  { label: 'Qualified', value: 64 },
-  { label: 'Proposal', value: 28 },
-  { label: 'Won', value: 11 },
-];
-
-const STACKED_PIPELINE = [
-  {
-    label: 'Q1',
-    value: 0,
-    segments: [
-      { key: 'New', value: 12 },
-      { key: 'Active', value: 24 },
-      { key: 'Won', value: 8 },
-    ],
-  },
-  {
-    label: 'Q2',
-    value: 0,
-    segments: [
-      { key: 'New', value: 15 },
-      { key: 'Active', value: 21 },
-      { key: 'Won', value: 10 },
-    ],
-  },
-  {
-    label: 'Q3',
-    value: 0,
-    segments: [
-      { key: 'New', value: 18 },
-      { key: 'Active', value: 19 },
-      { key: 'Won', value: 12 },
-    ],
-  },
-];
-
-const MULTI_LINE_REVENUE = [
-  { label: 'Jul', revenue: 32000, margin: 8400 },
-  { label: 'Aug', revenue: 38500, margin: 10200 },
-  { label: 'Sep', revenue: 41200, margin: 11100 },
-  { label: 'Oct', revenue: 39800, margin: 9800 },
-  { label: 'Nov', revenue: 45100, margin: 12400 },
-  { label: 'Dec', revenue: 51340, margin: 14200 },
-];
-
-const REVENUE_SERIES = [
-  { key: 'revenue', label: 'Revenue' },
-  { key: 'margin', label: 'Margin' },
-];
-
-const COMBO_DATA = [
-  { label: 'Jul', barValue: 38, lineValue: 32000 },
-  { label: 'Aug', barValue: 44, lineValue: 38500 },
-  { label: 'Sep', barValue: 41, lineValue: 41200 },
-  { label: 'Oct', barValue: 36, lineValue: 39800 },
-  { label: 'Nov', barValue: 47, lineValue: 45100 },
-  { label: 'Dec', barValue: 52, lineValue: 51340 },
-];
-
-const TOP_CLIENTS = [
-  { label: 'Apex Tech', value: 48 },
-  { label: 'Northwind', value: 36 },
-  { label: 'Contoso', value: 29 },
-  { label: 'Fabrikam', value: 22 },
-  { label: 'Globex', value: 18 },
-];
-
-const RADAR_KPIS = [
-  { subject: 'Sales', actual: 82, target: 90 },
-  { subject: 'Support', actual: 76, target: 80 },
-  { subject: 'Delivery', actual: 88, target: 85 },
-  { subject: 'Quality', actual: 91, target: 88 },
-  { subject: 'Retention', actual: 74, target: 82 },
-];
-
-const RADAR_SERIES = [
-  { key: 'actual', label: 'Actual' },
-  { key: 'target', label: 'Target' },
-];
-
-function datasetPreview(type: ChartCardType, dataset: SavedReport['dataset']) {
-  if (type === 'gauge') {
-    return { gaugeValue: dataset === 'revenue' ? 78 : dataset === 'orders' ? 62 : 54 };
-  }
-  if (type === 'funnel') {
-    return { funnelData: PIPELINE_FUNNEL };
-  }
-  if (type === 'stacked-bar') {
-    return { stackedData: STACKED_PIPELINE };
-  }
-  if (type === 'pie') {
-    return { data: ORDER_STATUS_DATA };
-  }
-  if (type === 'multi-line') {
-    return { multiSeriesData: MULTI_LINE_REVENUE, series: REVENUE_SERIES };
-  }
-  if (type === 'combo') {
-    return {
-      comboData: COMBO_DATA,
-      barLabel: 'Orders',
-      lineLabel: 'Revenue',
-    };
-  }
-  if (type === 'horizontal-bar') {
-    return { data: TOP_CLIENTS };
-  }
-  if (type === 'radar') {
-    return { radarData: RADAR_KPIS, series: RADAR_SERIES };
-  }
-  if (type === 'sparkline') {
-    return { data: REVENUE_DATA, height: 56 };
-  }
-  return {
-    data: dataset === 'revenue' ? REVENUE_DATA : ORDER_STATUS_DATA,
-  };
-}
 
 /** Lightweight saved-report builder for dashboard/report modules. */
 export function ReportBuilderPanel({
@@ -223,10 +89,6 @@ export function ReportBuilderPanel({
   const activeReport =
     savedReports.find((report) => report.id === activeReportId) ?? savedReports[0] ?? null;
 
-  const previewProps = useMemo(
-    () => (activeReport ? datasetPreview(activeReport.chartType, activeReport.dataset) : {}),
-    [activeReport],
-  );
   const drilldown = useMemo(
     () => (activeReport ? buildReportDrilldown(activeReport) : null),
     [activeReport],
@@ -340,65 +202,61 @@ export function ReportBuilderPanel({
 
       {activeReport && drilldown ? (
         <div className="space-y-4">
-          <ChartCard
+          <SectionCard
             title={activeReport.name}
             meta={`${activeReport.dataset} · ${activeReport.chartType}`}
-            type={activeReport.chartType}
-            {...previewProps}
-            valueFormatter={(value) =>
-              activeReport.dataset === 'revenue'
-                ? `€${value.toLocaleString('de-AT')}`
-                : String(value)
-            }
-          />
+          >
+            <InlineEmptyState
+              text={drilldown.emptyStateMessage ?? 'No report data source connected.'}
+              centered
+            />
+          </SectionCard>
           <SectionCard title={drilldown.title} meta={drilldown.description}>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[28rem] text-left text-sm">
-                <thead className="text-xs font-semibold uppercase text-muted-foreground">
-                  <tr>
-                    {drilldown.columns.map((column) => (
-                      <th key={column} scope="col" className="border-b border-border/70 px-3 py-2">
-                        {column}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {drilldown.rows.map((row) => (
-                    <tr key={row.id} className="border-b border-border/40 last:border-b-0">
-                      {row.cells.map((cell, index) => (
-                        <td
-                          key={`${row.id}-${index}`}
-                          className={
-                            index === 0
-                              ? 'px-3 py-2 font-medium text-foreground'
-                              : 'px-3 py-2 text-muted-foreground'
-                          }
+            {drilldown.rows.length === 0 ? (
+              <InlineEmptyState
+                text={drilldown.emptyStateMessage ?? 'No report data source connected.'}
+                centered
+              />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[28rem] text-left text-sm">
+                  <thead className="text-xs font-semibold uppercase text-muted-foreground">
+                    <tr>
+                      {drilldown.columns.map((column) => (
+                        <th
+                          key={column}
+                          scope="col"
+                          className="border-b border-border/70 px-3 py-2"
                         >
-                          {cell}
-                        </td>
+                          {column}
+                        </th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {drilldown.rows.map((row) => (
+                      <tr key={row.id} className="border-b border-border/40 last:border-b-0">
+                        {row.cells.map((cell, index) => (
+                          <td
+                            key={`${row.id}-${index}`}
+                            className={
+                              index === 0
+                                ? 'px-3 py-2 font-medium text-foreground'
+                                : 'px-3 py-2 text-muted-foreground'
+                            }
+                          >
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </SectionCard>
         </div>
       ) : null}
     </div>
   );
 }
-
-export {
-  REVENUE_DATA,
-  ORDER_STATUS_DATA,
-  PIPELINE_FUNNEL,
-  STACKED_PIPELINE,
-  MULTI_LINE_REVENUE,
-  REVENUE_SERIES,
-  COMBO_DATA,
-  TOP_CLIENTS,
-  RADAR_KPIS,
-  RADAR_SERIES,
-};

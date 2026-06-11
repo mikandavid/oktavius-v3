@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import { Badge, SettingsTable, type SettingsTableColumn } from '@oktavius/base-ui';
 
+import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
 import type { LocationDetailItem } from '@/lib/locations/types';
 
 function formatLocationAddress(item: LocationDetailItem): string {
@@ -19,12 +20,22 @@ function compareLocations(a: LocationDetailItem, b: LocationDetailItem): number 
   return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 }
 
-/** Compact read-only site list for workspace settings — not the popover contact card layout. */
-export function WorkspaceLocationsOverview({ locations }: { locations: LocationDetailItem[] }) {
+type WorkspaceLocationsOverviewProps = {
+  locations: LocationDetailItem[];
+  onEdit?: (location: LocationDetailItem) => void;
+  onDeactivate?: (location: LocationDetailItem) => void;
+};
+
+/** Compact site list for workspace settings — not the popover contact card layout. */
+export function WorkspaceLocationsOverview({
+  locations,
+  onEdit,
+  onDeactivate,
+}: WorkspaceLocationsOverviewProps) {
   const rows = useMemo(() => [...locations].sort(compareLocations), [locations]);
 
-  const columns = useMemo<SettingsTableColumn<LocationDetailItem>[]>(
-    () => [
+  const columns = useMemo<SettingsTableColumn<LocationDetailItem>[]>(() => {
+    const baseColumns: SettingsTableColumn<LocationDetailItem>[] = [
       {
         key: 'name',
         header: 'Site',
@@ -67,9 +78,32 @@ export function WorkspaceLocationsOverview({ locations }: { locations: LocationD
           );
         },
       },
-    ],
-    [],
-  );
+    ];
+
+    if (!onEdit && !onDeactivate) return baseColumns;
+
+    return [
+      ...baseColumns,
+      {
+        key: 'actions',
+        header: '',
+        headerClassName: 'w-24',
+        cell: (location) => (
+          <div className="flex items-center justify-end gap-1">
+            {onEdit ? (
+              <IconEditButton label={`Edit ${location.name}`} onClick={() => onEdit(location)} />
+            ) : null}
+            {onDeactivate && location.isActive ? (
+              <IconDeleteButton
+                label={`Deactivate ${location.name}`}
+                onClick={() => onDeactivate(location)}
+              />
+            ) : null}
+          </div>
+        ),
+      },
+    ];
+  }, [onDeactivate, onEdit]);
 
   return (
     <SettingsTable

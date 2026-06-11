@@ -10,9 +10,7 @@ import {
   APP_MAIN_SCROLL_CLASS,
   APP_WORKSPACE_COLUMN_CLASS,
 } from '@/components/common/pageChrome';
-import { OrgDemoBootstrap } from '@/components/demo/OrgDemoBootstrap';
-import { ModuleErrorBoundary } from '@/components/errors/ModuleErrorBoundary';
-import { rememberHealthyRoute } from '@/lib/chunkLoadRecovery';
+import { rememberHealthyRoute } from '@/core/errors/chunkLoadRecovery';
 import { sonnerToasterProps } from '@/lib/toast';
 import { AppShellLayoutProvider, useAppShellLayout } from './AppShellLayoutContext';
 import { AIChatSidebar } from './AIChatSidebar';
@@ -20,17 +18,7 @@ import { Header } from './Header';
 import { MobileTopBar } from './MobileTopBar';
 import { Sidebar } from './Sidebar';
 
-function moduleIdFromPath(pathname: string) {
-  return pathname.split('/').filter(Boolean)[0] || 'app';
-}
-
-function AppLayoutMain({
-  isAgentChatRoute,
-  moduleId,
-}: {
-  isAgentChatRoute: boolean;
-  moduleId: string;
-}) {
+function AppLayoutMain({ isAgentChatRoute }: { isAgentChatRoute: boolean }) {
   const { hasSecondaryNav, hasFillHeightPage } = useAppShellLayout();
   const isFitMain = isAgentChatRoute || hasSecondaryNav || hasFillHeightPage;
 
@@ -39,11 +27,9 @@ function AppLayoutMain({
       id="app-main-content"
       className={cn(isFitMain ? APP_MAIN_FIT_CLASS : APP_MAIN_SCROLL_CLASS, APP_MAIN_GUTTER_CLASS)}
     >
-      <ModuleErrorBoundary moduleId={moduleId}>
-        <div className={cn(isFitMain && 'flex min-h-0 flex-1 flex-col')}>
-          <Outlet />
-        </div>
-      </ModuleErrorBoundary>
+      <div className={cn(isFitMain && 'flex min-h-0 flex-1 flex-col')}>
+        <Outlet />
+      </div>
     </main>
   );
 }
@@ -62,7 +48,6 @@ export function AppLayout() {
 
   return (
     <AppShellLayoutProvider>
-      <OrgDemoBootstrap />
       <div className="flex h-dvh max-h-dvh min-w-0 overflow-hidden bg-muted/40">
         <a
           href="#app-main-content"
@@ -99,10 +84,7 @@ export function AppLayout() {
             <div className="hidden md:block">
               <Header />
             </div>
-            <AppLayoutMain
-              isAgentChatRoute={isAgentChatRoute}
-              moduleId={moduleIdFromPath(pathname)}
-            />
+            <AppLayoutMain isAgentChatRoute={isAgentChatRoute} />
           </div>
 
           {showDesktopChatRail ? (

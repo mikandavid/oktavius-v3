@@ -1,5 +1,5 @@
 import { EntityPicker, type EntityPickerValue } from '@/components/pickers/EntityPicker';
-import { useDemoData } from '@/app/demo-data';
+import { useOptionalApiRegistry } from '@/api/ApiProvider';
 
 export type ProjectPickerValue = EntityPickerValue;
 
@@ -11,7 +11,12 @@ type ProjectPickerProps = {
   placeholder?: string;
 };
 
-/** Search projects from the active demo dataset. */
+function stringField(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  return typeof value === 'string' ? value : '';
+}
+
+/** Search projects from the configured API registry. */
 export function ProjectPicker({
   value,
   onChange,
@@ -19,24 +24,22 @@ export function ProjectPicker({
   id,
   placeholder = 'Search projects…',
 }: ProjectPickerProps) {
-  const { projects } = useDemoData();
+  const api = useOptionalApiRegistry();
 
   const searchEntities = async (query: string): Promise<ProjectPickerValue[]> => {
-    const normalized = query.trim().toLowerCase();
-    const items = projects.map((project) => ({
-      id: project.id,
-      label: project.name,
-      description: `${project.status} · ${project.manager}`,
-    }));
+    if (!api) return [];
 
-    if (!normalized) return items.slice(0, 8);
-    return items
-      .filter(
-        (item) =>
-          item.label.toLowerCase().includes(normalized) ||
-          item.description?.toLowerCase().includes(normalized),
-      )
-      .slice(0, 8);
+    const projects = await api.projects.list({ pageSize: '8', search: query });
+
+    return projects.data
+      .map((project) => ({
+        id: stringField(project, 'id'),
+        label: stringField(project, 'name'),
+        description: [stringField(project, 'status'), stringField(project, 'manager')]
+          .filter(Boolean)
+          .join(' · '),
+      }))
+      .filter((item) => item.id && item.label);
   };
 
   return (

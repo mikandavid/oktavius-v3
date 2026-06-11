@@ -594,12 +594,7 @@ export const GENERATED_MODULE_TEMPLATE_DESCRIPTORS: GeneratedModuleTemplateDescr
         {
           key: 'clientName',
           label: 'Client',
-          options: [
-            'Apex Technologies GmbH',
-            'Bruckner Consulting',
-            'Donau Logistics AG',
-            'Clara Sonnenschein',
-          ],
+          options: [],
         },
       ],
       savedViews: [
@@ -698,12 +693,7 @@ export const GENERATED_MODULE_TEMPLATE_DESCRIPTORS: GeneratedModuleTemplateDescr
         {
           key: 'clientName',
           label: 'Client',
-          options: [
-            'Apex Technologies GmbH',
-            'Bruckner Consulting',
-            'Donau Logistics AG',
-            'Clara Sonnenschein',
-          ],
+          options: [],
         },
       ],
       savedViews: [
@@ -794,7 +784,7 @@ export const GENERATED_MODULE_TEMPLATE_DESCRIPTORS: GeneratedModuleTemplateDescr
         {
           key: 'clientName',
           label: 'Client',
-          options: ['Apex Technologies GmbH', 'Bruckner Consulting', 'Donau Logistics AG'],
+          options: [],
         },
         { key: 'owner', label: 'Owner', options: ['Anna Hofer', 'Markus Leitner', 'Nina Weiss'] },
       ],
@@ -1006,7 +996,7 @@ export const GENERATED_MODULE_TEMPLATE_DESCRIPTORS: GeneratedModuleTemplateDescr
         {
           key: 'clientName',
           label: 'Client',
-          options: ['Apex Technologies GmbH', 'Bruckner Consulting', 'Donau Logistics AG'],
+          options: [],
         },
       ],
       savedViews: [

@@ -1,0 +1,15 @@
+{
+  "required": "This field is required",
+  "nameRequired": "Name is required",
+  "invalidEmail": "Invalid email address",
+  "invalidPhone": "Invalid phone number",
+  "invalidUrl": "Invalid URL",
+  "minLength": "Must be at least {{min}} characters",
+  "maxLength": "Must be at most {{max}} characters",
+  "minValue": "Value must be at least {{min}}",
+  "maxValue": "Value must be at most {{max}}",
+  "invalidFormat": "Invalid format",
+  "passwordMismatch": "Passwords do not match",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "fullNameRequired": "Full name is required"
+}

@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,7 +22,6 @@ import {
 } from '@oktavius/base-ui';
 
 import { SearchIcon } from '@/lib/icons';
-import { useDemoData } from '@/app/demo-data';
 import {
   APP_NAV_MODULES,
   getAppQuickActionsForProfile,
@@ -23,7 +30,15 @@ import {
   visiblePathFor,
 } from '@/lib/appNavModules';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
-import { canAccessAppNavItem, permissionSubjectFor } from '@/lib/permissions';
+import {
+  canAccessAppNavItem,
+  canUsePermissionRequirement,
+  EMPTY_PERMISSION_SUBJECT,
+} from '@/lib/permissions';
+import { createRouteSearchProvider } from '@/lib/search/providers/routes';
+import { createRuntimeSearchProvider } from '@/lib/search/SearchRuntime';
+import type { SearchProvider, SearchResult } from '@/lib/search/types';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 type CommandPaletteContextValue = {
   open: boolean;
@@ -42,12 +57,16 @@ export function useCommandPalette() {
 
 export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const profile = useOrgProfile();
-  const { activeMembership, currentUser } = useDemoData();
+  const osirisRuntime = useOptionalOsirisRuntime();
+  const searchRuntime = osirisRuntime?.searchRuntime;
   const permissionSubject = useMemo(
-    () => permissionSubjectFor(currentUser, activeMembership),
-    [activeMembership, currentUser],
+    () => osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
+    [osirisRuntime?.permissionSubject],
   );
   const navItems = useMemo(
     () =>
@@ -72,6 +91,33 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
       }),
     [permissionSubject, profile],
   );
+  const providers = useMemo<SearchProvider[]>(() => {
+    const routeItems = [
+      ...quickActions.map((action) => ({
+        id: `quick:${action.path}`,
+        label: action.label,
+        path: action.path,
+        group: 'Quick actions',
+        icon: <SearchIcon size={16} className="text-muted-foreground" />,
+      })),
+      ...navItems.map((item) => {
+        const Icon = item.icon;
+        return {
+          id: `route:${item.path}`,
+          label: item.label,
+          path: item.path,
+          group: item.group,
+          icon: <Icon size={16} className="text-muted-foreground" />,
+        };
+      }),
+    ];
+
+    const entityProviders = searchRuntime ? [createRuntimeSearchProvider(searchRuntime)] : [];
+
+    return [createRouteSearchProvider(routeItems), ...entityProviders].filter((provider) =>
+      canUsePermissionRequirement(permissionSubject, provider.permission),
+    );
+  }, [navItems, permissionSubject, quickActions, searchRuntime]);
 
   useHotkeys(
     'mod+k',
@@ -90,35 +136,75 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
     [navigate],
   );
 
+  useEffect(() => {
+    if (!open) {
+      setQuery('');
+      setResults([]);
+      setIsSearching(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setIsSearching(true);
+      void Promise.all(providers.map((provider) => provider.search(query, controller.signal)))
+        .then((providerResults) => {
+          if (controller.signal.aborted) return;
+          setResults(providerResults.flat());
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setIsSearching(false);
+        });
+    }, 200);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [open, providers, query]);
+
+  const groupedResults = useMemo(() => {
+    return results.reduce(
+      (groups, result) => {
+        if (!groups[result.groupId]) groups[result.groupId] = [];
+        groups[result.groupId].push(result);
+        return groups;
+      },
+      {} as Record<string, SearchResult[]>,
+    );
+  }, [results]);
+  const groupEntries = Object.entries(groupedResults);
+
   return (
     <CommandPaletteContext.Provider value={{ open, setOpen }}>
       {children}
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Search modules, records, actions…" />
+        <CommandInput
+          value={query}
+          onValueChange={setQuery}
+          placeholder="Search modules, records, actions…"
+        />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading="Quick actions">
-            {quickActions.map((action) => (
-              <CommandItem key={action.path} onSelect={() => run(action.path)}>
-                <SearchIcon size={16} className="text-muted-foreground" />
-                {action.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-          <CommandSeparator />
-          {(['Modules', 'Admin'] as const).map((group) => (
+          <CommandEmpty>{isSearching ? 'Searching…' : 'No results found.'}</CommandEmpty>
+          {groupEntries.map(([group, groupResults], index) => (
             <CommandGroup key={group} heading={group}>
-              {navItems
-                .filter((item) => item.group === group)
-                .map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <CommandItem key={item.path} onSelect={() => run(item.path)}>
-                      <Icon size={16} className="text-muted-foreground" />
-                      {item.label}
-                    </CommandItem>
-                  );
-                })}
+              {index > 0 ? <CommandSeparator /> : null}
+              {groupResults.map((result) => (
+                <CommandItem
+                  key={`${result.groupId}:${result.id}`}
+                  onSelect={() => run(result.href)}
+                >
+                  {result.icon ?? <SearchIcon size={16} className="text-muted-foreground" />}
+                  <span className="min-w-0">
+                    <span className="block truncate">{result.title}</span>
+                    {result.subtitle ? (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {result.subtitle}
+                      </span>
+                    ) : null}
+                  </span>
+                </CommandItem>
+              ))}
             </CommandGroup>
           ))}
         </CommandList>

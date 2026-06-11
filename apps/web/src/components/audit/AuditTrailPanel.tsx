@@ -9,7 +9,6 @@ import {
   cn,
 } from '@oktavius/base-ui';
 
-import { getDemoAuditLogs, type AuditEntry } from '@/lib/audit/demoAuditLogs';
 import {
   ArrowRightIcon,
   BotIcon,
@@ -19,6 +18,23 @@ import {
   SystemThemeIcon,
   UserIcon,
 } from '@/lib/icons';
+
+export type AuditChange = {
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+};
+
+export type AuditEntry = {
+  id: string;
+  action: 'create' | 'update' | 'delete' | 'send' | 'payment' | string;
+  entityType: string;
+  entityId: string;
+  userName?: string | null;
+  source?: 'user' | 'ai' | 'agent' | 'system' | string | null;
+  changes?: AuditChange[] | null;
+  createdAt: string;
+};
 
 type AuditTrailPanelProps = {
   entityType: string;
@@ -149,16 +165,8 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
   );
 }
 
-export function AuditTrailPanel({
-  entityType,
-  entityId,
-  entries,
-  className,
-}: AuditTrailPanelProps) {
-  const resolvedEntries = useMemo(
-    () => entries ?? getDemoAuditLogs(entityType, entityId),
-    [entries, entityType, entityId],
-  );
+export function AuditTrailPanel({ entries, className }: AuditTrailPanelProps) {
+  const resolvedEntries = useMemo(() => entries ?? [], [entries]);
 
   return (
     <CollapsibleSection title="Change history" className={className}>

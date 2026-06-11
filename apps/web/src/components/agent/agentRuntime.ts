@@ -1,4 +1,3 @@
-import { buildDemoAgentFollowUp } from './agentDemoResponses';
 import type { AgentPageContextSnapshot } from './page-routing';
 import type { AgentMessage } from './types';
 
@@ -216,6 +215,17 @@ export async function runAgentTurn({
     return transport({ content, createdAt, pageSnapshot });
   }
 
-  const messages = buildDemoAgentFollowUp(content, createdAt);
-  return appendPageContext(messages, pageSnapshot);
+  void content;
+
+  return appendPageContext(
+    [
+      {
+        id: `assistant_unconfigured_${createdAt}`,
+        role: 'assistant',
+        createdAt,
+        content: 'Agent runtime is not configured.',
+      },
+    ],
+    pageSnapshot,
+  );
 }

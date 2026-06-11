@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
-import type { DemoApiRegistry } from './demo-client';
+import type { ApiRegistry } from './contracts';
 
-export type ApiRegistry = DemoApiRegistry;
+export type { ApiRegistry } from './contracts';
 
 type ApiContextValue = {
   registry: ApiRegistry;
@@ -41,4 +41,8 @@ export function useApiRegistry() {
     throw new Error('useApiRegistry must be used inside ApiProvider');
   }
   return context.registry;
+}
+
+export function useOptionalApiRegistry() {
+  return useContext(ApiContext)?.registry ?? null;
 }

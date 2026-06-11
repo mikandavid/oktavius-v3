@@ -1,22 +1,14 @@
 import type { HttpRegistryFetcher } from '@/api/httpRegistry';
 
+import { joinOsirisApiBaseUrl } from './apiBaseUrl';
+
 export type OsirisApiClientOptions = {
   baseUrl?: string;
   getAccessToken?: () => string | null;
   getActiveOrgId?: () => string | null;
   getActiveSiteId?: () => string | null;
+  onUnauthorized?: () => void | Promise<void>;
 };
-
-function isAbsoluteHttpUrl(input: string) {
-  return /^https?:\/\//i.test(input);
-}
-
-function joinBaseUrl(baseUrl: string | undefined, input: string) {
-  if (isAbsoluteHttpUrl(input)) return input;
-  if (!baseUrl) return input;
-
-  return `${baseUrl.replace(/\/$/, '')}/${input.replace(/^\//, '')}`;
-}
 
 export function createOsirisApiFetcher(options: OsirisApiClientOptions = {}): HttpRegistryFetcher {
   return async (input, init) => {
@@ -29,10 +21,14 @@ export function createOsirisApiFetcher(options: OsirisApiClientOptions = {}): Ht
     if (orgId) headers.set('X-Org-Id', orgId);
     if (siteId) headers.set('X-Site-Id', siteId);
 
-    return fetch(joinBaseUrl(options.baseUrl, input), {
+    const response = await fetch(joinOsirisApiBaseUrl(options.baseUrl, input), {
       ...init,
       headers,
       credentials: 'include',
     });
+    if (response.status === 401) {
+      void options.onUnauthorized?.();
+    }
+    return response;
   };
 }

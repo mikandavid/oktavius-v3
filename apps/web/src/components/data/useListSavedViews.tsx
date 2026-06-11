@@ -5,11 +5,15 @@ import { appToast } from '@/lib/toast';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 
 import {
-  createLocalSavedViewsStore,
   createSavedViewFromFilters,
   type SavedViewsStore,
   type StoredSavedView,
 } from './savedViewsStorage';
+import {
+  createLocalSavedViewsRuntime,
+  createSavedViewsStoreFromRuntime,
+  type SavedViewsRuntimeAdapter,
+} from './savedViewsRuntime';
 
 export type SavedViewPreset = SavedView & {
   /** Filter values applied when this view is selected — empty string clears a slot. */
@@ -24,6 +28,7 @@ type UseListSavedViewsOptions = {
   onFilterChange: (key: string, value: string) => void;
   onReset: () => void;
   store?: SavedViewsStore;
+  runtime?: SavedViewsRuntimeAdapter;
 };
 
 /** Saved-view dropdown for CrudMainView `toolbarTrailing` — applies filter presets per view. */
@@ -35,14 +40,16 @@ export function useListSavedViews({
   onFilterChange,
   onReset,
   store,
+  runtime,
 }: UseListSavedViewsOptions) {
   const defaultId = views.find((view) => view.isDefault)?.id ?? views[0]?.id ?? '';
   const storage = getWindowStorage('localStorage');
-  const localStore = useMemo(
-    () => createLocalSavedViewsStore(storage, listKey),
-    [storage, listKey],
+  const localRuntime = useMemo(() => createLocalSavedViewsRuntime(storage), [storage]);
+  const runtimeStore = useMemo(
+    () => createSavedViewsStoreFromRuntime(runtime ?? localRuntime, { listKey }),
+    [listKey, localRuntime, runtime],
   );
-  const savedViewsStore = store ?? localStore;
+  const savedViewsStore = store ?? runtimeStore;
   const [customViews, setCustomViews] = useState<StoredSavedView[]>([]);
   const resolvedViews = useMemo(() => [...views, ...customViews], [views, customViews]);
   const [activeViewId, setActiveViewId] = useState(defaultId);

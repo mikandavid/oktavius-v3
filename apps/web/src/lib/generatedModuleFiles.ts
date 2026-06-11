@@ -459,7 +459,7 @@ function formatGeneratedListPage({ descriptor, pageName }: FormatGeneratedPageOp
     "import { useCallback } from 'react';",
     '',
     'import { useApiRegistry } from "../../../api/ApiProvider";',
-    'import type { ListResponse } from "../../../api/demo-client";',
+    'import type { ListResponse } from "../../../api/contracts";',
     'import type { BulkAction, CrudColumn, CrudRowAction } from "../../../components/data/CrudMainView";',
     'import type { FilterDef } from "../../../components/data/FilterToolbar";',
     'import { StandardCrudListPage, type StandardCrudListRequestParams } from "../../../components/data/StandardCrudListPage";',

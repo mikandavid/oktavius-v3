@@ -5,12 +5,12 @@ import { CalendarEventEditorDialog, CalendarView } from '@oktavius/base-ui';
 import { ModulePage } from '@/components/common/PageLayout';
 import { calendarPageIcon } from '@/lib/modulePageIcons';
 
-import { useInteractiveCalendarDemo } from './shared';
+import { useCalendarRuntime } from './shared';
 
 export function CalendarPage() {
   const [anchor, setAnchor] = useState(() => new Date());
   const [view, setView] = useState<'day' | 'week' | 'month' | 'agenda'>('week');
-  const calendar = useInteractiveCalendarDemo();
+  const calendar = useCalendarRuntime();
 
   return (
     <ModulePage

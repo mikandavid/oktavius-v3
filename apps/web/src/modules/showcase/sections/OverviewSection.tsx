@@ -64,7 +64,7 @@ export function OverviewSection() {
         </div>
       </ShowcaseBlock>
 
-      <ShowcaseBlock title="Command palette" meta="⌘K global search">
+      <ShowcaseBlock title="Command palette" meta="⌘K · routes, clients, orders">
         <div className="flex flex-wrap items-center gap-3">
           <Button size="sm" variant="cta" onClick={() => openCommandPalette(true)}>
             Open command palette

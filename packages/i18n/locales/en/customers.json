@@ -1,0 +1,53 @@
+{
+  "title": "Customers",
+  "newCustomer": "New customer",
+  "noCustomersFound": "No customers yet",
+  "noCustomersDescription": "Add your first customer to start building your portfolio.",
+  "searchCustomers": "Search customers…",
+  "customerNumber": "Customer No.",
+  "salutation": "Salutation",
+  "titleField": "Title",
+  "firstName": "First name",
+  "lastName": "Last name",
+  "company": "Company",
+  "isCompany": "Company",
+  "contactType": "Contact type",
+  "letterSalutation": "Letter salutation",
+  "contactInformation": "Contact details",
+  "addressDetails": "Address",
+  "administration": "Administration",
+  "sections": {
+    "identity": "Identity",
+    "contact": "Contact",
+    "admin": "Administration"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "files": "Files",
+    "propertySearch": "Property search",
+    "activity": "Activity",
+    "notes": "Notes"
+  },
+  "deleteRecordConfirm": "Delete this customer?",
+  "filterCityPlaceholder": "City (exact match)",
+  "form": {
+    "showCustomFields": "Custom fields…",
+    "hideCustomFields": "Hide custom fields"
+  },
+  "contactTypes": {
+    "interessent": "Prospect",
+    "kaeufer": "Buyer",
+    "verkaeufer": "Seller",
+    "eigentuemer": "Owner",
+    "makler": "Agent",
+    "notar": "Notary",
+    "sonstiges": "Other"
+  },
+  "linkedProperties": "Linked properties",
+  "linkedPropertiesEmpty": "No linked properties",
+  "openProperty": "Open property",
+  "role": "Role",
+  "filesPlaceholder": "Files will be linked via the Storage module — coming soon.",
+  "activityPlaceholder": "Email and calendar activity will appear here — coming soon.",
+  "propertySearchHint": "Manually linked and matching properties for this customer."
+}

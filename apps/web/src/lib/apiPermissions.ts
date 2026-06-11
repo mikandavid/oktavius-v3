@@ -1,15 +1,39 @@
-import {
-  ApiAuthorizationError,
-  type DemoApiRegistry,
-  type OrganizationsHandlers,
-  type UsersHandlers,
-} from '@/api/demo-client';
+import { ApiAuthorizationError } from '@/api/contracts';
 
 import {
   canUsePermissionRequirement,
   type PermissionRequirement,
   type PermissionSubject,
 } from './permissions';
+
+type AsyncHandler = (...args: never[]) => Promise<unknown>;
+
+type DeletableHandlers = {
+  delete: (id: string) => Promise<void>;
+};
+
+type OrganizationAdminHandlers = {
+  list: AsyncHandler;
+  get: AsyncHandler;
+  create: AsyncHandler;
+  update: AsyncHandler;
+  delete: AsyncHandler;
+};
+
+type UserAdminHandlers = OrganizationAdminHandlers;
+
+type PermissionedRegistry = {
+  cases: DeletableHandlers;
+  clients: DeletableHandlers;
+  contracts: DeletableHandlers;
+  incidents: DeletableHandlers;
+  invoices: DeletableHandlers;
+  orders: DeletableHandlers;
+  organizations: OrganizationAdminHandlers;
+  products: DeletableHandlers;
+  projects: DeletableHandlers;
+  users: UserAdminHandlers;
+};
 
 function requirementName(requirement: PermissionRequirement) {
   if (Array.isArray(requirement)) return requirement.join(',');
@@ -29,16 +53,16 @@ export function requireApiPermission(
   );
 }
 
-function withPermission<TArgs extends unknown[], TResult>(
+function withPermission<THandler extends AsyncHandler>(
   subject: PermissionSubject,
   requirement: PermissionRequirement,
   actionLabel: string,
-  handler: (...args: TArgs) => Promise<TResult>,
-) {
-  return async (...args: TArgs) => {
+  handler: THandler,
+): THandler {
+  return (async (...args: Parameters<THandler>): Promise<Awaited<ReturnType<THandler>>> => {
     requireApiPermission(subject, requirement, actionLabel);
-    return handler(...args);
-  };
+    return (await handler(...args)) as Awaited<ReturnType<THandler>>;
+  }) as THandler;
 }
 
 function guardDelete<THandlers extends { delete: (id: string) => Promise<void> }>(
@@ -52,10 +76,10 @@ function guardDelete<THandlers extends { delete: (id: string) => Promise<void> }
   };
 }
 
-function guardOrganizations(
-  handlers: OrganizationsHandlers,
+function guardOrganizations<THandlers extends OrganizationAdminHandlers>(
+  handlers: THandlers,
   subject: PermissionSubject,
-): OrganizationsHandlers {
+): THandlers {
   return {
     ...handlers,
     list: withPermission(subject, 'superadmin', 'List organizations', handlers.list),
@@ -66,7 +90,10 @@ function guardOrganizations(
   };
 }
 
-function guardUsers(handlers: UsersHandlers, subject: PermissionSubject): UsersHandlers {
+function guardUsers<THandlers extends UserAdminHandlers>(
+  handlers: THandlers,
+  subject: PermissionSubject,
+): THandlers {
   return {
     ...handlers,
     list: withPermission(subject, 'manageOrganization', 'List users', handlers.list),
@@ -77,10 +104,10 @@ function guardUsers(handlers: UsersHandlers, subject: PermissionSubject): UsersH
   };
 }
 
-export function withPermissionedDemoApiRegistry(
-  registry: DemoApiRegistry,
+export function withPermissionedDemoApiRegistry<TRegistry extends PermissionedRegistry>(
+  registry: TRegistry,
   subject: PermissionSubject,
-): DemoApiRegistry {
+): TRegistry {
   return {
     ...registry,
     cases: guardDelete(registry.cases, subject, 'Delete case'),

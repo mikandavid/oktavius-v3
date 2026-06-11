@@ -130,6 +130,7 @@ export function useListPageState<T extends Record<string, unknown>>({
     onSortChange: (nextSort: string) => {
       void setUrlState({ [sortKey]: nextSort, [pageKey]: 1 });
     },
+    requestedPage: page,
     page: safePage,
     pageSize,
     total: filtered.length,

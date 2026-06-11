@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DemoApiRegistry, ListResponse } from './demo-client';
-import { createConfiguredApiRegistry, DEFAULT_HTTP_REGISTRY_ENDPOINTS } from './apiRegistryConfig';
+import type { ListResponse } from './contracts';
+import {
+  createConfiguredApiRegistry,
+  createOsirisApiRegistry,
+  DEFAULT_HTTP_REGISTRY_ENDPOINTS,
+} from './apiRegistryConfig';
 
 type Row = { id: string; name: string };
 
@@ -12,12 +16,6 @@ function response(body: unknown) {
   });
 }
 
-const demoRegistry = {
-  clients: {
-    list: vi.fn(),
-  },
-} as unknown as DemoApiRegistry;
-
 const listResponse: ListResponse<Row> = {
   data: [{ id: 'row_1', name: 'Alpha' }],
   total: 1,
@@ -27,14 +25,15 @@ const listResponse: ListResponse<Row> = {
 };
 
 describe('API registry configuration', () => {
-  it('keeps the demo registry when no production base URL is configured', () => {
-    expect(createConfiguredApiRegistry({ demoRegistry, env: {} })).toBe(demoRegistry);
+  it('throws when no production base URL is configured', () => {
+    expect(() => createConfiguredApiRegistry({ env: {} })).toThrow(
+      'VITE_OKTAVIUS_API_BASE_URL is required for API registry.',
+    );
   });
 
   it('creates an HTTP registry when a production base URL is configured', async () => {
     const fetcher = vi.fn(async () => response(listResponse));
     const registry = createConfiguredApiRegistry({
-      demoRegistry,
       fetcher,
       env: {
         VITE_OKTAVIUS_API_BASE_URL: 'https://api.example.test/v1',
@@ -51,7 +50,6 @@ describe('API registry configuration', () => {
   it('passes configured bearer tokens to HTTP registry requests', async () => {
     const fetcher = vi.fn(async () => response(listResponse));
     const registry = createConfiguredApiRegistry({
-      demoRegistry,
       fetcher,
       env: {
         VITE_OKTAVIUS_API_BASE_URL: '/api',
@@ -67,13 +65,38 @@ describe('API registry configuration', () => {
     });
   });
 
+  it('creates an Osiris same-origin registry when no base URL is configured', async () => {
+    const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
+      response(listResponse),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const registry = createOsirisApiRegistry({
+      env: {},
+      osiris: {
+        getAccessToken: () => 'token_1',
+        getActiveOrgId: () => 'org_1',
+        getActiveSiteId: () => 'site_1',
+      },
+    });
+
+    await registry.clients.list({ page: '1' });
+
+    expect(fetch).toHaveBeenCalledWith(
+      '/clients?page=1',
+      expect.objectContaining({
+        credentials: 'include',
+        method: 'GET',
+        headers: expect.any(Headers),
+      }),
+    );
+  });
+
   it('can build an Osiris dynamic fetcher registry', async () => {
     const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
       response(listResponse),
     );
     vi.stubGlobal('fetch', fetch);
-    const registry = createConfiguredApiRegistry({
-      demoRegistry,
+    const registry = createOsirisApiRegistry({
       env: {
         VITE_OKTAVIUS_API_BASE_URL: '/api',
       },

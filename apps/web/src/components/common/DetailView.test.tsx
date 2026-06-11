@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailView, type DetailFieldProps } from './DetailView';
 
-const demoData = vi.hoisted(() => ({
-  currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'member', permissions: [] as string[] },
+const demoData = vi.hoisted<{
+  permissionSubject: { isSuperadmin: boolean; role: 'admin' | 'member'; permissions: string[] };
+}>(() => ({
+  permissionSubject: { isSuperadmin: false, role: 'member' as const, permissions: [] as string[] },
 }));
 
-vi.mock('@/app/demo-data', () => ({
-  useDemoData: () => demoData,
+vi.mock('@/runtime/osiris/useOsirisRuntime', () => ({
+  useOptionalOsirisRuntime: () => demoData,
 }));
 
 const fields: DetailFieldProps[] = [
@@ -19,8 +20,7 @@ const fields: DetailFieldProps[] = [
 
 describe('DetailView permissioned fields', () => {
   beforeEach(() => {
-    demoData.currentUser = { isSuperadmin: false };
-    demoData.activeMembership = { role: 'member', permissions: [] };
+    demoData.permissionSubject = { isSuperadmin: false, role: 'member', permissions: [] };
   });
 
   it('hides manager-only detail fields from member memberships', () => {
@@ -32,7 +32,11 @@ describe('DetailView permissioned fields', () => {
   });
 
   it('keeps manager-only detail fields for organization managers', () => {
-    demoData.activeMembership = { role: 'admin', permissions: ['org.manage'] };
+    demoData.permissionSubject = {
+      isSuperadmin: false,
+      role: 'admin',
+      permissions: ['org.manage'],
+    };
 
     const markup = renderToStaticMarkup(<DetailView title="Client" fields={fields} />);
 

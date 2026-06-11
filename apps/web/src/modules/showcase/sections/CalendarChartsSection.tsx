@@ -8,23 +8,10 @@ import {
   SimpleSparklineChart,
 } from '@oktavius/base-ui';
 
-import {
-  COMBO_DATA,
-  MULTI_LINE_REVENUE,
-  ORDER_STATUS_DATA,
-  PIPELINE_FUNNEL,
-  RADAR_KPIS,
-  RADAR_SERIES,
-  ReportBuilderPanel,
-  REVENUE_DATA,
-  REVENUE_SERIES,
-  STACKED_PIPELINE,
-  TOP_CLIENTS,
-} from '@/components/reports/ReportBuilderPanel';
-
-import { useInteractiveCalendarDemo } from '@/modules/calendar/shared';
+import { ReportBuilderPanel } from '@/components/reports/ReportBuilderPanel';
 
 import { ShowcaseBlock } from '../shared';
+import { useShowcaseCalendarDemo } from '../fixtures/calendarDemo';
 
 const ORDERS_DATA = [
   { label: 'Licenses', value: 18 },
@@ -33,10 +20,107 @@ const ORDERS_DATA = [
   { label: 'Support', value: 9 },
 ];
 
+const REVENUE_DATA = [
+  { label: 'Jul', value: 32000 },
+  { label: 'Aug', value: 38500 },
+  { label: 'Sep', value: 41200 },
+  { label: 'Oct', value: 39800 },
+  { label: 'Nov', value: 45100 },
+  { label: 'Dec', value: 51340 },
+];
+
+const ORDER_STATUS_DATA = [
+  { label: 'Draft', value: 4 },
+  { label: 'Confirmed', value: 11 },
+  { label: 'Fulfilled', value: 18 },
+  { label: 'Cancelled', value: 2 },
+];
+
+const PIPELINE_FUNNEL = [
+  { label: 'Leads', value: 120 },
+  { label: 'Qualified', value: 64 },
+  { label: 'Proposal', value: 28 },
+  { label: 'Won', value: 11 },
+];
+
+const STACKED_PIPELINE = [
+  {
+    label: 'Q1',
+    value: 0,
+    segments: [
+      { key: 'New', value: 12 },
+      { key: 'Active', value: 24 },
+      { key: 'Won', value: 8 },
+    ],
+  },
+  {
+    label: 'Q2',
+    value: 0,
+    segments: [
+      { key: 'New', value: 15 },
+      { key: 'Active', value: 21 },
+      { key: 'Won', value: 10 },
+    ],
+  },
+  {
+    label: 'Q3',
+    value: 0,
+    segments: [
+      { key: 'New', value: 18 },
+      { key: 'Active', value: 19 },
+      { key: 'Won', value: 12 },
+    ],
+  },
+];
+
+const MULTI_LINE_REVENUE = [
+  { label: 'Jul', revenue: 32000, margin: 8400 },
+  { label: 'Aug', revenue: 38500, margin: 10200 },
+  { label: 'Sep', revenue: 41200, margin: 11100 },
+  { label: 'Oct', revenue: 39800, margin: 9800 },
+  { label: 'Nov', revenue: 45100, margin: 12400 },
+  { label: 'Dec', revenue: 51340, margin: 14200 },
+];
+
+const REVENUE_SERIES = [
+  { key: 'revenue', label: 'Revenue' },
+  { key: 'margin', label: 'Margin' },
+];
+
+const COMBO_DATA = [
+  { label: 'Jul', barValue: 38, lineValue: 32000 },
+  { label: 'Aug', barValue: 44, lineValue: 38500 },
+  { label: 'Sep', barValue: 41, lineValue: 41200 },
+  { label: 'Oct', barValue: 36, lineValue: 39800 },
+  { label: 'Nov', barValue: 47, lineValue: 45100 },
+  { label: 'Dec', barValue: 52, lineValue: 51340 },
+];
+
+const TOP_CLIENTS = [
+  { label: 'Apex Tech', value: 48 },
+  { label: 'Northwind', value: 36 },
+  { label: 'Contoso', value: 29 },
+  { label: 'Fabrikam', value: 22 },
+  { label: 'Globex', value: 18 },
+];
+
+const RADAR_KPIS = [
+  { subject: 'Sales', actual: 82, target: 90 },
+  { subject: 'Support', actual: 76, target: 80 },
+  { subject: 'Delivery', actual: 88, target: 85 },
+  { subject: 'Quality', actual: 91, target: 88 },
+  { subject: 'Retention', actual: 74, target: 82 },
+];
+
+const RADAR_SERIES = [
+  { key: 'actual', label: 'Actual' },
+  { key: 'target', label: 'Target' },
+];
+
 export function CalendarChartsSection() {
   const [anchor, setAnchor] = useState(() => new Date('2024-12-10'));
   const [view, setView] = useState<'day' | 'week' | 'month' | 'agenda'>('week');
-  const calendar = useInteractiveCalendarDemo();
+  const calendar = useShowcaseCalendarDemo();
 
   return (
     <div className="space-y-4">

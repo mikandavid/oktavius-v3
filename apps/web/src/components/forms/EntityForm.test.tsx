@@ -4,6 +4,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { TestI18nProvider } from '@/core/i18n';
+
 import { EntityForm, type FormFieldValue } from './EntityForm';
 
 const demoData = vi.hoisted(() => ({
@@ -13,6 +15,7 @@ const demoData = vi.hoisted(() => ({
 
 vi.mock('@/app/demo-data', () => ({
   useDemoData: () => demoData,
+  useOptionalDemoData: () => demoData,
 }));
 
 vi.mock('@/lib/userPreferences', () => ({
@@ -39,7 +42,7 @@ function renderForm({
   autoSave,
   defaultValues = { name: 'Apex' },
 }: {
-  onSubmit?: (values: TestValues) => void | Promise<void>;
+  onSubmit?: ComponentProps<typeof EntityForm<TestValues>>['onSubmit'];
   autoSave?: ComponentProps<typeof EntityForm<TestValues>>['autoSave'];
   defaultValues?: TestValues;
 }) {
@@ -50,14 +53,16 @@ function renderForm({
     {
       path: '/',
       element: (
-        <EntityForm<TestValues>
-          title="Client"
-          surface="dialog"
-          fields={[{ name: 'name', label: 'Name', type: 'text', required: true }]}
-          defaultValues={defaultValues}
-          onSubmit={onSubmit}
-          autoSave={autoSave}
-        />
+        <TestI18nProvider>
+          <EntityForm<TestValues>
+            title="Client"
+            surface="dialog"
+            fields={[{ name: 'name', label: 'Name', type: 'text', required: true }]}
+            defaultValues={defaultValues}
+            onSubmit={onSubmit}
+            autoSave={autoSave}
+          />
+        </TestI18nProvider>
       ),
     },
   ]);
@@ -152,5 +157,28 @@ describe('EntityForm autosave', () => {
     });
 
     expect(onSubmit).toHaveBeenCalledWith({ name: 'Apex Submit' });
+  });
+
+  it('maps thrown server field errors onto fields after submit', async () => {
+    const onSubmit = vi.fn(async () => {
+      throw {
+        fieldErrors: { name: 'A client with this name already exists.' },
+        formError: 'Client could not be saved.',
+      };
+    });
+    const rendered = renderForm({ onSubmit });
+    roots.push(rendered.root);
+
+    const form = rendered.container.querySelector('form');
+    if (!(form instanceof HTMLFormElement)) {
+      throw new Error('Expected form to render.');
+    }
+
+    await act(async () => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    });
+
+    expect(rendered.container.textContent).toContain('A client with this name already exists.');
+    expect(rendered.container.textContent).toContain('Client could not be saved.');
   });
 });

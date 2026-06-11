@@ -23,6 +23,8 @@ export type AppNavModule = {
   id: AppNavRouteId;
   path: string;
   label: string;
+  /** i18n key for the label (e.g. 'navigation.dashboard'). Resolved at render time; `label` is the fallback. */
+  labelKey?: string;
   icon: ComponentType<IconProps>;
   section: AppNavSection;
   devOnly?: boolean;
@@ -42,6 +44,7 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     id: 'dashboard',
     path: '/dashboard',
     label: 'Dashboard',
+    labelKey: 'navigation.dashboard',
     icon: HomeIcon,
     section: 'primary',
     terminologyKey: 'dashboard',
@@ -50,6 +53,7 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     id: 'ai-chat',
     path: '/ai-chat',
     label: 'AI Chat',
+    labelKey: 'navigation.aiChat',
     icon: BotIcon,
     section: 'primary',
     permission: 'agent-chat.view',
@@ -58,6 +62,7 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     id: 'email',
     path: '/email',
     label: 'Email',
+    labelKey: 'navigation.email',
     icon: EmailIcon,
     section: 'modules',
     permission: 'email.view_own',
@@ -66,6 +71,7 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     id: 'calendar',
     path: '/calendar',
     label: 'Calendar',
+    labelKey: 'navigation.calendar',
     icon: CalendarIcon,
     section: 'modules',
     permission: 'calendar-v2.view',
@@ -74,15 +80,24 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     id: 'reports',
     path: '/reports',
     label: 'Reports',
+    labelKey: 'navigation.reports',
     icon: ReportsIcon,
     section: 'modules',
     permission: 'reports.view',
   },
-  { id: 'settings', path: '/settings', label: 'Settings', icon: SettingsIcon, section: 'admin' },
+  {
+    id: 'settings',
+    path: '/settings',
+    label: 'Settings',
+    labelKey: 'navigation.settings',
+    icon: SettingsIcon,
+    section: 'admin',
+  },
   {
     id: 'showcase',
     path: '/showcase',
     label: 'Component showcase',
+    labelKey: 'navigation.componentShowcase',
     icon: SlidersHorizontalIcon,
     section: 'admin',
     devOnly: true,
@@ -99,8 +114,14 @@ export function isOrgModuleId(_id: AppNavRouteId): _id is OrgModuleId {
   return true;
 }
 
-export function moduleLabelFor(profile: OrgProfile, item: AppNavModule) {
-  return item.terminologyKey ? profile.terminology[item.terminologyKey] : item.label;
+export function moduleLabelFor(
+  profile: OrgProfile,
+  item: AppNavModule,
+  translate?: (key: string, _params?: Record<string, string | number>, fallback?: string) => string,
+) {
+  if (item.terminologyKey) return profile.terminology[item.terminologyKey];
+  if (item.labelKey && translate) return translate(item.labelKey, undefined, item.label);
+  return item.label;
 }
 
 export function visiblePathFor(profile: OrgProfile, item: AppNavModule) {
@@ -115,13 +136,14 @@ export function buildVisibleAppNavItems(
   profile: OrgProfile,
   subject: PermissionSubject,
   items: readonly AppNavModule[],
+  translate?: (key: string, _params?: Record<string, string | number>, fallback?: string) => string,
 ): AppNavModule[] {
   return items
     .filter((item) => isAppNavItemEnabled(profile, item) && canAccessAppNavItem(item, subject))
     .map((item) => ({
       ...item,
       path: visiblePathFor(profile, item),
-      label: moduleLabelFor(profile, item),
+      label: moduleLabelFor(profile, item, translate),
     }));
 }
 

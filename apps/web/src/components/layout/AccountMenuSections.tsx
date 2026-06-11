@@ -7,6 +7,8 @@ import {
   DropdownMenuSubTrigger,
 } from '@oktavius/base-ui';
 
+import { useI18n, useTranslation } from '@/core/i18n';
+
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -85,11 +87,13 @@ export function OrganizationMenuSection({
 
 export function LanguageMenuSection() {
   const { locale, setLocale, localeLabel } = useUserPreferences();
+  const { setLanguage } = useI18n();
+  const { t } = useTranslation();
 
   return (
     <AccountSubmenu
       icon={<GlobeIcon size={14} className="text-muted-foreground" />}
-      label="Language"
+      label={t('common.language', undefined, 'Language')}
       hint={localeLabel}
     >
       {UI_LOCALE_OPTIONS.map((option) => (
@@ -97,7 +101,11 @@ export function LanguageMenuSection() {
           key={option.value}
           active={locale === option.value}
           label={option.label}
-          onSelect={() => setLocale(option.value as UiLocale)}
+          onSelect={() => {
+            const next = option.value as UiLocale;
+            setLocale(next);
+            void setLanguage(next);
+          }}
         />
       ))}
     </AccountSubmenu>

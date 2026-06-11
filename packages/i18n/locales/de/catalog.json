@@ -1,0 +1,20 @@
+{
+  "catalog": "Katalog",
+  "newCatalogItem": "Neuer Katalogeintrag",
+  "itemDetails": "Artikeldetails",
+  "purchasePrice": "Einkaufspreis",
+  "salePrice": "Verkaufspreis",
+  "taxRate": "Steuersatz",
+  "margin": "Marge",
+  "currentStock": "Aktueller Bestand",
+  "minStockLevel": "Mindestbestand",
+  "inStock": "Auf Lager",
+  "stock": "Bestand",
+  "searchCatalog": "Katalog durchsuchen...",
+  "product": "Produkt",
+  "service": "Dienstleistung",
+  "material": "Material",
+  "emptyState": "Keine Katalogartikel gefunden",
+  "emptyStateDescription": "Fügen Sie Ihr erstes Produkt, Dienstleistung oder Material hinzu.",
+  "deleteConfirm": "Diesen Katalogartikel löschen?"
+}

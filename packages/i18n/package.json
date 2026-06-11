@@ -1,0 +1,29 @@
+{
+  "name": "@oktavius/i18n",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./translations": {
+      "import": "./src/translations.ts",
+      "types": "./src/translations.ts"
+    },
+    "./locales/*": "./locales/*",
+    "./overrides/*": "./overrides/*"
+  },
+  "scripts": {
+    "generate:namespaces": "node --experimental-strip-types scripts/generate-namespaces.ts",
+    "scan:missing": "node --experimental-strip-types scripts/scan-missing-keys.ts",
+    "validate": "node scripts/validate-translations.mjs",
+    "test": "node --experimental-strip-types --test scripts/__tests__/validate-translations.test.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "^5.8.3"
+  }
+}

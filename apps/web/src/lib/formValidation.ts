@@ -31,6 +31,11 @@ export type NormalizedFormSubmissionFailure = {
   message?: string;
 };
 
+export type ServerFieldErrorResponse = {
+  fieldErrors?: FormValidationErrorMap;
+  formError?: string;
+};
+
 export class FormSubmissionValidationError extends Error {
   errors: FormValidationErrorMap;
 
@@ -53,6 +58,25 @@ function normalizeErrorMap(errors: unknown): FormValidationErrorMap {
   return normalized;
 }
 
+function normalizeServerFieldErrorResponse(value: unknown): NormalizedFormSubmissionFailure | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+
+  const candidate = value as Partial<ServerFieldErrorResponse> & { message?: unknown };
+  if (!('fieldErrors' in candidate) && !('formError' in candidate)) return null;
+
+  const message =
+    typeof candidate.formError === 'string' && candidate.formError.trim()
+      ? candidate.formError
+      : typeof candidate.message === 'string' && candidate.message.trim()
+        ? candidate.message
+        : undefined;
+
+  return {
+    errors: normalizeErrorMap(candidate.fieldErrors),
+    ...(message ? { message } : {}),
+  };
+}
+
 export function normalizeFormSubmissionFailure(
   value: unknown,
 ): NormalizedFormSubmissionFailure | null {
@@ -62,6 +86,9 @@ export function normalizeFormSubmissionFailure(
       message: value.message,
     };
   }
+
+  const serverFailure = normalizeServerFieldErrorResponse(value);
+  if (serverFailure) return serverFailure;
 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
 
@@ -76,8 +103,28 @@ export function normalizeFormSubmissionFailure(
   };
 }
 
+export function withFieldErrors<TValues, TResult>(
+  submitFn: (values: TValues) => TResult | Promise<TResult>,
+): (values: TValues) => Promise<TResult> {
+  return async (values) => {
+    try {
+      return await submitFn(values);
+    } catch (error) {
+      const failure = normalizeFormSubmissionFailure(error);
+      if (failure) {
+        throw new FormSubmissionValidationError({
+          errors: failure.errors,
+          message: failure.message,
+        });
+      }
+      throw error;
+    }
+  };
+}
+
 export function isFieldVisible(field: FormField, values: Record<string, FormFieldValue>): boolean {
-  return field.visibleWhen ? field.visibleWhen(values) : true;
+  if (field.visibleWhen && !field.visibleWhen(values)) return false;
+  return field.visibleIf ? field.visibleIf(values) : true;
 }
 
 export function filterVisibleFields(
@@ -165,6 +212,13 @@ export function validateFormFields(
       const customError = rule.custom(value, values);
       if (customError) {
         errors[field.name] = customError;
+      }
+    }
+
+    if (!errors[field.name] && field.crossValidate) {
+      const crossError = field.crossValidate(values);
+      if (crossError) {
+        errors[field.name] = crossError;
       }
     }
   }

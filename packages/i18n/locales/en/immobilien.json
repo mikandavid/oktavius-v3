@@ -1,0 +1,153 @@
+{
+  "title": "Properties",
+  "newImmobilie": "New property",
+  "noImmobilienFound": "No properties yet",
+  "noImmobilienDescription": "Add your first property to start your portfolio.",
+  "searchImmobilien": "Search properties…",
+  "externalNumber": "External No.",
+  "marketingType": "Marketing type",
+  "propertyType": "Property type",
+  "purchasePrice": "Purchase price",
+  "rentCold": "Net rent",
+  "additionalCosts": "Additional costs",
+  "livingAreaM2": "Living area (m²)",
+  "plotAreaM2": "Plot area (m²)",
+  "roomCount": "Rooms",
+  "headline": "Headline",
+  "description": "Description",
+  "locationDescription": "Location description",
+  "isPublished": "Published",
+  "ownerLink": "Owner",
+  "deleteRecordConfirm": "Delete this property?",
+  "filterCityPlaceholder": "City (exact match)",
+  "sections": {
+    "overview": "Master data",
+    "pricing": "Prices & areas",
+    "pricingFinancial": "Financial",
+    "pricingAreas": "Areas & rooms",
+    "texts": "Texts",
+    "location": "Location",
+    "marketing": "Marketing",
+    "technical": "Technical details",
+    "category": "Category",
+    "features": "Equipment & building",
+    "customAttributes": "Custom attributes"
+  },
+  "sidebar": {
+    "unit": "Unit",
+    "address": "Address",
+    "addPhotos": "Add photos"
+  },
+  "media": {
+    "photos": "Property photos",
+    "noPhotos": "No photos linked yet. Upload images below.",
+    "allFiles": "Files & documents",
+    "photoCount": "{{count}} photos",
+    "fileCountHint": "{{count}} files linked to this property"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "pricing": "Prices & areas",
+    "features": "Features",
+    "texts": "Texts",
+    "location": "Location",
+    "media": "Media",
+    "contacts": "Contacts",
+    "marketing": "Marketing",
+    "activity": "Activity",
+    "masterData": "Master data"
+  },
+  "facts": {
+    "livingAreaUnit": "m²",
+    "roomsUnit": "rooms",
+    "plotAreaUnit": "m² plot"
+  },
+  "form": {
+    "showCustomFields": "Custom fields…",
+    "hideCustomFields": "Hide custom fields"
+  },
+  "marketingTypes": {
+    "kauf": "Sale",
+    "miete": "Rent"
+  },
+  "propertyTypes": {
+    "haus": "House",
+    "wohnung": "Apartment",
+    "grundstueck": "Land",
+    "gewerbe": "Commercial",
+    "buero": "Office",
+    "garage": "Garage",
+    "sonstiges": "Other"
+  },
+  "statuses": {
+    "aktiv": "Active",
+    "inaktiv": "Inactive",
+    "archiv": "Archived",
+    "reserviert": "Reserved",
+    "verkauft": "Sold",
+    "vermietet": "Rented"
+  },
+  "linkRoles": {
+    "eigentuemer": "Owner",
+    "kaeufer": "Buyer",
+    "interessent": "Prospect",
+    "makler": "Agent",
+    "ansprechpartner": "Contact person",
+    "notar": "Notary",
+    "sonstiges": "Other"
+  },
+  "linkedCustomers": "Linked customers",
+  "linkedCustomersEmpty": "No linked customers yet.",
+  "openCustomer": "Open customer",
+  "addContact": "Link customer",
+  "selectCustomer": "Select customer",
+  "featuresHint": "Equipment, condition, and building details can be stored in custom fields below.",
+  "features": {
+    "emptyTitle": "No feature details yet",
+    "emptyDescription": "Use custom fields to capture equipment, energy class, year built, and other property specifics."
+  },
+  "texts": {
+    "emptyTitle": "No marketing texts yet",
+    "emptyDescription": "Add a headline, property description, and location text for exposés and portals.",
+    "partialTitle": "Add full property copy",
+    "partialDescription": "Complete the description and location sections for portal-ready listings.",
+    "internalNotes": "Internal only"
+  },
+  "location": {
+    "emptyTitle": "No address on file",
+    "emptyDescription": "Enter the street, postal code, and city to show the property location.",
+    "mapTitle": "Map preview",
+    "mapHint": "Interactive map integration will use this address — coming soon."
+  },
+  "marketing": {
+    "publishedTitle": "Published for marketing",
+    "draftTitle": "Draft — not published",
+    "publishedHint": "Visible for marketing",
+    "draftHint": "Not published yet",
+    "portalsTitle": "Portals",
+    "portalsMeta": "Coming soon",
+    "portalDisabled": "Not connected",
+    "portals": {
+      "immoscout": "ImmoScout24",
+      "immowelt": "Immowelt",
+      "kleinanzeigen": "Kleinanzeigen"
+    }
+  },
+  "contacts": {
+    "linkTitle": "Link customer",
+    "emptyTitle": "No linked customers",
+    "noContactInfo": "No contact details"
+  },
+  "activity": {
+    "emptyTitle": "No activity yet",
+    "emailTitle": "Email",
+    "emailHint": "Threads linked to this property will show here.",
+    "calendarTitle": "Appointments",
+    "calendarHint": "Viewings and broker appointments tied to this listing.",
+    "notesTitle": "Broker log",
+    "notesHint": "Internal Maklerbuch entries and follow-ups."
+  },
+  "mediaPlaceholder": "Photos and documents will be linked via Storage — coming soon.",
+  "marketingPlaceholder": "Portal publishing and address visibility settings — coming soon.",
+  "activityPlaceholder": "Email threads, appointments, and broker notes will appear here — coming soon."
+}

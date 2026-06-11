@@ -10,8 +10,12 @@ export type ShowcaseSectionId =
   | 'inputs'
   | 'forms'
   | 'feedback'
+  | 'errors'
   | 'dialogs'
   | 'data'
+  | 'multi-tenant'
+  | 'settings'
+  | 'responsive-detail'
   | 'detail-layout'
   | 'workflow'
   | 'agent'
@@ -36,8 +40,28 @@ export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; descri
   { key: 'inputs', label: 'Inputs', description: 'All control primitives and states' },
   { key: 'forms', label: 'Forms', description: 'EntityForm field registry' },
   { key: 'feedback', label: 'Feedback', description: 'Toasts, banners, empty & loading states' },
+  {
+    key: 'errors',
+    label: 'Errors',
+    description: 'Module and section error boundaries with retry fallbacks',
+  },
   { key: 'dialogs', label: 'Dialogs', description: 'Modals, confirms, menus, wizards' },
   { key: 'data', label: 'Data', description: 'Tables, stats, lists, export' },
+  {
+    key: 'multi-tenant',
+    label: 'Multi-tenant',
+    description: 'Organization and location scoped data views',
+  },
+  {
+    key: 'settings',
+    label: 'Settings',
+    description: 'Settings page factory and generic catalog blocks',
+  },
+  {
+    key: 'responsive-detail',
+    label: 'Responsive detail',
+    description: 'URL-backed master-detail layouts that collapse below md',
+  },
   {
     key: 'detail-layout',
     label: 'Detail & layout',

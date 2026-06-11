@@ -1,12 +1,11 @@
-import { useMemo } from 'react';
-
-import { getCustomFieldDefinitions } from './demoDefinitions';
 import type { CustomFieldDefinition } from './types';
+
+const EMPTY_CUSTOM_FIELD_DEFINITIONS: CustomFieldDefinition[] = [];
 
 export function useCustomFieldDefinitions(entityType: string): {
   definitions: CustomFieldDefinition[];
   isLoading: boolean;
 } {
-  const definitions = useMemo(() => getCustomFieldDefinitions(entityType), [entityType]);
-  return { definitions, isLoading: false };
+  void entityType;
+  return { definitions: EMPTY_CUSTOM_FIELD_DEFINITIONS, isLoading: false };
 }

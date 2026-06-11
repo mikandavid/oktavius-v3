@@ -1,0 +1,53 @@
+{
+  "title": "Kunden",
+  "newCustomer": "Neuer Kunde",
+  "noCustomersFound": "Noch keine Kunden",
+  "noCustomersDescription": "Legen Sie Ihren ersten Kunden an, um Ihr Portfolio aufzubauen.",
+  "searchCustomers": "Kunden suchen…",
+  "customerNumber": "KdNr.",
+  "salutation": "Anrede",
+  "titleField": "Titel",
+  "firstName": "Vorname",
+  "lastName": "Nachname",
+  "company": "Firma",
+  "isCompany": "Firma",
+  "contactType": "Kontaktart",
+  "letterSalutation": "Briefanrede",
+  "contactInformation": "Kontaktdaten",
+  "addressDetails": "Adresse",
+  "administration": "Verwaltung",
+  "sections": {
+    "identity": "Stammdaten",
+    "contact": "Kontakt",
+    "admin": "Verwaltung"
+  },
+  "tabs": {
+    "overview": "Grunddaten",
+    "files": "Dateien",
+    "propertySearch": "Immosuche",
+    "activity": "Aktivitäten",
+    "notes": "Notizen"
+  },
+  "deleteRecordConfirm": "Diesen Kunden löschen?",
+  "filterCityPlaceholder": "Ort (exakte Übereinstimmung)",
+  "form": {
+    "showCustomFields": "Benutzerdefinierte Felder…",
+    "hideCustomFields": "Benutzerdefinierte Felder ausblenden"
+  },
+  "contactTypes": {
+    "interessent": "Interessent",
+    "kaeufer": "Käufer",
+    "verkaeufer": "Verkäufer",
+    "eigentuemer": "Eigentümer",
+    "makler": "Makler",
+    "notar": "Notar",
+    "sonstiges": "Sonstiges"
+  },
+  "linkedProperties": "Verknüpfte Immobilien",
+  "linkedPropertiesEmpty": "Keine Immobilien verknüpft",
+  "openProperty": "Immobilie öffnen",
+  "role": "Rolle",
+  "filesPlaceholder": "Dateien werden über das Storage-Modul verknüpft — demnächst verfügbar.",
+  "activityPlaceholder": "E-Mail- und Kalenderaktivitäten erscheinen hier — demnächst verfügbar.",
+  "propertySearchHint": "Manuell verknüpfte und passende Immobilien für diesen Kunden."
+}

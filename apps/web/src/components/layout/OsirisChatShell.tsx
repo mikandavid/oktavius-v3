@@ -28,10 +28,9 @@ import {
 } from '@/components/agent/chatStorage';
 import { useAgentPageContext } from '@/components/agent/page-context';
 import { captureAgentPageContext } from '@/components/agent/page-routing';
-import { ContextUsageIndicator, TokenBadge } from '@/components/agent/ContextUsageIndicator';
 import { AgentThinkingIndicator } from '@/components/agent/AgentThinkingIndicator';
 import { AgentWelcomeScreen } from '@/components/agent/AgentWelcomeScreen';
-import type { AgentMessage, AgentModelMode, AgentTokenStats } from '@/components/agent/types';
+import type { AgentMessage, AgentModelMode } from '@/components/agent/types';
 import {
   BrainIcon,
   ChevronDownIcon,
@@ -74,12 +73,6 @@ type BrowserSpeechRecognition = {
 };
 
 type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
-
-const DEMO_TOKEN_STATS: AgentTokenStats = {
-  inputTokens: 18_400,
-  outputTokens: 2_150,
-  contextWindowTokens: 200_000,
-};
 
 const MODEL_MODE_LABEL: Record<AgentModelMode, string> = {
   default: 'Default',
@@ -135,7 +128,6 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const activeConversation =
     conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
   const hasComposerContent = draft.trim().length > 0 || selectedFiles.length > 0;
-  const contextTokens = DEMO_TOKEN_STATS.inputTokens + DEMO_TOKEN_STATS.outputTokens;
   const composerPlaceholder = pageContext.primaryEntity?.displayLabel
     ? `Ask about ${pageContext.primaryEntity.displayLabel}…`
     : pageContext.moduleLabel
@@ -424,9 +416,6 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
             />
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
-            {(activeConversation?.messages.length ?? 0) > 0 ? (
-              <TokenBadge stats={DEMO_TOKEN_STATS} />
-            ) : null}
             <Button
               variant="ghost"
               size="icon"
@@ -633,13 +622,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
                     </DropdownMenuRadioGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="ml-auto flex items-center pr-1">
-                  <ContextUsageIndicator
-                    tokens={contextTokens}
-                    onCompact={() => appToast.success('Context compacted (demo).')}
-                    disabled={isAssistantPending}
-                  />
-                </div>
+                <div className="ml-auto" />
               </>
             }
           />

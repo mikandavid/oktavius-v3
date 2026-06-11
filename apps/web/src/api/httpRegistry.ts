@@ -1,46 +1,11 @@
 import {
   ApiAuthorizationError,
   ApiValidationError,
-  type CaseChecklistsHandlers,
-  type CasesHandlers,
-  type CasesListParams,
-  type ClientsListParams,
-  type ContactsListParams,
-  type ContractsListParams,
-  type DemoApiRegistry,
-  type IncidentsListParams,
-  type InvoicesListParams,
-  type LeadsListParams,
+  type ApiCrudResourceHandlers,
+  type ApiListParams,
+  type ApiRegistry,
   type ListResponse,
-  type OrdersListParams,
-  type OrganizationsListParams,
-  type PartiesHandlers,
-  type ProductsListParams,
-  type ProjectsListParams,
-  type PurchasingListParams,
-  type StaffListParams,
-  type UsersListParams,
-  type VendorsListParams,
-} from './demo-client';
-import type {
-  CaseChecklistItem,
-  CaseRecord,
-  ClientRecord,
-  ContactRecord,
-  ContractRecord,
-  IncidentRecord,
-  InvoiceRecord,
-  LeadRecord,
-  OrderRecord,
-  OrganizationRecord,
-  PartyRecord,
-  ProductRecord,
-  ProjectRecord,
-  PurchaseOrderRecord,
-  StaffRecord,
-  UserRecord,
-  VendorRecord,
-} from '@/app/demo-data';
+} from './contracts';
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
@@ -86,6 +51,8 @@ export type HttpRegistryOptions = {
   headers?: Record<string, string>;
 };
 
+type ApiRecord = Record<string, unknown> & { id: string };
+
 function getDefaultFetcher(): HttpRegistryFetcher {
   if (typeof fetch !== 'function') {
     throw new Error('No fetch implementation is available for HTTP API registry adapters.');
@@ -98,7 +65,7 @@ function joinPath(base: string, path: string) {
   return `${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 }
 
-function withQuery(path: string, params: Record<string, string | undefined>) {
+function withQuery(path: string, params: ApiListParams) {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value != null && value !== '') query.set(key, value);
@@ -111,7 +78,12 @@ async function parseJson(response: Response) {
   if (response.status === 204) return null;
   const text = await response.text();
   if (!text) return null;
-  return JSON.parse(text) as unknown;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch (error) {
+    if (!response.ok) return null;
+    throw error;
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -185,10 +157,13 @@ function resourcePath(basePath: string, id: string) {
 }
 
 export function createHttpEntityHandlers<
-  TRow extends { id: string },
-  TListParams extends Record<string, string | undefined>,
-  TCreateInput,
->(options: HttpEntityHandlersOptions) {
+  TRow extends { id: string } = ApiRecord,
+  TListParams extends ApiListParams = ApiListParams,
+  TCreateInput = Partial<TRow>,
+  TUpdateInput = Partial<TRow>,
+>(
+  options: HttpEntityHandlersOptions,
+): ApiCrudResourceHandlers<TRow, TListParams, TCreateInput, TUpdateInput> {
   return {
     list(params: TListParams) {
       return requestJson<ListResponse<TRow>>(options, withQuery(options.basePath, params), 'GET');
@@ -199,7 +174,7 @@ export function createHttpEntityHandlers<
     create(input: TCreateInput) {
       return requestJson<TRow>(options, options.basePath, 'POST', input);
     },
-    update(id: string, input: Partial<TCreateInput>) {
+    update(id: string, input: TUpdateInput) {
       return requestJson<TRow>(options, resourcePath(options.basePath, id), 'PATCH', input);
     },
     async delete(id: string) {
@@ -208,26 +183,27 @@ export function createHttpEntityHandlers<
   };
 }
 
-function createCasesHandlers(options: HttpEntityHandlersOptions): CasesHandlers {
-  const handlers = createHttpEntityHandlers<
-    CaseRecord,
-    CasesListParams,
-    Omit<CaseRecord, 'id' | 'caseNumber' | 'openedAt' | 'slaStatus' | 'orgId'>
-  >(options);
+function createCasesHandlers(options: HttpEntityHandlersOptions): ApiCrudResourceHandlers & {
+  updateStage: (id: string, stage: string) => Promise<ApiRecord>;
+} {
+  const handlers = createHttpEntityHandlers(options);
   return {
     ...handlers,
     updateStage: (id, stage) =>
-      requestJson<CaseRecord>(options, `${resourcePath(options.basePath, id)}/stage`, 'PATCH', {
+      requestJson<ApiRecord>(options, `${resourcePath(options.basePath, id)}/stage`, 'PATCH', {
         stage,
       }),
   };
 }
 
-function createCaseChecklistsHandlers(options: HttpEntityHandlersOptions): CaseChecklistsHandlers {
+function createCaseChecklistsHandlers(
+  options: HttpEntityHandlersOptions,
+): ApiRegistry['caseChecklists'] {
   return {
-    create: (input) => requestJson<CaseChecklistItem>(options, options.basePath, 'POST', input),
+    create: (input) =>
+      requestJson<Record<string, unknown>>(options, options.basePath, 'POST', input),
     updateDone: (id, done) =>
-      requestJson<CaseChecklistItem>(
+      requestJson<Record<string, unknown>>(
         options,
         `${resourcePath(options.basePath, id)}/done`,
         'PATCH',
@@ -238,9 +214,10 @@ function createCaseChecklistsHandlers(options: HttpEntityHandlersOptions): CaseC
   };
 }
 
-function createPartiesHandlers(options: HttpEntityHandlersOptions): PartiesHandlers {
+function createPartiesHandlers(options: HttpEntityHandlersOptions): ApiRegistry['parties'] {
   return {
-    create: (input) => requestJson<PartyRecord>(options, options.basePath, 'POST', input),
+    create: (input) =>
+      requestJson<Record<string, unknown>>(options, options.basePath, 'POST', input),
   };
 }
 
@@ -249,7 +226,7 @@ export function createHttpRegistry({
   endpoints,
   fetcher,
   headers,
-}: HttpRegistryOptions): DemoApiRegistry {
+}: HttpRegistryOptions): ApiRegistry {
   const optionsFor = (endpoint: string): HttpEntityHandlersOptions => ({
     basePath: joinPath(baseUrl, endpoint),
     fetcher,
@@ -259,83 +236,20 @@ export function createHttpRegistry({
   return {
     cases: createCasesHandlers(optionsFor(endpoints.cases)),
     caseChecklists: createCaseChecklistsHandlers(optionsFor(endpoints.caseChecklists)),
-    clients: createHttpEntityHandlers<
-      ClientRecord,
-      ClientsListParams,
-      Omit<ClientRecord, 'id' | 'createdAt' | 'orgId'>
-    >(optionsFor(endpoints.clients)),
-    contracts: createHttpEntityHandlers<
-      ContractRecord,
-      ContractsListParams,
-      Omit<ContractRecord, 'id' | 'orgId' | 'renewalNoticeDays'>
-    >(optionsFor(endpoints.contracts)),
-    incidents: createHttpEntityHandlers<
-      IncidentRecord,
-      IncidentsListParams,
-      Omit<IncidentRecord, 'id' | 'orgId'>
-    >(optionsFor(endpoints.incidents)),
-    invoices: createHttpEntityHandlers<
-      InvoiceRecord,
-      InvoicesListParams,
-      Omit<InvoiceRecord, 'id' | 'orgId'>
-    >(optionsFor(endpoints.invoices)),
-    orders: createHttpEntityHandlers<
-      OrderRecord,
-      OrdersListParams,
-      Omit<OrderRecord, 'id' | 'orgId'>
-    >(optionsFor(endpoints.orders)),
-    organizations: createHttpEntityHandlers<
-      OrganizationRecord,
-      OrganizationsListParams,
-      Omit<OrganizationRecord, 'id' | 'memberCount' | 'createdAt'>
-    >(optionsFor(endpoints.organizations)),
+    clients: createHttpEntityHandlers(optionsFor(endpoints.clients)),
+    contacts: createHttpEntityHandlers(optionsFor(endpoints.contacts)),
+    contracts: createHttpEntityHandlers(optionsFor(endpoints.contracts)),
+    incidents: createHttpEntityHandlers(optionsFor(endpoints.incidents)),
+    invoices: createHttpEntityHandlers(optionsFor(endpoints.invoices)),
+    leads: createHttpEntityHandlers(optionsFor(endpoints.leads)),
+    orders: createHttpEntityHandlers(optionsFor(endpoints.orders)),
+    organizations: createHttpEntityHandlers(optionsFor(endpoints.organizations)),
     parties: createPartiesHandlers(optionsFor(endpoints.parties)),
-    products: createHttpEntityHandlers<
-      ProductRecord,
-      ProductsListParams,
-      Omit<ProductRecord, 'id' | 'orgId'>
-    >(optionsFor(endpoints.products)),
-    projects: createHttpEntityHandlers<
-      ProjectRecord,
-      ProjectsListParams,
-      Omit<ProjectRecord, 'id' | 'orgId'>
-    >(optionsFor(endpoints.projects)),
-    users: createHttpEntityHandlers<UserRecord, UsersListParams, Omit<UserRecord, 'id'>>(
-      optionsFor(endpoints.users),
-    ),
-    contacts: createHttpEntityHandlers<
-      ContactRecord,
-      ContactsListParams,
-      Omit<ContactRecord, 'id' | 'createdAt' | 'orgId'>
-    >(optionsFor(endpoints.contacts)),
-    vendors: createHttpEntityHandlers<
-      VendorRecord,
-      VendorsListParams,
-      Omit<VendorRecord, 'id' | 'createdAt' | 'orgId'>
-    >(optionsFor(endpoints.vendors)),
-    leads: {
-      ...createHttpEntityHandlers<
-        LeadRecord,
-        LeadsListParams,
-        Omit<LeadRecord, 'id' | 'createdAt' | 'orgId'>
-      >(optionsFor(endpoints.leads)),
-      updateStage: (id: string, stage: LeadRecord['stage']) =>
-        requestJson<LeadRecord>(
-          optionsFor(endpoints.leads),
-          `${optionsFor(endpoints.leads).basePath}/${id}/stage`,
-          'PATCH',
-          { stage },
-        ),
-    },
-    staff: createHttpEntityHandlers<
-      StaffRecord,
-      StaffListParams,
-      Omit<StaffRecord, 'id' | 'createdAt' | 'orgId'>
-    >(optionsFor(endpoints.staff)),
-    purchasing: createHttpEntityHandlers<
-      PurchaseOrderRecord,
-      PurchasingListParams,
-      Omit<PurchaseOrderRecord, 'id' | 'poNumber' | 'createdAt' | 'orgId'>
-    >(optionsFor(endpoints.purchasing)),
+    products: createHttpEntityHandlers(optionsFor(endpoints.products)),
+    projects: createHttpEntityHandlers(optionsFor(endpoints.projects)),
+    purchasing: createHttpEntityHandlers(optionsFor(endpoints.purchasing)),
+    staff: createHttpEntityHandlers(optionsFor(endpoints.staff)),
+    users: createHttpEntityHandlers(optionsFor(endpoints.users)),
+    vendors: createHttpEntityHandlers(optionsFor(endpoints.vendors)),
   };
 }

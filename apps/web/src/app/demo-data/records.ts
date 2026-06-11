@@ -60,6 +60,7 @@ export type CaseStage =
 
 export type OrgScoped = {
   orgId?: string;
+  siteId?: string | null;
 };
 
 export type ClientRecord = OrgScoped & {

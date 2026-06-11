@@ -1,0 +1,153 @@
+{
+  "title": "Immobilien",
+  "newImmobilie": "Neue Immobilie",
+  "noImmobilienFound": "Noch keine Immobilien",
+  "noImmobilienDescription": "Legen Sie Ihre erste Immobilie an, um Ihr Portfolio aufzubauen.",
+  "searchImmobilien": "Immobilien suchen…",
+  "externalNumber": "Objektnr.",
+  "marketingType": "Vermarktungsart",
+  "propertyType": "Objektart",
+  "purchasePrice": "Kaufpreis",
+  "rentCold": "Nettokaltmiete",
+  "additionalCosts": "Nebenkosten",
+  "livingAreaM2": "Wohnfläche (m²)",
+  "plotAreaM2": "Grundstücksfläche (m²)",
+  "roomCount": "Zimmer",
+  "headline": "Überschrift",
+  "description": "Objektbeschreibung",
+  "locationDescription": "Lagebeschreibung",
+  "isPublished": "Veröffentlicht",
+  "ownerLink": "Eigentümer",
+  "deleteRecordConfirm": "Diese Immobilie löschen?",
+  "filterCityPlaceholder": "Ort (exakte Übereinstimmung)",
+  "sections": {
+    "overview": "Stammdaten",
+    "pricing": "Preise & Flächen",
+    "pricingFinancial": "Finanzen",
+    "pricingAreas": "Flächen & Zimmer",
+    "texts": "Freitexte",
+    "location": "Lage",
+    "marketing": "Vermarktung",
+    "technical": "Technische Angaben",
+    "category": "Kategorie",
+    "features": "Ausstattung & Gebäude",
+    "customAttributes": "Benutzerdefinierte Merkmale"
+  },
+  "sidebar": {
+    "unit": "Einheit",
+    "address": "Adresse",
+    "addPhotos": "Fotos hinzufügen"
+  },
+  "media": {
+    "photos": "Objektfotos",
+    "noPhotos": "Noch keine Fotos verknüpft. Bilder unten hochladen.",
+    "allFiles": "Dateien & Unterlagen",
+    "photoCount": "{{count}} Fotos",
+    "fileCountHint": "{{count}} Dateien mit dieser Immobilie verknüpft"
+  },
+  "tabs": {
+    "overview": "Grunddaten",
+    "pricing": "Preise & Flächen",
+    "features": "Details",
+    "texts": "Freitexte",
+    "location": "Lage",
+    "media": "Dateien",
+    "contacts": "Interessenten",
+    "marketing": "Vermarktung",
+    "activity": "Maklerbuch",
+    "masterData": "Stammdaten"
+  },
+  "facts": {
+    "livingAreaUnit": "m²",
+    "roomsUnit": "Zi.",
+    "plotAreaUnit": "m² GF"
+  },
+  "form": {
+    "showCustomFields": "Benutzerdefinierte Felder…",
+    "hideCustomFields": "Benutzerdefinierte Felder ausblenden"
+  },
+  "marketingTypes": {
+    "kauf": "Kauf",
+    "miete": "Miete"
+  },
+  "propertyTypes": {
+    "haus": "Haus",
+    "wohnung": "Wohnung",
+    "grundstueck": "Grundstück",
+    "gewerbe": "Gewerbe",
+    "buero": "Büro",
+    "garage": "Garage",
+    "sonstiges": "Sonstiges"
+  },
+  "statuses": {
+    "aktiv": "Aktiv",
+    "inaktiv": "Inaktiv",
+    "archiv": "Archiv",
+    "reserviert": "Reserviert",
+    "verkauft": "Verkauft",
+    "vermietet": "Vermietet"
+  },
+  "linkRoles": {
+    "eigentuemer": "Eigentümer",
+    "kaeufer": "Käufer",
+    "interessent": "Interessent",
+    "makler": "Makler",
+    "ansprechpartner": "Ansprechpartner",
+    "notar": "Notar",
+    "sonstiges": "Sonstiges"
+  },
+  "linkedCustomers": "Verknüpfte Kunden",
+  "linkedCustomersEmpty": "Noch keine Kunden verknüpft.",
+  "openCustomer": "Kunde öffnen",
+  "addContact": "Kunde verknüpfen",
+  "selectCustomer": "Kunde auswählen",
+  "featuresHint": "Ausstattung, Zustand und Gebäudedetails können in den benutzerdefinierten Feldern unten hinterlegt werden.",
+  "features": {
+    "emptyTitle": "Noch keine Ausstattungsdetails",
+    "emptyDescription": "Nutzen Sie benutzerdefinierte Felder für Ausstattung, Energieklasse, Baujahr und weitere Objektdetails."
+  },
+  "texts": {
+    "emptyTitle": "Noch keine Vermarktungstexte",
+    "emptyDescription": "Ergänzen Sie Überschrift, Objektbeschreibung und Lagebeschreibung für Exposés und Portale.",
+    "partialTitle": "Vollständige Objekttexte ergänzen",
+    "partialDescription": "Vervollständigen Sie Beschreibung und Lage für portalreife Inserate.",
+    "internalNotes": "Nur intern"
+  },
+  "location": {
+    "emptyTitle": "Keine Adresse hinterlegt",
+    "emptyDescription": "Tragen Sie Straße, PLZ und Ort ein, um den Standort anzuzeigen.",
+    "mapTitle": "Kartenvorschau",
+    "mapHint": "Die interaktive Karte nutzt diese Adresse — demnächst verfügbar."
+  },
+  "marketing": {
+    "publishedTitle": "Zur Vermarktung freigegeben",
+    "draftTitle": "Entwurf — nicht veröffentlicht",
+    "publishedHint": "Für die Vermarktung sichtbar",
+    "draftHint": "Noch nicht veröffentlicht",
+    "portalsTitle": "Portale",
+    "portalsMeta": "Demnächst",
+    "portalDisabled": "Nicht verbunden",
+    "portals": {
+      "immoscout": "ImmoScout24",
+      "immowelt": "Immowelt",
+      "kleinanzeigen": "Kleinanzeigen"
+    }
+  },
+  "contacts": {
+    "linkTitle": "Kunde verknüpfen",
+    "emptyTitle": "Keine verknüpften Kunden",
+    "noContactInfo": "Keine Kontaktdaten"
+  },
+  "activity": {
+    "emptyTitle": "Noch keine Aktivitäten",
+    "emailTitle": "E-Mail",
+    "emailHint": "Mit dieser Immobilie verknüpfte E-Mail-Threads erscheinen hier.",
+    "calendarTitle": "Termine",
+    "calendarHint": "Besichtigungen und Maklertermine zu diesem Objekt.",
+    "notesTitle": "Maklerbuch",
+    "notesHint": "Interne Maklerbuch-Einträge und Wiedervorlagen."
+  },
+  "mediaPlaceholder": "Fotos und Dokumente werden über Storage verknüpft — demnächst verfügbar.",
+  "marketingPlaceholder": "Portal-Veröffentlichung und Adresssichtbarkeit — demnächst verfügbar.",
+  "activityPlaceholder": "E-Mails, Termine und Maklerbuch-Einträge erscheinen hier — demnächst verfügbar."
+}

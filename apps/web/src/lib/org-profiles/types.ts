@@ -43,8 +43,6 @@ export type OrgProfile = {
   slug: string;
   name: string;
   industryKey: OrgIndustryKey;
-  /** Demo user shown in the account menu when this org is active */
-  demoUserId: string;
   enabledModules: OrgModuleId[];
   /** When set, sidebar uses Osiris module URLs (e.g. /funeral/cases). */
   navPaths?: Partial<Record<OrgModuleId, string>>;

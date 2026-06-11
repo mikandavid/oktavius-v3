@@ -10,7 +10,7 @@ import type {
   TaskRecord,
   UserRecord,
 } from './records';
-import { ORG_KUNZ_ID } from '@/lib/org-profiles/profiles';
+import { ORG_KUNZ_ID } from './orgIds';
 
 const ORG = ORG_KUNZ_ID;
 
