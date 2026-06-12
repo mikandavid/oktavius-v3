@@ -1,2 +1,2 @@
-export { CustomFieldsFormSection } from './CustomFieldsFormSection';
 export { CustomFieldsDetailSection } from './CustomFieldsDetailSection';
+export { CustomFieldsFormSection } from './CustomFieldsFormSection';

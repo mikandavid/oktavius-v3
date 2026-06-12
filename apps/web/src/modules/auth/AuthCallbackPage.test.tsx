@@ -1,5 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import type * as ReactRouterDomModule from 'react-router-dom';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -14,7 +15,7 @@ import { AuthCallbackPage } from './AuthPlaceholderPage';
 const navigate = vi.fn();
 
 vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
+  const actual = await importOriginal<typeof ReactRouterDomModule>();
   return {
     ...actual,
     useNavigate: () => navigate,

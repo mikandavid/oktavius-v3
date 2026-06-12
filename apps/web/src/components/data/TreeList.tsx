@@ -1,6 +1,5 @@
+import { cn, CollapsibleSection } from '@oktavius/base-ui';
 import { useState } from 'react';
-
-import { CollapsibleSection, cn } from '@oktavius/base-ui';
 
 import { FolderIcon } from '@/lib/icons';
 

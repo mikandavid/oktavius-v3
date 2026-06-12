@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
-
 import { Badge, cn } from '@oktavius/base-ui';
+import { Link } from 'react-router-dom';
 
 import { ExternalLinkIcon } from '@/lib/icons';
 

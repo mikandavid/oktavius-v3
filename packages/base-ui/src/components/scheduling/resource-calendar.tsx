@@ -3,11 +3,10 @@ import * as React from 'react';
 
 import { cn } from '../../lib/utils';
 import { eventBlockClasses } from './calendar-colors';
-import { CalendarToolbar } from './calendar-toolbar';
 import {
-  clampEventToDayWindow,
   type CalendarEvent,
   type CalendarResource,
+  clampEventToDayWindow,
   DEFAULT_SCHEDULER_END_HOUR,
   DEFAULT_SCHEDULER_START_HOUR,
   DEFAULT_SLOT_MINUTES,
@@ -17,6 +16,7 @@ import {
   schedulingShellClass,
   schedulingTimeLabelClass,
 } from './calendar-shared';
+import { CalendarToolbar } from './calendar-toolbar';
 
 function buildTimeSlots(startHour: number, endHour: number, slotMinutes: number): string[] {
   const slots: string[] = [];

@@ -1,7 +1,6 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
-
 import {
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
@@ -10,27 +9,27 @@ import {
   formatDisplayDateTime,
   MouseTooltip,
   ScrollArea,
-  cn,
 } from '@oktavius/base-ui';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
-import { AgentMessageList } from '@/components/agent/AgentMessageList';
-import { ChatFilePreviewDialog } from '@/components/agent/ChatFilePreviewDialog';
-import { EditableConversationTitle } from '@/components/agent/EditableConversationTitle';
-import { RecordingBar } from '@/components/agent/VoiceRecorder';
 import { getAttachmentIcon } from '@/components/agent/agentHelpers';
+import { AgentMessageList } from '@/components/agent/AgentMessageList';
 import { createConfiguredAgentTransport, runAgentTurn } from '@/components/agent/agentRuntime';
+import { AgentThinkingIndicator } from '@/components/agent/AgentThinkingIndicator';
+import { AgentWelcomeScreen } from '@/components/agent/AgentWelcomeScreen';
+import { ChatFilePreviewDialog } from '@/components/agent/ChatFilePreviewDialog';
 import {
   loadStoredChatConversations,
   storeChatConversations,
-  trimChatConversations,
   type StoredChatConversation,
+  trimChatConversations,
 } from '@/components/agent/chatStorage';
+import { EditableConversationTitle } from '@/components/agent/EditableConversationTitle';
 import { useAgentPageContext } from '@/components/agent/page-context';
 import { captureAgentPageContext } from '@/components/agent/page-routing';
-import { AgentThinkingIndicator } from '@/components/agent/AgentThinkingIndicator';
-import { AgentWelcomeScreen } from '@/components/agent/AgentWelcomeScreen';
 import type { AgentMessage, AgentModelMode } from '@/components/agent/types';
+import { RecordingBar } from '@/components/agent/VoiceRecorder';
+import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import {
   BrainIcon,
   ChevronDownIcon,
@@ -45,7 +44,7 @@ import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
 
 import { ChatComposer } from './ChatComposer';
-import { ConversationHistoryPanel, type ConversationHistoryItem } from './ConversationHistoryPanel';
+import { type ConversationHistoryItem, ConversationHistoryPanel } from './ConversationHistoryPanel';
 import { MobileAgentLayout } from './MobileAgentLayout';
 
 type ShellConversation = StoredChatConversation;

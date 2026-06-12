@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 /**
  * Spaced stack for master-detail sidebars (incident queue, document list, etc.).

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   assertGeneratedModuleContract,
   GENERATED_MODULE_CONTRACT_LIMITS,
-  validateGeneratedModuleContract,
   type GeneratedModuleContract,
+  validateGeneratedModuleContract,
 } from './generatedModuleContract';
 
 const validContract: GeneratedModuleContract = {

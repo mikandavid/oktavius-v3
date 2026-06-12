@@ -7,8 +7,8 @@ import {
   createLocalSavedViewsStore,
   createSavedViewFromFilters,
   loadStoredSavedViews,
-  storeSavedViews,
   type StoredSavedView,
+  storeSavedViews,
 } from './savedViewsStorage';
 
 function createStorage(seed: Record<string, string> = {}): Storage {

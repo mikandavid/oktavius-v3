@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { ListResponse } from './contracts';
 import {
   createConfiguredApiRegistry,
   createOsirisApiRegistry,
   DEFAULT_HTTP_REGISTRY_ENDPOINTS,
 } from './apiRegistryConfig';
+import type { ListResponse } from './contracts';
 
 type Row = { id: string; name: string };
 

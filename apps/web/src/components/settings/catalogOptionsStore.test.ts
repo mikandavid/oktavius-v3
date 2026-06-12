@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { CatalogOption } from './CatalogOptionsManager';
 import {
   buildCatalogOptionsStorageKey,
+  type CatalogOptionsStore,
   createApiCatalogOptionsStore,
   createLocalCatalogOptionsStore,
   loadStoredCatalogOptions,
   storeCatalogOptions,
-  type CatalogOptionsStore,
 } from './catalogOptionsStore';
-import type { CatalogOption } from './CatalogOptionsManager';
 
 function createStorage(seed: Record<string, string> = {}): Storage {
   const values = new Map(Object.entries(seed));

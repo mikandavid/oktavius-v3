@@ -1,5 +1,5 @@
 import { cn } from '../lib/utils';
-import { badgeVariants, type BadgeProps } from './badge';
+import { type BadgeProps, badgeVariants } from './badge';
 
 export interface CountBadgeProps {
   count: number;

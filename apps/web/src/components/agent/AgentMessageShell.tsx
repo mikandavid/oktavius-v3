@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 import { OctopusIcon } from './OctopusIcon';
 

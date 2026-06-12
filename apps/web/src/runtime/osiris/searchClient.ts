@@ -7,10 +7,12 @@ import {
   DocumentIcon,
   EmailIcon,
   FolderIcon,
+  type IconProps,
   IncidentIcon,
   InvoiceIcon,
   OrderIcon,
   OrganizationIcon,
+  type PhosphorIcon,
   ProductIcon,
   ProjectIcon,
   ProjectsIcon,
@@ -19,8 +21,6 @@ import {
   TeamIcon,
   UserIcon,
   UsersIcon,
-  type IconProps,
-  type PhosphorIcon,
 } from '@/lib/icons';
 import type { SearchRuntimeAdapter } from '@/lib/search/SearchRuntime';
 import type { SearchResult } from '@/lib/search/types';

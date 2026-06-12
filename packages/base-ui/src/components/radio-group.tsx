@@ -1,9 +1,9 @@
 import * as RadioGroupPrimitive from '@radix-ui/react-radio-group';
 import * as React from 'react';
 
-import { Label } from './label';
 import { pressableMicroClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';
+import { Label } from './label';
 
 export const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,

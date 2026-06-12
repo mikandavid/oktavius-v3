@@ -1,4 +1,4 @@
-import { toast as sonnerToast, type ExternalToast, type ToasterProps } from 'sonner';
+import { type ExternalToast, toast as sonnerToast, type ToasterProps } from 'sonner';
 
 import { formatUserFacingApiError } from './userFacingApiError';
 

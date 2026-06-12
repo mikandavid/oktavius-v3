@@ -1,16 +1,4 @@
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import { useHotkeys } from 'react-hotkeys-hook';
-import { useNavigate } from 'react-router-dom';
-
-import {
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -20,8 +8,18 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@oktavius/base-ui';
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+import { useNavigate } from 'react-router-dom';
 
-import { SearchIcon } from '@/lib/icons';
 import {
   APP_NAV_MODULES,
   getAppQuickActionsForProfile,
@@ -29,6 +27,7 @@ import {
   moduleLabelFor,
   visiblePathFor,
 } from '@/lib/appNavModules';
+import { SearchIcon } from '@/lib/icons';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
 import {
   canAccessAppNavItem,

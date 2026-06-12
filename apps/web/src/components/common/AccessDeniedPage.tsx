@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { ModulePage } from '@/components/common/PageLayout';
 import { EmptyState } from '@/components/common/EmptyState';
 import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
+import { ModulePage } from '@/components/common/PageLayout';
 import { accessDeniedPageIcon } from '@/lib/modulePageIcons';
 
 export type AccessDeniedPageProps = {

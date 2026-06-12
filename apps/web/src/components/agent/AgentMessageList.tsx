@@ -5,12 +5,12 @@ import { extractGoogleMapsUrls, GoogleMapsPreviewButton } from '@/components/map
 
 import { AgentConfirmationCard } from './AgentConfirmationCard';
 import { formatToolName, getToolIcon } from './agentHelpers';
-import { AgentPythonExecutionCard } from './cards/AgentPythonExecutionCard';
 import { renderAgentCard } from './cards';
+import { AgentPythonExecutionCard } from './cards/AgentPythonExecutionCard';
 import { OctopusIcon } from './OctopusIcon';
 import { StructuredContent } from './structured/StructuredContent';
-import { ChatUIComponent } from './UIComponentRegistry';
 import type { AgentMessage } from './types';
+import { ChatUIComponent } from './UIComponentRegistry';
 
 type MessageGroup =
   | { kind: 'chain'; items: { message: AgentMessage; index: number }[] }

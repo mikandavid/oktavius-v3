@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import { Badge, Button, cn } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon, SpinnerIcon } from '@/lib/icons';
 

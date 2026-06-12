@@ -17,23 +17,23 @@ import {
   coreTranslations,
   DEFAULT_LANGUAGE,
   interpolate,
-  loadNamespace,
   type InterpolationParams,
   type LanguageCode,
+  loadNamespace,
   type TranslationNamespace,
 } from '@oktavius/i18n';
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from 'react';
 
-import { useUserPreferences, type UiLocale } from '@/lib/userPreferences';
+import { type UiLocale, useUserPreferences } from '@/lib/userPreferences';
 
 import {
   buildOverrideScopeKey,
@@ -41,7 +41,7 @@ import {
   resetRequestedNamespacesToBase,
 } from './namespaceOverrides';
 import { buildWarmupNamespaceKey, selectWarmupNamespaces } from './namespaceWarmup';
-import { NOOP_I18N_RUNTIME, type I18nRuntimeAdapter } from './runtime';
+import { type I18nRuntimeAdapter, NOOP_I18N_RUNTIME } from './runtime';
 
 type Store = Record<LanguageCode, Record<string, Record<string, unknown>>>;
 

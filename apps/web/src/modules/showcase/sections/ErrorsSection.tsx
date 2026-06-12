@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import { Button } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { ModuleErrorBoundary } from '@/core/errors/ModuleErrorBoundary';
 import { SectionErrorBoundary } from '@/core/errors/SectionErrorBoundary';

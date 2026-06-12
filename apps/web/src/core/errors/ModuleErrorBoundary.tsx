@@ -1,6 +1,5 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-
 import { Button } from '@oktavius/base-ui';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 import { RefreshIcon, WarningIcon } from '@/lib/icons';

@@ -1,6 +1,5 @@
+import { Badge, cn, Combobox, type ComboboxOption } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
-
-import { Badge, Combobox, type ComboboxOption, cn } from '@oktavius/base-ui';
 
 type RecipientComboboxProps = {
   value: string[];

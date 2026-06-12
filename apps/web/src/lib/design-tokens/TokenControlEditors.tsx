@@ -1,4 +1,4 @@
-import { Input, Label, cn } from '@oktavius/base-ui';
+import { cn, Input, Label } from '@oktavius/base-ui';
 
 import {
   hslStringFromHex,

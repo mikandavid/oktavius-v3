@@ -1,3 +1,4 @@
+import type { AgentCardPayload } from '../types';
 import { AgentActionItemsCard } from './AgentActionItemsCard';
 import { AgentActiveTimerCard } from './AgentActiveTimerCard';
 import { AgentCatalogItemCard } from './AgentCatalogItemCard';
@@ -17,7 +18,6 @@ import { AgentScheduleCard } from './AgentScheduleCard';
 import { AgentSearchResultsCard } from './AgentSearchResultsCard';
 import { AgentSkillApprovalCard } from './AgentSkillApprovalCard';
 import { AgentTimelineCard } from './AgentTimelineCard';
-import type { AgentCardPayload } from '../types';
 
 type RenderAgentCardOptions = {
   onEntityClick?: (itemId: string, href?: string) => void;

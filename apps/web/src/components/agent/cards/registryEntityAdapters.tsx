@@ -1,7 +1,7 @@
 import { humanizeKey } from '../cardUtils';
+import type { AgentEntityDetailCardPayload, AgentEntityListCardPayload } from '../types';
 import { AgentEntityDetailCard } from './AgentEntityDetailCard';
 import { AgentEntityListCard } from './AgentEntityListCard';
-import type { AgentEntityDetailCardPayload, AgentEntityListCardPayload } from '../types';
 
 export function normalizeEntityDetailProps(
   props: Record<string, unknown>,

@@ -1,13 +1,12 @@
-import { useState } from 'react';
-
 import { Button, RichTextEditor, Stepper, StepperLayout } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { TreeList, type TreeNode } from '@/components/data/TreeList';
 import { GoogleMapsPreview, GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
 import {
-  CatalogOptionsManager,
   type CatalogOption,
+  CatalogOptionsManager,
 } from '@/components/settings/CatalogOptionsManager';
 import { UploadIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';

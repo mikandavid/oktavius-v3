@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { Button, DialogClose, DialogFooter } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 type DialogFormFooterProps = {
   cancelLabel?: string;

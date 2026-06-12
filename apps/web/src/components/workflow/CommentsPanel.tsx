@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   Avatar,
   Badge,
@@ -11,6 +9,7 @@ import {
   RelativeTime,
   SectionCard,
 } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { FormattedText } from '@/components/common/FormattedText';
 import { UserIcon } from '@/lib/icons';

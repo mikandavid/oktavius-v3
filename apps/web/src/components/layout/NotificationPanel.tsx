@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-
 import {
   Button,
+  cn,
   ListRow,
   Popover,
   PopoverContent,
   PopoverTrigger,
   ScrollArea,
-  cn,
 } from '@oktavius/base-ui';
+import { useEffect, useMemo, useState } from 'react';
 
 import { NotificationsIcon } from '@/lib/icons';
 

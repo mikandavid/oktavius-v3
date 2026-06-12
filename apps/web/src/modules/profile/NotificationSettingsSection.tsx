@@ -1,6 +1,5 @@
+import { Badge, cn, SettingsRow, SettingsSection } from '@oktavius/base-ui';
 import { useCallback, useEffect, useState } from 'react';
-
-import { Badge, SettingsRow, SettingsSection, cn } from '@oktavius/base-ui';
 
 import type {
   NotificationChannel,

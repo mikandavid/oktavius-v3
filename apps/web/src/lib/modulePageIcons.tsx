@@ -1,14 +1,16 @@
 import type { ComponentType, ReactNode } from 'react';
 
 import {
+  CalendarIcon,
   CaseIcon,
   ContractIcon,
+  EmailIcon,
   FunnelIcon,
   HomeIcon,
+  type IconProps,
   IncidentIcon,
   InvoiceIcon,
   LockIcon,
-  WarningIcon,
   OrderIcon,
   OrganizationIcon,
   ProductIcon,
@@ -21,9 +23,7 @@ import {
   TeamIcon,
   UserCircleIcon,
   UsersIcon,
-  CalendarIcon,
-  EmailIcon,
-  type IconProps,
+  WarningIcon,
 } from '@/lib/icons';
 
 /** Standard header orb on ModulePage / CrudMainView — size 20, duotone (matches Users list). */

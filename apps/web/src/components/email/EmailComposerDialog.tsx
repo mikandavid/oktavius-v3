@@ -10,8 +10,8 @@ import {
 
 import { PaperclipIcon } from '@/lib/icons';
 
-import { EmailComposer, type EmailContactOption } from './EmailComposer';
 import type { ComposerMode } from './emailActions';
+import { EmailComposer, type EmailContactOption } from './EmailComposer';
 import type { EmailAttachment, EmailDraft, EmailTemplate } from './types';
 
 const MODE_TITLE: Record<Exclude<ComposerMode, 'closed'>, string> = {

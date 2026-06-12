@@ -1,7 +1,7 @@
 import { Button } from '@oktavius/base-ui';
 
-import { InfoBox } from '@/components/common/InfoBox';
 import { useCommandPalette } from '@/components/command/CommandPalette';
+import { InfoBox } from '@/components/common/InfoBox';
 import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';

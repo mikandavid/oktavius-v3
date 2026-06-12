@@ -1,10 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { Button, Input, SettingsRow, SettingsSection } from '@oktavius/base-ui';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { Button, Input, SettingsRow, SettingsSection } from '@oktavius/base-ui';
-
-import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
+import { ModulePage } from '@/components/common/PageLayout';
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 import { useTranslation } from '@/core/i18n';
 import { NotificationsIcon, Settings2Icon, UserCircleIcon } from '@/lib/icons';

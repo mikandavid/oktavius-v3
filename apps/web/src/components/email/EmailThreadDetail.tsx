@@ -1,11 +1,11 @@
 import {
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  cn,
 } from '@oktavius/base-ui';
 
 import {
@@ -22,11 +22,11 @@ import {
   ReplyIcon,
 } from '@/lib/icons';
 
+import type { ComposerMode } from './emailActions';
 import { EmailMessageAttachments } from './EmailMessageAttachments';
 import { EmailMessageBodyHtml } from './EmailMessageBodyHtml';
 import { EmailMessageHeader } from './EmailMessageHeader';
 import { LinkedEntityPill } from './LinkedEntityPill';
-import type { ComposerMode } from './emailActions';
 import type { EmailMessage, EmailThread } from './types';
 
 type EmailThreadDetailProps = {

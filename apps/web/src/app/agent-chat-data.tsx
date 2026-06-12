@@ -1,17 +1,17 @@
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ReactNode,
 } from 'react';
 
 import { resolveAppNavModuleForProfile } from '@/lib/appNavModules';
-import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
+import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 import { useUserPreferences } from '@/lib/userPreferences';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 

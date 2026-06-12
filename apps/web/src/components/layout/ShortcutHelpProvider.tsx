@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 
 import { ShortcutHelpDialog } from './ShortcutHelpDialog';

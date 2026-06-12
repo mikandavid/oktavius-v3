@@ -1,12 +1,12 @@
-export * from './types';
 export * from './emailActions';
 export { EmailComposer, type EmailContactOption } from './EmailComposer';
 export { EmailComposerDialog, type EmailComposerDialogProps } from './EmailComposerDialog';
-export { EmailThreadQueue } from './EmailThreadQueue';
-export { EmailThreadDetail } from './EmailThreadDetail';
-export { EmailMessageHeader } from './EmailMessageHeader';
-export { EmailMessageBodyHtml } from './EmailMessageBodyHtml';
 export { EmailMessageAttachments } from './EmailMessageAttachments';
-export { LinkedEntityPill } from './LinkedEntityPill';
+export { EmailMessageBodyHtml } from './EmailMessageBodyHtml';
+export { EmailMessageHeader } from './EmailMessageHeader';
 export { EmailTemplatesDialog } from './EmailTemplatesDialog';
+export { EmailThreadDetail } from './EmailThreadDetail';
+export { EmailThreadQueue } from './EmailThreadQueue';
+export { LinkedEntityPill } from './LinkedEntityPill';
 export { sanitizeEmailHtml } from './sanitizeEmailHtml';
+export * from './types';

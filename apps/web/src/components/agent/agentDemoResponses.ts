@@ -1,4 +1,3 @@
-import type { AgentMessage } from './types';
 import {
   DEMO_DOCUMENT_CARD,
   DEMO_ENTITY_DETAIL_CARD,
@@ -9,6 +8,7 @@ import {
   DEMO_SEARCH_RESULTS_CARD,
   DEMO_SKILL_APPROVAL_CARD,
 } from './agentDemoCardPayloads';
+import type { AgentMessage } from './types';
 
 /** Demo assistant follow-up after a user message — tool + confirmation cards. */
 export function buildDemoAgentFollowUp(userContent: string, now: string): AgentMessage[] {

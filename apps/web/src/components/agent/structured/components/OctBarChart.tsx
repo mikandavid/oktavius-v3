@@ -1,7 +1,6 @@
 import { SectionCard, SimpleBarChart } from '@oktavius/base-ui';
 
 import type { OctComponentProps } from '../registry';
-
 import { makeValueFormatter, mapChartPoints, parseChartBody } from './chartShared';
 
 export default function OctBarChart({ attrs, body }: OctComponentProps) {

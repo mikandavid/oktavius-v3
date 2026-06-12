@@ -1,16 +1,15 @@
+import { ChartCard, type ChartPoint } from '@oktavius/base-ui';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { useQuery } from '@tanstack/react-query';
-import { ChartCard, type ChartPoint } from '@oktavius/base-ui';
-
-import { createConfiguredReportStore } from '@/api/apiStoreConfig';
 import { useApiRegistry } from '@/api/ApiProvider';
-import { ModulePage } from '@/components/common/PageLayout';
+import { createConfiguredReportStore } from '@/api/apiStoreConfig';
 import { MODULE_TABS_CONTENT_SCROLL_CLASS } from '@/components/common/pageChrome';
+import { ModulePage } from '@/components/common/PageLayout';
 import { ReportBuilderPanel } from '@/components/reports/ReportBuilderPanel';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
-import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { reportsPageIcon } from '@/lib/modulePageIcons';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 const REPORTS_PAGE_SIZE = '250';

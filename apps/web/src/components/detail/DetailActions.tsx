@@ -1,8 +1,7 @@
+import { Button, type ButtonProps, buttonVariants, cn } from '@oktavius/base-ui';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-
-import { Button, buttonVariants, cn, type ButtonProps } from '@oktavius/base-ui';
 
 import type { PermissionRequirement } from '@/lib/permissions';
 import { canUsePermissionRequirement, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';

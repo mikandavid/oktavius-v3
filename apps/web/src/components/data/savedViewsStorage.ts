@@ -1,5 +1,6 @@
+import { type ApiArrayStoreFetcher, createApiArrayStore } from '@/lib/apiArrayStore';
+
 import type { SavedViewPreset } from './useListSavedViews';
-import { createApiArrayStore, type ApiArrayStoreFetcher } from '@/lib/apiArrayStore';
 
 const SAVED_VIEW_STORAGE_PREFIX = 'oktavius.savedViews';
 

@@ -1,15 +1,13 @@
+import { Button, buttonVariants, cn, MouseTooltip } from '@oktavius/base-ui';
 import { Link } from 'react-router-dom';
-
-import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 
 import { useCommandPalette } from '@/components/command/CommandPalette';
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
+import { BotIcon, ListIcon } from '@/lib/icons';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
 
-import { BotIcon, ListIcon } from '@/lib/icons';
-
-import { HeaderAccountMenu } from './HeaderAccountMenu';
 import { BrandMark } from './BrandMark';
+import { HeaderAccountMenu } from './HeaderAccountMenu';
 
 type MobileTopBarProps = {
   onToggleSidebar: () => void;

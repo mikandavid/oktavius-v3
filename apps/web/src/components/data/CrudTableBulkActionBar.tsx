@@ -1,6 +1,6 @@
 import { Button, Checkbox } from '@oktavius/base-ui';
 
-import { permitted, type PermissionSubject } from '@/lib/permissions';
+import { type PermissionSubject, permitted } from '@/lib/permissions';
 
 import { CRUD_TABLE_SELECTION_CHECKBOX_CLASS } from './crudTableDensity';
 import type { BulkAction } from './crudTableTypes';

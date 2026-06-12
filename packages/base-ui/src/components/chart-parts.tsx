@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '../lib/utils';
 import { CHART_PALETTE, resolveChartColor } from '../lib/chartPalette';
+import { cn } from '../lib/utils';
 
 export type ChartLegendItem = {
   label: string;

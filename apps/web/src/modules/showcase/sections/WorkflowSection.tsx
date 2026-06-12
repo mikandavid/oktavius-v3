@@ -1,14 +1,13 @@
+import { applyKanbanMove, Badge, Button, KanbanBoard, ListRow, Timeline } from '@oktavius/base-ui';
 import { useState } from 'react';
 
-import { Badge, Button, KanbanBoard, ListRow, Timeline, applyKanbanMove } from '@oktavius/base-ui';
-
+import { AgentConfirmationCard } from '@/components/agent/AgentConfirmationCard';
+import { AgentToolCallCard } from '@/components/agent/AgentToolCallCard';
 import { ChecklistSection } from '@/components/common/ChecklistSection';
 import { FormattedText } from '@/components/common/FormattedText';
 import { ApprovalHistory } from '@/components/workflow/ApprovalHistory';
-import { ApprovalPanel, type ApprovalItem } from '@/components/workflow/ApprovalPanel';
-import { AgentConfirmationCard } from '@/components/agent/AgentConfirmationCard';
-import { AgentToolCallCard } from '@/components/agent/AgentToolCallCard';
-import { CommentsPanel, type CommentItem } from '@/components/workflow/CommentsPanel';
+import { type ApprovalItem, ApprovalPanel } from '@/components/workflow/ApprovalPanel';
+import { type CommentItem, CommentsPanel } from '@/components/workflow/CommentsPanel';
 import { MentionComposer } from '@/components/workflow/MentionComposer';
 import { TaskInbox, type TaskInboxItem } from '@/components/workflow/TaskInbox';
 import { UserIcon } from '@/lib/icons';

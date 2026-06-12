@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from 'react';
+import { type RefObject, useEffect } from 'react';
 import { useBlocker } from 'react-router-dom';
 
 import type { FormFieldValue } from '@/components/forms/EntityForm';

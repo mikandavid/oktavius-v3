@@ -1,4 +1,4 @@
-import { StatCard, SectionCard } from '@oktavius/base-ui';
+import { SectionCard, StatCard } from '@oktavius/base-ui';
 
 import { MinusIcon, SortAscIcon, SortDescIcon } from '@/lib/icons';
 

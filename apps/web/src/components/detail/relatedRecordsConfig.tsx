@@ -1,4 +1,4 @@
-import { RelatedRecordsPanel, type RelatedRecordItem } from './RelatedRecordsPanel';
+import { type RelatedRecordItem, RelatedRecordsPanel } from './RelatedRecordsPanel';
 
 export type RelatedRecordsConfig<TParent, TRow> = {
   title: string;

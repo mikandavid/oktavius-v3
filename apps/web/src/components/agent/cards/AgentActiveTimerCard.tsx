@@ -1,8 +1,8 @@
 import { Badge, Button, SectionCard } from '@oktavius/base-ui';
+import { formatDisplayDateTime } from '@oktavius/base-ui';
 
 import { StopIcon, TimeIcon } from '@/lib/icons';
 
-import { formatDisplayDateTime } from '@oktavius/base-ui';
 import type { AgentActiveTimerCardPayload } from '../types';
 
 type AgentActiveTimerCardProps = AgentActiveTimerCardPayload & {

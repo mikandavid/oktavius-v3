@@ -1,11 +1,11 @@
 import * as React from 'react';
 
-import { cn } from '../lib/utils';
 import {
   sanitizeDecimalInput,
   sanitizeEmailInput,
   sanitizeIntegerInput,
 } from '../lib/input-sanitize';
+import { cn } from '../lib/utils';
 import { Combobox, type ComboboxOption } from './combobox';
 import { Input } from './input';
 

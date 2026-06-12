@@ -1,9 +1,7 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
 import {
   Button,
   buttonVariants,
+  cn,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -12,8 +10,9 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  cn,
 } from '@oktavius/base-ui';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   getLocationMapsSearchUrl,

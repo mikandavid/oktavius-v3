@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 
+import type { IconProps } from '@/lib/icons';
 import {
   BotIcon,
   CalendarIcon,
@@ -9,12 +10,11 @@ import {
   SettingsIcon,
   SlidersHorizontalIcon,
 } from '@/lib/icons';
-import type { IconProps } from '@/lib/icons';
 import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 
-import { canAccessAppNavItem } from './permissions';
 import type { PermissionSubject } from './permissions';
 import type { PermissionRequirement } from './permissions';
+import { canAccessAppNavItem } from './permissions';
 
 export type AppNavSection = 'primary' | 'modules' | 'admin';
 export type AppNavRouteId = OrgModuleId;

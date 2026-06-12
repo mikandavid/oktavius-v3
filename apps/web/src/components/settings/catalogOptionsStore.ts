@@ -1,5 +1,6 @@
+import { type ApiArrayStoreFetcher, createApiArrayStore } from '@/lib/apiArrayStore';
+
 import type { CatalogOption } from './CatalogOptionsManager';
-import { createApiArrayStore, type ApiArrayStoreFetcher } from '@/lib/apiArrayStore';
 
 const CATALOG_OPTIONS_STORAGE_PREFIX = 'oktavius.catalogOptions';
 

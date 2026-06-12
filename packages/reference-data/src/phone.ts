@@ -2,8 +2,8 @@ import { COUNTRY_CODES, getCountryDisplayName, getPrimaryDialCode } from './coun
 import {
   PHONE_PRIORITY_CODES,
   prioritizeCodes,
-  toDisplayLocale,
   type ReferenceDataMode,
+  toDisplayLocale,
 } from './locale';
 
 export interface PhoneCountry {

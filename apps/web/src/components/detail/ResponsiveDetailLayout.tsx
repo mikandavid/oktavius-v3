@@ -1,8 +1,7 @@
+import { Button, cn, SplitView } from '@oktavius/base-ui';
+import { parseAsString } from 'nuqs';
 import type { ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-
-import { Button, SplitView, cn } from '@oktavius/base-ui';
-import { parseAsString } from 'nuqs';
 
 import { useMediaQuery } from '@/lib/useMediaQuery';
 

@@ -1,7 +1,7 @@
+import { cn } from '@oktavius/base-ui';
 import type { DragEvent, ReactNode } from 'react';
 
 import { UploadIcon } from '@/lib/icons';
-import { cn } from '@oktavius/base-ui';
 
 type PageFileDropProps = {
   onFiles: (files: File[]) => void;

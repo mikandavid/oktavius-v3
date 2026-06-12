@@ -11,6 +11,7 @@ export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDiv
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+  // eslint-disable-next-line jsx-a11y/heading-has-content -- children arrive via {...props} spread; callers always pass content
   return <h3 className={cn('text-sm font-semibold text-foreground', className)} {...props} />;
 }
 

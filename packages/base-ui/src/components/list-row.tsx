@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { cn } from '../lib/utils';
 import { surfacePressMicroClasses } from '../lib/microInteractions';
 import { getSemanticToneClasses } from '../lib/semanticPalette';
+import { cn } from '../lib/utils';
 import { RecordVisual, type RecordVisualProps } from './record-visual';
 
 export type ListRowVariant = 'default' | 'muted' | 'warning' | 'dashed' | 'queue';

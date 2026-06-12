@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-
 import { Button, Input, Label } from '@oktavius/base-ui';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { EyeIcon, EyeOffIcon, WarningIcon } from '@/lib/icons';

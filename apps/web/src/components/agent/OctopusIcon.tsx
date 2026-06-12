@@ -1,6 +1,5 @@
-import type { ImgHTMLAttributes } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import type { ImgHTMLAttributes } from 'react';
 
 type OctopusIconProps = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'>;
 

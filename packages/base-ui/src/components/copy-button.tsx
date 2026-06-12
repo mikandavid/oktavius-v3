@@ -1,6 +1,5 @@
-import * as React from 'react';
-
 import { Check, Copy } from '@phosphor-icons/react';
+import * as React from 'react';
 
 import { successFeedbackClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';

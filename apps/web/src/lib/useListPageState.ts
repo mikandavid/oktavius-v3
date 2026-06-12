@@ -1,6 +1,6 @@
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 import { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs';
 
 import { sortRows } from '@/lib/sortRows';
 

@@ -1,6 +1,6 @@
-import { ChevronLeftIcon, ChevronRightIcon } from '@/lib/icons';
-
 import { Button } from '@oktavius/base-ui';
+
+import { ChevronLeftIcon, ChevronRightIcon } from '@/lib/icons';
 
 type PaginationProps = {
   page: number;

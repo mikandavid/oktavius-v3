@@ -4,13 +4,13 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { cn } from '../../lib/utils';
 import { type CalendarSource, eventChipClasses } from './calendar-colors';
-import { calendarEventDragId, CALENDAR_CLICK_DRAG_THRESHOLD_PX } from './calendar-dnd';
+import { CALENDAR_CLICK_DRAG_THRESHOLD_PX, calendarEventDragId } from './calendar-dnd';
 import {
-  formatCalendarEventDetailHint,
   type CalendarEvent,
   type CalendarTeamMember,
   eventClickAnchor,
   eventStartDate,
+  formatCalendarEventDetailHint,
 } from './calendar-shared';
 
 export interface CalendarEventChipProps {

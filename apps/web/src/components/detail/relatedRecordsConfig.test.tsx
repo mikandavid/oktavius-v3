@@ -3,8 +3,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import {
-  GeneratedRelatedRecordsPanel,
   buildRelatedRecordItems,
+  GeneratedRelatedRecordsPanel,
   type RelatedRecordsConfig,
 } from './relatedRecordsConfig';
 

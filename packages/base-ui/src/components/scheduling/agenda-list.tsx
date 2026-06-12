@@ -3,15 +3,15 @@ import { type CalendarSource, eventBlockClasses } from './calendar-colors';
 import {
   type CalendarEvent,
   type CalendarEventClickHandler,
+  type CalendarTeamMember,
+  eventClickAnchor,
   formatAgendaDayHeading,
   formatCalendarEventDetailHint,
   formatEventTimeRange,
   groupEventsByDay,
-  type CalendarTeamMember,
   isToday,
   schedulingBodyClass,
   schedulingShellClass,
-  eventClickAnchor,
 } from './calendar-shared';
 
 export interface AgendaListProps {

@@ -1,5 +1,5 @@
-import { EntityPicker, type EntityPickerValue } from '@/components/pickers/EntityPicker';
 import { useOptionalApiRegistry } from '@/api/ApiProvider';
+import { EntityPicker, type EntityPickerValue } from '@/components/pickers/EntityPicker';
 
 export type ProjectPickerValue = EntityPickerValue;
 

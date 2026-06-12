@@ -1,6 +1,6 @@
 import { SectionCard } from '@oktavius/base-ui';
-
 import { formatDisplayDateTime } from '@oktavius/base-ui';
+
 import type { AgentTimelineCardPayload, AgentTimelineEvent } from '../types';
 
 type AgentTimelineCardProps = AgentTimelineCardPayload & {

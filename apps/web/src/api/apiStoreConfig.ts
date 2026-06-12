@@ -8,12 +8,12 @@ import {
   createLocalReportStore,
   type ReportStore,
 } from '@/components/reports/reportStorage';
+import type { CatalogOption } from '@/components/settings/CatalogOptionsManager';
 import {
+  type CatalogOptionsStore,
   createApiCatalogOptionsStore,
   createLocalCatalogOptionsStore,
-  type CatalogOptionsStore,
 } from '@/components/settings/catalogOptionsStore';
-import type { CatalogOption } from '@/components/settings/CatalogOptionsManager';
 import type { ApiArrayStoreFetcher } from '@/lib/apiArrayStore';
 
 export type ApiStoreEnvironment = {

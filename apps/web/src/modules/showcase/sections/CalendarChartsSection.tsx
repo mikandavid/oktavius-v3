@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   CalendarEventEditorDialog,
   CalendarEventQuickCreate,
@@ -7,11 +5,12 @@ import {
   ChartCard,
   SimpleSparklineChart,
 } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { ReportBuilderPanel } from '@/components/reports/ReportBuilderPanel';
 
-import { ShowcaseBlock } from '../shared';
 import { useShowcaseCalendarDemo } from '../fixtures/calendarDemo';
+import { ShowcaseBlock } from '../shared';
 
 const ORDERS_DATA = [
   { label: 'Licenses', value: 18 },

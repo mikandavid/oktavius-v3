@@ -1,12 +1,13 @@
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from 'react';
+
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 import { SIDEBAR_COLLAPSED_STORAGE_KEY, useOptionalUserPreferences } from '@/lib/userPreferences';
 

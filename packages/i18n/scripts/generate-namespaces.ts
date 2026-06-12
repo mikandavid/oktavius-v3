@@ -3,7 +3,7 @@
  * + src/translations.ts (bundle map + lazy loaders) so namespace lists stay in sync.
  */
 import { readdirSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { dirname,join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

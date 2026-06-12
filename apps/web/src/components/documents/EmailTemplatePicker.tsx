@@ -1,4 +1,4 @@
-import { InlineEmptyState, ListRow, SectionCard, cn } from '@oktavius/base-ui';
+import { cn, InlineEmptyState, ListRow, SectionCard } from '@oktavius/base-ui';
 
 import { CheckIcon, EmailIcon } from '@/lib/icons';
 

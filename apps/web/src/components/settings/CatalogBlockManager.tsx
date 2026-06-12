@@ -1,25 +1,24 @@
-import { useMemo, useState } from 'react';
-
 import {
+  applyOrderedIds,
   Button,
+  nextSortOrder,
   SectionCard,
   SettingsTable,
-  applyOrderedIds,
-  nextSortOrder,
-  sortBySortOrder,
   type SettingsTableColumn,
+  sortBySortOrder,
 } from '@oktavius/base-ui';
+import { useMemo, useState } from 'react';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
-import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
+import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
+import { PlusIcon } from '@/lib/icons';
 import {
   canUsePermissionRequirement,
   EMPTY_PERMISSION_SUBJECT,
   type PermissionRequirement,
 } from '@/lib/permissions';
-import { PlusIcon } from '@/lib/icons';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 type RowWithId = {
@@ -110,6 +109,7 @@ export function CatalogBlockManager<T extends RowWithId>({
           header: '',
           headerClassName: 'w-24',
           cell: (row) => (
+            // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- click-shield that keeps row navigation from firing around the action buttons; not itself a control
             <div
               className="flex items-center justify-end gap-1"
               onClick={(event) => event.stopPropagation()}

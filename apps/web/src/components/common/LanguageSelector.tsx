@@ -1,8 +1,8 @@
 import { Combobox } from '@oktavius/base-ui';
 
 import { useI18n, useTranslation } from '@/core/i18n';
-import { UI_LOCALE_OPTIONS, useUserPreferences, type UiLocale } from '@/lib/userPreferences';
 import { appToast } from '@/lib/toast';
+import { UI_LOCALE_OPTIONS, type UiLocale, useUserPreferences } from '@/lib/userPreferences';
 
 type LanguageSelectorProps = {
   className?: string;

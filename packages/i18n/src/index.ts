@@ -1,17 +1,17 @@
-export type {
-  LanguageCode,
-  InterpolationParams,
-  TranslateFunction,
-  I18nOverridesSource,
-} from './types';
-export { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, FALLBACK_LANGUAGE } from './types';
-export { interpolate, extractVars } from './interpolate';
+export type { TranslationNamespace } from './generated-namespaces';
+export { extractVars,interpolate } from './interpolate';
 export {
+  ALL_NAMESPACES,
+  CORE_NAMESPACES,
+  coreTranslations,
+  LAZY_NAMESPACES,
   loadNamespace,
   loadNamespaces,
-  coreTranslations,
-  CORE_NAMESPACES,
-  LAZY_NAMESPACES,
-  ALL_NAMESPACES,
 } from './translations';
-export type { TranslationNamespace } from './generated-namespaces';
+export type {
+  I18nOverridesSource,
+  InterpolationParams,
+  LanguageCode,
+  TranslateFunction,
+} from './types';
+export { DEFAULT_LANGUAGE, FALLBACK_LANGUAGE,SUPPORTED_LANGUAGES } from './types';

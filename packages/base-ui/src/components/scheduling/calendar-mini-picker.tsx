@@ -1,8 +1,8 @@
 import { startOfMonth } from 'date-fns';
 import { useEffect, useState } from 'react';
 
-import { Calendar } from '../calendar';
 import { cn } from '../../lib/utils';
+import { Calendar } from '../calendar';
 import { MINI_CALENDAR_CLASS_NAMES } from './calendar-mini-picker-styles';
 
 /** In-flow nav buttons — do NOT use absolute positioning (breaks react-day-picker v9). */

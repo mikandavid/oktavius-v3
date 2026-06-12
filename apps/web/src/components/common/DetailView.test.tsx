@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DetailView, type DetailFieldProps } from './DetailView';
+import { type DetailFieldProps, DetailView } from './DetailView';
 
 const demoData = vi.hoisted<{
   permissionSubject: { isSuperadmin: boolean; role: 'admin' | 'member'; permissions: string[] };

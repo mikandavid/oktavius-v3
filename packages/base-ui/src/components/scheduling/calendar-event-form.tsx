@@ -1,12 +1,12 @@
 import { format, isSameDay, startOfDay } from 'date-fns';
-import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { Button } from '../button';
 import { Input } from '../input';
 import { MultiSelect } from '../multi-select';
-import { Textarea } from '../textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../select';
 import { Switch } from '../switch';
+import { Textarea } from '../textarea';
 import { CALENDAR_COLOR_STYLES, type CalendarSource } from './calendar-colors';
 import { createCalendarEventTimesFromRange } from './calendar-dnd';
 import type {

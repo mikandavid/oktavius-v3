@@ -2,7 +2,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CrudTable, type CrudColumn } from './CrudTable';
+import { type CrudColumn, CrudTable } from './CrudTable';
 
 vi.mock('@1771technologies/lytenyte-core', () => ({
   Grid: ({ rowSource }: { rowSource: { __rows: Row[] } }) => (

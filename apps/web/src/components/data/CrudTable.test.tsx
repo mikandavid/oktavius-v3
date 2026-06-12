@@ -2,7 +2,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CrudTable, type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
+import { type BulkAction, type CrudColumn, type CrudRowAction, CrudTable } from './CrudTable';
 
 type Row = {
   id: string;

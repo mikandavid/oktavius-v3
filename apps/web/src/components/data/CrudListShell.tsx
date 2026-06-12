@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { CrudTable, type BulkAction, type CrudColumn, type CrudRowAction } from './CrudTable';
 import { filterCrudListPermissions } from './crudListPermissions';
-import { FilterToolbar, type FilterDef } from './FilterToolbar';
+import { type BulkAction, type CrudColumn, type CrudRowAction, CrudTable } from './CrudTable';
+import { type FilterDef, FilterToolbar } from './FilterToolbar';
 import { Pagination } from './Pagination';
 import { buildStandardListCrudActions } from './standardListCrud';
 

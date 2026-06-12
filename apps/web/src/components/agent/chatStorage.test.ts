@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   CHAT_STORAGE_KEY,
-  MAX_STORED_CHAT_CONVERSATIONS,
   loadStoredChatConversations,
+  MAX_STORED_CHAT_CONVERSATIONS,
   storeChatConversations,
-  trimChatConversations,
   type StoredChatConversation,
+  trimChatConversations,
 } from './chatStorage';
 
 function createStorage(seed: Record<string, string> = {}): Storage {

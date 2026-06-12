@@ -1,18 +1,18 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StrictMode, act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
-import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
+import { act, StrictMode } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ActiveLocationProvider } from '@/lib/locations/ActiveLocationContext';
 import type { OsirisRuntimeState } from '@/runtime/osiris/types';
 import { OsirisRuntimeContext } from '@/runtime/osiris/useOsirisRuntime';
 
-import { StandardCrudListPage } from './StandardCrudListPage';
-import { buildStandardListCrudActions } from './standardListCrud';
-import { buildStandardCrudListRequestParams } from './standardCrudQuery';
 import type { SavedViewsRuntimeAdapter } from './savedViewsRuntime';
+import { StandardCrudListPage } from './StandardCrudListPage';
+import { buildStandardCrudListRequestParams } from './standardCrudQuery';
+import { buildStandardListCrudActions } from './standardListCrud';
 
 vi.mock('./CrudMainView', () => ({
   CrudMainView: ({

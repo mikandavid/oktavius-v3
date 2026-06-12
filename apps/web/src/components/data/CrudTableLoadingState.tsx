@@ -1,4 +1,4 @@
-import { Skeleton, cn } from '@oktavius/base-ui';
+import { cn, Skeleton } from '@oktavius/base-ui';
 
 import type { ColumnType, CrudColumn } from './crudTableTypes';
 

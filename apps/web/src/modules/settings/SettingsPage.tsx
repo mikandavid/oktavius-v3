@@ -1,25 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-
 import { Button, Combobox, SettingsRow, Switch } from '@oktavius/base-ui';
+import { useEffect, useMemo, useState } from 'react';
 
 import { createConfiguredCatalogOptionsStore } from '@/api/apiStoreConfig';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
-import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
+import { ModulePage } from '@/components/common/PageLayout';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
 import {
-  CatalogOptionsManager,
   type CatalogOption,
+  CatalogOptionsManager,
 } from '@/components/settings/CatalogOptionsManager';
 import {
   SettingsPageFactory,
   type SettingsSectionConfig,
 } from '@/components/settings/SettingsPageFactory';
 import { WorkspaceLocationsOverview } from '@/components/settings/WorkspaceLocationsOverview';
-import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
-import type { LocationDetailItem } from '@/lib/locations/types';
 import {
   DocumentIcon,
   LocationIcon,
@@ -27,8 +24,10 @@ import {
   PlusIcon,
   Settings2Icon,
 } from '@/lib/icons';
-import { getWindowStorage } from '@/lib/storage/safeStorage';
+import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
+import type { LocationDetailItem } from '@/lib/locations/types';
 import { settingsPageIcon } from '@/lib/modulePageIcons';
+import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
 import type {
   OsirisOrgLocation,

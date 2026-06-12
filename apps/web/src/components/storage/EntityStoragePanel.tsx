@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-
 import {
-  AttachmentList,
   type Attachment,
+  AttachmentList,
   Button,
   CollapsibleSection,
   formatDisplayDate,
   InlineEmptyState,
   SectionCard,
 } from '@oktavius/base-ui';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import {

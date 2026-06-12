@@ -5,7 +5,7 @@
  * Limitations: only catches static string literal keys. Dynamic keys are skipped.
  */
 import { readdirSync, readFileSync, statSync } from 'fs';
-import { extname, join, dirname } from 'path';
+import { dirname,extname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

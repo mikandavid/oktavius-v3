@@ -1,5 +1,3 @@
-import type { ChangeEvent } from 'react';
-
 import {
   Combobox,
   DatePicker,
@@ -12,6 +10,7 @@ import {
   Switch,
   Textarea,
 } from '@oktavius/base-ui';
+import type { ChangeEvent } from 'react';
 
 import { FIELD_GROUP_LABEL_CLASS } from '@/components/common/pageChrome';
 import type { FormFieldValue } from '@/components/forms/EntityForm';

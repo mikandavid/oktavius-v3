@@ -1,4 +1,4 @@
-import { Button, FormField as FormFieldControl, cn } from '@oktavius/base-ui';
+import { Button, cn, FormField as FormFieldControl } from '@oktavius/base-ui';
 
 import { fieldRegistry, type FieldRenderContext } from '@/lib/fields';
 

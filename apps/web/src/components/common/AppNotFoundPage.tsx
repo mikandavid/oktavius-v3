@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { ModulePage } from '@/components/common/PageLayout';
 import { PageHeaderCtaLink } from '@/components/common/PageHeaderButtons';
+import { ModulePage } from '@/components/common/PageLayout';
 import { notFoundPageIcon } from '@/lib/modulePageIcons';
 
 export function AppNotFoundPage() {

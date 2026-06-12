@@ -1,6 +1,5 @@
+import { AttachmentList, Button, cn, Combobox, Input, RichTextEditor } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
-
-import { AttachmentList, Button, Combobox, Input, RichTextEditor, cn } from '@oktavius/base-ui';
 
 import { RecipientCombobox } from '@/components/forms/RecipientCombobox';
 import { CloseIcon, PaperclipIcon, SendIcon } from '@/lib/icons';

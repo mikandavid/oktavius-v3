@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { Badge, Checkbox, cn, InlineEmptyState, ListRow, SectionCard } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 export type ChecklistItem = {
   id: string;

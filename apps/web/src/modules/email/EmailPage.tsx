@@ -1,32 +1,30 @@
+import { InlineEmptyState, SplitView } from '@oktavius/base-ui';
 import { useEffect, useMemo, useState } from 'react';
 
-import { InlineEmptyState, SplitView } from '@oktavius/base-ui';
-
-import { ModulePage } from '@/components/common/PageLayout';
 import {
   PageHeaderCtaButton,
   PageHeaderOutlineButton,
 } from '@/components/common/PageHeaderButtons';
-import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
-import { EmailIcon, PlusIcon, TemplatesIcon } from '@/lib/icons';
-import { appToast } from '@/lib/toast';
-
+import { ModulePage } from '@/components/common/PageLayout';
 import {
   buildForwardDraft,
   buildReplyDraft,
-  EmailComposerDialog,
-  EmailTemplatesDialog,
-  EmailThreadDetail,
-  EmailThreadQueue,
-  queueEmailSend,
   type ComposerMode,
+  EmailComposerDialog,
   type EmailContactOption,
   type EmailDraft,
   type EmailFolder,
   type EmailTemplate,
+  EmailTemplatesDialog,
   type EmailThread,
+  EmailThreadDetail,
+  EmailThreadQueue,
+  queueEmailSend,
 } from '@/components/email';
+import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
+import { EmailIcon, PlusIcon, TemplatesIcon } from '@/lib/icons';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
+import { appToast } from '@/lib/toast';
 
 import { resolveLinkedEntityHref } from './emailLinkedEntityRoutes';
 import { loadStoredEmailThreads, storeEmailThreads } from './emailStorage';

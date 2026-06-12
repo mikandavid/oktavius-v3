@@ -1,6 +1,5 @@
+import { Badge, Button, cn, CopyButton } from '@oktavius/base-ui';
 import { useState } from 'react';
-
-import { Badge, Button, CopyButton, cn } from '@oktavius/base-ui';
 
 import { ChevronDownIcon, ChevronUpIcon, SpinnerIcon } from '@/lib/icons';
 

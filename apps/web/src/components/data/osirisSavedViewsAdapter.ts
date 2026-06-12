@@ -1,6 +1,7 @@
+import { joinOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
+
 import type { SavedViewsRuntimeAdapter } from './savedViewsRuntime';
 import { parseStoredSavedViews } from './savedViewsStorage';
-import { joinOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
 
 export type OsirisSavedViewsFetcher = (input: string, init?: RequestInit) => Promise<Response>;
 

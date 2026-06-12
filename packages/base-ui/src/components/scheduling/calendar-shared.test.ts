@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { filterEventsByTeamMembers, type CalendarEvent } from './calendar-shared';
+import { type CalendarEvent, filterEventsByTeamMembers } from './calendar-shared';
 
 const events: CalendarEvent[] = [
   { id: '1', title: 'All hands', start: '2026-06-01', end: '2026-06-01' },

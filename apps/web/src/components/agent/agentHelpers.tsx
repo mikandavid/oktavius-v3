@@ -1,6 +1,7 @@
 import { formatBytes } from '@/lib/formatBytes';
 import type { PhosphorIcon } from '@/lib/icons';
 import {
+  BrainIcon,
   DocumentIcon,
   EditIcon,
   EyeIcon,
@@ -14,7 +15,6 @@ import {
   TableIcon,
   TerminalIcon,
   TimeIcon,
-  BrainIcon,
 } from '@/lib/icons';
 
 export const DEFAULT_CONTEXT_WINDOW_TOKENS = 200_000;

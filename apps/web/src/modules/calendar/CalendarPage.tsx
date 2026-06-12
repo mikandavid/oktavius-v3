@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import { CalendarEventEditorDialog, CalendarView } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { calendarPageIcon } from '@/lib/modulePageIcons';

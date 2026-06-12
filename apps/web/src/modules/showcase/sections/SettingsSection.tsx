@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import type { SettingsTableColumn } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { type FormField, type FormFieldValue } from '@/components/forms/EntityForm';

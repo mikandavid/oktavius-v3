@@ -1,7 +1,6 @@
+import { Button } from '@oktavius/base-ui';
 import { useEffect } from 'react';
 import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
-
-import { Button } from '@oktavius/base-ui';
 
 import {
   getChunkLoadRecoveryState,

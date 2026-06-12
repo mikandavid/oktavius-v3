@@ -2,13 +2,12 @@ import type { ReactNode } from 'react';
 
 import { cn } from '../lib/utils';
 import {
+  type ChartPoint,
   type ChartSeriesDefinition,
   type ComboChartPoint,
   type FunnelChartPoint,
   type MultiSeriesChartPoint,
   type RadarChartPoint,
-  type ChartPoint,
-  type StackedChartPoint,
   SimpleAreaChart,
   SimpleBarChart,
   SimpleComboChart,
@@ -21,6 +20,7 @@ import {
   SimpleRadarChart,
   SimpleSparklineChart,
   SimpleStackedBarChart,
+  type StackedChartPoint,
 } from './chart';
 import { SectionCard } from './section-card';
 

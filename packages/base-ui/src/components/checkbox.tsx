@@ -1,5 +1,5 @@
-import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { Check } from '@phosphor-icons/react';
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import * as React from 'react';
 
 import { pressableMicroClasses } from '../lib/microInteractions';

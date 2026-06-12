@@ -1,7 +1,6 @@
+import { Button } from '@oktavius/base-ui';
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-
-import { Button } from '@oktavius/base-ui';
 
 import { AppShellSpinner } from '@/components/layout/AppShellSpinner';
 import { OrganizationIcon, RefreshIcon, WarningIcon } from '@/lib/icons';

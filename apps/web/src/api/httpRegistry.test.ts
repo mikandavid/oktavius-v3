@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
 
-import { ApiAuthorizationError, ApiValidationError, type ListResponse } from './contracts';
+import type { ApiAuthorizationError, ApiValidationError } from './contracts';
+import { type ListResponse } from './contracts';
 import { createHttpEntityHandlers, createHttpRegistry } from './httpRegistry';
 
 type Row = {

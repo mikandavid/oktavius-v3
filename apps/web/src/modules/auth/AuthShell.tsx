@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 

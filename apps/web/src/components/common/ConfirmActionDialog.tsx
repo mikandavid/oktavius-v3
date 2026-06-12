@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 type ConfirmActionDialogProps = {
   open: boolean;

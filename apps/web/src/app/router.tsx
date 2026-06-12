@@ -1,6 +1,6 @@
-import { lazy, Suspense, type ComponentType, type ReactNode } from 'react';
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
+import { type ComponentType, lazy, type ReactNode, Suspense } from 'react';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 
 import { AgentPageContextProvider } from '@/components/agent/page-context';
 import { CommandPaletteProvider } from '@/components/command/CommandPalette';

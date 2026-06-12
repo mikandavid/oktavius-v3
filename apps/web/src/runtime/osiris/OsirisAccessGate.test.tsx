@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestI18nProvider } from '@/core/i18n';
 
-import { OsirisRuntimeContext, type OsirisRuntimeContextValue } from './useOsirisRuntime';
 import { OsirisAccessGate } from './OsirisAccessGate';
+import { OsirisRuntimeContext, type OsirisRuntimeContextValue } from './useOsirisRuntime';
 
 const baseRuntime: OsirisRuntimeContextValue = {
   currentUser: { id: 'usr_1', email: 'user@example.test', fullName: 'User', isSuperadmin: false },

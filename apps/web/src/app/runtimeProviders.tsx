@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 
 import { ApiProvider } from '@/api/ApiProvider';
 import { createOsirisApiRegistry } from '@/api/apiRegistryConfig';

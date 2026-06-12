@@ -9,8 +9,8 @@
 import { X } from '@phosphor-icons/react';
 import * as React from 'react';
 
-import { Badge } from './badge';
 import { cn } from '../lib/utils';
+import { Badge } from './badge';
 
 export interface TagsInputProps {
   value?: string[];
@@ -58,6 +58,7 @@ export function TagsInput({
   };
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- click only delegates focus to the inner input, which keyboard users reach by tabbing
     <div
       className={cn(
         'flex min-h-8 w-full flex-wrap items-center gap-1.5 rounded-control bg-muted/60 px-2 py-1 text-sm',

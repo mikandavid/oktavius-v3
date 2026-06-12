@@ -1,9 +1,9 @@
-import { Skeleton, cn } from '@oktavius/base-ui';
+import { cn, Skeleton } from '@oktavius/base-ui';
 
 import { FormattedText } from '@/components/common/FormattedText';
 
 import { parseStructuredContent } from './parser';
-import { OctComponentRenderer, isKnownOctTag } from './registry';
+import { isKnownOctTag, OctComponentRenderer } from './registry';
 
 type StructuredContentProps = {
   text: string;

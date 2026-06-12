@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { validateGeneratedModuleContract } from './generatedModuleContract';
 import {
+  emitGeneratedModuleContract,
+  emitGeneratedModuleContracts,
   GENERATED_CRUD_MODULE_IDS,
   GENERATED_MODULE_CONTRACTS,
   GENERATED_MODULE_TEMPLATE_DESCRIPTORS,
-  emitGeneratedModuleContract,
-  emitGeneratedModuleContracts,
 } from './generatedModuleContracts';
-import { validateGeneratedModuleContract } from './generatedModuleContract';
 
 describe('current generated module contracts', () => {
   it('covers every current standard generated CRUD module', () => {

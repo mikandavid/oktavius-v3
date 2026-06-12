@@ -1,9 +1,8 @@
-import { useMemo, useState, type ComponentType, type ReactNode } from 'react';
+import { type SettingsNavItem, SettingsSection } from '@oktavius/base-ui';
+import { type ComponentType, type ReactNode, useMemo, useState } from 'react';
 
-import { SettingsSection, type SettingsNavItem } from '@oktavius/base-ui';
-
-import { SectionErrorBoundary } from '@/core/errors/SectionErrorBoundary';
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
+import { SectionErrorBoundary } from '@/core/errors/SectionErrorBoundary';
 import {
   canUsePermissionRequirement,
   EMPTY_PERMISSION_SUBJECT,

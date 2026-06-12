@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { useUserPreferences } from '@/lib/userPreferences';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { getLocalizedOrgProfile } from './terminology';
 import { getOrgProfile } from './profiles';
+import { getLocalizedOrgProfile } from './terminology';
 
 export function useOrgProfile() {
   const osirisRuntime = useOptionalOsirisRuntime();

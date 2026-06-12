@@ -8,11 +8,11 @@
 import { CaretDown, Check, MagnifyingGlass, X } from '@phosphor-icons/react';
 import * as React from 'react';
 
+import { limitSelectOptions } from '../lib/limit-select-options';
+import { cn } from '../lib/utils';
 import { Badge } from './badge';
 import { dropdownPopoverPanelClasses, Popover, PopoverContent, PopoverTrigger } from './popover';
 import { SelectOptionsOverflowHint } from './select-options-overflow-hint';
-import { limitSelectOptions } from '../lib/limit-select-options';
-import { cn } from '../lib/utils';
 
 export interface MultiSelectOption {
   value: string;

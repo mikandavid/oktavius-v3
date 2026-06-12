@@ -1,4 +1,4 @@
-import { parseImportFile, type ImportRow } from './importFileParser';
+import { type ImportRow, parseImportFile } from './importFileParser';
 
 export type ImportPreview = {
   columns: string[];

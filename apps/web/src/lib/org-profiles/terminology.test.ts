@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { OrgProfile } from './types';
 import { getLocalizedTerminology } from './terminology';
+import type { OrgProfile } from './types';
 
 const baseProfile: OrgProfile = {
   id: 'org_test',

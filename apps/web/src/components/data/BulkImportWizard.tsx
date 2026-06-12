@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import {
   Button,
   Dialog,
@@ -11,13 +9,14 @@ import {
   SectionCard,
   StepperLayout,
 } from '@oktavius/base-ui';
+import { useEffect, useState } from 'react';
 
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 import { UploadIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
 
 import { completeBulkImport } from './bulkImportActions';
-import { loadImportPreview, type ImportPreview } from './importPreview';
+import { type ImportPreview, loadImportPreview } from './importPreview';
 
 const STEPS = [
   { key: 'file', label: 'Upload', description: 'Choose CSV or XLSX' },

@@ -1,10 +1,11 @@
-import { act } from 'react';
 import type { ComponentProps } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { RouterProvider, createMemoryRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestI18nProvider } from '@/core/i18n';
+import type * as ReferenceDataModule from '@/lib/reference-data';
 
 import { EntityForm, type FormFieldValue } from './EntityForm';
 
@@ -13,7 +14,7 @@ vi.mock('@/lib/userPreferences', () => ({
 }));
 
 vi.mock('@/lib/reference-data', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/reference-data')>();
+  const actual = await importOriginal<typeof ReferenceDataModule>();
   return {
     ...actual,
     useCountryOptions: () => [],

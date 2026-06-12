@@ -1,8 +1,8 @@
 import { Badge, SectionCard } from '@oktavius/base-ui';
+import { formatDisplayDateTime } from '@oktavius/base-ui';
 
 import { SquareIcon, SuccessIcon } from '@/lib/icons';
 
-import { formatDisplayDateTime } from '@oktavius/base-ui';
 import type { AgentActionItem, AgentActionItemsCardPayload } from '../types';
 
 type AgentActionItemsCardProps = AgentActionItemsCardPayload & {

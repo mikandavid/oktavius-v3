@@ -1,7 +1,3 @@
-import Placeholder from '@tiptap/extension-placeholder';
-import type { Editor } from '@tiptap/react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
@@ -12,6 +8,10 @@ import {
   TextItalic,
   TextStrikethrough,
 } from '@phosphor-icons/react';
+import Placeholder from '@tiptap/extension-placeholder';
+import type { Editor } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import { useEffect, useMemo, useState } from 'react';
 
 import { cn } from '../lib/utils';

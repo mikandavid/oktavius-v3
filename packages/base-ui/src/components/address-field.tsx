@@ -1,13 +1,13 @@
 import {
+  type CountryOption,
   DEFAULT_ADDRESS_COUNTRY_OPTIONS,
   getPostalCodeInputMode,
   sanitizePostalCodeInput,
-  type CountryOption,
 } from '@oktavius/reference-data';
 
+import { cn } from '../lib/utils';
 import { Combobox, type ComboboxOption } from './combobox';
 import { Input } from './input';
-import { cn } from '../lib/utils';
 
 export interface AddressValue {
   line1: string;

@@ -2,7 +2,7 @@ import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIcon
 import { canDeleteRecords, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { DetailActions, type DetailAction } from './DetailActions';
+import { type DetailAction, DetailActions } from './DetailActions';
 
 type DetailPageHeaderActionsProps = {
   customActions?: DetailAction[];

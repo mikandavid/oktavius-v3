@@ -7,9 +7,9 @@ import type {
   NotificationSettingsChannel,
   NotificationSettingsModule,
   NotificationSettingsType,
-  NotificationSubscriptionUpdate,
   NotificationsRuntimeAdapter,
   NotificationsRuntimeEvent,
+  NotificationSubscriptionUpdate,
 } from '@/components/layout/NotificationsRuntime';
 
 import { joinOsirisApiBaseUrl } from './apiBaseUrl';

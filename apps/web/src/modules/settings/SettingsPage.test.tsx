@@ -1,14 +1,15 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestI18nProvider } from '@/core/i18n';
 import {
   OsirisRuntimeContext,
   type OsirisRuntimeContextValue,
 } from '@/runtime/osiris/useOsirisRuntime';
-import { SettingsPage } from './SettingsPage';
 import { createDefaultOsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
+
+import { SettingsPage } from './SettingsPage';
 
 vi.mock('@/components/layout/AppShellLayoutContext', () => ({
   useAppShellLayout: () => ({ isSidebarCollapsed: false, setSidebarCollapsed: vi.fn() }),

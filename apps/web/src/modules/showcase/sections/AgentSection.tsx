@@ -1,17 +1,6 @@
+import { Button } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
 
-import { Button } from '@oktavius/base-ui';
-
-import { ChatFilePreviewDialog } from '@/components/agent/ChatFilePreviewDialog';
-import { ContentPanel } from '@/components/agent/ContentPanel';
-import { EditableConversationTitle } from '@/components/agent/EditableConversationTitle';
-import { AgentFileAttachmentChip } from '@/components/agent/AgentFileAttachmentChip';
-import { AgentMessageList } from '@/components/agent/AgentMessageList';
-import { AgentSettingsPopover } from '@/components/agent/AgentSettingsPopover';
-import { AgentThinkingIndicator } from '@/components/agent/AgentThinkingIndicator';
-import { AgentWelcomeScreen } from '@/components/agent/AgentWelcomeScreen';
-import { ChatUIComponent } from '@/components/agent/UIComponentRegistry';
-import { RecordingBar, VoiceRecorder } from '@/components/agent/VoiceRecorder';
 import {
   DEMO_ACTION_ITEMS_CARD,
   DEMO_ACTIVE_TIMER_CARD,
@@ -19,11 +8,11 @@ import {
   DEMO_CONTEXT_DUMP_CARD,
   DEMO_DOC_PROCESSING_CARD,
   DEMO_DOC_PROCESSING_PROGRESS_CARD,
-  DEMO_EMAIL_COMPOSE_CARD,
-  DEMO_FINANCIAL_CARD,
   DEMO_DOCUMENT_CARD,
+  DEMO_EMAIL_COMPOSE_CARD,
   DEMO_ENTITY_DETAIL_CARD,
   DEMO_ENTITY_LIST_CARD,
+  DEMO_FINANCIAL_CARD,
   DEMO_MEMORY_CARD,
   DEMO_PLANNER_CARD,
   DEMO_PROJECT_SUMMARY_CARD,
@@ -34,6 +23,11 @@ import {
   DEMO_SKILL_APPROVAL_CARD,
   DEMO_TIMELINE_CARD,
 } from '@/components/agent/agentDemoCardPayloads';
+import { AgentFileAttachmentChip } from '@/components/agent/AgentFileAttachmentChip';
+import { AgentMessageList } from '@/components/agent/AgentMessageList';
+import { AgentSettingsPopover } from '@/components/agent/AgentSettingsPopover';
+import { AgentThinkingIndicator } from '@/components/agent/AgentThinkingIndicator';
+import { AgentWelcomeScreen } from '@/components/agent/AgentWelcomeScreen';
 import {
   AgentActionItemsCard,
   AgentActiveTimerCard,
@@ -55,9 +49,11 @@ import {
   AgentSkillApprovalCard,
   AgentTimelineCard,
 } from '@/components/agent/cards';
-import { StructuredContent } from '@/components/agent/structured/StructuredContent';
+import { ChatFilePreviewDialog } from '@/components/agent/ChatFilePreviewDialog';
+import { ContentPanel } from '@/components/agent/ContentPanel';
 import { ContextUsageIndicator, TokenBadge } from '@/components/agent/ContextUsageIndicator';
-import { MobileAgentLayout } from '@/components/layout/MobileAgentLayout';
+import { EditableConversationTitle } from '@/components/agent/EditableConversationTitle';
+import { StructuredContent } from '@/components/agent/structured/StructuredContent';
 import type {
   AgentActionItemsCardPayload,
   AgentActiveTimerCardPayload,
@@ -70,19 +66,22 @@ import type {
   AgentFinancialCardPayload,
   AgentGeneratedDocumentCardPayload,
   AgentMemoryCardPayload,
+  AgentMessage,
+  AgentModelMode,
   AgentPlannerCardPayload,
   AgentProjectSummaryCardPayload,
   AgentPythonExecutionCardPayload,
+  AgentRuntimeMode,
   AgentSalesDocumentCardPayload,
   AgentScheduleCardPayload,
   AgentSearchResultsCardPayload,
   AgentSkillApprovalCardPayload,
   AgentTimelineCardPayload,
-  AgentMessage,
-  AgentModelMode,
-  AgentRuntimeMode,
   AgentTokenStats,
 } from '@/components/agent/types';
+import { ChatUIComponent } from '@/components/agent/UIComponentRegistry';
+import { RecordingBar, VoiceRecorder } from '@/components/agent/VoiceRecorder';
+import { MobileAgentLayout } from '@/components/layout/MobileAgentLayout';
 import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';

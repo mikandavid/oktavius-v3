@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from 'react';
-
 import { cn, ListRow, Popover, PopoverContent, PopoverTrigger, Textarea } from '@oktavius/base-ui';
+import { useMemo, useRef, useState } from 'react';
 
 import { FormattedText } from '@/components/common/FormattedText';
 

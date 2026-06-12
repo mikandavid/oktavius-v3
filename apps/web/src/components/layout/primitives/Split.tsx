@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 type Ratio = '1:1' | '1:2' | '2:1' | '1:3' | '3:1';
 

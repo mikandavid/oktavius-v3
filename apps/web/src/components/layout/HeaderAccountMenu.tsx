@@ -1,15 +1,14 @@
-import { useNavigate } from 'react-router-dom';
-
 import {
   Avatar,
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  cn,
 } from '@oktavius/base-ui';
+import { useNavigate } from 'react-router-dom';
 
 import { ChevronDownIcon, SettingsIcon, SignOutIcon, UserIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';

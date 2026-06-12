@@ -1,40 +1,40 @@
 import { useDroppable } from '@dnd-kit/core';
 import { format } from 'date-fns';
-import { useCallback, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { type ReactNode, type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { cn } from '../../lib/utils';
 import { type CalendarSource, eventBlockClasses } from './calendar-colors';
 import {
-  calendarDayDropId,
   CALENDAR_CLICK_DRAG_THRESHOLD_PX,
+  type CalendarAllDayColumnRef,
+  type CalendarDayColumnRef,
+  calendarDayDropId,
+  type CalendarEventMoveTarget,
+  type CalendarEventResizeTarget,
   moveCalendarEvent,
   normalizeSlotRange,
   pointerToDropTarget,
   pointerYToSlotTime,
   resizeCalendarEvent,
   slotRangeLayout,
-  type CalendarAllDayColumnRef,
-  type CalendarDayColumnRef,
-  type CalendarEventMoveTarget,
-  type CalendarEventResizeTarget,
 } from './calendar-dnd';
 import { layoutTimedEventsForDay } from './calendar-event-layout';
 import {
-  CALENDAR_WEEKDAY_LABELS,
   CALENDAR_SNAP_MINUTES,
-  clampEventToDayWindow,
+  CALENDAR_WEEKDAY_LABELS,
   type CalendarEvent,
   type CalendarEventClickHandler,
   type CalendarSlotAnchor,
-  eventClickAnchor,
-  eventStartDate,
-  formatEventTimeRange,
-  isMultiDayEvent,
+  clampEventToDayWindow,
   DEFAULT_SCHEDULER_END_HOUR,
   DEFAULT_SCHEDULER_START_HOUR,
   DEFAULT_SLOT_MINUTES,
-  eventsForDay,
+  eventClickAnchor,
   eventEndDate,
+  eventsForDay,
+  eventStartDate,
+  formatEventTimeRange,
+  isMultiDayEvent,
   isToday,
   schedulingColumnHeaderClass,
   schedulingTimeLabelClass,

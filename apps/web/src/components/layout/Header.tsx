@@ -1,6 +1,6 @@
-import { useCommandPalette } from '@/components/command/CommandPalette';
 import { cn } from '@oktavius/base-ui';
 
+import { useCommandPalette } from '@/components/command/CommandPalette';
 import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 

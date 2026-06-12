@@ -1,6 +1,6 @@
+import { Button, buttonVariants, cn, MouseTooltip } from '@oktavius/base-ui';
 import { Link } from 'react-router-dom';
 
-import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 import { DeleteIcon, EditIcon } from '@/lib/icons';
 
 import { PAGE_HEADER_ICON_BUTTON_CLASS } from './PageHeaderButtons';

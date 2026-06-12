@@ -1,6 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@oktavius/base-ui';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { ModuleScopedAssistantPanel } from '@/components/agent/ModuleScopedAssistantPanel';
 import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';

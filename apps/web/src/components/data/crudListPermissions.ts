@@ -1,4 +1,4 @@
-import { permitted, type PermissionSubject } from '@/lib/permissions';
+import { type PermissionSubject, permitted } from '@/lib/permissions';
 
 import type { BulkAction, CrudColumn, CrudRowAction } from './crudTableTypes';
 

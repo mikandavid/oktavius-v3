@@ -1,5 +1,3 @@
-import { useMemo, useState } from 'react';
-
 import {
   Button,
   DatePicker,
@@ -9,18 +7,19 @@ import {
   TabsList,
   TabsTrigger,
 } from '@oktavius/base-ui';
+import { useMemo, useState } from 'react';
 
 import { CustomFieldsFormSection } from '@/components/custom-fields';
 import { EntityForm, type FormField as EntityFormField } from '@/components/forms/EntityForm';
 import { JsonField } from '@/components/forms/JsonField';
 import { PageFileDrop } from '@/components/forms/PageFileDrop';
 import { RecipientCombobox } from '@/components/forms/RecipientCombobox';
-import { fieldRegistry, type FieldDefinition } from '@/lib/fields';
+import { type CustomFieldValues } from '@/lib/custom-fields';
 import {
   buildCustomFieldDefaults,
   getCustomFieldDefinitions,
 } from '@/lib/custom-fields/demoDefinitions';
-import { type CustomFieldValues } from '@/lib/custom-fields';
+import { type FieldDefinition, fieldRegistry } from '@/lib/fields';
 import { withFieldErrors } from '@/lib/formValidation';
 import { appToast } from '@/lib/toast';
 

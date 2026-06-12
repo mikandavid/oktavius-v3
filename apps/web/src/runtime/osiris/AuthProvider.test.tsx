@@ -2,10 +2,10 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OsirisBootstrapResponse } from './types';
 import { OsirisAuthProvider } from './AuthProvider';
-import { createDefaultOsirisWorkspaceSettings } from './workspaceSettingsClient';
+import type { OsirisBootstrapResponse } from './types';
 import { useOsirisRuntime } from './useOsirisRuntime';
+import { createDefaultOsirisWorkspaceSettings } from './workspaceSettingsClient';
 
 const bootstrapOrg1Site1: OsirisBootstrapResponse = {
   user: { id: 'usr_1', email: 'anna@example.test' },

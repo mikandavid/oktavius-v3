@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import {
   APP_NAV_MODULES,
-  PRIMARY_NAV_ITEMS,
   buildVisibleAppNavItems,
   getAppCreateActionForProfile,
   getAppQuickActionsForProfile,
   isAppNavItemEnabled,
+  PRIMARY_NAV_ITEMS,
 } from './appNavModules';
 import { createDefaultOrgProfile } from './org-profiles/profiles';
 import { getLocalizedOrgProfile } from './org-profiles/terminology';

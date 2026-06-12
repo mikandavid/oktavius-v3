@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   AlertBanner,
   DetailSkeleton,
@@ -7,6 +5,7 @@ import {
   PageSkeleton,
   Skeleton,
 } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { InfoBox } from '@/components/common/InfoBox';

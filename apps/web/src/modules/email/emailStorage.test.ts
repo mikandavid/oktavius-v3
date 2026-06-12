@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import type { EmailThread } from '@/components/email';
+
 import {
   EMAIL_THREADS_STORAGE_KEY,
   loadStoredEmailThreads,
   storeEmailThreads,
 } from './emailStorage';
-import type { EmailThread } from '@/components/email';
 
 function createStorage(seed: Record<string, string> = {}): Storage {
   const values = new Map(Object.entries(seed));

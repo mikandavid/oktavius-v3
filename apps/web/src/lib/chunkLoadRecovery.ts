@@ -1,4 +1,5 @@
 export {
+  type ChunkLoadRecoveryState,
   getChunkLoadRecoveryState,
   getLastHealthyLocation,
   isChunkLoadError,
@@ -6,5 +7,4 @@ export {
   rememberHealthyRoute,
   setLastHealthyLocation,
   triggerChunkLoadAutoReload,
-  type ChunkLoadRecoveryState,
 } from '@/core/errors/chunkLoadRecovery';

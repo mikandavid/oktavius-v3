@@ -1,6 +1,5 @@
+import { Button, cn, Textarea } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
-
-import { Button, Textarea, cn } from '@oktavius/base-ui';
 
 type JsonFieldProps = {
   id?: string;

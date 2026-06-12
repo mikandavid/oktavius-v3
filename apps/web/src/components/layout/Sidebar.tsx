@@ -1,3 +1,4 @@
+import { cn, MouseTooltip } from '@oktavius/base-ui';
 import {
   createContext,
   useCallback,
@@ -11,26 +12,23 @@ import {
 import { createPortal } from 'react-dom';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
-import { MouseTooltip, cn } from '@oktavius/base-ui';
-
-import { CheckIcon, EditIcon, SortIcon, PanelLeftCloseIcon, PanelLeftIcon } from '@/lib/icons';
-
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
-import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
-import { MODULE_ORDER_STORAGE_KEY, useUserPreferences } from '@/lib/userPreferences';
+import { useTranslation } from '@/core/i18n';
 import {
   ADMIN_NAV_ITEMS,
-  MODULE_NAV_ITEMS,
-  PRIMARY_NAV_ITEMS,
   type AppNavModule,
   buildVisibleAppNavItems,
+  MODULE_NAV_ITEMS,
+  PRIMARY_NAV_ITEMS,
 } from '@/lib/appNavModules';
+import { CheckIcon, EditIcon, PanelLeftCloseIcon, PanelLeftIcon, SortIcon } from '@/lib/icons';
 import { getOrgProfile } from '@/lib/org-profiles/profiles';
-import type { OrgProfile } from '@/lib/org-profiles/types';
 import { getLocalizedOrgProfile } from '@/lib/org-profiles/terminology';
+import type { OrgProfile } from '@/lib/org-profiles/types';
 import { EMPTY_PERMISSION_SUBJECT, type PermissionSubject } from '@/lib/permissions';
+import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
+import { MODULE_ORDER_STORAGE_KEY, useUserPreferences } from '@/lib/userPreferences';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
-import { useTranslation } from '@/core/i18n';
 
 import { useAppShellLayout } from './AppShellLayoutContext';
 import { BrandMark } from './BrandMark';

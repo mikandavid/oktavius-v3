@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type EditableConversationTitleProps = {
   conversationId: string | null;
@@ -86,27 +85,19 @@ export function EditableConversationTitle({
   }
 
   return (
-    <h2
-      className={cn(
-        'truncate text-[13px] font-semibold text-foreground/90',
-        canEdit && 'cursor-text hover:text-foreground',
-        className,
+    <h2 className={cn('min-w-0 truncate text-[13px] font-semibold text-foreground/90', className)}>
+      {canEdit ? (
+        <button
+          type="button"
+          onClick={startEditing}
+          className="block w-full cursor-text truncate text-left hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          aria-label={`Rename conversation: ${displayTitle}`}
+        >
+          {displayTitle}
+        </button>
+      ) : (
+        displayTitle
       )}
-      onClick={canEdit ? startEditing : undefined}
-      onKeyDown={
-        canEdit
-          ? (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                startEditing();
-              }
-            }
-          : undefined
-      }
-      tabIndex={canEdit ? 0 : undefined}
-      role={canEdit ? 'button' : undefined}
-    >
-      {displayTitle}
     </h2>
   );
 }

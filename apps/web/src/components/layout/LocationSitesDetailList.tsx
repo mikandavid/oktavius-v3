@@ -1,12 +1,11 @@
+import { Badge, cn } from '@oktavius/base-ui';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Badge, cn } from '@oktavius/base-ui';
-
 import { GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
+import { buildGoogleMapsSearchUrl } from '@/components/maps/googleMapsEmbed';
 import { EmailIcon, LocationIcon, PhoneIcon } from '@/lib/icons';
 import type { LocationDetailItem } from '@/lib/locations/types';
-import { buildGoogleMapsSearchUrl } from '@/components/maps/googleMapsEmbed';
 
 function formatAddressLine(item: LocationDetailItem): string {
   const parts: string[] = [];

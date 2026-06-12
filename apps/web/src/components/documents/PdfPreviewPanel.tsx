@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { Button, cn } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import type {

@@ -1,24 +1,24 @@
-import { useMemo, type ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
-import type { ListResponse } from '@/api/contracts';
 import { createConfiguredSavedViewsStore } from '@/api/apiStoreConfig';
+import type { ListResponse } from '@/api/contracts';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import { canDeleteRecords, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { useListPageState } from '@/lib/useListPageState';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { CrudMainView, type CrudColumn } from './CrudMainView';
+import { type CrudColumn, CrudMainView } from './CrudMainView';
 import type { BulkAction, CrudRowAction } from './CrudTable';
 import type { FilterDef } from './FilterToolbar';
 import type { SavedViewsStore } from './savedViewsStorage';
 import {
   buildStandardCrudListQueryKey,
   buildStandardCrudListRequestParams,
-  useStandardCrudServerList,
   type StandardCrudListRequestParams,
+  useStandardCrudServerList,
 } from './standardCrudQuery';
-import { useListSavedViews, type SavedViewPreset } from './useListSavedViews';
+import { type SavedViewPreset, useListSavedViews } from './useListSavedViews';
 
 export type { StandardCrudListRequestParams } from './standardCrudQuery';
 

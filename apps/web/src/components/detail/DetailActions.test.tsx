@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DetailActions, type DetailAction } from './DetailActions';
+import { type DetailAction, DetailActions } from './DetailActions';
 import { DetailPageHeaderActions } from './DetailPageHeaderActions';
 
 const demoData = vi.hoisted<{

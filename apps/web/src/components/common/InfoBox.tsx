@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { cn, getSemanticToneClasses, type SemanticTone } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 type InfoBoxTone = Extract<
   SemanticTone,

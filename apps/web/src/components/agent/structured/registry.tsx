@@ -1,6 +1,5 @@
-import React, { Suspense, lazy } from 'react';
-
 import { Skeleton } from '@oktavius/base-ui';
+import React, { lazy, Suspense } from 'react';
 
 const OctStat = lazy(() => import('./components/OctStat'));
 const OctDataCard = lazy(() => import('./components/OctDataCard'));

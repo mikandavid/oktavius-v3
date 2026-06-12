@@ -1,6 +1,5 @@
+import { cn, Combobox } from '@oktavius/base-ui';
 import { useMemo } from 'react';
-
-import { Combobox, cn } from '@oktavius/base-ui';
 
 export type FuneralCasePickerValue = {
   id: string;

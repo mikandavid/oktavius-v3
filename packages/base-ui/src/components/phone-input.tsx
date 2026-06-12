@@ -1,14 +1,14 @@
 import {
   DEFAULT_PHONE_COUNTRIES,
   formatPhoneValue,
+  type PhoneCountry,
   sanitizePhoneLocalInput,
   splitPhoneValue,
-  type PhoneCountry,
 } from '@oktavius/reference-data';
 
+import { cn } from '../lib/utils';
 import { Combobox, type ComboboxOption } from './combobox';
 import { Input } from './input';
-import { cn } from '../lib/utils';
 
 export type { PhoneCountry };
 export { DEFAULT_PHONE_COUNTRIES };

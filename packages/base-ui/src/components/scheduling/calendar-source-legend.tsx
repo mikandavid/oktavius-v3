@@ -1,5 +1,5 @@
 import { cn } from '../../lib/utils';
-import { type CalendarSource, CALENDAR_COLOR_STYLES } from './calendar-colors';
+import { CALENDAR_COLOR_STYLES, type CalendarSource } from './calendar-colors';
 import { CalendarSidebarToggleRow } from './calendar-sidebar-primitives';
 
 export interface CalendarSourceLegendProps {

@@ -12,7 +12,7 @@ import { useMemo } from 'react';
 import { joinOsirisApiBaseUrl, resolveOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { NOOP_I18N_RUNTIME, type I18nRuntimeAdapter } from './runtime';
+import { type I18nRuntimeAdapter, NOOP_I18N_RUNTIME } from './runtime';
 
 const OSIRIS_API_BASE_URL = resolveOsirisApiBaseUrl();
 

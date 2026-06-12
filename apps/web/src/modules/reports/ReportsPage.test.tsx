@@ -1,3 +1,4 @@
+import type * as BaseUiModule from '@oktavius/base-ui';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -14,7 +15,7 @@ const chartCards = vi.hoisted(() => ({
 }));
 
 vi.mock('@oktavius/base-ui', async () => {
-  const actual = await vi.importActual<typeof import('@oktavius/base-ui')>('@oktavius/base-ui');
+  const actual = await vi.importActual<typeof BaseUiModule>('@oktavius/base-ui');
   return {
     ...actual,
     ChartCard: (props: { title: string; data?: unknown }) => {

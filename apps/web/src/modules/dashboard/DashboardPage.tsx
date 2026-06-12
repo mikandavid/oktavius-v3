@@ -1,21 +1,20 @@
-import { useMemo } from 'react';
-
 import {
   ChartCard,
-  STAT_CARD_GRID_CLASS,
+  type ChartPoint,
   SectionCard,
   SimpleBarChart,
+  STAT_CARD_GRID_CLASS,
   StatCard,
   Timeline,
-  type ChartPoint,
 } from '@oktavius/base-ui';
+import { useMemo } from 'react';
 
 import { ModulePage } from '@/components/common/PageLayout';
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { CaseIcon, InvoiceIcon, OrderIcon, ProjectsIcon } from '@/lib/icons';
 import { dashboardPageIcon } from '@/lib/modulePageIcons';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
-import { useUserPreferences, type UiLocale } from '@/lib/userPreferences';
+import { type UiLocale, useUserPreferences } from '@/lib/userPreferences';
 
 function aggregateOrdersByMonth(orders: Array<{ orderDate: string; total: string }>): ChartPoint[] {
   const buckets = new Map<string, number>();

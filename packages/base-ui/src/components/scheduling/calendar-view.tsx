@@ -1,27 +1,25 @@
-import { DndContext, DragOverlay, useDroppable, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, type DragEndEvent, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { startOfDay } from 'date-fns';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { cn } from '../../lib/utils';
+import { AgendaList } from './agenda-list';
 import { type CalendarSource, visibleEvents } from './calendar-colors';
 import {
   calendarDayDropId,
+  type CalendarEventMoveTarget,
+  type CalendarEventResizeTarget,
   parseCalendarDayDropId,
   parseCalendarEventDragId,
   parseCalendarSlotDropId,
   useCalendarDndSensors,
-  type CalendarEventMoveTarget,
-  type CalendarEventResizeTarget,
 } from './calendar-dnd';
 import { CalendarEventChip } from './calendar-event-chip';
-import { CalendarSidebar } from './calendar-sidebar';
-import { CalendarTimeGrid } from './calendar-time-grid';
-import { CalendarToolbar } from './calendar-toolbar';
-import { AgendaList } from './agenda-list';
 import {
   CALENDAR_WEEKDAY_LABELS,
   type CalendarEvent,
   type CalendarEventClickHandler,
+  type CalendarSlotAnchor,
   type CalendarTeamMember,
   type CalendarViewMode,
   DEFAULT_SCHEDULER_END_HOUR,
@@ -34,8 +32,10 @@ import {
   isToday,
   schedulingBodyClass,
   schedulingShellClass,
-  type CalendarSlotAnchor,
 } from './calendar-shared';
+import { CalendarSidebar } from './calendar-sidebar';
+import { CalendarTimeGrid } from './calendar-time-grid';
+import { CalendarToolbar } from './calendar-toolbar';
 
 const MAX_VISIBLE_EVENTS = 4;
 

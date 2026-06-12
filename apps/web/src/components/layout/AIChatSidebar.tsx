@@ -1,9 +1,8 @@
+import { cn, MouseTooltip } from '@oktavius/base-ui';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MouseTooltip, cn } from '@oktavius/base-ui';
-
-import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { OctopusIcon } from '@/components/agent/OctopusIcon';
+import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { ChevronLeftIcon } from '@/lib/icons';
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
@@ -181,6 +180,7 @@ export function AIChatSidebar() {
                 <ChevronLeftIcon size={12} className="mx-auto rotate-180" />
               </button>
             </MouseTooltip>
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- mouse-only resize affordance; the sidebar is keyboard-operable via the collapse/expand button */}
             <div
               className={cn(
                 'absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 cursor-col-resize transition-colors',

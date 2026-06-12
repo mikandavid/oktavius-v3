@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { SectionCard } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 export type ShowcaseSectionId =
   | 'overview'

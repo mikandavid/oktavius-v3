@@ -1,15 +1,15 @@
 import {
+  closestCenter,
   DndContext,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
-  closestCenter,
   useSensor,
   useSensors,
-  type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  SortableContext,
   arrayMove,
+  SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -19,8 +19,8 @@ import { DotsSixVertical } from '@phosphor-icons/react';
 import type { ReactNode } from 'react';
 
 import { cn } from '../lib/utils';
-import { MouseTooltip } from './mouse-tooltip';
 import { InlineEmptyState } from './inline-empty-state';
+import { MouseTooltip } from './mouse-tooltip';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 
 export interface SettingsTableColumn<T> {

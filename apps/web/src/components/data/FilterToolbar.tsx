@@ -1,6 +1,6 @@
-import { CloseIcon, FilterIcon, SearchIcon } from '@/lib/icons';
+import { Button, cn, Combobox, Input } from '@oktavius/base-ui';
 
-import { Button, Combobox, Input, cn } from '@oktavius/base-ui';
+import { CloseIcon, FilterIcon, SearchIcon } from '@/lib/icons';
 
 export type FilterOption = {
   value: string;

@@ -1,4 +1,4 @@
-import { Badge, Button, Label, cn } from '@oktavius/base-ui';
+import { Badge, Button, cn, Label } from '@oktavius/base-ui';
 
 import { TokenFormatControls, TokenPreviewSwatch } from '@/lib/design-tokens/TokenControlEditors';
 import type { DesignToken } from '@/lib/design-tokens/tokenRegistry';

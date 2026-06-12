@@ -1,12 +1,11 @@
+import { cn, ListRow, SplitView } from '@oktavius/base-ui';
 import { useMemo } from 'react';
-
-import { ListRow, SplitView, cn } from '@oktavius/base-ui';
 
 import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { DocumentIcon } from '@/lib/icons';
 
-import { buildPreviewDocument } from './documentPreviewUtils';
 import type { DocumentPreviewListItem } from './documentPreviewTypes';
+import { buildPreviewDocument } from './documentPreviewUtils';
 import { PdfPreviewPanel } from './PdfPreviewPanel';
 
 type DocumentPreviewPanelProps = {

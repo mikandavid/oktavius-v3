@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
 import { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestI18nProvider } from '@/core/i18n';

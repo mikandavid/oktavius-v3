@@ -1,33 +1,31 @@
+import { cn } from '@oktavius/base-ui';
 import { useState } from 'react';
 
-import { cn } from '@oktavius/base-ui';
-
-import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
-
-import { ModulePage } from '@/components/common/PageLayout';
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
+import { ModulePage } from '@/components/common/PageLayout';
+import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 import { showcasePageIcon } from '@/lib/modulePageIcons';
 
-import { SHOWCASE_NAV, type ShowcaseSectionId } from './shared';
 import { AgentSection } from './sections/AgentSection';
 import { CalendarChartsSection } from './sections/CalendarChartsSection';
+import { CommsOpsSection } from './sections/CommsOpsSection';
 import { DataSection } from './sections/DataSection';
+import { DesignTokensSection } from './sections/DesignTokensSection';
 import { DetailLayoutSection } from './sections/DetailLayoutSection';
 import { DialogsSection } from './sections/DialogsSection';
 import { DocumentsSection } from './sections/DocumentsSection';
-import { FeedbackSection } from './sections/FeedbackSection';
 import { ErrorsSection } from './sections/ErrorsSection';
+import { FeedbackSection } from './sections/FeedbackSection';
 import { FormsSection } from './sections/FormsSection';
-import { DesignTokensSection } from './sections/DesignTokensSection';
 import { FoundationsSection } from './sections/FoundationsSection';
 import { InputsSection } from './sections/InputsSection';
 import { LayoutsSection } from './sections/LayoutsSection';
 import { OverviewSection } from './sections/OverviewSection';
 import { PatternsSection } from './sections/PatternsSection';
-import { SettingsShowcaseSection } from './sections/SettingsSection';
 import { ResponsiveDetailSection } from './sections/ResponsiveDetailSection';
+import { SettingsShowcaseSection } from './sections/SettingsSection';
 import { WorkflowSection } from './sections/WorkflowSection';
-import { CommsOpsSection } from './sections/CommsOpsSection';
+import { SHOWCASE_NAV, type ShowcaseSectionId } from './shared';
 
 function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
   switch (section) {

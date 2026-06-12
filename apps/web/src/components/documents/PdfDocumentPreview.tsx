@@ -1,7 +1,7 @@
 import { cn } from '@oktavius/base-ui';
 
+import { type PdfPreviewFitMode, withPdfFitMode } from './documentPreviewTypes';
 import { PREVIEW_SURFACE_CLASS } from './documentPreviewUtils';
-import { withPdfFitMode, type PdfPreviewFitMode } from './documentPreviewTypes';
 
 type PdfDocumentPreviewProps = {
   sourceUrl: string;

@@ -1,19 +1,20 @@
 import type { Grid } from '@1771technologies/lytenyte-core';
-import type { MutableRefObject } from 'react';
-
-import { MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
-
 import {
   Button,
   Checkbox,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  cn,
 } from '@oktavius/base-ui';
+import type { MutableRefObject } from 'react';
 
+import { MoreIcon, SortAscIcon, SortDescIcon, SortIcon as SortUnsortedIcon } from '@/lib/icons';
+
+import { renderTypedCell, shouldTruncateCell } from './crudTableCells';
+import type { ColumnStretchMode, CrudGridSpec } from './crudTableColumnState';
 import {
   CRUD_TABLE_CELL_INNER_BASE,
   CRUD_TABLE_COLUMN_PADDING_ACTIONS,
@@ -24,6 +25,7 @@ import {
   crudTableColumnPaddingClass,
   resolveCrudColumnAlign,
 } from './crudTableDensity';
+import type { ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
 import {
   nextSortValue,
   parseCssSizeToPx,
@@ -31,9 +33,6 @@ import {
   toggleAllIds,
   toggleId,
 } from './gridUtils';
-import { renderTypedCell, shouldTruncateCell } from './crudTableCells';
-import type { ColumnStretchMode, CrudGridSpec } from './crudTableColumnState';
-import type { ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
 
 const DEFAULT_RESIZE_MIN_WIDTH_PX = 56;
 const STRETCH_FLOOR_MIN_WIDTH_PX = 48;
@@ -192,7 +191,6 @@ export function buildDataColumns<T extends { id: string }>({
         return (
           <button
             type="button"
-            aria-sort={getAriaSort(currentSort, gridColumn.id)}
             disabled={!sortable}
             className={cn(
               CRUD_TABLE_HEADER_INNER_BASE,
@@ -213,6 +211,13 @@ export function buildDataColumns<T extends { id: string }>({
             }}
           >
             <span className="truncate">{column.header}</span>
+            {sortable && getAriaSort(currentSort, gridColumn.id) !== 'none' ? (
+              <span className="sr-only">
+                {getAriaSort(currentSort, gridColumn.id) === 'ascending'
+                  ? ', sorted ascending'
+                  : ', sorted descending'}
+              </span>
+            ) : null}
             {sortable ? <SortIcon sort={currentSort} columnKey={gridColumn.id} /> : null}
           </button>
         );

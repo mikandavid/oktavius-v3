@@ -1,12 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import {
-  createCalendarEventTimesFromSlot,
-  eventToEditorDraft,
-  filterEventsByTeamMembers,
-  moveCalendarEvent,
-  normalizeSlotRange,
-  resizeCalendarEvent,
   type CalendarEvent,
   type CalendarEventEditorDraft,
   type CalendarEventMoveTarget,
@@ -14,10 +6,17 @@ import {
   type CalendarSlotAnchor,
   type CalendarSource,
   type CalendarTeamMember,
+  createCalendarEventTimesFromSlot,
+  eventToEditorDraft,
+  filterEventsByTeamMembers,
+  moveCalendarEvent,
+  normalizeSlotRange,
+  resizeCalendarEvent,
 } from '@oktavius/base-ui';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 import { appToast } from '@/lib/toast';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 export function useCalendarTeamMembers(): CalendarTeamMember[] {
   const osirisRuntime = useOptionalOsirisRuntime();

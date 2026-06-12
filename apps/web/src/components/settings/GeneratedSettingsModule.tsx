@@ -1,6 +1,5 @@
-import { useState, type ReactNode } from 'react';
-
-import { SettingsSection, type SettingsNavItem } from '@oktavius/base-ui';
+import { type SettingsNavItem, SettingsSection } from '@oktavius/base-ui';
+import { type ReactNode, useState } from 'react';
 
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
 

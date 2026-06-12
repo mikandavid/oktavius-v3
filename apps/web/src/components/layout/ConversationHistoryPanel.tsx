@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-
 import {
   Button,
+  cn,
   Input,
   MouseTooltip,
   RelativeTime,
   ScrollArea,
   Skeleton,
-  cn,
 } from '@oktavius/base-ui';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { BackIcon, CloseIcon, DeleteIcon, EditIcon, PlusIcon, SearchIcon } from '@/lib/icons';
@@ -246,18 +245,9 @@ function ConversationHistoryRow({
         'group/conversation mx-1 grid w-full min-w-0 max-w-full grid-cols-[minmax(0,1fr)_auto] items-center overflow-hidden rounded-control border border-transparent text-foreground transition-colors duration-200',
         isActive ? 'border-border/60 bg-muted/70' : 'hover:border-border/40 hover:bg-muted/50',
       )}
-      tabIndex={0}
-      onClick={!isEditing ? onSelect : undefined}
-      onKeyDown={(event) => {
-        if (isEditing) return;
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
     >
-      <div className="min-w-0 flex-1 overflow-hidden px-3 py-2">
-        {isEditing ? (
+      {isEditing ? (
+        <div className="min-w-0 flex-1 overflow-hidden px-3 py-2">
           <Input
             ref={inputRef}
             value={draftTitle}
@@ -269,13 +259,20 @@ function ConversationHistoryRow({
             onBlur={commitRename}
             className="h-6 border-0 border-b border-border/70 bg-transparent px-0 py-0 text-[13px] font-medium shadow-none focus-visible:ring-0"
           />
-        ) : (
-          <div className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-snug">
+          <RelativeTime date={item.updatedAt} className="mt-0.5 block text-[10px]" />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onSelect}
+          className="min-w-0 flex-1 overflow-hidden px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+        >
+          <span className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-medium leading-snug">
             {item.title || 'Untitled'}
-          </div>
-        )}
-        <RelativeTime date={item.updatedAt} className="mt-0.5 block text-[10px]" />
-      </div>
+          </span>
+          <RelativeTime date={item.updatedAt} className="mt-0.5 block text-[10px]" />
+        </button>
+      )}
 
       <div
         className={cn(

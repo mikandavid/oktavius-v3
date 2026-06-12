@@ -1,6 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-
 import { Badge, CountBadge, ListRow, SectionCard } from '@oktavius/base-ui';
+import { useNavigate } from 'react-router-dom';
 
 import { SearchIcon } from '@/lib/icons';
 

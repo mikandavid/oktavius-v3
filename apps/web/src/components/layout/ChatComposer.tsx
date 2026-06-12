@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ArrowUpIcon, SquareIcon } from '@/lib/icons';
 

@@ -31,12 +31,11 @@ import {
   resolveChartColor,
 } from '../lib/chartPalette';
 import { cn } from '../lib/utils';
-
 import {
+  chartAreaFill,
   ChartEmptyHint,
   ChartGradientDefs,
   ChartLegend,
-  chartAreaFill,
   MultiSeriesTooltip,
 } from './chart-parts';
 

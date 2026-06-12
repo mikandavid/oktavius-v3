@@ -1,8 +1,8 @@
 import { Badge, ListRow, SectionCard } from '@oktavius/base-ui';
+import { formatDisplayDateTime } from '@oktavius/base-ui';
 
 import { BrainIcon } from '@/lib/icons';
 
-import { formatDisplayDateTime } from '@oktavius/base-ui';
 import type { AgentMemoryCardPayload, AgentMemoryEntry } from '../types';
 
 type AgentMemoryCardProps = AgentMemoryCardPayload & {

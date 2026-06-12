@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import {
   Dialog,
   DialogContent,
@@ -9,6 +7,7 @@ import {
   Label,
   Textarea,
 } from '@oktavius/base-ui';
+import { useEffect, useState } from 'react';
 
 import { DialogFormFooter } from '@/components/common/DialogFormFooter';
 

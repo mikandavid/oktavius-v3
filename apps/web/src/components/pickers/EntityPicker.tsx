@@ -1,6 +1,5 @@
-import { useRef } from 'react';
-
 import { Combobox, type ComboboxOption } from '@oktavius/base-ui';
+import { useRef } from 'react';
 
 export type EntityPickerValue = {
   id: string;

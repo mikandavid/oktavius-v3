@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import { useMemo } from 'react';
 
 import { sanitizeEmailHtml } from './sanitizeEmailHtml';
 

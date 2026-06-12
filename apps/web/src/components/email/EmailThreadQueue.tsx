@@ -1,6 +1,5 @@
+import { Badge, Button, Checkbox, cn, Combobox, Input } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
-
-import { Badge, Button, Checkbox, Combobox, Input, cn } from '@oktavius/base-ui';
 
 import {
   ArchiveIcon,

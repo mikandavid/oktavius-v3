@@ -1,8 +1,7 @@
+import { cn, Drawer, DrawerContent, DrawerTitle } from '@oktavius/base-ui';
 import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
-
-import { cn, Drawer, DrawerContent, DrawerTitle } from '@oktavius/base-ui';
 
 import {
   APP_MAIN_FIT_CLASS,
@@ -12,8 +11,9 @@ import {
 } from '@/components/common/pageChrome';
 import { rememberHealthyRoute } from '@/core/errors/chunkLoadRecovery';
 import { sonnerToasterProps } from '@/lib/toast';
-import { AppShellLayoutProvider, useAppShellLayout } from './AppShellLayoutContext';
+
 import { AIChatSidebar } from './AIChatSidebar';
+import { AppShellLayoutProvider, useAppShellLayout } from './AppShellLayoutContext';
 import { Header } from './Header';
 import { MobileTopBar } from './MobileTopBar';
 import { Sidebar } from './Sidebar';

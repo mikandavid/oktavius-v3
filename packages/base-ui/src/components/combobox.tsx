@@ -13,20 +13,20 @@
 import { CaretDown, Check, MagnifyingGlass, SpinnerGap, X } from '@phosphor-icons/react';
 import * as React from 'react';
 
-import { Button } from './button';
-import { Input } from './input';
-import { dropdownPopoverPanelClasses, Popover, PopoverContent, PopoverTrigger } from './popover';
 import {
-  type ControlValidationState,
   controlDisabledClasses,
   controlHoverClasses,
   controlValidationClasses,
+  type ControlValidationState,
   filledControlSurfaceClasses,
   resolveControlValidationState,
 } from '../lib/controlStates';
-import { SelectOptionsOverflowHint } from './select-options-overflow-hint';
 import { limitSelectOptions } from '../lib/limit-select-options';
 import { cn } from '../lib/utils';
+import { Button } from './button';
+import { Input } from './input';
+import { dropdownPopoverPanelClasses, Popover, PopoverContent, PopoverTrigger } from './popover';
+import { SelectOptionsOverflowHint } from './select-options-overflow-hint';
 
 export interface ComboboxOption {
   value: string;
@@ -94,6 +94,7 @@ export function Combobox({
   const [isFooterPending, setIsFooterPending] = React.useState(false);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const listboxId = React.useId();
   const createInputRef = React.useRef<HTMLInputElement>(null);
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -262,12 +263,16 @@ export function Combobox({
             placeholder={searchPlaceholder}
             role="combobox"
             aria-autocomplete="list"
+            aria-controls={listboxId}
             aria-expanded={open}
             className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
 
-        <div className={cn('overflow-y-auto p-1', hasFooter ? 'max-h-52' : 'max-h-60')}>
+        <div
+          id={listboxId}
+          className={cn('overflow-y-auto p-1', hasFooter ? 'max-h-52' : 'max-h-60')}
+        >
           {isLoading || isFetching ? (
             <div className="flex items-center justify-center py-3">
               <SpinnerGap className="h-4 w-4 animate-spin text-muted-foreground" />

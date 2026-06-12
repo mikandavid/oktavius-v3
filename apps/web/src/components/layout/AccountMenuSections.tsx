@@ -1,14 +1,12 @@
-import type { ReactNode } from 'react';
-
 import {
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 import { useI18n, useTranslation } from '@/core/i18n';
-
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -21,9 +19,9 @@ import {
 import {
   UI_LOCALE_OPTIONS,
   UI_THEME_OPTIONS,
-  useUserPreferences,
   type UiLocale,
   type UiTheme,
+  useUserPreferences,
 } from '@/lib/userPreferences';
 
 type OrganizationMenuSectionProps = {

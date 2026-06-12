@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 
-import { buildGoogleMapsSearchUrl, buildGoogleMapsSearchUrlFromAddress } from './googleMapsEmbed';
 import { GoogleMapsPreviewButton } from './GoogleMapsDialog';
+import { buildGoogleMapsSearchUrl, buildGoogleMapsSearchUrlFromAddress } from './googleMapsEmbed';
 
 type StructuredAddressInput = Parameters<typeof buildGoogleMapsSearchUrlFromAddress>[0];
 

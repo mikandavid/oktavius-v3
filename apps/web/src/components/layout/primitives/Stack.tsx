@@ -1,6 +1,5 @@
-import type { ElementType, ReactNode } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import type { ElementType, ReactNode } from 'react';
 
 type Gap = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 

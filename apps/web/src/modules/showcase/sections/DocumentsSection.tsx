@@ -1,17 +1,16 @@
+import { type Attachment, AttachmentList, Button } from '@oktavius/base-ui';
 import { useState } from 'react';
 
-import { AttachmentList, Button, type Attachment } from '@oktavius/base-ui';
-
-import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import { DocumentGenerateDialog } from '@/components/documents/DocumentGenerateDialog';
-import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
+import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import {
   DOCUMENT_PREVIEW_DEMO_FILES,
   DOCUMENT_PREVIEW_DEMO_PDF_URL,
 } from '@/components/documents/documentPreviewDemoData';
-import { PdfPreviewPanel } from '@/components/documents/PdfPreviewPanel';
+import { DocumentPreviewPanel } from '@/components/documents/DocumentPreviewPanel';
 import { DocumentSendDialog } from '@/components/documents/DocumentSendDialog';
 import { EmailTemplatePicker } from '@/components/documents/EmailTemplatePicker';
+import { PdfPreviewPanel } from '@/components/documents/PdfPreviewPanel';
 import { TemplatePicker } from '@/components/documents/TemplatePicker';
 import { appToast } from '@/lib/toast';
 

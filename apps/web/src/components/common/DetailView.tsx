@@ -1,18 +1,17 @@
-import type { ReactNode } from 'react';
-import { useMemo } from 'react';
-
 import {
   DetailFieldGrid,
+  type DetailFieldProps as BaseDetailFieldProps,
   InlineEdit,
   type InlineEditProps,
   RecordIdentity,
   RecordInfoHero,
   RecordInfoMeta,
   RecordVisual,
-  SectionCard,
-  type DetailFieldProps as BaseDetailFieldProps,
   type RecordVisualProps,
+  SectionCard,
 } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 
 import type { PermissionRequirement } from '@/lib/permissions';
 import { canUsePermissionRequirement, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';

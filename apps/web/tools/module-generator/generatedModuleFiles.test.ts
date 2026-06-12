@@ -1,23 +1,23 @@
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
+import { validateGeneratedModuleContract } from './generatedModuleContract';
 import {
-  GENERATED_MODULE_TEMPLATE_DESCRIPTORS,
   emitGeneratedModuleContract,
+  GENERATED_MODULE_TEMPLATE_DESCRIPTORS,
 } from './generatedModuleContracts';
 import {
   emitGeneratedModuleFile,
+  emitGeneratedModuleFiles,
   emitGeneratedModuleRouteFiles,
   emitGeneratedModuleScaffoldFiles,
-  emitGeneratedModuleFiles,
   materializeGeneratedModuleFiles,
 } from './generatedModuleFiles';
-import { validateGeneratedModuleContract } from './generatedModuleContract';
 
 const execFileAsync = promisify(execFile);
 

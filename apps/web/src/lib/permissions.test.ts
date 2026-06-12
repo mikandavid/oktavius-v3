@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { canAccessAppNavItem, canDeleteRecords, canUsePermissionRequirement } from './permissions';
 import type { AppNavModule } from './appNavModules';
 import type { PermissionRequirement } from './permissions';
+import { canAccessAppNavItem, canDeleteRecords, canUsePermissionRequirement } from './permissions';
 
 const navItem = (
   id: AppNavModule['id'],

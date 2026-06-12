@@ -1,8 +1,7 @@
-import { CheckIcon, MinusIcon } from '@/lib/icons';
-
 import { Badge, type BadgeProps, formatDisplayDate, MoneyText } from '@oktavius/base-ui';
 
 import { StatusBadge } from '@/components/feedback/StatusBadge';
+import { CheckIcon, MinusIcon } from '@/lib/icons';
 
 import type { CrudColumn } from './crudTableTypes';
 

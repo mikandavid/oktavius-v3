@@ -1,12 +1,13 @@
+import { resolveOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
+import type { OsirisApiClientOptions } from '@/runtime/osiris/apiClient';
+import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
+
 import type { ApiRegistry } from './contracts';
 import {
   createHttpRegistry,
   type HttpRegistryEndpoints,
   type HttpRegistryFetcher,
 } from './httpRegistry';
-import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
-import { resolveOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
-import type { OsirisApiClientOptions } from '@/runtime/osiris/apiClient';
 
 /** Endpoint overrides only — every resource defaults to `/<key>` in createHttpRegistry. */
 export const DEFAULT_HTTP_REGISTRY_ENDPOINTS: HttpRegistryEndpoints = {};

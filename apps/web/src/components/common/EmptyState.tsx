@@ -1,6 +1,6 @@
+import { cn } from '@oktavius/base-ui';
 import type { ReactNode } from 'react';
 
-import { cn } from '@oktavius/base-ui';
 import { EmptyStateIcon } from '@/lib/icons';
 
 type EmptyStateProps = {

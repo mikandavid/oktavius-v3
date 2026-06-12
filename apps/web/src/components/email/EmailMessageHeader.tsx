@@ -1,4 +1,4 @@
-import { Avatar, Button, Popover, PopoverContent, PopoverTrigger, cn } from '@oktavius/base-ui';
+import { Avatar, Button, cn, Popover, PopoverContent, PopoverTrigger } from '@oktavius/base-ui';
 
 import { ChevronDownIcon } from '@/lib/icons';
 

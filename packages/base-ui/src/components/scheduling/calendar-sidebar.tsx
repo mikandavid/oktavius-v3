@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 
 import { cn } from '../../lib/utils';
-import { CalendarMiniPicker } from './calendar-mini-picker';
-import { CalendarSourceLegend } from './calendar-source-legend';
-import { CalendarSidebarSection, CalendarSidebarToggleRow } from './calendar-sidebar-primitives';
-import { type CalendarTeamMember, type CalendarViewMode } from './calendar-shared';
 import { type CalendarSource } from './calendar-colors';
+import { CalendarMiniPicker } from './calendar-mini-picker';
+import { type CalendarTeamMember, type CalendarViewMode } from './calendar-shared';
+import { CalendarSidebarSection, CalendarSidebarToggleRow } from './calendar-sidebar-primitives';
+import { CalendarSourceLegend } from './calendar-source-legend';
 
 function memberInitials(label: string): string {
   const parts = label.trim().split(/\s+/).filter(Boolean);

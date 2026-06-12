@@ -3,11 +3,11 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { ActiveLocationProvider } from '@/lib/locations/ActiveLocationContext';
 import {
   OsirisRuntimeContext,
   type OsirisRuntimeContextValue,
 } from '@/runtime/osiris/useOsirisRuntime';
-import { ActiveLocationProvider } from '@/lib/locations/ActiveLocationContext';
 
 import { ActiveLocationPicker, shouldShowActiveLocationPicker } from './ActiveLocationPicker';
 

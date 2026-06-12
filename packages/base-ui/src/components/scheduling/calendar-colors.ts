@@ -1,6 +1,5 @@
-import type { CalendarColorKey, CalendarEvent, CalendarEventTone } from './calendar-shared';
-
 import { getSemanticToneClasses, type SemanticTone } from '../../lib/semanticPalette';
+import type { CalendarColorKey, CalendarEvent, CalendarEventTone } from './calendar-shared';
 
 export interface CalendarSource {
   id: string;

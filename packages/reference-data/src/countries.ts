@@ -3,8 +3,8 @@ import { countries, getCountryCode } from 'countries-list';
 import {
   DACH_COUNTRY_CODES,
   prioritizeCodes,
-  toDisplayLocale,
   type ReferenceDataMode,
+  toDisplayLocale,
 } from './locale';
 
 export const COUNTRY_CODES = Object.keys(countries)

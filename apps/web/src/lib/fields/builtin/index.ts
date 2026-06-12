@@ -1,3 +1,4 @@
+import type { FieldDefinition } from '../types';
 import { fieldDefinition as addressFieldDefinition } from './address';
 import { fieldDefinition as checkboxFieldDefinition } from './checkbox';
 import { fieldDefinition as comboboxFieldDefinition } from './combobox';
@@ -23,8 +24,6 @@ import { fieldDefinition as textareaFieldDefinition } from './textarea';
 import { fieldDefinition as timeFieldDefinition } from './time';
 import { fieldDefinition as urlFieldDefinition } from './url';
 import { fieldDefinition as vocabularyFieldDefinition } from './vocabulary';
-
-import type { FieldDefinition } from '../types';
 
 export const builtinFieldDefinitions: FieldDefinition[] = [
   textFieldDefinition,

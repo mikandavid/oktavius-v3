@@ -1,4 +1,5 @@
-import { Badge, ListRow, SectionCard, formatDisplayDateTime } from '@oktavius/base-ui';
+import { Badge, formatDisplayDateTime, ListRow, SectionCard } from '@oktavius/base-ui';
+
 import type { AgentPlannerCardPayload, AgentPlannerSlot } from '../types';
 
 type AgentPlannerCardProps = AgentPlannerCardPayload & {

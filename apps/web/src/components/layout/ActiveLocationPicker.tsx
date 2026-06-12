@@ -1,4 +1,4 @@
-import { Combobox, cn } from '@oktavius/base-ui';
+import { cn, Combobox } from '@oktavius/base-ui';
 
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';

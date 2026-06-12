@@ -1,6 +1,6 @@
+import { Button, buttonVariants, cn, MouseTooltip } from '@oktavius/base-ui';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { Button, MouseTooltip, buttonVariants, cn } from '@oktavius/base-ui';
 import { BackIcon } from '@/lib/icons';
 
 type BackButtonProps = {

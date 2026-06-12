@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-
 import {
   Button,
+  cn,
   InlineEmptyState,
   ScrollArea,
   Skeleton,
@@ -11,18 +10,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  cn,
 } from '@oktavius/base-ui';
+import { useEffect, useMemo, useState } from 'react';
 
 import { DownloadIcon, SpinnerIcon } from '@/lib/icons';
 
-import { PdfDocumentPreview } from './PdfDocumentPreview';
 import {
   inferPreviewDocumentKind,
   type PdfPreviewFitMode,
   type PreviewDocument,
 } from './documentPreviewTypes';
 import { downloadPreviewDocument, resolvePreviewDownloadUrl } from './documentPreviewUtils';
+import { PdfDocumentPreview } from './PdfDocumentPreview';
 
 const MAX_PREVIEW_ROWS = 100;
 

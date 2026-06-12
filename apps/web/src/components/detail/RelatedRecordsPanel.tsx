@@ -1,8 +1,6 @@
-import { Link } from 'react-router-dom';
-
-import type { ReactNode } from 'react';
-
 import { Button, InlineEmptyState, ListRow, SectionCard } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 export type RelatedRecordItem = {
   id: string;

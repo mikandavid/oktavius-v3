@@ -1,6 +1,5 @@
-import { useMemo } from 'react';
-
 import { Badge, SettingsTable, type SettingsTableColumn } from '@oktavius/base-ui';
+import { useMemo } from 'react';
 
 import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
 import type { LocationDetailItem } from '@/lib/locations/types';

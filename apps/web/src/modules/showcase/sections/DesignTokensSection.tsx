@@ -1,20 +1,18 @@
-import { useMemo, useState } from 'react';
-
 import {
   Badge,
   Button,
+  cn,
   CollapsibleSection,
   Input,
   SettingsRow,
   SplitView,
   Switch,
-  cn,
 } from '@oktavius/base-ui';
+import { useMemo, useState } from 'react';
 
 import { InfoBox } from '@/components/common/InfoBox';
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
-import { TokenEditor } from '@/modules/showcase/components/TokenEditor';
 import {
   NEUTRAL_STEPS,
   SEMANTIC_COLOR_TOKENS,
@@ -26,8 +24,9 @@ import {
   readBaseTokenFromStylesheet,
 } from '@/lib/design-tokens/tokenRegistry';
 import { useDesignTokenOverrides } from '@/lib/design-tokens/useDesignTokenOverrides';
-import { useUserPreferences } from '@/lib/userPreferences';
 import { appToast } from '@/lib/toast';
+import { useUserPreferences } from '@/lib/userPreferences';
+import { TokenEditor } from '@/modules/showcase/components/TokenEditor';
 
 import { ShowcaseBlock } from '../shared';
 

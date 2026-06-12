@@ -1,40 +1,39 @@
 import { Grid, useClientDataSource } from '@1771technologies/lytenyte-core';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EMPTY_PERMISSION_SUBJECT, permitted } from '@/lib/permissions';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
+import { CrudTableBulkActionBar } from './CrudTableBulkActionBar';
+import { buildActionsColumn, buildDataColumns, buildSelectColumn } from './crudTableColumns';
+import {
+  type ColumnStretchMode,
+  type CrudGridApi,
+  type CrudGridSpec,
+  useCrudColumnState,
+} from './crudTableColumnState';
 import {
   CRUD_TABLE_GRID_CHROME_EXTRA_PX,
   CRUD_TABLE_HEADER_HEIGHT_PX,
   crudTableRowHeightPx,
 } from './crudTableDensity';
+import { CrudTableLoadingState } from './CrudTableLoadingState';
+import { CrudTableMobileList } from './CrudTableMobileList';
+import type { BulkAction, CrudColumn, CrudRowAction } from './crudTableTypes';
 import {
+  BREAKPOINT_MIN_WIDTHS,
   resolveEffectiveTableWidth,
   shouldHideForViewport,
   toggleAllIds,
   toggleId,
-  BREAKPOINT_MIN_WIDTHS,
 } from './gridUtils';
-import { CrudTableBulkActionBar } from './CrudTableBulkActionBar';
-import { CrudTableLoadingState } from './CrudTableLoadingState';
-import { CrudTableMobileList } from './CrudTableMobileList';
-import {
-  useCrudColumnState,
-  type ColumnStretchMode,
-  type CrudGridApi,
-  type CrudGridSpec,
-} from './crudTableColumnState';
-import { buildActionsColumn, buildDataColumns, buildSelectColumn } from './crudTableColumns';
 import { useCrudTableConfirm } from './useCrudTableConfirm';
-import type { BulkAction, CrudColumn, CrudRowAction } from './crudTableTypes';
 
-export type { BulkAction, ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
 export type { CrudGridApi, CrudGridSpec } from './crudTableColumnState';
+export type { BulkAction, ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
 
 const LEAF_ID_FN = <T extends { id: string }>(item: T) => item.id;
 

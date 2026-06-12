@@ -1,13 +1,12 @@
-import { useMemo, useState } from 'react';
-
 import {
   Badge,
+  cn,
   CollapsibleSection,
   InlineEmptyState,
   RelativeTime,
   ScrollArea,
-  cn,
 } from '@oktavius/base-ui';
+import { useMemo, useState } from 'react';
 
 import {
   ArrowRightIcon,

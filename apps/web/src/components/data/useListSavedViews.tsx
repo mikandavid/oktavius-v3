@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { SavedViewSelector, type SavedView } from '@/components/data/SavedViewSelector';
-import { appToast } from '@/lib/toast';
+import { type SavedView, SavedViewSelector } from '@/components/data/SavedViewSelector';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
+import { appToast } from '@/lib/toast';
 
-import {
-  createSavedViewFromFilters,
-  type SavedViewsStore,
-  type StoredSavedView,
-} from './savedViewsStorage';
 import {
   createLocalSavedViewsRuntime,
   createSavedViewsStoreFromRuntime,
   type SavedViewsRuntimeAdapter,
 } from './savedViewsRuntime';
+import {
+  createSavedViewFromFilters,
+  type SavedViewsStore,
+  type StoredSavedView,
+} from './savedViewsStorage';
 
 export type SavedViewPreset = SavedView & {
   /** Filter values applied when this view is selected — empty string clears a slot. */

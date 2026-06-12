@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { CARD_CONTENT_TIERS } from './detail-field';
 import { cn } from '../lib/utils';
+import { CARD_CONTENT_TIERS } from './detail-field';
 
 /** Fixed visual sizes — pair with typography tiers, never ad-hoc dimensions. */
 export type RecordVisualSize = 'sm' | 'md' | 'lg' | 'xl';

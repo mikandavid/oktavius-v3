@@ -1,14 +1,14 @@
 import {
+  closestCorners,
   DndContext,
+  type DragEndEvent,
   DragOverlay,
+  type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
-  closestCorners,
   useDroppable,
   useSensor,
   useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState, type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { cn, interactiveSurfaceClasses } from '../lib/utils';
 import { InlineEmptyState } from './inline-empty-state';

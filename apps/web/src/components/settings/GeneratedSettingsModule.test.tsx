@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { AppShellLayoutProvider } from '@/components/layout/AppShellLayoutContext';
 
 import {
-  GeneratedSettingsModule,
   buildSettingsNavItems,
+  GeneratedSettingsModule,
   type GeneratedSettingsSection,
 } from './GeneratedSettingsModule';
 

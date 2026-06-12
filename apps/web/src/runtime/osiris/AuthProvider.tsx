@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 
 import { createOsirisSavedViewsAdapter } from '@/components/data/osirisSavedViewsAdapter';
 
@@ -9,8 +9,8 @@ import { createOsirisLocationAdminClient } from './locationAdminClient';
 import { createOsirisNotificationsRuntime } from './notificationsClient';
 import { createOsirisSearchRuntime } from './searchClient';
 import type { OsirisBootstrapResponse, OsirisRuntimeState, OsirisSessionStatus } from './types';
-import { createOsirisUserPreferencesRuntime } from './userPreferencesClient';
 import { OsirisRuntimeContext } from './useOsirisRuntime';
+import { createOsirisUserPreferencesRuntime } from './userPreferencesClient';
 import { createOsirisWorkspaceSettingsClient } from './workspaceSettingsClient';
 
 const OSIRIS_API_BASE_URL = resolveOsirisApiBaseUrl();

@@ -1,7 +1,6 @@
-import { useState } from 'react';
-
 import {
   Button,
+  cn,
   Label,
   Popover,
   PopoverContent,
@@ -9,8 +8,8 @@ import {
   RadioGroupField,
   SettingsRow,
   Switch,
-  cn,
 } from '@oktavius/base-ui';
+import { useState } from 'react';
 
 import { Settings2Icon } from '@/lib/icons';
 

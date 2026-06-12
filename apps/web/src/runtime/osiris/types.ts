@@ -1,6 +1,6 @@
-import type { SearchRuntimeAdapter } from '@/lib/search/SearchRuntime';
-import type { NotificationsRuntimeAdapter } from '@/components/layout/NotificationsRuntime';
 import type { SavedViewsRuntimeAdapter } from '@/components/data/savedViewsRuntime';
+import type { NotificationsRuntimeAdapter } from '@/components/layout/NotificationsRuntime';
+import type { SearchRuntimeAdapter } from '@/lib/search/SearchRuntime';
 import type { UserPreferencesRuntimeAdapter } from '@/lib/userPreferences';
 
 import type {

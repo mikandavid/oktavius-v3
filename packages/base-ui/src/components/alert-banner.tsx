@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { CheckCircle, Info, Warning, WarningCircle, X } from '@phosphor-icons/react';
+import * as React from 'react';
 
 import { getSemanticToneClasses, type SemanticTone } from '../lib/semanticPalette';
 import { cn } from '../lib/utils';

@@ -1,10 +1,10 @@
-import { act } from 'react';
 import type { ComponentProps } from 'react';
+import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { type EntityStorageFile, EntityStoragePanel } from './EntityStoragePanel';
 import type { StorageFileLinkPickerDialogProps } from './StorageFileLinkPickerDialog';
-import { EntityStoragePanel, type EntityStorageFile } from './EntityStoragePanel';
 import type { StorageLinkNode } from './StorageFileLinkPickerDialog';
 
 const storageDialogMock = vi.hoisted(() => ({

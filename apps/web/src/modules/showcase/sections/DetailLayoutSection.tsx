@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   Breadcrumb,
   Button,
@@ -17,12 +15,18 @@ import {
   TabsList,
   TabsTrigger,
 } from '@oktavius/base-ui';
+import { useState } from 'react';
 
-import { BackButton } from '@/components/common/BackButton';
-import { DetailView } from '@/components/common/DetailView';
-import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { OrgCustomRolesSection } from '@/components/admin/OrgCustomRolesSection';
 import { AuditTrailPanel } from '@/components/audit/AuditTrailPanel';
+import { BackButton } from '@/components/common/BackButton';
+import {
+  ConnectedAccountsHeaderMenu,
+  hostedNylasProviderLabel,
+} from '@/components/common/ConnectedAccountsHeaderMenu';
+import { DetailView } from '@/components/common/DetailView';
+import { LanguageSelector } from '@/components/common/LanguageSelector';
+import { QUEUE_ITEM_SELECTED_CLASS, SplitViewQueue } from '@/components/common/SplitViewQueue';
 import { CustomFieldsDetailSection } from '@/components/custom-fields';
 import { RelatedRecordsPanel } from '@/components/detail/RelatedRecordsPanel';
 import { ResponsiveDetailLayout } from '@/components/detail/ResponsiveDetailLayout';
@@ -30,16 +34,10 @@ import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { ActiveLocationInfoButton } from '@/components/layout/ActiveLocationInfoButton';
 import { ActiveLocationPicker } from '@/components/layout/ActiveLocationPicker';
 import { LocationSitesDetailList } from '@/components/layout/LocationSitesDetailList';
-import { LanguageSelector } from '@/components/common/LanguageSelector';
-import {
-  ConnectedAccountsHeaderMenu,
-  hostedNylasProviderLabel,
-} from '@/components/common/ConnectedAccountsHeaderMenu';
-
 import { EntityStoragePanel } from '@/components/storage/EntityStoragePanel';
 import { StorageFileLinkPickerDialog } from '@/components/storage/StorageFileLinkPickerDialog';
-import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import { CaseIcon, ProjectsIcon } from '@/lib/icons';
+import { DEMO_LOCATIONS } from '@/lib/locations/demoLocations';
 import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';

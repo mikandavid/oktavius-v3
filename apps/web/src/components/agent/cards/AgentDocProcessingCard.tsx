@@ -1,4 +1,4 @@
-import { Badge, DetailFieldGrid, SectionCard, cn } from '@oktavius/base-ui';
+import { Badge, cn, DetailFieldGrid, SectionCard } from '@oktavius/base-ui';
 
 import { DocumentIcon, SpinnerIcon } from '@/lib/icons';
 

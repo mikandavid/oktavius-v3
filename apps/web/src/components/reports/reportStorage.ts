@@ -1,5 +1,6 @@
 import type { ChartCardType } from '@oktavius/base-ui';
-import { createApiArrayStore, type ApiArrayStoreFetcher } from '@/lib/apiArrayStore';
+
+import { type ApiArrayStoreFetcher, createApiArrayStore } from '@/lib/apiArrayStore';
 
 export type SavedReport = {
   id: string;

@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { cn } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 

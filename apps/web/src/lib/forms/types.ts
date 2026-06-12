@@ -1,3 +1,4 @@
+import type { AddressValue, ComboboxOption } from '@oktavius/base-ui';
 import type {
   CountryOption,
   CurrencyOption,
@@ -5,7 +6,6 @@ import type {
   ReferenceDataMode,
   VocabularyKey,
 } from '@oktavius/reference-data';
-import type { AddressValue, ComboboxOption } from '@oktavius/base-ui';
 
 import type { PermissionRequirement } from '@/lib/permissions';
 

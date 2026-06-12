@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import {
   Button,
   Dialog,
@@ -8,11 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@oktavius/base-ui';
+import { useEffect, useState } from 'react';
 
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
 import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
-import { TemplatePicker, type TemplateOption } from './TemplatePicker';
+import { type TemplateOption, TemplatePicker } from './TemplatePicker';
 
 type GenerateFormValues = {
   format: string;

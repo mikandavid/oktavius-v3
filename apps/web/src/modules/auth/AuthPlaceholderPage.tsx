@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { Button, buttonVariants, Input, Label } from '@oktavius/base-ui';
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-
-import { Button, Input, Label, buttonVariants } from '@oktavius/base-ui';
 
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { SpinnerIcon, WarningIcon } from '@/lib/icons';

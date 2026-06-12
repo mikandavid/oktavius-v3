@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import {
   AddressField,
   Checkbox,
@@ -18,8 +16,8 @@ import {
   TagsInput,
   Textarea,
 } from '@oktavius/base-ui';
+import { useState } from 'react';
 
-import { ShowcaseBlock } from '../shared';
 import {
   BusinessContactPicker,
   type BusinessContactPickerValue,
@@ -31,6 +29,8 @@ import {
   type FuneralCasePickerValue,
 } from '@/components/pickers/FuneralCasePicker';
 import { ProjectPicker, type ProjectPickerValue } from '@/components/pickers/ProjectPicker';
+
+import { ShowcaseBlock } from '../shared';
 
 const DEMO_ENTITY_OPTIONS: EntityPickerValue[] = [
   { id: 'staff_1', label: 'Anna Hofer', description: 'Account manager' },

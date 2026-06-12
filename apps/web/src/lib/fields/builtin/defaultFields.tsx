@@ -1,7 +1,3 @@
-import type { ChangeEvent } from 'react';
-import { z } from 'zod';
-
-import { buildCountryOptions } from '@oktavius/reference-data';
 import {
   AddressField,
   Checkbox,
@@ -17,22 +13,25 @@ import {
   NumberInput,
   PhoneInput,
   RadioGroupField,
+  sanitizeEmailInput,
+  sanitizeUrlInput,
   Switch,
   TagsInput,
   Textarea,
-  sanitizeEmailInput,
-  sanitizeUrlInput,
 } from '@oktavius/base-ui';
+import { buildCountryOptions } from '@oktavius/reference-data';
+import type { ChangeEvent } from 'react';
+import { z } from 'zod';
 
 import {
-  type FormFieldValue,
-  type FieldType,
   type AddressValue,
+  type FieldType,
+  type FormFieldValue,
 } from '@/components/forms/EntityForm';
-import { GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
-import { buildGoogleMapsSearchUrlFromAddress } from '@/components/maps/googleMapsEmbed';
 import { JsonField } from '@/components/forms/JsonField';
 import { LineItemArray, type LineItemRow } from '@/components/forms/LineItemArray';
+import { GoogleMapsPreviewButton } from '@/components/maps/GoogleMapsDialog';
+import { buildGoogleMapsSearchUrlFromAddress } from '@/components/maps/googleMapsEmbed';
 
 import type { FieldDefinition, FieldRendererProps } from '../types';
 

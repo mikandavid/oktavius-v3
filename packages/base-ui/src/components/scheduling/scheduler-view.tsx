@@ -1,7 +1,5 @@
 import { cn } from '../../lib/utils';
 import { type CalendarSource, visibleEvents } from './calendar-colors';
-import { CalendarTimeGrid } from './calendar-time-grid';
-import { CalendarToolbar } from './calendar-toolbar';
 import {
   type CalendarEvent,
   DEFAULT_SCHEDULER_END_HOUR,
@@ -11,6 +9,8 @@ import {
   schedulingBodyClass,
   schedulingShellClass,
 } from './calendar-shared';
+import { CalendarTimeGrid } from './calendar-time-grid';
+import { CalendarToolbar } from './calendar-toolbar';
 
 export interface SchedulerViewProps {
   anchor: Date;

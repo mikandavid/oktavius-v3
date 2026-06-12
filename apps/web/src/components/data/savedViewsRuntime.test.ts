@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { StoredSavedView } from './savedViewsStorage';
 import {
   createLocalSavedViewsRuntime,
   createSavedViewsStoreFromRuntime,
   type SavedViewsRuntimeAdapter,
 } from './savedViewsRuntime';
+import type { StoredSavedView } from './savedViewsStorage';
 
 function createStorage(seed: Record<string, string> = {}): Storage {
   const values = new Map(Object.entries(seed));

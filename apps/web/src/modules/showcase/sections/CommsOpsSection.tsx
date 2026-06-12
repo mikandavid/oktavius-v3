@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-
 import {
   Badge,
   Button,
+  cn,
   Input,
   ListRow,
   RelativeTime,
   ScrollArea,
   Separator,
-  cn,
 } from '@oktavius/base-ui';
+import { useEffect, useRef, useState } from 'react';
 
+import { NotificationPanel } from '@/components/layout/NotificationPanel';
 import {
   BookOpenIcon,
   CheckIcon,
@@ -26,7 +26,6 @@ import {
   TeamIcon,
   TimeIcon,
 } from '@/lib/icons';
-import { NotificationPanel } from '@/components/layout/NotificationPanel';
 import { appToast } from '@/lib/toast';
 
 import { ShowcaseBlock } from '../shared';

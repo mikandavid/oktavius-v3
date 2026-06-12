@@ -1,7 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
 import { isValidElement, type ReactElement } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DocumentIcon, UserIcon } from '@/lib/icons';
+
 import { createOsirisSearchRuntime } from './searchClient';
 
 function jsonResponse(payload: unknown) {

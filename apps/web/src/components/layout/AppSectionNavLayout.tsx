@@ -1,4 +1,4 @@
-import { SettingsLayout, cn, type SettingsLayoutProps } from '@oktavius/base-ui';
+import { cn, SettingsLayout, type SettingsLayoutProps } from '@oktavius/base-ui';
 
 import { useRegisterSecondaryNav } from './AppShellLayoutContext';
 
