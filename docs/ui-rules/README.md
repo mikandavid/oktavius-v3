@@ -40,3 +40,10 @@ Single source of truth for ERP frontend UI. Tool-agnostic.
 1. Edit the canonical files listed above — do not add parallel topic docs.
 2. Mirror critical bans to `.cursor/rules/ui-system.mdc` when they must load in every session.
 3. Prefer ESLint in `apps/web/eslint.config.js` for enforceable limits.
+
+## Mechanically enforced
+
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests, build, and bundle
+budgets on every push. Lint enforces: design tokens, UX limits, import order,
+type-only imports, jsx-a11y, and module boundaries (`oktavius/no-cross-module-imports`
+— modules may not import other modules; lift shared code to `@/lib`).
