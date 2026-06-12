@@ -27,12 +27,7 @@ export const PARTY_ROLE_VOCABULARY = {
   aliases: {
     primary_contact: ['primary contact', 'primary', 'hauptansprechperson', 'hauptkontakt'],
     billing_contact: ['billing contact', 'billing', 'rechnungskontakt', 'rechnung'],
-    technical_contact: [
-      'technical contact',
-      'technical',
-      'technical lead',
-      'technischer kontakt',
-    ],
+    technical_contact: ['technical contact', 'technical', 'technical lead', 'technischer kontakt'],
     account_manager: ['account manager', 'kundenbetreuer', 'betreuer'],
     legal: ['legal', 'rechtlich', 'juristisch'],
     other: ['other', 'sonstige'],

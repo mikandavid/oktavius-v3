@@ -14,16 +14,6 @@ import { buildStandardListCrudActions } from './standardListCrud';
 import { buildStandardCrudListRequestParams } from './standardCrudQuery';
 import type { SavedViewsRuntimeAdapter } from './savedViewsRuntime';
 
-const demoData = vi.hoisted(() => ({
-  currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'admin', permissions: ['records.delete'] },
-}));
-
-vi.mock('@/app/demo-data', () => ({
-  useDemoData: () => demoData,
-  useOptionalDemoData: () => demoData,
-}));
-
 vi.mock('./CrudMainView', () => ({
   CrudMainView: ({
     rows,

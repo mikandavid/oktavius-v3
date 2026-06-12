@@ -1,28 +1,5 @@
-import type { OrgModuleId, OrgProfile, OrgTerminology } from './types';
-
-export const GENERIC_TERMINOLOGY: OrgTerminology = {
-  cases: 'Cases',
-  casesSingular: 'Case',
-  clients: 'Clients',
-  clientsSingular: 'Client',
-  products: 'Products',
-  orders: 'Orders',
-  projects: 'Projects',
-  documents: 'Documents',
-  dashboard: 'Dashboard',
-};
-
-export const FUNERAL_TERMINOLOGY: OrgTerminology = {
-  cases: 'Cases',
-  casesSingular: 'Case',
-  clients: 'Contacts',
-  clientsSingular: 'Contact',
-  products: 'Products',
-  orders: 'Sales',
-  projects: 'Bereavement cases',
-  documents: 'Storage',
-  dashboard: 'Overview',
-};
+import { presetFor } from './presets';
+import type { OrgModuleId, OrgProfile } from './types';
 
 const DEFAULT_ORG_MODULES: OrgModuleId[] = [
   'dashboard',
@@ -41,7 +18,7 @@ export function createDefaultOrgProfile(orgId?: string | null): OrgProfile {
     name: 'Workspace',
     industryKey: 'generic',
     enabledModules: DEFAULT_ORG_MODULES,
-    terminology: GENERIC_TERMINOLOGY,
+    terminology: presetFor('generic').terminologyByLocale.en ?? {},
     locations: [],
     tagline: '',
   };
@@ -53,8 +30,4 @@ export const ORG_PROFILES: Record<string, OrgProfile> = {};
 export function getOrgProfile(orgId: string | null | undefined): OrgProfile {
   if (!orgId) return DEFAULT_ORG_PROFILE;
   return ORG_PROFILES[orgId] ?? createDefaultOrgProfile(orgId);
-}
-
-export function isFuneralOrg(orgId: string): boolean {
-  return getOrgProfile(orgId).industryKey === 'funeral';
 }

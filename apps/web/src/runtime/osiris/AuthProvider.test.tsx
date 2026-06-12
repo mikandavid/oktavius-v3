@@ -238,13 +238,13 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/me/active-context', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/me/active-context', {
       body: JSON.stringify({ activeOrgId: 'org_1', activeSiteId: 'site_2' }),
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/bootstrap', { credentials: 'include' });
     expect(rendered.container.querySelector('[data-testid="site"]')?.textContent).toBe('site_2');
   });
 
@@ -263,13 +263,13 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/me/active-context', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/me/active-context', {
       body: JSON.stringify({ activeOrgId: 'org_2', activeSiteId: null }),
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/bootstrap', { credentials: 'include' });
     expect(rendered.container.querySelector('[data-testid="org"]')?.textContent).toBe('org_2');
     expect(rendered.container.querySelector('[data-testid="site"]')?.textContent).toBe('all');
   });
@@ -300,12 +300,12 @@ describe('OsirisAuthProvider active context switching', () => {
     const rendered = await renderProvider();
     roots.push(rendered.root);
 
-    expect(fetchMock).toHaveBeenNthCalledWith(1, '/bootstrap', { credentials: 'include' });
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/auth/refresh', {
+    expect(fetchMock).toHaveBeenNthCalledWith(1, '/v1/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/auth/refresh', {
       credentials: 'include',
       method: 'POST',
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/bootstrap', { credentials: 'include' });
     expect(rendered.container.querySelector('[data-testid="session"]')?.textContent).toBe(
       'authenticated',
     );
@@ -330,7 +330,7 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/auth/logout', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/auth/logout', {
       credentials: 'include',
       method: 'POST',
     });
@@ -360,13 +360,13 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/me/profile', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/me/profile', {
       body: JSON.stringify({ fullName: 'Anna Beispiel' }),
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       method: 'PUT',
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/bootstrap', { credentials: 'include' });
   });
 
   it('changes the signed-in password without clearing the runtime session', async () => {
@@ -383,7 +383,7 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/auth/password/change', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/auth/password/change', {
       body: JSON.stringify({
         currentPassword: 'current-password',
         newPassword: 'new-password-123',
@@ -421,16 +421,16 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/orgs/org_1/settings', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/orgs/org_1/settings', {
       credentials: 'include',
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/orgs/org_1/settings', {
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/orgs/org_1/settings', {
       method: 'PUT',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings),
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(4, '/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/bootstrap', { credentials: 'include' });
   });
 
   it('loads and updates organization locations through the runtime', async () => {
@@ -462,16 +462,16 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/orgs/org_1/locations', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/orgs/org_1/locations', {
       credentials: 'include',
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(3, '/orgs/org_1/locations/site_1', {
+    expect(fetchMock).toHaveBeenNthCalledWith(3, '/v1/orgs/org_1/locations/site_1', {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isActive: false }),
     });
-    expect(fetchMock).toHaveBeenNthCalledWith(4, '/bootstrap', { credentials: 'include' });
+    expect(fetchMock).toHaveBeenNthCalledWith(4, '/v1/bootstrap', { credentials: 'include' });
   });
 
   it('exposes saved views persistence through the Osiris runtime', async () => {
@@ -491,7 +491,7 @@ describe('OsirisAuthProvider active context switching', () => {
       await Promise.resolve();
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/generated-stores/saved-views/clients', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/generated-stores/saved-views/clients', {
       method: 'GET',
       credentials: 'include',
     });
@@ -513,7 +513,7 @@ describe('OsirisAuthProvider active context switching', () => {
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(2, '/i18n/user/language', {
+    expect(fetchMock).toHaveBeenNthCalledWith(2, '/v1/i18n/user/language', {
       body: JSON.stringify({ language: 'de' }),
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

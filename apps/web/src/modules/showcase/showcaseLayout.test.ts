@@ -27,18 +27,6 @@ describe('showcase layout', () => {
     expect(page).toContain('<ErrorsSection />');
   });
 
-  it('registers the multi-tenant showcase section', () => {
-    const shared = readFileSync(join(process.cwd(), 'src/modules/showcase/shared.tsx'), 'utf8');
-    const page = readFileSync(
-      join(process.cwd(), 'src/modules/showcase/ComponentShowcasePage.tsx'),
-      'utf8',
-    );
-
-    expect(shared).toContain("key: 'multi-tenant'");
-    expect(page).toContain("case 'multi-tenant':");
-    expect(page).toContain('<MultiTenantSection />');
-  });
-
   it('demonstrates the field registry extension in the forms showcase', () => {
     const forms = readFileSync(
       join(process.cwd(), 'src/modules/showcase/sections/FormsSection.tsx'),

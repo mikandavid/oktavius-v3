@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
   Button,
+  buttonVariants,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -11,10 +12,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
   cn,
 } from '@oktavius/base-ui';
 
@@ -25,22 +22,8 @@ import {
 import { GlobeIcon, LocationIcon } from '@/lib/icons';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import type { LocationDetailItem } from '@/lib/locations/types';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
-
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia(`(max-width: ${breakpoint - 1}px)`).matches,
-  );
-
-  useEffect(() => {
-    const media = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const onChange = () => setIsMobile(media.matches);
-    media.addEventListener('change', onChange);
-    return () => media.removeEventListener('change', onChange);
-  }, [breakpoint]);
-
-  return isMobile;
-}
 
 function osirisSiteToLocationDetail(site: {
   id: string;
@@ -115,7 +98,7 @@ function LocationSingleSitePanel({
             href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex h-7 w-full items-center justify-center rounded-control bg-cta px-2.5 text-xs font-medium text-cta-foreground hover:bg-cta/90 sm:w-auto"
+            className={cn(buttonVariants({ variant: 'cta', size: 'sm' }), 'w-full sm:w-auto')}
           >
             Get directions
           </a>
@@ -164,7 +147,7 @@ function LocationAllSitesPanel({
 
 export function ActiveLocationInfoButton({ className }: { className?: string }) {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [open, setOpen] = useState(false);
   const osirisRuntime = useOptionalOsirisRuntime();
   const activeLocationState = useActiveLocation();
@@ -265,22 +248,15 @@ export function ActiveLocationInfoButton({ className }: { className?: string }) 
   }
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <Popover open={open} onOpenChange={setOpen}>
-        <Tooltip>
-          <PopoverTrigger asChild>
-            <TooltipTrigger asChild>{triggerButton}</TooltipTrigger>
-          </PopoverTrigger>
-          <TooltipContent side="bottom">Active location</TooltipContent>
-        </Tooltip>
-        <PopoverContent
-          align="end"
-          className="flex max-h-[min(85vh,32rem)] w-[min(92vw,22.5rem)] flex-col overflow-hidden p-0"
-          sideOffset={6}
-        >
-          {panelBody}
-        </PopoverContent>
-      </Popover>
-    </TooltipProvider>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{triggerButton}</PopoverTrigger>
+      <PopoverContent
+        align="end"
+        className="flex max-h-[min(85vh,32rem)] w-[min(92vw,22.5rem)] flex-col overflow-hidden p-0"
+        sideOffset={6}
+      >
+        {panelBody}
+      </PopoverContent>
+    </Popover>
   );
 }

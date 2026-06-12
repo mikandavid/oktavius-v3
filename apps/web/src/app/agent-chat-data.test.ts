@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { ORG_KUNZ_ID } from '@/app/demo-data/orgIds';
-import { DEMO_ORG_PROFILES } from '@/app/demo-data/orgProfiles';
+import { createDefaultOrgProfile } from '@/lib/org-profiles/profiles';
+import type { OrgProfile } from '@/lib/org-profiles/types';
 
 import { deriveAssistantResponse, derivePromptSet } from './agent-chat-data';
 
-const kunz = DEMO_ORG_PROFILES[ORG_KUNZ_ID];
+const kunz: OrgProfile = {
+  ...createDefaultOrgProfile('org_test_funeral'),
+  name: 'Test Funeral Org',
+  industryKey: 'funeral',
+  navPaths: { cases: '/funeral/cases', products: '/catalog', orders: '/sales' },
+};
 
 describe('agent chat page context', () => {
   it('treats removed business module paths as generic workspace context', () => {

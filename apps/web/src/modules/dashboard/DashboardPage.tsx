@@ -59,8 +59,13 @@ function aggregateCasesByStage(
     }));
 }
 
-const FUNERAL_CASE_STAGES = ['Aufnahme', 'Planung', 'Durchführung', 'Abgeschlossen'] as const;
 const GENERIC_CASE_STAGES = ['Intake', 'Investigation', 'Resolution', 'Closed'] as const;
+
+/** Stage orders per dashboard variant (profile-driven, see OrgProfile.dashboardVariant). */
+const CASE_STAGES_BY_VARIANT: Record<string, readonly string[]> = {
+  generic: GENERIC_CASE_STAGES,
+  funeral: ['Aufnahme', 'Planung', 'Durchführung', 'Abgeschlossen'],
+};
 const EMPTY_DASHBOARD_CLIENTS: unknown[] = [];
 const EMPTY_DASHBOARD_ORDERS: Array<{ orderDate: string; total: string }> = [];
 const EMPTY_DASHBOARD_CASES: Array<{ stage: string }> = [];
@@ -104,9 +109,10 @@ export function DashboardPage() {
   const products = EMPTY_DASHBOARD_PRODUCTS;
   const profile = useOrgProfile();
   const { t } = useTranslation();
-  const isFuneral = profile.industryKey === 'funeral';
+  const dashboardVariant = profile.dashboardVariant ?? 'generic';
+  const isFuneral = dashboardVariant === 'funeral';
   const { locale } = useUserPreferences();
-  const stageOrder = isFuneral ? FUNERAL_CASE_STAGES : GENERIC_CASE_STAGES;
+  const stageOrder = CASE_STAGES_BY_VARIANT[dashboardVariant] ?? GENERIC_CASE_STAGES;
   const closedStage = stageOrder[stageOrder.length - 1];
 
   const overdueInvoices = useMemo(

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ApiValidationError } from '@/api/demo-client';
+import { ApiValidationError } from '@/api/contracts';
 
 import { apiValidationErrorToFormFailure, submitApiForm } from './apiFormSubmit';
 

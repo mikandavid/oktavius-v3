@@ -9,7 +9,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { AppShellSpinner } from '@/components/layout/AppShellSpinner';
 import { ShortcutHelpProvider } from '@/components/layout/ShortcutHelpProvider';
 import { ModuleErrorBoundary } from '@/core/errors/ModuleErrorBoundary';
-import { APP_NAV_MODULES, type AppNavRouteId } from '@/lib/appNavModules';
+import { APP_NAV_MODULES, type AppNavModule, type AppNavRouteId } from '@/lib/appNavModules';
 import { canAccessAppNavItem } from '@/lib/permissions';
 import { OsirisAccessGate } from '@/runtime/osiris/OsirisAccessGate';
 import { useOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
@@ -99,17 +99,26 @@ const AuthCallbackPage = lazyPage(
   'AuthCallbackPage',
 );
 const InvitePage = lazyPage(() => import('@/modules/auth/AuthPlaceholderPage'), 'InvitePage');
-const AIChatPage = lazyPage(() => import('@/modules/ai-chat/AIChatPage'), 'AIChatPage');
-const CalendarPage = lazyPage(() => import('@/modules/calendar/CalendarPage'), 'CalendarPage');
-const DashboardPage = lazyPage(() => import('@/modules/dashboard/DashboardPage'), 'DashboardPage');
-const EmailPage = lazyPage(() => import('@/modules/email/EmailPage'), 'EmailPage');
 const ProfilePage = lazyPage(() => import('@/modules/profile/ProfilePage'), 'ProfilePage');
-const ReportsPage = lazyPage(() => import('@/modules/reports/ReportsPage'), 'ReportsPage');
-const SettingsPage = lazyPage(() => import('@/modules/settings/SettingsPage'), 'SettingsPage');
-const ComponentShowcasePage = lazyPage(
-  () => import('@/modules/showcase/ComponentShowcasePage'),
-  'ComponentShowcasePage',
+
+/** One lazy component per manifest entry; created once at module scope so Vite splits chunks. */
+const MODULE_PAGES = new Map(
+  APP_NAV_MODULES.map((module) => [module.id, lazyPage(module.loadPage, module.pageExport)]),
 );
+
+function moduleRouteElement(module: AppNavModule) {
+  const Page = MODULE_PAGES.get(module.id)!;
+
+  if (module.devOnly && !import.meta.env.DEV) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (module.permission || module.superadminOnly) {
+    return protectedPageElement(module.id, Page);
+  }
+
+  return modulePageElement(module.id, Page);
+}
 
 function AppRootProviders() {
   return (
@@ -142,21 +151,11 @@ const appRouter = createBrowserRouter([
         errorElement: <RouteErrorPage />,
         children: [
           { path: '/', element: <Navigate to="/dashboard" replace /> },
-          { path: '/dashboard', element: modulePageElement('dashboard', DashboardPage) },
-          { path: '/reports', element: modulePageElement('reports', ReportsPage) },
-          { path: '/ai-chat', element: modulePageElement('ai-chat', AIChatPage) },
-          {
-            path: '/showcase',
-            element: import.meta.env.DEV ? (
-              protectedPageElement('showcase', ComponentShowcasePage)
-            ) : (
-              <Navigate to="/dashboard" replace />
-            ),
-          },
+          ...APP_NAV_MODULES.map((module) => ({
+            path: module.path,
+            element: moduleRouteElement(module),
+          })),
           { path: '/profile', element: modulePageElement('profile', ProfilePage) },
-          { path: '/settings', element: protectedPageElement('settings', SettingsPage) },
-          { path: '/email', element: modulePageElement('email', EmailPage) },
-          { path: '/calendar', element: modulePageElement('calendar', CalendarPage) },
           { path: '/access-denied', element: modulePageElement('access-denied', AccessDeniedPage) },
           { path: '*', element: modulePageElement('not-found', AppNotFoundPage) },
         ],

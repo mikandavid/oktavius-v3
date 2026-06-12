@@ -17,6 +17,21 @@ export function hasOsirisPermission(permissions: readonly string[], permission: 
   return permissions.includes(permission);
 }
 
+/**
+ * App code uses public permission names; this table translates them to the
+ * Osiris backend's names (incl. versioned module ids and legacy aliases).
+ * Osiris naming must not leak outside runtime/osiris.
+ */
+const PUBLIC_TO_OSIRIS_PERMISSION: Record<string, string> = {
+  'calendar.view': 'calendar-v2.view',
+  manageOrganization: 'org.manage',
+  deleteRecords: 'records.delete',
+};
+
+export function toOsirisPermission(permission: string): string {
+  return PUBLIC_TO_OSIRIS_PERMISSION[permission] ?? permission;
+}
+
 export function canUseOsirisPermissionRequirement(
   subject: OsirisPermissionSubject,
   requirement?: OsirisPermissionRequirement,
@@ -29,5 +44,7 @@ export function canUseOsirisPermissionRequirement(
   if (subject.isSuperadmin) return true;
 
   const permissions = Array.isArray(subject.permissions) ? subject.permissions : [];
-  return required.every((permission) => hasOsirisPermission(permissions, permission));
+  return required.every((permission) =>
+    hasOsirisPermission(permissions, toOsirisPermission(permission)),
+  );
 }

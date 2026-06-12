@@ -4,27 +4,27 @@ import { canAccessAppNavItem, canDeleteRecords, canUsePermissionRequirement } fr
 import type { AppNavModule } from './appNavModules';
 import type { PermissionRequirement } from './permissions';
 
-type TestNavItem = AppNavModule & {
-  permission?: PermissionRequirement;
-};
-
 const navItem = (
   id: AppNavModule['id'],
   section: AppNavModule['section'],
   permission?: PermissionRequirement,
-): TestNavItem => ({
+  options?: { superadminOnly?: boolean },
+): AppNavModule => ({
   id,
   path: `/${id}`,
   label: id,
   section,
   icon: () => null,
   permission,
+  superadminOnly: options?.superadminOnly,
+  loadPage: () => Promise.resolve({}),
+  pageExport: 'TestPage',
 });
 
 describe('canAccessAppNavItem', () => {
-  it('requires org.manage for settings', () => {
+  it('enforces the declared permission for settings', () => {
     expect(
-      canAccessAppNavItem(navItem('settings', 'admin'), {
+      canAccessAppNavItem(navItem('settings', 'admin', 'org.manage'), {
         isSuperadmin: false,
         role: 'member',
         permissions: [],
@@ -32,7 +32,7 @@ describe('canAccessAppNavItem', () => {
     ).toBe(false);
 
     expect(
-      canAccessAppNavItem(navItem('settings', 'admin'), {
+      canAccessAppNavItem(navItem('settings', 'admin', 'org.manage'), {
         isSuperadmin: false,
         role: 'member',
         permissions: ['org.manage'],
@@ -42,7 +42,7 @@ describe('canAccessAppNavItem', () => {
 
   it('keeps regular modules available when no permission is configured', () => {
     expect(
-      canAccessAppNavItem(navItem('clients', 'modules'), {
+      canAccessAppNavItem(navItem('email', 'modules'), {
         isSuperadmin: false,
         role: 'member',
         permissions: [],
@@ -50,27 +50,9 @@ describe('canAccessAppNavItem', () => {
     ).toBe(true);
   });
 
-  it('requires org.members.manage for users', () => {
+  it('requires superadmin for superadmin-only items regardless of permissions', () => {
     expect(
-      canAccessAppNavItem(navItem('users', 'modules'), {
-        isSuperadmin: false,
-        role: 'member',
-        permissions: ['org.manage'],
-      }),
-    ).toBe(false);
-
-    expect(
-      canAccessAppNavItem(navItem('users', 'modules'), {
-        isSuperadmin: false,
-        role: 'member',
-        permissions: ['org.members.manage'],
-      }),
-    ).toBe(true);
-  });
-
-  it('requires superadmin for the showcase', () => {
-    expect(
-      canAccessAppNavItem(navItem('showcase', 'admin'), {
+      canAccessAppNavItem(navItem('showcase', 'admin', undefined, { superadminOnly: true }), {
         isSuperadmin: false,
         role: 'admin',
         permissions: ['org.manage'],
@@ -78,7 +60,7 @@ describe('canAccessAppNavItem', () => {
     ).toBe(false);
 
     expect(
-      canAccessAppNavItem(navItem('showcase', 'admin'), {
+      canAccessAppNavItem(navItem('showcase', 'admin', undefined, { superadminOnly: true }), {
         isSuperadmin: true,
         role: 'viewer',
         permissions: [],
@@ -88,7 +70,7 @@ describe('canAccessAppNavItem', () => {
 
   it('requires configured permissions for regular modules', () => {
     expect(
-      canAccessAppNavItem(navItem('clients', 'modules', 'contacts.view'), {
+      canAccessAppNavItem(navItem('email', 'modules', 'email.view_own'), {
         isSuperadmin: false,
         role: 'member',
         permissions: [],
@@ -96,10 +78,10 @@ describe('canAccessAppNavItem', () => {
     ).toBe(false);
 
     expect(
-      canAccessAppNavItem(navItem('clients', 'modules', 'contacts.view'), {
+      canAccessAppNavItem(navItem('email', 'modules', 'email.view_own'), {
         isSuperadmin: false,
         role: 'member',
-        permissions: ['contacts.view'],
+        permissions: ['email.view_own'],
       }),
     ).toBe(true);
   });
@@ -136,17 +118,24 @@ describe('canUsePermissionRequirement', () => {
     expect(canUsePermissionRequirement(member, (subject) => subject.role === 'member')).toBe(true);
   });
 
-  it('maps legacy symbolic requirements to Osiris permission keys', () => {
+  it('maps public permission names to Osiris permission keys in the adapter', () => {
     const manager = {
       isSuperadmin: false,
       role: 'member',
       permissions: ['org.manage', 'records.delete'],
     } as const;
     const member = { isSuperadmin: false, role: 'member', permissions: [] } as const;
+    const calendarUser = {
+      isSuperadmin: false,
+      role: 'member',
+      permissions: ['calendar-v2.view'],
+    } as const;
 
     expect(canUsePermissionRequirement(manager, 'manageOrganization')).toBe(true);
     expect(canUsePermissionRequirement(member, 'manageOrganization')).toBe(false);
     expect(canUsePermissionRequirement(manager, 'deleteRecords')).toBe(true);
     expect(canUsePermissionRequirement(member, 'deleteRecords')).toBe(false);
+    expect(canUsePermissionRequirement(calendarUser, 'calendar.view')).toBe(true);
+    expect(canUsePermissionRequirement(member, 'calendar.view')).toBe(false);
   });
 });

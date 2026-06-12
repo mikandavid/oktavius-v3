@@ -57,15 +57,15 @@ describe('API registry configuration', () => {
       },
     });
 
-    await registry.products.list({});
+    await registry.projects.list({});
 
-    expect(fetcher).toHaveBeenCalledWith('/api/products', {
+    expect(fetcher).toHaveBeenCalledWith('/api/projects', {
       method: 'GET',
       headers: { Authorization: 'Bearer secret' },
     });
   });
 
-  it('creates an Osiris same-origin registry when no base URL is configured', async () => {
+  it('creates an Osiris /v1 registry when no base URL is configured', async () => {
     const fetch = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) =>
       response(listResponse),
     );
@@ -82,7 +82,7 @@ describe('API registry configuration', () => {
     await registry.clients.list({ page: '1' });
 
     expect(fetch).toHaveBeenCalledWith(
-      '/clients?page=1',
+      '/v1/clients?page=1',
       expect.objectContaining({
         credentials: 'include',
         method: 'GET',
@@ -125,12 +125,7 @@ describe('API registry configuration', () => {
     expect(headers.get('X-Site-Id')).toBe('site_1');
   });
 
-  it('documents the generated default endpoint map', () => {
-    expect(DEFAULT_HTTP_REGISTRY_ENDPOINTS).toMatchObject({
-      clients: '/clients',
-      products: '/products',
-      cases: '/cases',
-      users: '/users',
-    });
+  it('keeps the default endpoint map override-only (endpoints derive from resource keys)', () => {
+    expect(DEFAULT_HTTP_REGISTRY_ENDPOINTS).toEqual({});
   });
 });

@@ -8,16 +8,6 @@ import { TestI18nProvider } from '@/core/i18n';
 
 import { EntityForm, type FormFieldValue } from './EntityForm';
 
-const demoData = vi.hoisted(() => ({
-  currentUser: { isSuperadmin: false },
-  activeMembership: { role: 'Admin' as 'Member' | 'Admin' },
-}));
-
-vi.mock('@/app/demo-data', () => ({
-  useDemoData: () => demoData,
-  useOptionalDemoData: () => demoData,
-}));
-
 vi.mock('@/lib/userPreferences', () => ({
   useUserPreferences: () => ({ locale: 'en' }),
 }));

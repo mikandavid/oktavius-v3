@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
   Avatar,
@@ -22,8 +22,6 @@ import {
   type CrudColumn,
   type CrudRowAction,
 } from '@/components/data/CrudTable';
-import { useDemoData } from '@/app/demo-data';
-import type { ProductRecord } from '@/app/demo-data';
 import { useListPageState } from '@/lib/useListPageState';
 import { appToast } from '@/lib/toast';
 import {
@@ -32,6 +30,64 @@ import {
 } from '@/runtime/osiris/useOsirisRuntime';
 
 import { ShowcaseBlock } from '../shared';
+
+type ProductRecord = {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  status: 'Active' | 'Discontinued' | 'Draft';
+  price: string;
+  stock: number;
+};
+
+const SHOWCASE_PRODUCTS: ProductRecord[] = [
+  {
+    id: 'prod_1',
+    sku: 'CHR-100',
+    name: 'Conference chair',
+    category: 'Furniture',
+    status: 'Active',
+    price: '129.00',
+    stock: 42,
+  },
+  {
+    id: 'prod_2',
+    sku: 'DSK-210',
+    name: 'Standing desk',
+    category: 'Furniture',
+    status: 'Active',
+    price: '549.00',
+    stock: 8,
+  },
+  {
+    id: 'prod_3',
+    sku: 'LMP-031',
+    name: 'Desk lamp',
+    category: 'Lighting',
+    status: 'Draft',
+    price: '39.90',
+    stock: 120,
+  },
+  {
+    id: 'prod_4',
+    sku: 'MON-275',
+    name: '27" monitor',
+    category: 'Electronics',
+    status: 'Active',
+    price: '289.00',
+    stock: 17,
+  },
+  {
+    id: 'prod_5',
+    sku: 'CBL-905',
+    name: 'HDMI cable 2m',
+    category: 'Electronics',
+    status: 'Discontinued',
+    price: '9.90',
+    stock: 0,
+  },
+];
 
 const PRODUCT_STATUS_VARIANT = {
   Active: 'success',
@@ -139,14 +195,9 @@ function permissionRuntime(allowed: boolean): OsirisRuntimeContextValue {
 }
 
 export function DataSection() {
-  const { products } = useDemoData();
-  const [rows, setRows] = useState(products);
+  const [rows, setRows] = useState(SHOWCASE_PRODUCTS);
   const [savedView, setSavedView] = useState('all');
   const [permissionAllowed, setPermissionAllowed] = useState(false);
-
-  useEffect(() => {
-    setRows(products);
-  }, [products]);
 
   const list = useListPageState({
     rows,

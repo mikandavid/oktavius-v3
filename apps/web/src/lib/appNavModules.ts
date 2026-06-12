@@ -28,8 +28,14 @@ export type AppNavModule = {
   icon: ComponentType<IconProps>;
   section: AppNavSection;
   devOnly?: boolean;
+  /** Only superadmins may access (overrides `permission`). */
+  superadminOnly?: boolean;
   permission?: PermissionRequirement;
   terminologyKey?: keyof OrgTerminology;
+  /** Lazy page loader; the router builds the module route from this. */
+  loadPage: () => Promise<Record<string, ComponentType>>;
+  /** Named export of the page component inside the loaded module. */
+  pageExport: string;
 };
 
 export type AppQuickAction = {
@@ -38,7 +44,11 @@ export type AppQuickAction = {
   routeId: OrgModuleId;
 };
 
-/** Static module nav — longest path match wins (same logic as sidebar). */
+/**
+ * Static module manifest — single source for navigation AND routing.
+ * The router generates one lazy route per entry; access is declared via
+ * `permission` / `superadminOnly`. Longest path match wins (same logic as sidebar).
+ */
 export const APP_NAV_MODULES: AppNavModule[] = [
   {
     id: 'dashboard',
@@ -48,6 +58,8 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     icon: HomeIcon,
     section: 'primary',
     terminologyKey: 'dashboard',
+    loadPage: () => import('@/modules/dashboard/DashboardPage'),
+    pageExport: 'DashboardPage',
   },
   {
     id: 'ai-chat',
@@ -57,6 +69,8 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     icon: BotIcon,
     section: 'primary',
     permission: 'agent-chat.view',
+    loadPage: () => import('@/modules/ai-chat/AIChatPage'),
+    pageExport: 'AIChatPage',
   },
   {
     id: 'email',
@@ -66,6 +80,8 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     icon: EmailIcon,
     section: 'modules',
     permission: 'email.view_own',
+    loadPage: () => import('@/modules/email/EmailPage'),
+    pageExport: 'EmailPage',
   },
   {
     id: 'calendar',
@@ -74,7 +90,9 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     labelKey: 'navigation.calendar',
     icon: CalendarIcon,
     section: 'modules',
-    permission: 'calendar-v2.view',
+    permission: 'calendar.view',
+    loadPage: () => import('@/modules/calendar/CalendarPage'),
+    pageExport: 'CalendarPage',
   },
   {
     id: 'reports',
@@ -84,6 +102,8 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     icon: ReportsIcon,
     section: 'modules',
     permission: 'reports.view',
+    loadPage: () => import('@/modules/reports/ReportsPage'),
+    pageExport: 'ReportsPage',
   },
   {
     id: 'settings',
@@ -92,6 +112,9 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     labelKey: 'navigation.settings',
     icon: SettingsIcon,
     section: 'admin',
+    permission: 'org.manage',
+    loadPage: () => import('@/modules/settings/SettingsPage'),
+    pageExport: 'SettingsPage',
   },
   {
     id: 'showcase',
@@ -101,18 +124,15 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     icon: SlidersHorizontalIcon,
     section: 'admin',
     devOnly: true,
+    superadminOnly: true,
+    loadPage: () => import('@/modules/showcase/ComponentShowcasePage'),
+    pageExport: 'ComponentShowcasePage',
   },
 ];
 
 export const PRIMARY_NAV_ITEMS = APP_NAV_MODULES.filter((item) => item.section === 'primary');
-export const MODULE_NAV_ITEMS = APP_NAV_MODULES.filter(
-  (item) => item.section === 'modules' && isOrgModuleId(item.id),
-);
+export const MODULE_NAV_ITEMS = APP_NAV_MODULES.filter((item) => item.section === 'modules');
 export const ADMIN_NAV_ITEMS = APP_NAV_MODULES.filter((item) => item.section === 'admin');
-
-export function isOrgModuleId(_id: AppNavRouteId): _id is OrgModuleId {
-  return true;
-}
 
 export function moduleLabelFor(
   profile: OrgProfile,
@@ -125,11 +145,11 @@ export function moduleLabelFor(
 }
 
 export function visiblePathFor(profile: OrgProfile, item: AppNavModule) {
-  return isOrgModuleId(item.id) ? (profile.navPaths?.[item.id] ?? item.path) : item.path;
+  return profile.navPaths?.[item.id] ?? item.path;
 }
 
 export function isAppNavItemEnabled(profile: OrgProfile, item: AppNavModule) {
-  return !isOrgModuleId(item.id) || profile.enabledModules.includes(item.id);
+  return profile.enabledModules.includes(item.id);
 }
 
 export function buildVisibleAppNavItems(

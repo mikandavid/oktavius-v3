@@ -254,7 +254,7 @@ function TimedEventBlock({
         draggable && !isResizing && 'touch-none active:cursor-grabbing',
         resizable && 'select-none',
         isDragging && 'pointer-events-none opacity-30',
-        isResizing && 'z-20 shadow-md',
+        isResizing && 'z-20 shadow-elevated',
       )}
       style={{
         top: `${topPct}%`,
@@ -577,7 +577,7 @@ function DayTimeColumn({
         {ghostLayout ? (
           <div
             className={cn(
-              'pointer-events-none absolute inset-x-1.5 z-[15] rounded-control border-2 border-cta/70 bg-cta/25 opacity-90 shadow-md',
+              'pointer-events-none absolute inset-x-1.5 z-[15] rounded-control border-2 border-cta/70 bg-cta/25 opacity-90 shadow-elevated',
               eventBlockClasses(dragPreview!.event, calendars),
             )}
             style={{

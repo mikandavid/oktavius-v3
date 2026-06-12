@@ -13,7 +13,6 @@ export type ShowcaseSectionId =
   | 'errors'
   | 'dialogs'
   | 'data'
-  | 'multi-tenant'
   | 'settings'
   | 'responsive-detail'
   | 'detail-layout'
@@ -47,11 +46,6 @@ export const SHOWCASE_NAV: Array<{ key: ShowcaseSectionId; label: string; descri
   },
   { key: 'dialogs', label: 'Dialogs', description: 'Modals, confirms, menus, wizards' },
   { key: 'data', label: 'Data', description: 'Tables, stats, lists, export' },
-  {
-    key: 'multi-tenant',
-    label: 'Multi-tenant',
-    description: 'Organization and location scoped data views',
-  },
   {
     key: 'settings',
     label: 'Settings',

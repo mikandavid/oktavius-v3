@@ -347,7 +347,7 @@ export function KanbanBoard<T>({
       {board}
       <DragOverlay dropAnimation={{ duration: 180, easing: 'ease-out' }}>
         {activeItem ? (
-          <div className="cursor-grabbing rounded-control bg-card shadow-lg ring-1 ring-border/60">
+          <div className="cursor-grabbing rounded-control bg-card shadow-elevated ring-1 ring-border/60">
             {renderCard(activeItem.item, activeItem.column)}
           </div>
         ) : null}

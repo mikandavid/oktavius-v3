@@ -5,27 +5,11 @@ import {
   type HttpRegistryFetcher,
 } from './httpRegistry';
 import { createOsirisApiFetcher } from '@/runtime/osiris/apiClient';
+import { resolveOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
 import type { OsirisApiClientOptions } from '@/runtime/osiris/apiClient';
 
-export const DEFAULT_HTTP_REGISTRY_ENDPOINTS: HttpRegistryEndpoints = {
-  cases: '/cases',
-  caseChecklists: '/case-checklists',
-  clients: '/clients',
-  contracts: '/contracts',
-  incidents: '/incidents',
-  invoices: '/invoices',
-  orders: '/orders',
-  organizations: '/organizations',
-  parties: '/parties',
-  products: '/products',
-  projects: '/projects',
-  users: '/users',
-  contacts: '/contacts',
-  vendors: '/vendors',
-  leads: '/leads',
-  staff: '/staff',
-  purchasing: '/purchasing',
-};
+/** Endpoint overrides only — every resource defaults to `/<key>` in createHttpRegistry. */
+export const DEFAULT_HTTP_REGISTRY_ENDPOINTS: HttpRegistryEndpoints = {};
 
 export type ApiRegistryEnvironment = {
   VITE_OKTAVIUS_API_BASE_URL?: string;
@@ -41,7 +25,7 @@ export function createOsirisApiRegistry({
   env: ApiRegistryEnvironment;
   osiris: OsirisApiRegistryContextGetters;
 }): ApiRegistry {
-  const baseUrl = env.VITE_OKTAVIUS_API_BASE_URL?.trim() || undefined;
+  const baseUrl = resolveOsirisApiBaseUrl(env);
 
   return createHttpRegistry({
     baseUrl: '',

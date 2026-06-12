@@ -1,10 +1,10 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 
-import { GENERATED_MODULE_TEMPLATE_DESCRIPTORS } from '../src/lib/generatedModuleContracts.ts';
+import { GENERATED_MODULE_TEMPLATE_DESCRIPTORS } from '../tools/module-generator/generatedModuleContracts.ts';
 import {
   emitGeneratedModuleFiles,
   materializeGeneratedModuleFiles,
-} from '../src/lib/generatedModuleFiles.ts';
+} from '../tools/module-generator/generatedModuleFiles.ts';
 
 type GeneratorCliOptions = {
   rootDir: string;

@@ -22,7 +22,6 @@ import { DesignTokensSection } from './sections/DesignTokensSection';
 import { FoundationsSection } from './sections/FoundationsSection';
 import { InputsSection } from './sections/InputsSection';
 import { LayoutsSection } from './sections/LayoutsSection';
-import { MultiTenantSection } from './sections/MultiTenantSection';
 import { OverviewSection } from './sections/OverviewSection';
 import { PatternsSection } from './sections/PatternsSection';
 import { SettingsShowcaseSection } from './sections/SettingsSection';
@@ -52,8 +51,6 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
       return <DialogsSection />;
     case 'data':
       return <DataSection />;
-    case 'multi-tenant':
-      return <MultiTenantSection />;
     case 'settings':
       return <SettingsShowcaseSection />;
     case 'responsive-detail':

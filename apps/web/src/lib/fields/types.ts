@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { ZodTypeAny } from 'zod';
 
-import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
+import type { FormField, FormFieldValue } from '@/lib/forms/types';
 import type { CountryOption, CurrencyOption, PhoneCountry } from '@oktavius/reference-data';
 import type { VocabularyOptionsMap } from '@/lib/reference-data';
 

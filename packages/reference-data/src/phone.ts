@@ -1,9 +1,10 @@
+import { COUNTRY_CODES, getCountryDisplayName, getPrimaryDialCode } from './countries';
 import {
-  COUNTRY_CODES,
-  getCountryDisplayName,
-  getPrimaryDialCode,
-} from './countries';
-import { PHONE_PRIORITY_CODES, prioritizeCodes, toDisplayLocale, type ReferenceDataMode } from './locale';
+  PHONE_PRIORITY_CODES,
+  prioritizeCodes,
+  toDisplayLocale,
+  type ReferenceDataMode,
+} from './locale';
 
 export interface PhoneCountry {
   code: string;
@@ -30,9 +31,7 @@ export function buildPhoneCountries(
 ): PhoneCountry[] {
   const codesWithPhone = COUNTRY_CODES.filter((code) => getPrimaryDialCode(code));
   const orderedCodes =
-    mode === 'dach'
-      ? prioritizeCodes(codesWithPhone, PHONE_PRIORITY_CODES)
-      : codesWithPhone;
+    mode === 'dach' ? prioritizeCodes(codesWithPhone, PHONE_PRIORITY_CODES) : codesWithPhone;
 
   return orderedCodes
     .map((code) => buildPhoneCountry(code, locale))

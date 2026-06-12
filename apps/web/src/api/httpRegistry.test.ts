@@ -151,25 +151,6 @@ describe('HTTP registry adapters', () => {
     const registry = createHttpRegistry({
       baseUrl: '/api',
       fetcher,
-      endpoints: {
-        clients: '/clients',
-        products: '/products',
-        cases: '/cases',
-        orders: '/orders',
-        invoices: '/invoices',
-        contracts: '/contracts',
-        incidents: '/incidents',
-        projects: '/projects',
-        users: '/users',
-        organizations: '/organizations',
-        parties: '/parties',
-        caseChecklists: '/case-checklists',
-        contacts: '/contacts',
-        vendors: '/vendors',
-        leads: '/leads',
-        staff: '/staff',
-        purchasing: '/purchasing',
-      },
     });
 
     await registry.clients.list({ page: '1' });
@@ -193,25 +174,6 @@ describe('HTTP registry adapters', () => {
         getActiveOrgId: () => 'org_1',
         getActiveSiteId: () => 'site_1',
       }),
-      endpoints: {
-        clients: '/clients',
-        products: '/products',
-        cases: '/cases',
-        orders: '/orders',
-        invoices: '/invoices',
-        contracts: '/contracts',
-        incidents: '/incidents',
-        projects: '/projects',
-        users: '/users',
-        organizations: '/organizations',
-        parties: '/parties',
-        caseChecklists: '/case-checklists',
-        contacts: '/contacts',
-        vendors: '/vendors',
-        leads: '/leads',
-        staff: '/staff',
-        purchasing: '/purchasing',
-      },
     });
 
     await registry.contacts.list({ page: '1' });

@@ -14,6 +14,8 @@ Tracks **backend / codegen parity** — not day-to-day component usage. Catalog 
 
 Calendar/planning (`CalendarView`), workflow blocks, documents, agent UI shell, maps, pickers — see `/showcase` and live routes.
 
+2026-06-12 cleanup: demo runtime deleted (app boots Osiris-only; component fixtures remain), API registry trimmed to real resources (`API_RESOURCE_KEYS` in `src/api/contracts.ts`), `APP_NAV_MODULES` is the single source for module routes (loader + access declared per entry), org profiles are preset-driven (`src/lib/org-profiles/presets/`), module codegen lives in `apps/web/tools/module-generator/`.
+
 ## Outdated names
 
 | Old                  | Use            |

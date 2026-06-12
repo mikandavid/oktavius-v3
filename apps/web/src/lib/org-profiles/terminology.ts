@@ -1,112 +1,11 @@
-import type { UiLocale } from '@/lib/userPreferences';
+import { presetFor } from './presets';
+import type { OrgProfile, OrgTerminology } from './types';
 
-import type { OrgIndustryKey, OrgProfile, OrgTerminology } from './types';
-
-type OrgTerminologyLocale = UiLocale | 'fr';
-
-const FALLBACK_LOCALE: OrgTerminologyLocale = 'en';
-
-const TERMINOLOGY_BY_INDUSTRY: Record<
-  OrgIndustryKey,
-  Record<OrgTerminologyLocale, OrgTerminology>
-> = {
-  generic: {
-    en: {
-      cases: 'Cases',
-      casesSingular: 'Case',
-      clients: 'Clients',
-      clientsSingular: 'Client',
-      products: 'Products',
-      orders: 'Orders',
-      projects: 'Projects',
-      documents: 'Documents',
-      dashboard: 'Dashboard',
-    },
-    de: {
-      cases: 'Fälle',
-      casesSingular: 'Fall',
-      clients: 'Kontakte',
-      clientsSingular: 'Kontakt',
-      products: 'Produkte',
-      orders: 'Aufträge',
-      projects: 'Projekte',
-      documents: 'Ablage',
-      dashboard: 'Übersicht',
-    },
-    fr: {
-      cases: 'Cas',
-      casesSingular: 'Cas',
-      clients: 'Clients',
-      clientsSingular: 'Client',
-      products: 'Produits',
-      orders: 'Commandes',
-      projects: 'Projets',
-      documents: 'Documents',
-      dashboard: 'Tableau de bord',
-    },
-  },
-  funeral: {
-    en: {
-      cases: 'Cases',
-      casesSingular: 'Case',
-      clients: 'Contacts',
-      clientsSingular: 'Contact',
-      products: 'Products',
-      orders: 'Sales',
-      projects: 'Bereavement cases',
-      documents: 'Storage',
-      dashboard: 'Overview',
-    },
-    de: {
-      cases: 'Sterbefälle',
-      casesSingular: 'Sterbefall',
-      clients: 'Kontakte',
-      clientsSingular: 'Kontakt',
-      products: 'Katalog',
-      orders: 'Verkauf',
-      projects: 'Trauerfälle',
-      documents: 'Ablage',
-      dashboard: 'Übersicht',
-    },
-    fr: {
-      cases: 'Dossiers',
-      casesSingular: 'Dossier',
-      clients: 'Contacts',
-      clientsSingular: 'Contact',
-      products: 'Catalogue',
-      orders: 'Ventes',
-      projects: 'Dossiers de deuil',
-      documents: 'Stockage',
-      dashboard: 'Aperçu',
-    },
-  },
-};
+const FALLBACK_LOCALE = 'en';
 
 const warnedMissingKeys = new Set<string>();
 
-function isKnownLocale(locale: string | undefined): locale is OrgTerminologyLocale {
-  return locale === 'en' || locale === 'de' || locale === 'fr';
-}
-
-function normalizeLocale(locale: string | undefined): OrgTerminologyLocale {
-  if (isKnownLocale(locale)) return locale;
-  if (import.meta.env.DEV) {
-    const key = `locale:${locale}`;
-    if (!warnedMissingKeys.has(key)) {
-      warnedMissingKeys.add(key);
-      console.warn(
-        `[i18n] Unknown locale "${locale}" requested for org terminology; falling back to "${FALLBACK_LOCALE}".`,
-      );
-    }
-  }
-  return FALLBACK_LOCALE;
-}
-
-function warnMissingTranslation(
-  industryKey: OrgIndustryKey,
-  locale: OrgTerminologyLocale,
-  termKey: keyof OrgTerminology,
-) {
+function warnMissingTranslation(industryKey: string, locale: string, termKey: string) {
   const key = `term:${industryKey}:${locale}:${termKey}`;
   if (warnedMissingKeys.has(key)) return;
   warnedMissingKeys.add(key);
@@ -115,29 +14,32 @@ function warnMissingTranslation(
   );
 }
 
-function getFallbackTerminology(industryKey: OrgIndustryKey): OrgTerminology {
-  return TERMINOLOGY_BY_INDUSTRY[industryKey][FALLBACK_LOCALE];
-}
-
 export function getLocalizedTerminology(
   profile: OrgProfile,
   locale: string | undefined,
 ): OrgTerminology {
-  const language = normalizeLocale(locale);
-  const catalog = TERMINOLOGY_BY_INDUSTRY[profile.industryKey];
-  const fallback = getFallbackTerminology(profile.industryKey);
-  const localized = catalog[language] ?? catalog[FALLBACK_LOCALE];
+  const preset = presetFor(profile.industryKey);
+  const fallback = preset.terminologyByLocale[FALLBACK_LOCALE] ?? {};
+  const localized = locale ? preset.terminologyByLocale[locale] : undefined;
 
   const result: OrgTerminology = { ...fallback };
-  if (!catalog[language]) {
-    warnMissingTranslation(profile.industryKey, language, 'cases');
+  if (!localized) {
+    if (locale && locale !== FALLBACK_LOCALE && import.meta.env.DEV) {
+      const key = `locale:${profile.industryKey}:${locale}`;
+      if (!warnedMissingKeys.has(key)) {
+        warnedMissingKeys.add(key);
+        console.warn(
+          `[i18n] Unknown locale "${locale}" requested for org terminology; falling back to "${FALLBACK_LOCALE}".`,
+        );
+      }
+    }
     return result;
   }
 
-  for (const key of Object.keys(fallback) as Array<keyof OrgTerminology>) {
+  for (const key of Object.keys(fallback)) {
     const value = localized[key];
     if (!value) {
-      warnMissingTranslation(profile.industryKey, language, key);
+      warnMissingTranslation(profile.industryKey, locale ?? FALLBACK_LOCALE, key);
       continue;
     }
     result[key] = value;
@@ -146,10 +48,20 @@ export function getLocalizedTerminology(
   return result;
 }
 
+/**
+ * Resolves everything locale- and preset-dependent on a profile: terminology,
+ * brand title, and dashboard variant. Components consume only the result.
+ */
 export function getLocalizedOrgProfile(
   profile: OrgProfile,
   locale: string | undefined,
 ): OrgProfile {
-  const terminology = getLocalizedTerminology(profile, locale);
-  return { ...profile, terminology };
+  const preset = presetFor(profile.industryKey);
+  return {
+    ...profile,
+    terminology: getLocalizedTerminology(profile, locale),
+    brandTitle: profile.brandTitle ?? (preset.brandTitleFromOrgName ? profile.name : undefined),
+    dashboardVariant: profile.dashboardVariant ?? preset.dashboardVariant,
+    navPaths: profile.navPaths ?? preset.navPaths,
+  };
 }

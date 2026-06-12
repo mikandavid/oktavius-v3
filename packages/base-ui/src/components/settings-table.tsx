@@ -70,7 +70,7 @@ function SortableSettingsRow<T>({
       }}
       className={cn(
         onRowClick && 'cursor-pointer',
-        isDragging && 'relative z-10 bg-muted/40 shadow-sm',
+        isDragging && 'relative z-10 bg-muted/40 shadow-elevated',
       )}
       onClick={onRowClick ? () => onRowClick(row) : undefined}
     >

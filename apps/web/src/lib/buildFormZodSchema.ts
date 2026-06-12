@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
+import type { FormField, FormFieldValue } from '@/lib/forms/types';
 import { fieldRegistry } from '@/lib/fields';
 import { isFieldVisible, validateFormFields } from '@/lib/formValidation';
 

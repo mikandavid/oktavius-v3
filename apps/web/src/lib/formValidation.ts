@@ -1,16 +1,8 @@
-import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
+import type { FormField, FormFieldValue } from '@/lib/forms/types';
 import type { PermissionSubject } from '@/lib/permissions';
 import { canUsePermissionRequirement } from '@/lib/permissions';
 
-export type FieldValidationRule = {
-  required?: boolean;
-  minLength?: number;
-  maxLength?: number;
-  pattern?: RegExp;
-  message?: string;
-  /** Return an error string or undefined when valid. */
-  custom?: (value: FormFieldValue, values: Record<string, FormFieldValue>) => string | undefined;
-};
+export type { FieldValidationRule } from '@/lib/forms/types';
 
 export type FormValidationErrorMap = Partial<Record<string, string>>;
 

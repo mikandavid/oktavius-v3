@@ -1,52 +1,32 @@
 import type { LocationDetailItem } from '@/lib/locations/types';
 
-export type OrgIndustryKey = 'generic' | 'funeral';
-
+/** Modules that actually exist in the app shell (mirrors APP_NAV_MODULES ids). */
 export type OrgModuleId =
   | 'dashboard'
   | 'ai-chat'
-  | 'cases'
-  | 'incidents'
-  | 'clients'
-  | 'contracts'
-  | 'products'
-  | 'projects'
-  | 'orders'
-  | 'invoices'
-  | 'users'
-  | 'documents'
   | 'email'
   | 'calendar'
   | 'reports'
   | 'settings'
-  | 'showcase'
-  | 'contacts'
-  | 'vendors'
-  | 'leads'
-  | 'staff'
-  | 'purchasing';
+  | 'showcase';
 
-export type OrgTerminology = {
-  cases: string;
-  casesSingular: string;
-  clients: string;
-  clientsSingular: string;
-  products: string;
-  orders: string;
-  projects: string;
-  documents: string;
-  dashboard: string;
-};
+/** Free-form vocabulary map; industry presets fill it per locale. */
+export type OrgTerminology = Record<string, string>;
 
 export type OrgProfile = {
   id: string;
   slug: string;
   name: string;
-  industryKey: OrgIndustryKey;
+  /** Industry preset key (see lib/org-profiles/presets). Unknown keys fall back to generic. */
+  industryKey: string;
   enabledModules: OrgModuleId[];
-  /** When set, sidebar uses Osiris module URLs (e.g. /funeral/cases). */
-  navPaths?: Partial<Record<OrgModuleId, string>>;
+  /** When set, sidebar uses Osiris module URLs (e.g. /funeral/cases) keyed by module/entity id. */
+  navPaths?: Partial<Record<string, string>>;
   terminology: OrgTerminology;
   locations: LocationDetailItem[];
   tagline: string;
+  /** Brand title shown in the app shell; defaults to the product name when unset. */
+  brandTitle?: string;
+  /** Dashboard layout/content variant; defaults to generic when unset. */
+  dashboardVariant?: string;
 };

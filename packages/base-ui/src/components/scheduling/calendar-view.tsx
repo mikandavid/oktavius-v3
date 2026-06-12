@@ -394,7 +394,7 @@ export function CalendarView({
                 event={activeEvent}
                 calendars={calendars}
                 teamMembers={teamMembers}
-                className="scale-[1.02] shadow-lg ring-2 ring-ring/30"
+                className="scale-[1.02] shadow-elevated ring-2 ring-ring/30"
               />
             ) : null}
           </DragOverlay>

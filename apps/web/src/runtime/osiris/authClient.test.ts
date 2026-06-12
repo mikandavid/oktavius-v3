@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { resolveOsirisApiBaseUrl } from './apiBaseUrl';
 import { createOsirisAuthClient } from './authClient';
 
 function jsonResponse(payload: unknown, init?: ResponseInit) {
@@ -30,6 +31,26 @@ describe('Osiris auth client', () => {
     ).resolves.toEqual({ user: { id: 'usr_1', email: 'anna@example.test' }, expiresAt: 1 });
 
     expect(fetch).toHaveBeenCalledWith('https://api.example.test/v1/auth/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'anna@example.test', password: 'correct-password' }),
+    });
+  });
+
+  it('uses the default Osiris API base path when no environment override is configured', async () => {
+    const fetch = vi.fn(async () =>
+      jsonResponse({ user: { id: 'usr_1', email: 'anna@example.test' }, expiresAt: 1 }),
+    );
+    vi.stubGlobal('fetch', fetch);
+
+    const client = createOsirisAuthClient({ baseUrl: resolveOsirisApiBaseUrl({}) });
+    await client.signInWithPassword({
+      email: 'anna@example.test',
+      password: 'correct-password',
+    });
+
+    expect(fetch).toHaveBeenCalledWith('/v1/auth/login', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

@@ -1,9 +1,11 @@
 import {
+  API_RESOURCE_KEYS,
   ApiAuthorizationError,
   ApiValidationError,
   type ApiCrudResourceHandlers,
   type ApiListParams,
   type ApiRegistry,
+  type ApiResourceKey,
   type ListResponse,
 } from './contracts';
 
@@ -24,29 +26,12 @@ type HttpEntityHandlersOptions = {
   headers?: Record<string, string>;
 };
 
-export type HttpRegistryEndpoints = {
-  cases: string;
-  caseChecklists: string;
-  clients: string;
-  contacts: string;
-  contracts: string;
-  incidents: string;
-  invoices: string;
-  leads: string;
-  orders: string;
-  organizations: string;
-  parties: string;
-  products: string;
-  projects: string;
-  purchasing: string;
-  staff: string;
-  users: string;
-  vendors: string;
-};
+/** Optional endpoint overrides; every resource defaults to `/<key>`. */
+export type HttpRegistryEndpoints = Partial<Record<ApiResourceKey, string>>;
 
 export type HttpRegistryOptions = {
   baseUrl: string;
-  endpoints: HttpRegistryEndpoints;
+  endpoints?: HttpRegistryEndpoints;
   fetcher?: HttpRegistryFetcher;
   headers?: Record<string, string>;
 };
@@ -183,73 +168,21 @@ export function createHttpEntityHandlers<
   };
 }
 
-function createCasesHandlers(options: HttpEntityHandlersOptions): ApiCrudResourceHandlers & {
-  updateStage: (id: string, stage: string) => Promise<ApiRecord>;
-} {
-  const handlers = createHttpEntityHandlers(options);
-  return {
-    ...handlers,
-    updateStage: (id, stage) =>
-      requestJson<ApiRecord>(options, `${resourcePath(options.basePath, id)}/stage`, 'PATCH', {
-        stage,
-      }),
-  };
-}
-
-function createCaseChecklistsHandlers(
-  options: HttpEntityHandlersOptions,
-): ApiRegistry['caseChecklists'] {
-  return {
-    create: (input) =>
-      requestJson<Record<string, unknown>>(options, options.basePath, 'POST', input),
-    updateDone: (id, done) =>
-      requestJson<Record<string, unknown>>(
-        options,
-        `${resourcePath(options.basePath, id)}/done`,
-        'PATCH',
-        {
-          done,
-        },
-      ),
-  };
-}
-
-function createPartiesHandlers(options: HttpEntityHandlersOptions): ApiRegistry['parties'] {
-  return {
-    create: (input) =>
-      requestJson<Record<string, unknown>>(options, options.basePath, 'POST', input),
-  };
-}
-
 export function createHttpRegistry({
   baseUrl,
   endpoints,
   fetcher,
   headers,
 }: HttpRegistryOptions): ApiRegistry {
-  const optionsFor = (endpoint: string): HttpEntityHandlersOptions => ({
-    basePath: joinPath(baseUrl, endpoint),
+  const optionsFor = (key: ApiResourceKey): HttpEntityHandlersOptions => ({
+    basePath: joinPath(baseUrl, endpoints?.[key] ?? `/${key}`),
     fetcher,
     headers,
   });
 
-  return {
-    cases: createCasesHandlers(optionsFor(endpoints.cases)),
-    caseChecklists: createCaseChecklistsHandlers(optionsFor(endpoints.caseChecklists)),
-    clients: createHttpEntityHandlers(optionsFor(endpoints.clients)),
-    contacts: createHttpEntityHandlers(optionsFor(endpoints.contacts)),
-    contracts: createHttpEntityHandlers(optionsFor(endpoints.contracts)),
-    incidents: createHttpEntityHandlers(optionsFor(endpoints.incidents)),
-    invoices: createHttpEntityHandlers(optionsFor(endpoints.invoices)),
-    leads: createHttpEntityHandlers(optionsFor(endpoints.leads)),
-    orders: createHttpEntityHandlers(optionsFor(endpoints.orders)),
-    organizations: createHttpEntityHandlers(optionsFor(endpoints.organizations)),
-    parties: createPartiesHandlers(optionsFor(endpoints.parties)),
-    products: createHttpEntityHandlers(optionsFor(endpoints.products)),
-    projects: createHttpEntityHandlers(optionsFor(endpoints.projects)),
-    purchasing: createHttpEntityHandlers(optionsFor(endpoints.purchasing)),
-    staff: createHttpEntityHandlers(optionsFor(endpoints.staff)),
-    users: createHttpEntityHandlers(optionsFor(endpoints.users)),
-    vendors: createHttpEntityHandlers(optionsFor(endpoints.vendors)),
-  };
+  const registry = {} as ApiRegistry;
+  for (const key of API_RESOURCE_KEYS) {
+    registry[key] = createHttpEntityHandlers(optionsFor(key));
+  }
+  return registry;
 }

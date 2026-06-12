@@ -19,15 +19,6 @@ type PermissionBearingNavModule = AppNavModule & {
   permission?: PermissionRequirement;
 };
 
-function resolvePublicPermissionRequirement(
-  requirement: PermissionRequirement,
-): PermissionRequirement {
-  if (requirement === 'manageOrganization') return 'org.manage';
-  if (requirement === 'deleteRecords') return 'records.delete';
-
-  return requirement;
-}
-
 export function permissionSubjectFor(
   user: { isSuperadmin?: boolean; permissions?: readonly string[] },
   membership?: { role?: string | null; permissions?: readonly string[] } | null,
@@ -51,10 +42,7 @@ export function canUsePermissionRequirement(
   subject: PermissionSubject,
   requirement?: PermissionRequirement,
 ) {
-  return canUseOsirisPermissionRequirement(
-    subject,
-    requirement ? resolvePublicPermissionRequirement(requirement) : requirement,
-  );
+  return canUseOsirisPermissionRequirement(subject, requirement);
 }
 
 export function permitted(
@@ -65,21 +53,9 @@ export function permitted(
 }
 
 export function canAccessAppNavItem(item: PermissionBearingNavModule, subject: PermissionSubject) {
-  if (item.id === 'showcase') {
+  if (item.superadminOnly) {
     return subject.isSuperadmin;
   }
 
-  if (item.id === 'settings') {
-    return canUsePermissionRequirement(subject, 'org.manage');
-  }
-
-  if (item.id === 'users') {
-    return canUsePermissionRequirement(subject, 'org.members.manage');
-  }
-
-  if (item.permission) {
-    return permitted(item.permission, subject);
-  }
-
-  return true;
+  return canUsePermissionRequirement(subject, item.permission);
 }

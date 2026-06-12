@@ -62,11 +62,7 @@ export {
   type Salutation,
 } from './domain/person';
 
-export {
-  PARTY_ROLES,
-  PARTY_ROLE_VOCABULARY,
-  type PartyRole,
-} from './domain/contact';
+export { PARTY_ROLES, PARTY_ROLE_VOCABULARY, type PartyRole } from './domain/contact';
 
 export {
   CLIENT_STATUSES,
@@ -94,8 +90,4 @@ export {
   normalizeVocabularyCode,
 } from './domain';
 
-export type {
-  CoercedVocabularyValue,
-  VocabularyKey,
-  VocabularyOption,
-} from './domain/types';
+export type { CoercedVocabularyValue, VocabularyKey, VocabularyOption } from './domain/types';

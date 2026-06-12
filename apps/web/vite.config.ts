@@ -5,9 +5,22 @@ import react from '@vitejs/plugin-react-swc';
 import { defineConfig } from 'vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const apiProxyTarget =
+  process.env.VITE_OKTAVIUS_API_PROXY_TARGET?.trim() ||
+  process.env.OKTAVIUS_API_PROXY_TARGET?.trim() ||
+  'http://127.0.0.1:5176';
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      '/v1': {
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

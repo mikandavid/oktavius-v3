@@ -102,7 +102,10 @@ export function normalizeCountryCode(value: string | null | undefined): CountryC
 export function getCountryDisplayName(code: string, locale = 'en-GB'): string {
   const normalized = code.toUpperCase();
   try {
-    return new Intl.DisplayNames([toDisplayLocale(locale)], { type: 'region' }).of(normalized) ?? normalized;
+    return (
+      new Intl.DisplayNames([toDisplayLocale(locale)], { type: 'region' }).of(normalized) ??
+      normalized
+    );
   } catch {
     return getCountryMetadata(normalized)?.name ?? normalized;
   }
@@ -115,9 +118,7 @@ export function buildCountryOptions(
   const displayLocale = toDisplayLocale(locale);
   const alternateLocale = displayLocale.startsWith('de') ? 'en-GB' : 'de-AT';
   const orderedCodes =
-    mode === 'dach'
-      ? prioritizeCodes(COUNTRY_CODES, DACH_COUNTRY_CODES)
-      : COUNTRY_CODES;
+    mode === 'dach' ? prioritizeCodes(COUNTRY_CODES, DACH_COUNTRY_CODES) : COUNTRY_CODES;
 
   const prioritized = new Set<string>(mode === 'dach' ? DACH_COUNTRY_CODES : []);
   const prioritizedOptions: CountryOption[] = [];

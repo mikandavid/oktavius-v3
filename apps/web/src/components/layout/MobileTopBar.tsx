@@ -20,7 +20,7 @@ type MobileTopBarProps = {
 export function MobileTopBar({ onToggleSidebar, showChatLink = true }: MobileTopBarProps) {
   const { setOpen } = useCommandPalette();
   const profile = useOrgProfile();
-  const brandTitle = profile.industryKey === 'funeral' ? profile.name : 'Oktavius ERP';
+  const brandTitle = profile.brandTitle ?? 'Oktavius ERP';
 
   return (
     <div

@@ -4,8 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiProvider, type ApiRegistry } from '@/api/ApiProvider';
-import type { ListResponse } from '@/api/demo-client';
-import type { InvoiceRecord, OrderRecord } from '@/app/demo-data';
+import type { ListResponse } from '@/api/contracts';
 import { AppShellLayoutProvider } from '@/components/layout/AppShellLayoutContext';
 
 import { ReportsPage } from './ReportsPage';
@@ -40,17 +39,38 @@ vi.mock('@/components/reports/ReportBuilderPanel', () => ({
   ReportBuilderPanel: () => <section>Report builder</section>,
 }));
 
-vi.mock('@/app/demo-data', () => ({
-  useDemoData: () => ({ activeOrgId: 'org_1' }),
-  useOptionalDemoData: () => ({ activeOrgId: 'org_1' }),
-}));
-
 vi.mock('@/lib/locations/ActiveLocationContext', () => ({
   useActiveLocation: () => ({
     activeLocationId: 'site_1',
     viewAllLocations: false,
   }),
 }));
+
+type OrderRecord = {
+  id: string;
+  orgId: string;
+  orderNumber: string;
+  clientId: string;
+  clientName: string;
+  total: string;
+  orderDate: string;
+  dueDate: string;
+  status: string;
+  owner: string;
+  lineCount: number;
+};
+
+type InvoiceRecord = {
+  id: string;
+  orgId: string;
+  invoiceNumber: string;
+  clientName: string;
+  orderNumber: string;
+  amount: string;
+  issuedAt: string;
+  dueAt: string;
+  status: string;
+};
 
 function listResponse<T>(data: T[]): ListResponse<T> {
   return {

@@ -15,17 +15,6 @@ vi.mock('@1771technologies/lytenyte-core', () => ({
   useClientDataSource: ({ data }: { data: Row[] }) => ({ __rows: data }),
 }));
 
-vi.mock('@/app/demo-data', () => {
-  const demoData = {
-    currentUser: { isSuperadmin: false },
-    activeMembership: { role: 'member', permissions: [] },
-  };
-  return {
-    useDemoData: () => demoData,
-    useOptionalDemoData: () => demoData,
-  };
-});
-
 type Row = {
   id: string;
   name: string;

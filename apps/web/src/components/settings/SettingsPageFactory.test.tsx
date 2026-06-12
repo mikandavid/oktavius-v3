@@ -9,17 +9,6 @@ import {
   type SettingsSectionConfig,
 } from './SettingsPageFactory';
 
-vi.mock('@/app/demo-data', () => {
-  const demoData = {
-    currentUser: { isSuperadmin: false },
-    activeMembership: { role: 'Admin' },
-  };
-  return {
-    useDemoData: () => demoData,
-    useOptionalDemoData: () => demoData,
-  };
-});
-
 const sections: SettingsSectionConfig[] = [
   {
     id: 'general',

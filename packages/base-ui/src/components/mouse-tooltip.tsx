@@ -8,7 +8,7 @@ export type MouseTooltipOffset = { x?: number; y?: number };
 const DEFAULT_OFFSET: MouseTooltipOffset = { x: 12, y: 12 };
 
 const tooltipSurfaceClass =
-  'pointer-events-none fixed top-0 left-0 z-[100] rounded-md border border-border/70 bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-sm';
+  'pointer-events-none fixed top-0 left-0 z-[100] rounded-md border border-border/70 bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-elevated';
 
 type UseMouseTooltipOptions = {
   className?: string;

@@ -41,27 +41,12 @@ export type ApiCrudResourceHandlers<
   delete: (id: string) => Promise<void>;
 };
 
-export type ApiRegistry = {
-  cases: ApiCrudResourceHandlers;
-  caseChecklists: {
-    create: (input: Record<string, unknown>) => Promise<Record<string, unknown>>;
-    updateDone: (id: string, done: boolean) => Promise<Record<string, unknown>>;
-  };
-  clients: ApiCrudResourceHandlers;
-  contacts: ApiCrudResourceHandlers;
-  contracts: ApiCrudResourceHandlers;
-  incidents: ApiCrudResourceHandlers;
-  invoices: ApiCrudResourceHandlers;
-  leads: ApiCrudResourceHandlers;
-  orders: ApiCrudResourceHandlers;
-  organizations: ApiCrudResourceHandlers;
-  parties: {
-    create: (input: Record<string, unknown>) => Promise<Record<string, unknown>>;
-  };
-  products: ApiCrudResourceHandlers;
-  projects: ApiCrudResourceHandlers;
-  purchasing: ApiCrudResourceHandlers;
-  staff: ApiCrudResourceHandlers;
-  users: ApiCrudResourceHandlers;
-  vendors: ApiCrudResourceHandlers;
-};
+/**
+ * Every CRUD resource the frontend talks to. Adding a resource here is the only
+ * registry change needed — the HTTP endpoint derives from the key (`/clients`).
+ */
+export const API_RESOURCE_KEYS = ['clients', 'contacts', 'invoices', 'orders', 'projects'] as const;
+
+export type ApiResourceKey = (typeof API_RESOURCE_KEYS)[number];
+
+export type ApiRegistry = Record<ApiResourceKey, ApiCrudResourceHandlers>;

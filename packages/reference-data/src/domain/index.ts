@@ -48,10 +48,7 @@ export function getVocabularyDefinition(key: VocabularyKey): VocabularyDefinitio
   return VOCABULARY_REGISTRY[key];
 }
 
-export function buildVocabularyOptions(
-  key: VocabularyKey,
-  locale = 'en',
-): VocabularyOption[] {
+export function buildVocabularyOptions(key: VocabularyKey, locale = 'en'): VocabularyOption[] {
   const definition = getVocabularyDefinition(key);
   const appLocale = resolveAppLocale(locale);
 

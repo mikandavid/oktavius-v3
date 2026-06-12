@@ -2,6 +2,8 @@ export type OsirisApiEnvironment = {
   VITE_OKTAVIUS_API_BASE_URL?: string;
 };
 
+export const DEFAULT_OSIRIS_API_BASE_URL = '/v1';
+
 function isAbsoluteHttpUrl(input: string) {
   return /^https?:\/\//i.test(input);
 }
@@ -15,5 +17,5 @@ export function joinOsirisApiBaseUrl(baseUrl: string | undefined, input: string)
 }
 
 export function resolveOsirisApiBaseUrl(env: OsirisApiEnvironment = import.meta.env) {
-  return env.VITE_OKTAVIUS_API_BASE_URL?.trim() || undefined;
+  return env.VITE_OKTAVIUS_API_BASE_URL?.trim() || DEFAULT_OSIRIS_API_BASE_URL;
 }

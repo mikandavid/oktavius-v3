@@ -95,43 +95,16 @@ const NEUTRAL_ORG_PROFILE: OrgProfile = {
   tagline: '',
 };
 
-function workspaceLabel(profile: OrgProfile, moduleId: string) {
-  if (moduleId === 'clients') return profile.terminology.clientsSingular.toLowerCase();
-  if (moduleId === 'cases') return profile.terminology.casesSingular.toLowerCase();
-  if (moduleId === 'products') return profile.terminology.products.toLowerCase();
-  return null;
-}
-
 function resolveAgentModule(pathname: string | undefined, profile: OrgProfile) {
   return pathname ? (resolveAppNavModuleForProfile(profile, pathname)?.id ?? null) : null;
 }
 
-function buildWorkspaceIntro(params: {
+function buildWorkspaceIntro(_params: {
   moduleId: string | null;
   profile: OrgProfile;
   userCount: number;
   clientCount: number;
 }) {
-  const clientLabel = workspaceLabel(params.profile, 'clients') ?? 'client';
-  const caseLabel = workspaceLabel(params.profile, 'cases') ?? 'case';
-  const productLabel = workspaceLabel(params.profile, 'products') ?? 'products';
-
-  if (params.moduleId === 'clients') {
-    return `The ${clientLabel} workspace currently has ${params.clientCount} visible records.`;
-  }
-
-  if (params.moduleId === 'cases') {
-    return `The ${caseLabel} workspace is active.`;
-  }
-
-  if (params.moduleId === 'products') {
-    return `The ${productLabel} workspace is active.`;
-  }
-
-  if (params.moduleId === 'users') {
-    return `The user workspace currently has ${params.userCount} visible records.`;
-  }
-
   return 'The current shell is still compact, so I am reading this as an operational coordination request.';
 }
 
@@ -139,42 +112,7 @@ export function derivePromptSet(
   pathname?: string,
   profile = getLocalizedOrgProfile(NEUTRAL_ORG_PROFILE, 'en'),
 ) {
-  const moduleId = resolveAgentModule(pathname, profile);
-  const clientLabel = workspaceLabel(profile, 'clients') ?? 'client';
-
-  if (moduleId === 'clients') {
-    return [
-      `Summarize ${clientLabel} risk by status and contract timing.`,
-      'Draft a follow-up plan for inactive and churned accounts.',
-      'Show which prospects need attention this week.',
-    ];
-  }
-
-  if (moduleId === 'cases') {
-    const caseLabel = workspaceLabel(profile, 'cases') ?? 'case';
-    return [
-      `Summarize ${caseLabel} urgency, stage, and pending owner actions.`,
-      `Draft the next handoff note for the active ${caseLabel}.`,
-      `Show ${profile.terminology.cases.toLowerCase()} with deadlines or missing decisions.`,
-    ];
-  }
-
-  if (moduleId === 'products') {
-    const productLabel = workspaceLabel(profile, 'products') ?? 'products';
-    return [
-      `Summarize ${productLabel} coverage and stock-sensitive items.`,
-      'Show items that need price, SKU, or availability review.',
-      'Draft a short catalog cleanup plan.',
-    ];
-  }
-
-  if (moduleId === 'users') {
-    return [
-      'Review pending and suspended user access.',
-      'Draft a handoff note for admin approvals.',
-      'Summarize role distribution and team coverage.',
-    ];
-  }
+  void resolveAgentModule(pathname, profile);
   return [
     'Give me the operational summary for this workspace.',
     'What should be reviewed first today?',
@@ -204,19 +142,19 @@ export function deriveAssistantResponse(params: {
     return `${intro} Focus first on exceptions, then on deadlines, then on anything awaiting a decision. Keep the action list short and assignable.`;
   }
 
-  if (lower.includes('client') || lower.includes('contact') || moduleId === 'clients') {
+  if (lower.includes('client') || lower.includes('contact')) {
     return `${intro} Prioritize churned and inactive accounts, then prospects with explicit notes. After that, queue renewal-sensitive active clients for outreach.`;
   }
 
-  if (lower.includes('case') || moduleId === 'cases') {
+  if (lower.includes('case')) {
     return `${intro} Prioritize open deadlines, missing decisions, and owner handoffs before moving to routine follow-up.`;
   }
 
-  if (lower.includes('product') || lower.includes('catalog') || moduleId === 'products') {
+  if (lower.includes('product') || lower.includes('catalog')) {
     return `${intro} Review incomplete item metadata, stock-sensitive entries, and anything tied to an active sales workflow first.`;
   }
 
-  if (lower.includes('user') || lower.includes('access') || moduleId === 'users') {
+  if (lower.includes('user') || lower.includes('access')) {
     return `${intro} Review pending access first, then suspended members, then confirm whether admins and managers still match current responsibilities.`;
   }
 

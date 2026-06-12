@@ -9,6 +9,9 @@ export function crudTableRowHeightPx(compact: boolean) {
   return compact ? CRUD_TABLE_ROW_HEIGHT_COMPACT : CRUD_TABLE_ROW_HEIGHT_DEFAULT;
 }
 
+export const CRUD_TABLE_SELECTION_CHECKBOX_CLASS =
+  'border-border/80 data-[state=checked]:border-sidebar-primary data-[state=checked]:bg-sidebar-primary data-[state=checked]:text-sidebar-primary-foreground data-[state=indeterminate]:border-sidebar-primary data-[state=indeterminate]:bg-sidebar-primary/80 data-[state=indeterminate]:text-sidebar-primary-foreground';
+
 export const CRUD_TABLE_HEADER_INNER_BASE =
   'flex h-full w-full items-center gap-1.5 text-xs font-medium';
 
