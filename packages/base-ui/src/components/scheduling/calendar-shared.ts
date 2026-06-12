@@ -181,6 +181,7 @@ export function formatCalendarPeriodLabel(anchor: Date, mode: CalendarViewMode):
       const days = getWeekDays(anchor);
       const first = days[0];
       const last = days[6];
+      if (!first || !last) return format(anchor, 'MMMM yyyy');
       if (isSameMonth(first, last)) {
         return `${format(first, 'd')} – ${format(last, 'd MMMM yyyy')}`;
       }

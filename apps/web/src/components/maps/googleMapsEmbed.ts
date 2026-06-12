@@ -45,9 +45,11 @@ export function resolveGoogleMapsEmbed(mapsUrl: string): GoogleMapsEmbedResult {
       const pathParts = url.pathname
         .split('/')
         .filter((part) => part && part !== 'maps' && part !== 'dir');
-      if (pathParts.length >= 2) {
-        const origin = decodeURIComponent(pathParts[0]);
-        const destination = decodeURIComponent(pathParts[pathParts.length - 1]);
+      const firstPart = pathParts[0];
+      const lastPart = pathParts[pathParts.length - 1];
+      if (pathParts.length >= 2 && firstPart !== undefined && lastPart !== undefined) {
+        const origin = decodeURIComponent(firstPart);
+        const destination = decodeURIComponent(lastPart);
         const waypoints = pathParts.slice(1, -1).map((waypoint) => decodeURIComponent(waypoint));
 
         if (apiKey) {

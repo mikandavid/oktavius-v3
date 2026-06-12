@@ -205,10 +205,10 @@ export function EmailThreadQueue({
   );
 
   const filtered = useMemo(() => {
-    const f = FILTERS.find((entry) => entry.id === filter) ?? FILTERS[0];
+    const f = FILTERS.find((entry) => entry.id === filter);
     const needle = query.trim().toLowerCase();
     return folderThreads.filter((t) => {
-      if (!f.match(t)) return false;
+      if (f && !f.match(t)) return false;
       if (!needle) return true;
       return (
         t.subject.toLowerCase().includes(needle) ||

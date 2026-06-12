@@ -497,6 +497,7 @@ function SidebarContent({
 
       const nextIds = [...currentIds];
       const [movedId] = nextIds.splice(fromIndex, 1);
+      if (movedId === undefined) return;
       nextIds.splice(toIndex, 0, movedId);
       preferredModuleOrderRef.current = nextIds;
       setPreferredModuleOrder(nextIds);

@@ -149,13 +149,13 @@ export function DashboardPage() {
     >
       <div className={STAT_CARD_GRID_CLASS}>
         <StatCard
-          label={profile.terminology.clients}
+          label={profile.terminology.clients ?? ''}
           value={String(clients.length)}
           icon={<ProjectsIcon size={18} weight="duotone" />}
           description={t('dashboard.statClientsDescription')}
         />
         <StatCard
-          label={profile.terminology.orders}
+          label={profile.terminology.orders ?? ''}
           value={String(orders.length)}
           icon={<OrderIcon size={18} weight="duotone" />}
           description={t('dashboard.statOrdersDescription')}

@@ -46,6 +46,7 @@ export function ResponsiveDetailSection() {
             const item =
               RESPONSIVE_ITEMS.find((candidate) => candidate.id === selectedId) ??
               RESPONSIVE_ITEMS[0];
+            if (!item) return null;
             return (
               <div className="space-y-4 p-4">
                 <div className="flex items-start gap-3">

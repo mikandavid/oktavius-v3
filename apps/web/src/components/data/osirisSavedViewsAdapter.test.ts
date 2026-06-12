@@ -29,9 +29,10 @@ describe('createOsirisSavedViewsAdapter', () => {
   it('persists and clears saved views through the generated-store endpoint', async () => {
     const fetcher = vi.fn(async () => jsonResponse([]));
     const adapter = createOsirisSavedViewsAdapter({ baseUrl: '/v1', fetcher });
-    const views = [{ id: 'custom_2', label: 'Drafts', filters: { status: 'draft' } }];
+    const view = { id: 'custom_2', label: 'Drafts', filters: { status: 'draft' } };
+    const views = [view];
 
-    await adapter.persistView({ listKey: 'orders' }, views[0], views);
+    await adapter.persistView({ listKey: 'orders' }, view, views);
     await adapter.deleteView({ listKey: 'orders' }, 'custom_2', []);
 
     expect(fetcher).toHaveBeenNthCalledWith(1, '/v1/generated-stores/saved-views/orders', {

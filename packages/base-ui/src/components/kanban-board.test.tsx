@@ -33,6 +33,8 @@ describe('KanbanBoard', () => {
     cardButton.focus();
     await user.keyboard('{Enter}');
 
-    expect(onCardClick).toHaveBeenCalledWith(columns[0].items[0], columns[0]);
+    const firstColumn = columns[0];
+    if (!firstColumn) throw new Error('test fixture must contain a column');
+    expect(onCardClick).toHaveBeenCalledWith(firstColumn.items[0], firstColumn);
   });
 });

@@ -76,12 +76,16 @@ export function EmailPage() {
   };
 
   const openComposer = (mode: Exclude<ComposerMode, 'closed'>) => {
-    if (!activeThread && mode !== 'new') return;
+    if (mode === 'new') {
+      setComposerMode(mode);
+      setDraft(EMPTY_DRAFT);
+      return;
+    }
+    if (!activeThread) return;
     setComposerMode(mode);
     if (mode === 'reply') setDraft(buildReplyDraft(activeThread, false));
     else if (mode === 'replyAll') setDraft(buildReplyDraft(activeThread, true));
-    else if (mode === 'forward') setDraft(buildForwardDraft(activeThread));
-    else setDraft(EMPTY_DRAFT);
+    else setDraft(buildForwardDraft(activeThread));
   };
 
   useEffect(() => {

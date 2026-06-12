@@ -165,8 +165,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const groupedResults = useMemo(() => {
     return results.reduce(
       (groups, result) => {
-        if (!groups[result.groupId]) groups[result.groupId] = [];
-        groups[result.groupId].push(result);
+        (groups[result.groupId] ??= []).push(result);
         return groups;
       },
       {} as Record<string, SearchResult[]>,

@@ -158,6 +158,7 @@ export function LocationSitesDetailList({
     const index = locations.findIndex((location) => location.id === emphasizedSiteId);
     if (index <= 0) return locations;
     const emphasized = locations[index];
+    if (!emphasized) return locations;
     const rest = locations.filter((location) => location.id !== emphasizedSiteId);
     return [emphasized, ...rest];
   }, [locations, emphasizedSiteId]);

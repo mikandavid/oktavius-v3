@@ -47,7 +47,8 @@ export type IconComponent = PhosphorIcon;
 export function formatToolName(toolName: string): string {
   const parts = toolName.split('_').filter(Boolean);
   if (parts.length === 0) return toolName;
-  const verb = parts[0].toLowerCase();
+  // parts.length checked above
+  const verb = parts[0]!.toLowerCase();
   const rest = parts
     .slice(1)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())

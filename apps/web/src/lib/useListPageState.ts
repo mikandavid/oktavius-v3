@@ -95,9 +95,10 @@ export function useListPageState<T extends Record<string, unknown>>({
             .toLowerCase()
             .includes(q),
         );
-      const matchesFilters = filterKeys.every(
-        (key) => filters[key].length === 0 || String(row[key] ?? '') === filters[key],
-      );
+      const matchesFilters = filterKeys.every((key) => {
+        const filterValue = filters[key] ?? '';
+        return filterValue.length === 0 || String(row[key] ?? '') === filterValue;
+      });
       return matchesSearch && matchesFilters;
     };
 

@@ -13,7 +13,8 @@ export function extractVars(text: string): string[] {
   const regex = /\{\{(\w+)\}\}/g;
   let match;
   while ((match = regex.exec(text)) !== null) {
-    vars.push(match[1]);
+    const name = match[1];
+    if (name) vars.push(name);
   }
   return vars;
 }

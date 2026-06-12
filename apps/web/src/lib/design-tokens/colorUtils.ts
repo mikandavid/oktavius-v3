@@ -37,7 +37,9 @@ export function hslToHex({ h, s, l }: { h: number; s: number; l: number }): stri
 function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   const match = hex.trim().match(/^#?([0-9a-fA-F]{6})$/);
   if (!match) return null;
-  const int = parseInt(match[1], 16);
+  const hexDigits = match[1];
+  if (!hexDigits) return null;
+  const int = parseInt(hexDigits, 16);
   const r = ((int >> 16) & 255) / 255;
   const g = ((int >> 8) & 255) / 255;
   const b = (int & 255) / 255;

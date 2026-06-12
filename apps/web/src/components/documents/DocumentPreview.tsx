@@ -81,7 +81,8 @@ function parseDelimited(text: string, separator: string): TablePreviewData {
   }
 
   const parseLine = (line: string) => line.split(separator).map((value) => value.trim());
-  const headers = parseLine(lines[0]);
+  // lines.length checked above
+  const headers = parseLine(lines[0]!);
   const dataLines = lines.slice(1);
   const rows = dataLines.slice(0, MAX_PREVIEW_ROWS).map(parseLine);
 
@@ -95,7 +96,10 @@ async function loadSpreadsheet(document: PreviewDocument): Promise<TablePreviewD
     : await fetch(document.sourceUrl || '').then((response) => response.arrayBuffer());
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
   const firstSheetName = workbook.SheetNames[0];
-  const firstSheet = workbook.Sheets[firstSheetName];
+  const firstSheet = firstSheetName ? workbook.Sheets[firstSheetName] : undefined;
+  if (!firstSheet) {
+    return { headers: [], rows: [], totalRows: 0 };
+  }
   const rows = XLSX.utils.sheet_to_json<(string | number | null)[]>(firstSheet, {
     header: 1,
     blankrows: false,

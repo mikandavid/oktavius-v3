@@ -53,7 +53,8 @@ export function TagsInput({
       e.preventDefault();
       addTag(input);
     } else if (e.key === 'Backspace' && !input && tags.length > 0) {
-      removeTag(tags[tags.length - 1]);
+      const lastTag = tags[tags.length - 1];
+      if (lastTag !== undefined) removeTag(lastTag);
     }
   };
 

@@ -126,6 +126,7 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
   const fullWidthContentClass = 'mx-auto w-full max-w-5xl';
   const activeConversation =
     conversations.find((conversation) => conversation.id === activeConversationId) ?? null;
+  const latestConversation = conversations[0] ?? null;
   const hasComposerContent = draft.trim().length > 0 || selectedFiles.length > 0;
   const composerPlaceholder = pageContext.primaryEntity?.displayLabel
     ? `Ask about ${pageContext.primaryEntity.displayLabel}…`
@@ -442,16 +443,16 @@ export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatS
             <AgentWelcomeScreen
               title="How can I help?"
               subtitle='Ask about clients, tasks, or try "delete client" to see a confirmation card.'
-              latestConversationTitle={conversations[0]?.title}
+              latestConversationTitle={latestConversation?.title}
               latestConversationTime={
-                conversations[0]?.updatedAt
-                  ? formatDisplayDateTime(conversations[0].updatedAt)
+                latestConversation?.updatedAt
+                  ? formatDisplayDateTime(latestConversation.updatedAt)
                   : undefined
               }
               onOpenLatestConversation={
-                conversations[0]
+                latestConversation
                   ? () => {
-                      setActiveConversationId(conversations[0].id);
+                      setActiveConversationId(latestConversation.id);
                     }
                   : undefined
               }

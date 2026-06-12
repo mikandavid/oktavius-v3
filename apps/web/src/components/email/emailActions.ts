@@ -9,7 +9,8 @@ function prefixSubject(prefix: 'Re' | 'Fwd', subject: string): string {
 
 function lastInbound(thread: EmailThread): EmailMessage | undefined {
   for (let i = thread.messages.length - 1; i >= 0; i -= 1) {
-    if (thread.messages[i].direction === 'inbound') return thread.messages[i];
+    const message = thread.messages[i];
+    if (message?.direction === 'inbound') return message;
   }
   return thread.messages.at(-1);
 }

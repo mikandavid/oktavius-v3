@@ -92,6 +92,9 @@ async function parseWorkbook(file: File): Promise<ImportRow[]> {
   }
 
   const sheet = workbook.Sheets[firstSheetName];
+  if (!sheet) {
+    throw new Error('Import file has no sheets.');
+  }
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
     defval: '',
     raw: false,

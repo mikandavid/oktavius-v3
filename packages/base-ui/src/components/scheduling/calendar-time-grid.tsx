@@ -849,7 +849,7 @@ export function CalendarTimeGrid({
           <AllDayDropCell
             key={day.toISOString()}
             day={day}
-            events={allDayByDay[index]}
+            events={allDayByDay[index] ?? []}
             calendars={calendars}
             draggable={draggable}
             draggingEventId={dragState?.event.id ?? null}

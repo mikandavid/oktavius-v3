@@ -39,6 +39,7 @@ function moveRow(rows: LineItemRow[], index: number, offset: -1 | 1) {
   if (nextIndex < 0 || nextIndex >= rows.length) return rows;
   const next = [...rows];
   const [row] = next.splice(index, 1);
+  if (!row) return rows;
   next.splice(nextIndex, 0, row);
   return next;
 }

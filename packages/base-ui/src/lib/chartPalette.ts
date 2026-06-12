@@ -45,11 +45,12 @@ export const CHART_AXIS = {
 export const CHART_PRIMARY = CHART_PALETTE[0].stroke;
 
 export function getChartPaletteColor(index: number) {
-  return CHART_PALETTE[index % CHART_PALETTE.length];
+  // CHART_PALETTE is a non-empty tuple; modulo keeps the index in bounds
+  return CHART_PALETTE[index % CHART_PALETTE.length]!;
 }
 
 export function resolveChartColor(index: number, override?: string) {
-  return override ?? CHART_PALETTE[index % CHART_PALETTE.length].stroke;
+  return override ?? getChartPaletteColor(index).stroke;
 }
 
 /** Gauge arc stops — success at high end, warning mid, destructive low */

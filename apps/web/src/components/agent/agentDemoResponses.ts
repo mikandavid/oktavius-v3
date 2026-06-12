@@ -24,26 +24,26 @@ export function buildDemoAgentFollowUp(userContent: string, now: string): AgentM
   const wantsSearch = lower.includes('search') || lower.includes('find ');
   const wantsChart = lower.includes('chart') || lower.includes('graph');
 
-  const messages: AgentMessage[] = [
-    {
-      id: `assistant_${Date.now()}`,
-      role: 'assistant',
-      createdAt: now,
-      content: wantsChart
-        ? `Here is the trend for the last quarter:
+  const introMessage: AgentMessage = {
+    id: `assistant_${Date.now()}`,
+    role: 'assistant',
+    createdAt: now,
+    content: wantsChart
+      ? `Here is the trend for the last quarter:
 
 <oct-bar-chart title="Receivables by month">
 {"data":[{"name":"Sep","value":92000},{"name":"Oct","value":104000},{"name":"Nov","value":128400}],"yFormat":"currency","currency":"EUR"}
 </oct-bar-chart>`
-        : wantsClient
-          ? 'I found matching client records and prepared the cards below.'
-          : wantsFinancial
-            ? 'Here is the receivables snapshot for this workspace.'
-            : wantsSearch
-              ? 'I ran a global search and grouped the results below.'
-              : 'I reviewed the workspace context and prepared the next steps below.',
-    },
-  ];
+      : wantsClient
+        ? 'I found matching client records and prepared the cards below.'
+        : wantsFinancial
+          ? 'Here is the receivables snapshot for this workspace.'
+          : wantsSearch
+            ? 'I ran a global search and grouped the results below.'
+            : 'I reviewed the workspace context and prepared the next steps below.',
+  };
+
+  const messages: AgentMessage[] = [introMessage];
 
   if (wantsClient) {
     messages.push(
@@ -61,7 +61,7 @@ export function buildDemoAgentFollowUp(userContent: string, now: string): AgentM
       },
     );
   } else if (wantsFinancial) {
-    messages[0].ui = { component: 'FinancialOverview', props: DEMO_FINANCIAL_CARD };
+    introMessage.ui = { component: 'FinancialOverview', props: DEMO_FINANCIAL_CARD };
   } else if (wantsSearch) {
     messages.push({
       id: `ui_search_${Date.now()}`,

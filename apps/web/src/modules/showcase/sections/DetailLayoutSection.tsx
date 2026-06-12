@@ -137,6 +137,7 @@ export function DetailLayoutSection() {
           )}
           detail={({ selectedId }) => {
             const activeItem = QUEUE_ITEMS.find((item) => item.id === selectedId) ?? QUEUE_ITEMS[0];
+            if (!activeItem) return null;
             return (
               <div className="space-y-2 p-4">
                 <div className="flex items-start gap-3">

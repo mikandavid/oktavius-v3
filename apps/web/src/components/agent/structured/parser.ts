@@ -55,6 +55,7 @@ function isFenceStart(input: string, i: number): boolean {
 
 function findFenceEnd(input: string, start: number): number {
   const fenceChar = input[start];
+  if (!fenceChar) return input.length;
   const fence = fenceChar.repeat(3);
   const newline = input.indexOf('\n', start);
   if (newline === -1) return input.length;

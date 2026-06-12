@@ -113,6 +113,7 @@ export function moveCalendarEvent(
 
   if (target.time) {
     const [hours, minutes] = target.time.split(':').map(Number);
+    if (hours === undefined || minutes === undefined) return event;
     const nextStart = setMinutes(setHours(startOfDay(target.day), hours), minutes);
     const nextEnd = event.allDay
       ? new Date(nextStart.getTime() + slotMinutesToMs(60))
@@ -166,6 +167,7 @@ export function resizeCalendarEvent(
 
   const minDurationMs = slotMinutesToMs(slotMinutes);
   const [hours, minutes] = target.time.split(':').map(Number);
+  if (hours === undefined || minutes === undefined) return event;
   const day = target.edge === 'start' ? start : end;
   const nextEdge = setMinutes(setHours(startOfDay(day), hours), minutes);
 
@@ -271,7 +273,7 @@ export function pointerToDropTarget(
 }
 
 function timeStringToMinutes(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
+  const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return hours * 60 + minutes;
 }
 
@@ -337,8 +339,8 @@ export function createCalendarEventTimesFromRange(
   const { start, end } = endTime
     ? normalizeSlotRange(startTime, endTime, slotMinutes)
     : { start: startTime, end: minutesToTimeString(timeStringToMinutes(startTime) + slotMinutes) };
-  const [startHours, startMinutes] = start.split(':').map(Number);
-  const [endHours, endMinutes] = end.split(':').map(Number);
+  const [startHours = 0, startMinutes = 0] = start.split(':').map(Number);
+  const [endHours = 0, endMinutes = 0] = end.split(':').map(Number);
   const nextStart = setMinutes(setHours(normalizedStartDay, startHours), startMinutes);
   let nextEnd = setMinutes(setHours(normalizedEndDay, endHours), endMinutes);
 

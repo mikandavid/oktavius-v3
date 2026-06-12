@@ -160,7 +160,8 @@ export function hashStringToIndex(seed: string, modulo: number): number {
 }
 
 export function pickSemanticToneBySeed(seed: string): SemanticTone {
-  return DEFAULT_SEMANTIC_TONE_ORDER[hashStringToIndex(seed, DEFAULT_SEMANTIC_TONE_ORDER.length)];
+  // hashStringToIndex returns a value in [0, length), so the lookup always hits
+  return DEFAULT_SEMANTIC_TONE_ORDER[hashStringToIndex(seed, DEFAULT_SEMANTIC_TONE_ORDER.length)]!;
 }
 
 /** Map legacy StatusDot tone names to palette tones. */

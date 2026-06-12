@@ -64,18 +64,21 @@ export function AgentMessageList({
 
   return (
     <div className={cn('flex flex-col gap-4', className)}>
-      {buildMessageGroups(messages).map((group) =>
-        group.kind === 'single' ? (
-          <UserMessageRow key={group.message.id} message={group.message} />
-        ) : (
+      {buildMessageGroups(messages).map((group) => {
+        if (group.kind === 'single') {
+          return <UserMessageRow key={group.message.id} message={group.message} />;
+        }
+        const firstItem = group.items[0];
+        if (!firstItem) return null;
+        return (
           <ChainMessageGroup
-            key={`chain-${group.items[0].message.id}`}
+            key={`chain-${firstItem.message.id}`}
             items={group.items}
             onConfirmationRespond={onConfirmationRespond}
             onSkillApprovalRespond={onSkillApprovalRespond}
           />
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }

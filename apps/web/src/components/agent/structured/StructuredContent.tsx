@@ -13,8 +13,9 @@ type StructuredContentProps = {
 export function StructuredContent({ text, className }: StructuredContentProps) {
   const segments = parseStructuredContent(text);
 
-  if (segments.length === 1 && segments[0].type === 'text') {
-    return <FormattedText text={segments[0].text} className={className} />;
+  const onlySegment = segments.length === 1 ? segments[0] : undefined;
+  if (onlySegment?.type === 'text') {
+    return <FormattedText text={onlySegment.text} className={className} />;
   }
 
   return (

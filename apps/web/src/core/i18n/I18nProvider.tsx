@@ -89,7 +89,8 @@ function buildT(language: LanguageCode, store: Store) {
   return (key: string, params?: InterpolationParams, defaultValue?: string): string => {
     const parts = key.split('.');
     if (parts.length < 2) return defaultValue ?? formatMissingKey(key);
-    const ns = parts[0];
+    // parts.length >= 2 checked above
+    const ns = parts[0]!;
     const inner = parts.slice(1).join('.');
     const nsMap = store[language]?.[ns];
     if (!nsMap) {

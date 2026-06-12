@@ -139,7 +139,7 @@ export function moduleLabelFor(
   item: AppNavModule,
   translate?: (key: string, _params?: Record<string, string | number>, fallback?: string) => string,
 ) {
-  if (item.terminologyKey) return profile.terminology[item.terminologyKey];
+  if (item.terminologyKey) return profile.terminology[item.terminologyKey] ?? item.label;
   if (item.labelKey && translate) return translate(item.labelKey, undefined, item.label);
   return item.label;
 }
