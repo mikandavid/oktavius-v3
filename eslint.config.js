@@ -11,6 +11,7 @@ import noForbiddenTailwindClasses from './apps/web/eslint-rules/no-forbidden-tai
 import maxDetailTabsTriggers from './apps/web/eslint-rules/max-detail-tabs-triggers.mjs';
 import maxListFilters from './apps/web/eslint-rules/max-list-filters.mjs';
 import noBareJsxStrings from './apps/web/eslint-rules/no-bare-jsx-strings.mjs';
+import noCrossModuleImports from './apps/web/eslint-rules/no-cross-module-imports.mjs';
 
 const selectImportRestriction = {
   name: '@oktavius/base-ui',
@@ -40,6 +41,7 @@ const oktaviusUiPlugin = {
     'max-detail-tabs-triggers': maxDetailTabsTriggers,
     'max-list-filters': maxListFilters,
     'no-bare-jsx-strings': noBareJsxStrings,
+    'no-cross-module-imports': noCrossModuleImports,
   },
 };
 
@@ -140,6 +142,19 @@ export default tseslint.config(
     rules: {
       'oktavius/max-list-filters': 'error',
       'oktavius/no-bare-jsx-strings': 'warn',
+    },
+  },
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: [
+      // The router and nav manifest are the designated module loaders.
+      'apps/web/src/app/**',
+      'apps/web/src/lib/appNavModules.ts',
+      // Dev-only catalog whose job is to render every module.
+      'apps/web/src/modules/showcase/**',
+    ],
+    rules: {
+      'oktavius/no-cross-module-imports': 'error',
     },
   },
   {
