@@ -15,6 +15,7 @@ import type { StorageView } from '../data/types';
 import { useStorageTree } from '../data/useStorageData';
 import type { StorageViewState } from '../useStorageViewState';
 import { StorageFolderTree } from './StorageFolderTree';
+import { StorageUsageMeter } from './StorageUsageMeter';
 
 const NAV_ITEMS: { view: StorageView; icon: ComponentType<IconProps>; key: string }[] = [
   { view: 'folder', icon: DocumentIcon, key: 'all' },
@@ -90,6 +91,8 @@ export function StorageRail({
           />
         )}
       </div>
+
+      <StorageUsageMeter />
     </aside>
   );
 }
