@@ -14,18 +14,17 @@ import {
 export type DensityController = {
   density: Density;
   setDensity: (value: Density) => void;
+  /** When false, the current density is not written to localStorage and any
+   *  previously stored key is erased. The in-memory density is unchanged. */
   persist: boolean;
   setPersist: (value: boolean) => void;
   reset: () => void;
 };
 
 export function useDensity(): DensityController {
-  const [density, setDensity] = useState<Density>(
-    () => readStoredDensity(getWindowStorage('localStorage')) ?? DEFAULT_DENSITY,
-  );
-  const [persist, setPersist] = useState<boolean>(
-    () => readStoredDensity(getWindowStorage('localStorage')) !== null,
-  );
+  const storedOnMount = readStoredDensity(getWindowStorage('localStorage'));
+  const [density, setDensity] = useState<Density>(() => storedOnMount ?? DEFAULT_DENSITY);
+  const [persist, setPersist] = useState<boolean>(() => storedOnMount !== null);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -36,6 +35,8 @@ export function useDensity(): DensityController {
       safeStorageRemove(getWindowStorage('localStorage'), DENSITY_STORAGE_KEY);
     }
     return () => {
+      // On unmount: restore the baseline (no data-density). On a dependency change
+      // React re-runs the effect immediately, so the removal is transient and harmless.
       clearDensityFromDom(root);
     };
   }, [density, persist]);
