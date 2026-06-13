@@ -207,5 +207,80 @@
     "linkSuccess_one": "{{count}} Datei verknüpft",
     "linkSuccess_other": "{{count}} Dateien verknüpft",
     "linkFailed": "Dateien konnten nicht verknüpft werden"
+  },
+  "folders": "Ordner",
+  "nav": {
+    "all": "Alle Dateien",
+    "recent": "Zuletzt",
+    "starred": "Favoriten",
+    "trash": "Papierkorb"
+  },
+  "actions": {
+    "upload": "Hochladen",
+    "open": "Öffnen",
+    "download": "Herunterladen",
+    "rename": "Umbenennen",
+    "move": "Verschieben",
+    "star": "Zu Favoriten",
+    "unstar": "Aus Favoriten entfernen",
+    "trash": "In den Papierkorb",
+    "restore": "Wiederherstellen",
+    "deleteForever": "Endgültig löschen"
+  },
+  "search": {
+    "placeholder": "Dateien suchen…",
+    "scopeCurrent": "Dieser Ordner",
+    "scopeGlobal": "Überall"
+  },
+  "sort": {
+    "name": "Name",
+    "updatedAt": "Geändert",
+    "fileSizeBytes": "Größe"
+  },
+  "columns": {
+    "name": "Name",
+    "size": "Größe",
+    "modified": "Geändert"
+  },
+  "details": {
+    "title": "Details",
+    "size": "Größe",
+    "type": "Typ",
+    "modified": "Geändert",
+    "created": "Erstellt",
+    "folder": "Ordner"
+  },
+  "empty": {
+    "folder": "Dieser Ordner ist leer",
+    "recent": "Keine zuletzt verwendeten Dateien",
+    "starred": "Keine Favoriten",
+    "trash": "Papierkorb ist leer",
+    "search": "Keine Dateien gefunden"
+  },
+  "upload": {
+    "dropHere": "Dateien zum Hochladen ablegen",
+    "uploading": "Lädt {{name}} hoch",
+    "failed": "Hochladen fehlgeschlagen: {{name}}",
+    "duplicate": "{{name}} ist bereits in der Ablage vorhanden"
+  },
+  "dialogs": {
+    "newFolderTitle": "Neuer Ordner",
+    "newFolderLabel": "Ordnername",
+    "renameTitle": "Umbenennen",
+    "renameLabel": "Neuer Name",
+    "moveTitle": "Verschieben nach",
+    "trashTitle": "In den Papierkorb?",
+    "trashBody": "{{name}} wird in den Papierkorb verschoben und kann 30 Tage lang wiederhergestellt werden.",
+    "purgeTitle": "Endgültig löschen?",
+    "purgeBody": "{{name}} wird dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden.",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "create": "Erstellen",
+    "save": "Speichern"
+  },
+  "usage": "{{used}} von {{limit}} belegt",
+  "errors": {
+    "load": "Dateien konnten nicht geladen werden.",
+    "quota": "Speicherlimit erreicht. Bitte Speicher freigeben und erneut versuchen."
   }
 }
