@@ -15,7 +15,7 @@ import {
 
 import { DENSITIES, type Density } from '@/lib/density/density';
 import type { DesignTokenOverridesController } from '@/lib/design-tokens/useDesignTokenOverrides';
-import { useUserPreferences } from '@/lib/userPreferences';
+import { UI_LOCALE_OPTIONS, UI_THEME_OPTIONS, useUserPreferences } from '@/lib/userPreferences';
 
 import { TokenEditorPanel } from './TokenEditorPanel';
 
@@ -25,6 +25,8 @@ const DENSITY_LABELS: Record<Density, string> = {
   spacious: 'Spacious',
 };
 
+const toggleVariant = (active: boolean): 'secondary' | 'ghost' => (active ? 'secondary' : 'ghost');
+
 function DensitySegmented({
   value,
   onChange,
@@ -33,11 +35,16 @@ function DensitySegmented({
   onChange: (value: Density) => void;
 }) {
   return (
-    <div className="inline-flex rounded-control border border-border p-0.5">
+    <div
+      role="group"
+      aria-label="Density"
+      className="inline-flex rounded-control border border-border p-0.5"
+    >
       {DENSITIES.map((option) => (
         <button
           key={option}
           type="button"
+          aria-pressed={value === option}
           onClick={() => onChange(option)}
           className={cn(
             'rounded-[0.4rem] px-3 py-1 text-xs font-medium transition-colors',
@@ -97,31 +104,32 @@ export function ShowcaseSettingsDrawer({
             className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-3"
           >
             <SettingsRow label="Theme" description="Light, dark, or follow the system.">
-              <div className="inline-flex gap-1">
-                {(['light', 'dark', 'system'] as const).map((option) => (
+              <div role="group" aria-label="Theme" className="inline-flex gap-1">
+                {UI_THEME_OPTIONS.map(({ value, label }) => (
                   <Button
-                    key={option}
+                    key={value}
                     size="sm"
-                    variant={theme === option ? 'secondary' : 'ghost'}
-                    onClick={() => setTheme(option)}
+                    variant={toggleVariant(theme === value)}
+                    aria-pressed={theme === value}
+                    onClick={() => setTheme(value)}
                   >
-                    {option[0]?.toUpperCase()}
-                    {option.slice(1)}
+                    {label}
                   </Button>
                 ))}
               </div>
             </SettingsRow>
 
             <SettingsRow label="Language" description="UI locale.">
-              <div className="inline-flex gap-1">
-                {(['en', 'de'] as const).map((option) => (
+              <div role="group" aria-label="Language" className="inline-flex gap-1">
+                {UI_LOCALE_OPTIONS.map(({ value, label }) => (
                   <Button
-                    key={option}
+                    key={value}
                     size="sm"
-                    variant={locale === option ? 'secondary' : 'ghost'}
-                    onClick={() => setLocale(option)}
+                    variant={toggleVariant(locale === value)}
+                    aria-pressed={locale === value}
+                    onClick={() => setLocale(value)}
                   >
-                    {option.toUpperCase()}
+                    {label}
                   </Button>
                 ))}
               </div>
@@ -137,7 +145,8 @@ export function ShowcaseSettingsDrawer({
             >
               <Button
                 size="sm"
-                variant={densityPersist ? 'secondary' : 'ghost'}
+                variant={toggleVariant(densityPersist)}
+                aria-pressed={densityPersist}
                 onClick={() => onDensityPersistChange(!densityPersist)}
               >
                 {densityPersist ? 'On' : 'Off'}
