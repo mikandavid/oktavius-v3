@@ -94,13 +94,7 @@ export const MEMBER_COLUMNS: CrudColumn<MemberRow>[] = [
 export function inviteFormFields(roleOptions: ComboboxOption[]): FormField[] {
   return [
     { name: 'email', label: 'Email', type: 'email', required: true, autoComplete: 'off' },
-    {
-      name: 'role',
-      label: 'Role',
-      type: 'combobox',
-      required: true,
-      options: STANDARD_ROLE_OPTIONS,
-    },
+    { name: 'role', label: 'Role', type: 'combobox', required: true, options: roleOptions },
     {
       name: 'expiresInDays',
       label: 'Expires in (days)',
@@ -109,7 +103,7 @@ export function inviteFormFields(roleOptions: ComboboxOption[]): FormField[] {
       min: '1',
       max: '30',
     },
-  ].map((field) => (field.name === 'role' ? { ...field, options: roleOptions } : field));
+  ];
 }
 
 /** Invite-link dialog fields (links only allow member/viewer). */
