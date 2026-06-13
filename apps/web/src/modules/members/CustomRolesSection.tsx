@@ -57,6 +57,7 @@ export function CustomRolesSection({ roles, onCreate, onEdit, onDelete }: Custom
     <div className="space-y-4">
       <div className="flex justify-end">
         <Button variant="outline" size="sm" onClick={onCreate}>
+          {/* eslint-disable-next-line oktavius/no-bare-jsx-strings -- members module pending i18n */}
           <PlusIcon size={14} className="mr-1.5" aria-hidden="true" />
           Add custom role
         </Button>

@@ -276,6 +276,7 @@ export function MembersPage() {
       layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}
       actions={
         <PageHeaderCtaButton onClick={() => setInviteOpen(true)}>
+          {/* eslint-disable-next-line oktavius/no-bare-jsx-strings -- members module pending i18n */}
           <UserAddIcon size={16} className="mr-1.5" aria-hidden="true" />
           Invite member
         </PageHeaderCtaButton>
