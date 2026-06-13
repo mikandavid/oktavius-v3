@@ -4,15 +4,23 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('showcase layout', () => {
-  it('constrains the design-token section so its split panes can scroll', () => {
-    const source = readFileSync(
+  it('removes the design-tokens section and wires the global settings drawer', () => {
+    const shared = readFileSync(join(process.cwd(), 'src/modules/showcase/shared.tsx'), 'utf8');
+    const page = readFileSync(
       join(process.cwd(), 'src/modules/showcase/ComponentShowcasePage.tsx'),
       'utf8',
     );
 
-    expect(source).toMatch(
-      /activeSection === 'design-tokens'\s*\?\s*'flex min-h-0 flex-1 flex-col overflow-hidden'\s*:\s*undefined/,
-    );
+    // design-tokens fully removed
+    expect(shared).not.toContain("key: 'design-tokens'");
+    expect(page).not.toContain("case 'design-tokens':");
+    expect(page).not.toContain("activeSection === 'design-tokens'");
+
+    // global settings drawer + grouped, filterable nav wired
+    expect(page).toContain('<ShowcaseSettingsDrawer');
+    expect(page).toContain('groupOrder={SHOWCASE_GROUP_ORDER}');
+    expect(page).toContain('filterable');
+    expect(shared).toContain('SHOWCASE_GROUP_ORDER');
   });
 
   it('registers the error-boundary showcase section', () => {

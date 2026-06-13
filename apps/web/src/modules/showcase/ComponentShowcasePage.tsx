@@ -1,16 +1,19 @@
-import { cn } from '@oktavius/base-ui';
+import { Button } from '@oktavius/base-ui';
 import { useState } from 'react';
 
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
 import { ModulePage } from '@/components/common/PageLayout';
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
+import { useDensity } from '@/lib/density/useDensity';
+import { useDesignTokenOverrides } from '@/lib/design-tokens/useDesignTokenOverrides';
+import { SettingsIcon } from '@/lib/icons';
 import { showcasePageIcon } from '@/lib/modulePageIcons';
 
+import { ShowcaseSettingsDrawer } from './components/ShowcaseSettingsDrawer';
 import { AgentSection } from './sections/AgentSection';
 import { CalendarChartsSection } from './sections/CalendarChartsSection';
 import { CommsOpsSection } from './sections/CommsOpsSection';
 import { DataSection } from './sections/DataSection';
-import { DesignTokensSection } from './sections/DesignTokensSection';
 import { DetailLayoutSection } from './sections/DetailLayoutSection';
 import { DialogsSection } from './sections/DialogsSection';
 import { DocumentsSection } from './sections/DocumentsSection';
@@ -25,14 +28,12 @@ import { PatternsSection } from './sections/PatternsSection';
 import { ResponsiveDetailSection } from './sections/ResponsiveDetailSection';
 import { SettingsShowcaseSection } from './sections/SettingsSection';
 import { WorkflowSection } from './sections/WorkflowSection';
-import { SHOWCASE_NAV, type ShowcaseSectionId } from './shared';
+import { SHOWCASE_GROUP_ORDER, SHOWCASE_NAV, type ShowcaseSectionId } from './shared';
 
 function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
   switch (section) {
     case 'overview':
       return <OverviewSection />;
-    case 'design-tokens':
-      return <DesignTokensSection />;
     case 'foundations':
       return <FoundationsSection />;
     case 'layouts':
@@ -74,7 +75,18 @@ function ShowcaseSectionContent({ section }: { section: ShowcaseSectionId }) {
 
 export function ComponentShowcasePage() {
   const [activeSection, setActiveSection] = useState<ShowcaseSectionId>('overview');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const activeMeta = SHOWCASE_NAV.find((item) => item.key === activeSection);
+
+  // Owned at the page level so overrides persist while the drawer (which unmounts
+  // its content when closed) is shut.
+  const tokens = useDesignTokenOverrides(true);
+  const density = useDensity();
+
+  const handleResetEverything = () => {
+    tokens.resetAll();
+    density.reset();
+  };
 
   return (
     <ModulePage
@@ -82,41 +94,49 @@ export function ComponentShowcasePage() {
       subtitle="Structured gallery of every UI primitive, block, and ERP pattern — all interactive"
       icon={showcasePageIcon()}
       layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}
+      actions={
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Open showcase settings"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <SettingsIcon className="h-4 w-4" />
+        </Button>
+      }
     >
       <AppSectionNavLayout
         items={SHOWCASE_NAV.map((item) => ({
           key: item.key,
           label: item.label,
           description: item.description,
+          group: item.group,
         }))}
+        groupOrder={SHOWCASE_GROUP_ORDER}
+        filterable
         activeKey={activeSection}
         onSelect={(key) => setActiveSection(key as ShowcaseSectionId)}
-        contentClassName={
-          activeSection === 'design-tokens'
-            ? 'flex min-h-0 flex-1 flex-col overflow-hidden p-5'
-            : undefined
-        }
       >
-        <div
-          className={cn(
-            'flex flex-col gap-4',
-            activeSection === 'design-tokens' && 'min-h-0 flex-1',
-          )}
-        >
+        <div className="flex flex-col gap-4">
           {activeMeta ? (
             <p className="shrink-0 text-sm text-muted-foreground">{activeMeta.description}</p>
           ) : null}
-          <div
-            className={
-              activeSection === 'design-tokens'
-                ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
-                : undefined
-            }
-          >
+          <div>
             <ShowcaseSectionContent section={activeSection} />
           </div>
         </div>
       </AppSectionNavLayout>
+
+      <ShowcaseSettingsDrawer
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        tokens={tokens}
+        density={density.density}
+        onDensityChange={density.setDensity}
+        densityPersist={density.persist}
+        onDensityPersistChange={density.setPersist}
+        onResetEverything={handleResetEverything}
+      />
     </ModulePage>
   );
 }
