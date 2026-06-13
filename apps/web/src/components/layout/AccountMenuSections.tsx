@@ -1,5 +1,4 @@
 import {
-  Avatar,
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -87,15 +86,21 @@ export function OrganizationMenuSection({
 }
 
 function OrganizationLogo({ logoUrl, name }: { logoUrl?: string | null; name?: string | null }) {
+  if (logoUrl) {
+    return (
+      <img
+        src={logoUrl}
+        alt={name ?? 'Organization'}
+        width={16}
+        height={16}
+        className="h-4 w-4 shrink-0 object-contain"
+      />
+    );
+  }
   return (
-    <Avatar
-      label={name ?? 'Organization'}
-      src={logoUrl ?? null}
-      size="xs"
-      tone="muted"
-      icon={<OrganizationIcon size={12} weight="duotone" />}
-      className="h-4 w-4 [&_svg]:size-3"
-    />
+    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+      <OrganizationIcon size={10} weight="duotone" />
+    </span>
   );
 }
 

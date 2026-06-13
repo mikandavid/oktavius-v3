@@ -21,12 +21,7 @@ export function BrandMark({ className, iconClassName, logoUrl }: BrandMarkProps)
   }, [normalizedLogoUrl]);
 
   return (
-    <div
-      className={cn(
-        'flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md',
-        className,
-      )}
-    >
+    <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center', className)}>
       {resolvedLogoUrl ? (
         <img
           src={resolvedLogoUrl}

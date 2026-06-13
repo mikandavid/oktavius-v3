@@ -88,25 +88,38 @@ export function NotificationPanel({
         </div>
         <ScrollArea className="max-h-72">
           <div className="px-1 py-1">
-            {notifications.map((item) => (
-              <ListRow
-                key={item.id}
-                title={item.title}
-                subtitle={item.subtitle}
-                meta={item.time}
-                leading={
-                  <span
-                    aria-hidden
-                    className={cn(
-                      'mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full',
-                      item.isRead ? 'bg-transparent' : 'bg-foreground',
-                    )}
-                  />
-                }
-                onClick={() => markRead(item.id)}
-                className="px-2"
-              />
-            ))}
+            {notifications.length === 0 ? (
+              <div className="animate-in fade-in-0 slide-in-from-bottom-1 flex flex-col items-center justify-center px-4 py-9 text-center duration-300 ease-out">
+                <div
+                  className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                  style={{ animation: 'notif-bell-ring 0.65s ease-in-out 0.3s 1 both' }}
+                >
+                  <NotificationsIcon size={17} />
+                </div>
+                <p className="text-sm font-medium text-foreground/80">All caught up</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">No new notifications</p>
+              </div>
+            ) : (
+              notifications.map((item) => (
+                <ListRow
+                  key={item.id}
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  meta={item.time}
+                  leading={
+                    <span
+                      aria-hidden
+                      className={cn(
+                        'mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full',
+                        item.isRead ? 'bg-transparent' : 'bg-foreground',
+                      )}
+                    />
+                  }
+                  onClick={() => markRead(item.id)}
+                  className="px-2"
+                />
+              ))
+            )}
           </div>
         </ScrollArea>
       </PopoverContent>
