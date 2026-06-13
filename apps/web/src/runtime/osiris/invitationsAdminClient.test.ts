@@ -157,4 +157,12 @@ describe('createOsirisInvitationsAdminClient', () => {
       body: JSON.stringify({ role: 'viewer', customRoleId: null, maxUses: 5, expiresInDays: 14 }),
     });
   });
+
+  it('throws a readable error when listInvitations fails', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 }),
+    );
+    const client = createOsirisInvitationsAdminClient();
+    await expect(client.listInvitations('org_1')).rejects.toThrow('Forbidden');
+  });
 });

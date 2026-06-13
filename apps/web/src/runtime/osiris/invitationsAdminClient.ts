@@ -56,14 +56,28 @@ export type OsirisCreatedInviteLink = { link: OsirisInviteLink; inviteUrl: strin
 
 export type OsirisInvitationsAdminClientOptions = { baseUrl?: string };
 
+const INVITATION_ROLES: readonly OsirisInvitationRole[] = ['admin', 'member', 'viewer'];
+const INVITE_LINK_ROLES: readonly OsirisInviteLinkRole[] = ['member', 'viewer'];
+
+function readInvitationRole(value: unknown): OsirisInvitationRole {
+  return INVITATION_ROLES.includes(value as OsirisInvitationRole)
+    ? (value as OsirisInvitationRole)
+    : 'member';
+}
+
+function readInviteLinkRole(value: unknown): OsirisInviteLinkRole {
+  return INVITE_LINK_ROLES.includes(value as OsirisInviteLinkRole)
+    ? (value as OsirisInviteLinkRole)
+    : 'member';
+}
+
 function normalizeInvitation(row: unknown): OsirisInvitation {
   const v = readRecord(row);
-  const role = v.role;
   return {
     id: readString(v.id),
     orgId: readStringOrNull(v.org_id ?? v.orgId),
     email: readStringOrNull(v.email),
-    role: role === 'admin' || role === 'viewer' ? role : 'member',
+    role: readInvitationRole(v.role),
     customRoleId: readStringOrNull(v.custom_role_id ?? v.customRoleId),
     token: readString(v.token),
     invitedBy: readStringOrNull(v.invited_by ?? v.invitedBy),
@@ -79,7 +93,7 @@ function normalizeInviteLink(row: unknown): OsirisInviteLink {
     id: readString(v.id),
     orgId: readStringOrNull(v.org_id ?? v.orgId),
     token: readString(v.token),
-    role: v.role === 'viewer' ? 'viewer' : 'member',
+    role: readInviteLinkRole(v.role),
     customRoleId: readStringOrNull(v.custom_role_id ?? v.customRoleId),
     maxUses: readNumber(v.max_uses ?? v.maxUses),
     useCount: readNumber(v.use_count ?? v.useCount),
@@ -93,6 +107,7 @@ export function createOsirisInvitationsAdminClient(
   options: OsirisInvitationsAdminClientOptions = {},
 ) {
   const base = (path: string) => joinOsirisApiBaseUrl(options.baseUrl, path);
+  // The Osiris invitations service is mounted under its own /invitations prefix.
   const org = (orgId: string) => `/invitations/orgs/${encodeURIComponent(orgId)}`;
 
   return {
@@ -100,7 +115,8 @@ export function createOsirisInvitationsAdminClient(
       const response = await fetch(base(`${org(orgId)}/invitations`), { credentials: 'include' });
       if (!response.ok)
         throw new Error(await readErrorMessage(response, 'Invitations could not be loaded.'));
-      const invitations = readRecord(await response.json()).invitations;
+      const payload: unknown = await response.json();
+      const invitations = readRecord(payload).invitations;
       return Array.isArray(invitations) ? invitations.map(normalizeInvitation) : [];
     },
 
@@ -144,7 +160,8 @@ export function createOsirisInvitationsAdminClient(
       const response = await fetch(base(`${org(orgId)}/links`), { credentials: 'include' });
       if (!response.ok)
         throw new Error(await readErrorMessage(response, 'Invite links could not be loaded.'));
-      const links = readRecord(await response.json()).links;
+      const payload: unknown = await response.json();
+      const links = readRecord(payload).links;
       return Array.isArray(links) ? links.map(normalizeInviteLink) : [];
     },
 
