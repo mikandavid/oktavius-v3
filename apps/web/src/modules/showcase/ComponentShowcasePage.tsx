@@ -85,7 +85,9 @@ export function ComponentShowcasePage() {
 
   const handleResetEverything = () => {
     tokens.resetAll();
+    tokens.setPersist(false);
     density.reset();
+    density.setPersist(false);
   };
 
   return (
