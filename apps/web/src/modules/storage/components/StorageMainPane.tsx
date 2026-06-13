@@ -64,14 +64,20 @@ export function StorageMainPane({
     trash: trashQuery,
   });
 
-  const orderedNodes = useMemo(
-    () =>
-      [...nodes].sort((a, b) => {
-        if (a.nodeType !== b.nodeType) return a.nodeType === 'folder' ? -1 : 1;
-        return 0;
-      }),
-    [nodes],
-  );
+  const orderedNodes = useMemo(() => {
+    const direction = state.sort.dir === 'asc' ? 1 : -1;
+    return [...nodes].sort((a, b) => {
+      if (a.nodeType !== b.nodeType) return a.nodeType === 'folder' ? -1 : 1;
+      switch (state.sort.by) {
+        case 'updatedAt':
+          return (Date.parse(a.updatedAt) - Date.parse(b.updatedAt)) * direction;
+        case 'fileSizeBytes':
+          return ((a.fileSizeBytes ?? 0) - (b.fileSizeBytes ?? 0)) * direction;
+        default:
+          return a.name.localeCompare(b.name) * direction;
+      }
+    });
+  }, [nodes, state.sort.by, state.sort.dir]);
 
   const selectedNode = orderedNodes.find((node) => node.id === state.selectedNodeId) ?? null;
 

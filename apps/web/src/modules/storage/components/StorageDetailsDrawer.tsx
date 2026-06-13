@@ -40,7 +40,9 @@ export function StorageDetailsDrawer({
         {node && Icon && (
           <>
             <DrawerHeader>
-              <DrawerTitle className="truncate">{node.name}</DrawerTitle>
+              <DrawerTitle className="truncate pr-8" title={node.name}>
+                {node.name}
+              </DrawerTitle>
             </DrawerHeader>
             <div className="flex flex-col gap-4 px-4 pb-4">
               <div className="flex h-32 items-center justify-center rounded-card bg-muted/60">

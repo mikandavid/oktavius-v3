@@ -1,11 +1,10 @@
-import { useMemo } from 'react';
-
 import { PageHeaderCtaButton } from '@/components/common/PageHeaderButtons';
 import { ModulePage } from '@/components/common/PageLayout';
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { UploadIcon } from '@/lib/icons';
 import { storagePageIcon } from '@/lib/modulePageIcons';
 
+import { StorageHeaderControls } from './components/StorageHeaderControls';
 import { StorageMainPane } from './components/StorageMainPane';
 import { StorageRail } from './components/StorageRail';
 import { useStorageViewState } from './useStorageViewState';
@@ -15,16 +14,16 @@ export function StoragePage() {
   const { t } = useTranslation();
   const state = useStorageViewState();
 
-  const headerActions = useMemo(
-    () => (
+  const headerActions = (
+    <>
+      <StorageHeaderControls state={state} />
       <PageHeaderCtaButton
         onClick={() => document.dispatchEvent(new CustomEvent('storage:upload'))}
       >
         <UploadIcon size={16} />
         {t('storage.actions.upload', undefined, 'Upload')}
       </PageHeaderCtaButton>
-    ),
-    [t],
+    </>
   );
 
   if (!ready) return null;

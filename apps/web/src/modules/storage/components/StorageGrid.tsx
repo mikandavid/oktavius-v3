@@ -47,7 +47,7 @@ export function StorageGrid({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 p-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {nodes.map((node) => {
         const Icon = fileIcon(node);
         const kind = getFileKind(node);
@@ -57,13 +57,14 @@ export function StorageGrid({
             key={node.id}
             role="button"
             tabIndex={0}
-            onClick={() => handleClick(node)}
+            onClick={() => (isFolder ? handleOpen(node) : handleClick(node))}
             onDoubleClick={() => handleOpen(node)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') handleOpen(node);
               else if (event.key === ' ') {
                 event.preventDefault();
-                onSelect(node);
+                if (isFolder) handleOpen(node);
+                else onSelect(node);
               }
             }}
             className={cn(

@@ -66,18 +66,20 @@ export function StorageList({
       {nodes.map((node) => {
         const Icon = fileIcon(node);
         const kind = getFileKind(node);
+        const isFolder = node.nodeType === 'folder';
         return (
           <div
             key={node.id}
             role="button"
             tabIndex={0}
-            onClick={() => handleClick(node)}
+            onClick={() => (isFolder ? handleOpen(node) : handleClick(node))}
             onDoubleClick={() => handleOpen(node)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') handleOpen(node);
               else if (event.key === ' ') {
                 event.preventDefault();
-                onSelect(node);
+                if (isFolder) handleOpen(node);
+                else onSelect(node);
               }
             }}
             className={cn(

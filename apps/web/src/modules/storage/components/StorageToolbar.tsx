@@ -1,11 +1,8 @@
-import { Input } from '@oktavius/base-ui';
-
 import { useTranslation } from '@/core/i18n';
-import { ChevronRightIcon, SearchIcon } from '@/lib/icons';
+import { ChevronRightIcon } from '@/lib/icons';
 
 import type { StorageTreeNode } from '../data/types';
 import type { StorageViewState } from '../useStorageViewState';
-import { StorageViewToggle } from './StorageViewToggle';
 
 interface Crumb {
   id: string | null;
@@ -44,7 +41,7 @@ export function StorageToolbar({
     : [{ id: null, label: t(`storage.nav.${state.view}`) }];
 
   return (
-    <div className="flex flex-wrap items-center gap-3 pb-3">
+    <div className="flex items-center gap-3 pb-3">
       <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1 text-sm">
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
@@ -57,8 +54,8 @@ export function StorageToolbar({
                 onClick={() => state.openFolder(crumb.id)}
                 className={
                   isLast
-                    ? 'font-medium text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'truncate font-medium text-foreground'
+                    : 'shrink-0 text-muted-foreground hover:text-foreground'
                 }
               >
                 {crumb.label}
@@ -67,23 +64,6 @@ export function StorageToolbar({
           );
         })}
       </nav>
-
-      <div className="relative w-56 max-w-full">
-        <SearchIcon
-          size={16}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <Input
-          value={state.search.term}
-          onChange={(event) =>
-            state.setSearch({ term: event.target.value, scope: state.search.scope })
-          }
-          placeholder={t('storage.search.placeholder')}
-          className="pl-9"
-        />
-      </div>
-
-      <StorageViewToggle mode={state.displayMode} onChange={state.setDisplayMode} />
     </div>
   );
 }
