@@ -78,7 +78,7 @@ describe('createOsirisCustomRolesAdminClient', () => {
       );
 
     const client = createOsirisCustomRolesAdminClient();
-    await client.createCustomRole('org_1', {
+    const created = await client.createCustomRole('org_1', {
       name: 'Auditor',
       description: 'Read-only audit',
       baseRole: 'viewer',
@@ -86,7 +86,7 @@ describe('createOsirisCustomRolesAdminClient', () => {
       permissions: ['reports.view'],
       allowedModules: ['reports'],
     });
-    await client.updateCustomRole('org_1', 'role_2', { name: 'Senior Auditor' });
+    const updated = await client.updateCustomRole('org_1', 'role_2', { name: 'Senior Auditor' });
     await client.deleteCustomRole('org_1', 'role_2');
 
     expect(fetchMock).toHaveBeenNthCalledWith(1, '/orgs/org_1/custom-roles', {
@@ -111,6 +111,26 @@ describe('createOsirisCustomRolesAdminClient', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(3, '/orgs/org_1/custom-roles/role_2', {
       method: 'DELETE',
       credentials: 'include',
+    });
+    expect(created).toEqual({
+      id: 'role_2',
+      name: 'Auditor',
+      description: '',
+      baseRole: 'member',
+      agentAccess: false,
+      permissions: [],
+      allowedModules: [],
+      memberCount: 0,
+    });
+    expect(updated).toEqual({
+      id: 'role_2',
+      name: 'Senior Auditor',
+      description: '',
+      baseRole: 'member',
+      agentAccess: false,
+      permissions: [],
+      allowedModules: [],
+      memberCount: 0,
     });
   });
 });

@@ -34,13 +34,21 @@ export type OsirisUpdateCustomRoleInput = Partial<OsirisCreateCustomRoleInput>;
 
 export type OsirisCustomRolesAdminClientOptions = { baseUrl?: string };
 
+const CUSTOM_ROLE_BASES: readonly OsirisCustomRoleBase[] = ['member', 'viewer'];
+
+function readCustomRoleBase(value: unknown): OsirisCustomRoleBase {
+  return CUSTOM_ROLE_BASES.includes(value as OsirisCustomRoleBase)
+    ? (value as OsirisCustomRoleBase)
+    : 'member';
+}
+
 function normalizeCustomRole(row: unknown): OsirisCustomRole {
   const v = readRecord(row);
   return {
     id: readString(v.id),
     name: readString(v.name),
     description: readString(v.description),
-    baseRole: (v.base_role ?? v.baseRole) === 'viewer' ? 'viewer' : 'member',
+    baseRole: readCustomRoleBase(v.base_role ?? v.baseRole),
     agentAccess: Boolean(v.agent_access ?? v.agentAccess),
     permissions: readStringArray(v.permissions),
     allowedModules: readStringArray(v.allowed_modules ?? v.allowedModules),
