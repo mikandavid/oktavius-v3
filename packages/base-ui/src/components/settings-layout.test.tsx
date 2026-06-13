@@ -2,16 +2,16 @@ import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
-afterEach(() => {
-  cleanup();
-});
-
 import {
   filterSettingsNavItems,
   groupSettingsNavItems,
   SettingsLayout,
   type SettingsNavItem,
 } from './settings-layout';
+
+afterEach(() => {
+  cleanup();
+});
 
 const items: SettingsNavItem[] = [
   { key: 'a', label: 'Buttons', description: 'clickable', group: 'Foundations' },
@@ -31,6 +31,16 @@ describe('groupSettingsNavItems', () => {
     const groups = groupSettingsNavItems(items, ['Components', 'Foundations']);
     expect(groups.map((g) => g.group)).toEqual(['Components', 'Foundations', 'Patterns']);
     expect(groups[0]?.items.map((i) => i.key)).toEqual(['b']);
+  });
+
+  it('places ungrouped items under a null bucket after the ordered groups', () => {
+    const mixed: SettingsNavItem[] = [
+      { key: 'a', label: 'A', group: 'X' },
+      { key: 'b', label: 'B' },
+    ];
+    const groups = groupSettingsNavItems(mixed, ['X']);
+    expect(groups.map((g) => g.group)).toEqual(['X', null]);
+    expect(groups[1]?.items.map((i) => i.key)).toEqual(['b']);
   });
 });
 
@@ -75,5 +85,19 @@ describe('SettingsLayout grouping + filter', () => {
     );
     expect(screen.queryByPlaceholderText('Filter sections…')).not.toBeInTheDocument();
     expect(screen.getAllByText('Alpha').length).toBeGreaterThan(0);
+  });
+
+  it('renders ungrouped items without a group header', () => {
+    const mixed: SettingsNavItem[] = [
+      { key: 'a', label: 'Grouped', group: 'Foundations' },
+      { key: 'b', label: 'Loose' },
+    ];
+    render(
+      <SettingsLayout items={mixed} activeKey="a" onSelect={() => {}} groupOrder={['Foundations']}>
+        content
+      </SettingsLayout>,
+    );
+    expect(screen.getByText('Foundations')).toBeInTheDocument();
+    expect(screen.getAllByText('Loose').length).toBeGreaterThan(0);
   });
 });

@@ -23,7 +23,7 @@ export interface SettingsLayoutProps {
   filterable?: boolean;
   /** Placeholder text for the filter input (default: 'Filter sections…'). */
   filterPlaceholder?: string;
-  /** Ordered list of group names; groups not in this list are appended alphabetically after. */
+  /** Ordered list of group names; groups not in this list are appended in the order they first appear in `items`. */
   groupOrder?: string[];
 }
 
@@ -119,13 +119,16 @@ export function SettingsLayout({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={filterPlaceholder}
+            aria-label={filterPlaceholder}
             className="mb-1 h-8 shrink-0 rounded-md border border-border bg-muted/40 px-2.5 text-sm outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
           />
         ) : null}
         {hasGroups
-          ? groups.map(({ group, items: groupItems }) =>
-              groupItems.length === 0 ? null : (
-                <div key={group ?? '_'} className="space-y-1">
+          ? groups.map(({ group, items: groupItems }) => {
+              // After filtering, a group can be empty — skip its wrapper entirely.
+              if (groupItems.length === 0) return null;
+              return (
+                <div key={group === null ? '__ungrouped__' : group} className="space-y-1">
                   {group ? (
                     <p className="px-3 pt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                       {group}
@@ -133,8 +136,8 @@ export function SettingsLayout({
                   ) : null}
                   {groupItems.map(renderNavButton)}
                 </div>
-              ),
-            )
+              );
+            })
           : visibleItems.map(renderNavButton)}
       </nav>
 
