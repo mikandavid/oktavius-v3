@@ -12,7 +12,21 @@ import type {
   OsirisProviderSessionInput,
   OsirisRegisterInvitationInput,
 } from './authClient';
+import type {
+  OsirisCreateCustomRoleInput,
+  OsirisCustomRole,
+  OsirisUpdateCustomRoleInput,
+} from './customRolesAdminClient';
+import type {
+  OsirisCreatedInvitation,
+  OsirisCreatedInviteLink,
+  OsirisCreateInvitationInput,
+  OsirisCreateInviteLinkInput,
+  OsirisInvitation,
+  OsirisInviteLink,
+} from './invitationsAdminClient';
 import type { OsirisOrgLocation, OsirisOrgLocationInput } from './locationAdminClient';
+import type { OsirisOrgMember, OsirisUpdateMemberRoleInput } from './membersAdminClient';
 import type { OsirisRuntimeConfig } from './runtimeConfig';
 import type { OsirisWorkspaceSettings } from './workspaceSettingsClient';
 
@@ -132,6 +146,36 @@ export type OsirisRuntimeState = {
     orgId: string | null | undefined,
     locationId: string,
   ) => Promise<OsirisOrgLocation>;
+  listOrgMembers?: (orgId?: string | null) => Promise<OsirisOrgMember[]>;
+  updateMemberRole?: (
+    orgId: string | null | undefined,
+    userId: string,
+    input: OsirisUpdateMemberRoleInput,
+  ) => Promise<void>;
+  removeMember?: (orgId: string | null | undefined, userId: string) => Promise<void>;
+  listInvitations?: (orgId?: string | null) => Promise<OsirisInvitation[]>;
+  createInvitation?: (
+    orgId: string | null | undefined,
+    input: OsirisCreateInvitationInput,
+  ) => Promise<OsirisCreatedInvitation>;
+  revokeInvitation?: (orgId: string | null | undefined, invitationId: string) => Promise<void>;
+  listInviteLinks?: (orgId?: string | null) => Promise<OsirisInviteLink[]>;
+  createInviteLink?: (
+    orgId: string | null | undefined,
+    input: OsirisCreateInviteLinkInput,
+  ) => Promise<OsirisCreatedInviteLink>;
+  revokeInviteLink?: (orgId: string | null | undefined, linkId: string) => Promise<void>;
+  listCustomRoles?: (orgId?: string | null) => Promise<OsirisCustomRole[]>;
+  createCustomRole?: (
+    orgId: string | null | undefined,
+    input: OsirisCreateCustomRoleInput,
+  ) => Promise<OsirisCustomRole>;
+  updateCustomRole?: (
+    orgId: string | null | undefined,
+    roleId: string,
+    input: OsirisUpdateCustomRoleInput,
+  ) => Promise<OsirisCustomRole>;
+  deleteCustomRole?: (orgId: string | null | undefined, roleId: string) => Promise<void>;
   resolveInvitationToken?: (token: string) => Promise<OsirisInvitationResolution>;
   acceptInvitation?: (token: string) => Promise<OsirisAcceptedInvitation>;
   registerInvitation?: (input: OsirisRegisterInvitationInput) => Promise<void>;

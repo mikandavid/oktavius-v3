@@ -5,7 +5,10 @@ import { createOsirisSavedViewsAdapter } from '@/components/data/osirisSavedView
 import { joinOsirisApiBaseUrl, resolveOsirisApiBaseUrl } from './apiBaseUrl';
 import { createOsirisAuthClient } from './authClient';
 import { normalizeOsirisBootstrap } from './bootstrap';
+import { createOsirisCustomRolesAdminClient } from './customRolesAdminClient';
+import { createOsirisInvitationsAdminClient } from './invitationsAdminClient';
 import { createOsirisLocationAdminClient } from './locationAdminClient';
+import { createOsirisMembersAdminClient } from './membersAdminClient';
 import { createOsirisNotificationsRuntime } from './notificationsClient';
 import { createOsirisSearchRuntime } from './searchClient';
 import type { OsirisBootstrapResponse, OsirisRuntimeState, OsirisSessionStatus } from './types';
@@ -19,6 +22,13 @@ const osirisWorkspaceSettingsClient = createOsirisWorkspaceSettingsClient({
   baseUrl: OSIRIS_API_BASE_URL,
 });
 const osirisLocationAdminClient = createOsirisLocationAdminClient({ baseUrl: OSIRIS_API_BASE_URL });
+const osirisMembersAdminClient = createOsirisMembersAdminClient({ baseUrl: OSIRIS_API_BASE_URL });
+const osirisInvitationsAdminClient = createOsirisInvitationsAdminClient({
+  baseUrl: OSIRIS_API_BASE_URL,
+});
+const osirisCustomRolesAdminClient = createOsirisCustomRolesAdminClient({
+  baseUrl: OSIRIS_API_BASE_URL,
+});
 const osirisNotificationsRuntime = createOsirisNotificationsRuntime({
   baseUrl: OSIRIS_API_BASE_URL,
 });
@@ -351,6 +361,127 @@ export function OsirisAuthProvider({ children }: { children: ReactNode }) {
     [state.activeOrgId],
   );
 
+  const listOrgMembers = useCallback(
+    async (orgId?: string | null) =>
+      osirisMembersAdminClient.listOrgMembers(requireOrgId(orgId ?? state.activeOrgId)),
+    [state.activeOrgId],
+  );
+
+  const updateMemberRole = useCallback(
+    async (
+      orgId: string | null | undefined,
+      userId: string,
+      input: Parameters<typeof osirisMembersAdminClient.updateMemberRole>[2],
+    ) =>
+      osirisMembersAdminClient.updateMemberRole(
+        requireOrgId(orgId ?? state.activeOrgId),
+        userId,
+        input,
+      ),
+    [state.activeOrgId],
+  );
+
+  const removeMember = useCallback(
+    async (orgId: string | null | undefined, userId: string) =>
+      osirisMembersAdminClient.removeMember(requireOrgId(orgId ?? state.activeOrgId), userId),
+    [state.activeOrgId],
+  );
+
+  const listInvitations = useCallback(
+    async (orgId?: string | null) =>
+      osirisInvitationsAdminClient.listInvitations(requireOrgId(orgId ?? state.activeOrgId)),
+    [state.activeOrgId],
+  );
+
+  const createInvitation = useCallback(
+    async (
+      orgId: string | null | undefined,
+      input: Parameters<typeof osirisInvitationsAdminClient.createInvitation>[1],
+    ) =>
+      osirisInvitationsAdminClient.createInvitation(
+        requireOrgId(orgId ?? state.activeOrgId),
+        input,
+      ),
+    [state.activeOrgId],
+  );
+
+  const revokeInvitation = useCallback(
+    async (orgId: string | null | undefined, invitationId: string) =>
+      osirisInvitationsAdminClient.revokeInvitation(
+        requireOrgId(orgId ?? state.activeOrgId),
+        invitationId,
+      ),
+    [state.activeOrgId],
+  );
+
+  const listInviteLinks = useCallback(
+    async (orgId?: string | null) =>
+      osirisInvitationsAdminClient.listInviteLinks(requireOrgId(orgId ?? state.activeOrgId)),
+    [state.activeOrgId],
+  );
+
+  const createInviteLink = useCallback(
+    async (
+      orgId: string | null | undefined,
+      input: Parameters<typeof osirisInvitationsAdminClient.createInviteLink>[1],
+    ) =>
+      osirisInvitationsAdminClient.createInviteLink(
+        requireOrgId(orgId ?? state.activeOrgId),
+        input,
+      ),
+    [state.activeOrgId],
+  );
+
+  const revokeInviteLink = useCallback(
+    async (orgId: string | null | undefined, linkId: string) =>
+      osirisInvitationsAdminClient.revokeInviteLink(
+        requireOrgId(orgId ?? state.activeOrgId),
+        linkId,
+      ),
+    [state.activeOrgId],
+  );
+
+  const listCustomRoles = useCallback(
+    async (orgId?: string | null) =>
+      osirisCustomRolesAdminClient.listCustomRoles(requireOrgId(orgId ?? state.activeOrgId)),
+    [state.activeOrgId],
+  );
+
+  const createCustomRole = useCallback(
+    async (
+      orgId: string | null | undefined,
+      input: Parameters<typeof osirisCustomRolesAdminClient.createCustomRole>[1],
+    ) =>
+      osirisCustomRolesAdminClient.createCustomRole(
+        requireOrgId(orgId ?? state.activeOrgId),
+        input,
+      ),
+    [state.activeOrgId],
+  );
+
+  const updateCustomRole = useCallback(
+    async (
+      orgId: string | null | undefined,
+      roleId: string,
+      input: Parameters<typeof osirisCustomRolesAdminClient.updateCustomRole>[2],
+    ) =>
+      osirisCustomRolesAdminClient.updateCustomRole(
+        requireOrgId(orgId ?? state.activeOrgId),
+        roleId,
+        input,
+      ),
+    [state.activeOrgId],
+  );
+
+  const deleteCustomRole = useCallback(
+    async (orgId: string | null | undefined, roleId: string) =>
+      osirisCustomRolesAdminClient.deleteCustomRole(
+        requireOrgId(orgId ?? state.activeOrgId),
+        roleId,
+      ),
+    [state.activeOrgId],
+  );
+
   const resolveInvitationToken = useCallback(async (token: string) => {
     return osirisAuthClient.resolveInvitationToken(token);
   }, []);
@@ -403,6 +534,19 @@ export function OsirisAuthProvider({ children }: { children: ReactNode }) {
         createOrgLocation,
         updateOrgLocation,
         deactivateOrgLocation,
+        listOrgMembers,
+        updateMemberRole,
+        removeMember,
+        listInvitations,
+        createInvitation,
+        revokeInvitation,
+        listInviteLinks,
+        createInviteLink,
+        revokeInviteLink,
+        listCustomRoles,
+        createCustomRole,
+        updateCustomRole,
+        deleteCustomRole,
         resolveInvitationToken,
         acceptInvitation,
         registerInvitation,
