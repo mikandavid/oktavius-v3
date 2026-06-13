@@ -1,4 +1,5 @@
 import { Button, cn } from '@oktavius/base-ui';
+import { useEffect, useRef } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 import { MoreIcon } from '@/lib/icons';
@@ -29,6 +30,31 @@ export function StorageList({
   onOpen: (node: StorageNode) => void;
 }) {
   const { t } = useTranslation();
+
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (clickTimer.current) clearTimeout(clickTimer.current);
+    },
+    [],
+  );
+
+  const handleClick = (node: StorageNode) => {
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    clickTimer.current = setTimeout(() => {
+      onSelect(node);
+      clickTimer.current = null;
+    }, 220);
+  };
+
+  const handleOpen = (node: StorageNode) => {
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+    }
+    onOpen(node);
+  };
+
   return (
     <div className="rounded-card bg-card">
       <div className="grid grid-cols-[1fr_120px_140px_40px] gap-3 border-b border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground">
@@ -45,10 +71,10 @@ export function StorageList({
             key={node.id}
             role="button"
             tabIndex={0}
-            onClick={() => onSelect(node)}
-            onDoubleClick={() => onOpen(node)}
+            onClick={() => handleClick(node)}
+            onDoubleClick={() => handleOpen(node)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') onOpen(node);
+              if (event.key === 'Enter') handleOpen(node);
               else if (event.key === ' ') {
                 event.preventDefault();
                 onSelect(node);
@@ -80,6 +106,7 @@ export function StorageList({
                     className="h-7 w-7"
                     aria-label="Actions"
                     onClick={(event) => event.stopPropagation()}
+                    onDoubleClick={(event) => event.stopPropagation()}
                   >
                     <MoreIcon size={16} />
                   </Button>

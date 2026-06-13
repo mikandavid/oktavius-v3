@@ -1,4 +1,5 @@
 import { Button, cn } from '@oktavius/base-ui';
+import { useEffect, useRef } from 'react';
 
 import { MoreIcon } from '@/lib/icons';
 
@@ -21,6 +22,30 @@ export function StorageGrid({
   onSelect: (node: StorageNode) => void;
   onOpen: (node: StorageNode) => void;
 }) {
+  const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (clickTimer.current) clearTimeout(clickTimer.current);
+    },
+    [],
+  );
+
+  const handleClick = (node: StorageNode) => {
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    clickTimer.current = setTimeout(() => {
+      onSelect(node);
+      clickTimer.current = null;
+    }, 220);
+  };
+
+  const handleOpen = (node: StorageNode) => {
+    if (clickTimer.current) {
+      clearTimeout(clickTimer.current);
+      clickTimer.current = null;
+    }
+    onOpen(node);
+  };
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {nodes.map((node) => {
@@ -32,10 +57,10 @@ export function StorageGrid({
             key={node.id}
             role="button"
             tabIndex={0}
-            onClick={() => onSelect(node)}
-            onDoubleClick={() => onOpen(node)}
+            onClick={() => handleClick(node)}
+            onDoubleClick={() => handleOpen(node)}
             onKeyDown={(event) => {
-              if (event.key === 'Enter') onOpen(node);
+              if (event.key === 'Enter') handleOpen(node);
               else if (event.key === ' ') {
                 event.preventDefault();
                 onSelect(node);
@@ -68,6 +93,7 @@ export function StorageGrid({
                     className="h-7 w-7"
                     aria-label="Actions"
                     onClick={(event) => event.stopPropagation()}
+                    onDoubleClick={(event) => event.stopPropagation()}
                   >
                     <MoreIcon size={16} />
                   </Button>

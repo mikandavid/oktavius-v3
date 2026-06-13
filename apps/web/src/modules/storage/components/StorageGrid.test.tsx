@@ -52,9 +52,11 @@ afterEach(() => {
 });
 
 describe('StorageGrid', () => {
-  it('selects on single click and opens on double click', async () => {
+  it('single-click fires onSelect after timer expires, onOpen is NOT called', async () => {
     const onSelect = vi.fn();
     const onOpen = vi.fn();
+
+    // Render with real timers so React internal scheduling isn't blocked
     await act(async () => {
       root.render(
         <TestI18nProvider>
@@ -69,16 +71,76 @@ describe('StorageGrid', () => {
         </TestI18nProvider>,
       );
     });
+
     const tile = container.querySelector('[role="button"]') as HTMLElement;
     expect(tile).not.toBeNull();
+
+    // Switch to fake timers only for the event dispatch / assertion phase
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        tile.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+
+      // Timer has not fired yet — neither callback should have been called
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(onOpen).not.toHaveBeenCalled();
+
+      // Advance past the 220 ms debounce
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      expect(onSelect).toHaveBeenCalledOnce();
+      expect(onSelect).toHaveBeenCalledWith(node);
+      expect(onOpen).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('double-click fires onOpen and onSelect is NOT called', async () => {
+    const onSelect = vi.fn();
+    const onOpen = vi.fn();
+
     await act(async () => {
-      tile.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      root.render(
+        <TestI18nProvider>
+          <StorageGrid
+            nodes={[node]}
+            actions={makeActions()}
+            inTrash={false}
+            selectedId={null}
+            onSelect={onSelect}
+            onOpen={onOpen}
+          />
+        </TestI18nProvider>,
+      );
     });
-    expect(onSelect).toHaveBeenCalledWith(node);
-    await act(async () => {
-      tile.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
-    });
-    expect(onOpen).toHaveBeenCalledWith(node);
+
+    const tile = container.querySelector('[role="button"]') as HTMLElement;
+    expect(tile).not.toBeNull();
+
+    vi.useFakeTimers();
+    try {
+      // Simulate real browser sequence: click, click, dblclick
+      await act(async () => {
+        tile.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        tile.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        tile.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+      });
+
+      // Advance timers — the pending single-click timer was cancelled by dblclick handler
+      await act(async () => {
+        vi.advanceTimersByTime(300);
+      });
+
+      expect(onOpen).toHaveBeenCalledOnce();
+      expect(onOpen).toHaveBeenCalledWith(node);
+      expect(onSelect).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('opens on Enter key and selects on Space key', async () => {
