@@ -5,6 +5,7 @@ import {
   CaseIcon,
   ContractIcon,
   EmailIcon,
+  FolderIcon,
   FunnelIcon,
   HomeIcon,
   type IconProps,
@@ -56,3 +57,4 @@ export const vendorsPageIcon = () => modulePageIcon(OrganizationIcon);
 export const leadsPageIcon = () => modulePageIcon(FunnelIcon);
 export const staffPageIcon = () => modulePageIcon(TeamIcon);
 export const purchasingPageIcon = () => modulePageIcon(PurchasingIcon);
+export const storagePageIcon = () => modulePageIcon(FolderIcon);
