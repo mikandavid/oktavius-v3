@@ -107,9 +107,12 @@ export function MembersPage() {
     if (!runtime?.createInvitation) return;
     setIsInviting(true);
     try {
+      const { role, customRoleId } = roleValueToInput(String(values.role ?? 'member'));
       await runtime.createInvitation(orgId, {
         email: String(values.email ?? '').trim(),
-        role: String(values.role ?? 'member') as 'admin' | 'member' | 'viewer',
+        // roleValueToInput never yields 'owner' here (not an invitable option); narrow to the invite role union.
+        role: role === 'owner' ? 'member' : role,
+        customRoleId,
         expiresInDays: Number(values.expiresInDays ?? 7),
       });
       await refreshInvitations();
