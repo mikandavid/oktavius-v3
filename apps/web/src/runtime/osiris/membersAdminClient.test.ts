@@ -84,4 +84,14 @@ describe('createOsirisMembersAdminClient', () => {
     const client = createOsirisMembersAdminClient();
     await expect(client.listOrgMembers('org_1')).rejects.toThrow('Forbidden');
   });
+
+  it('throws a readable error when updateMemberRole fails', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'Forbidden' }), { status: 403 }),
+    );
+    const client = createOsirisMembersAdminClient();
+    await expect(
+      client.updateMemberRole('org_1', 'usr_1', { role: 'admin', customRoleId: null }),
+    ).rejects.toThrow('Forbidden');
+  });
 });

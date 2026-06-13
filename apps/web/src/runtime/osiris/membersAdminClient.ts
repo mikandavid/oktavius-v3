@@ -1,4 +1,5 @@
 import { joinOsirisApiBaseUrl } from './apiBaseUrl';
+import { readErrorMessage, readRecord, readString, readStringOrNull } from './osirisClientUtils';
 import type { OsirisOrgRole } from './types';
 
 export type OsirisOrgMember = {
@@ -19,22 +20,6 @@ export type OsirisMembersAdminClientOptions = {
   baseUrl?: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value : {};
-}
-
-function readStringOrNull(value: unknown): string | null {
-  return typeof value === 'string' ? value : null;
-}
-
-function readString(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback;
-}
-
 const ORG_ROLES: readonly OsirisOrgRole[] = ['owner', 'admin', 'member', 'viewer'];
 
 function readRole(value: unknown): OsirisOrgRole {
@@ -51,22 +36,6 @@ function normalizeMember(row: unknown): OsirisOrgMember {
     email: readStringOrNull(value.email),
     fullName: readString(value.full_name ?? value.fullName),
   };
-}
-
-async function readErrorMessage(response: Response, fallback: string) {
-  const text = await response.text();
-  if (!text) return fallback;
-  try {
-    const payload: unknown = JSON.parse(text);
-    if (isRecord(payload) && typeof payload.message === 'string') return payload.message;
-    if (isRecord(payload) && typeof payload.error === 'string') return payload.error;
-    if (isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === 'string') {
-      return payload.error.message;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
 }
 
 export function createOsirisMembersAdminClient(options: OsirisMembersAdminClientOptions = {}) {

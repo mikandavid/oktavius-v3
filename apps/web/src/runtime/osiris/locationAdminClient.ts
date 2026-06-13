@@ -1,4 +1,5 @@
 import { joinOsirisApiBaseUrl } from './apiBaseUrl';
+import { readErrorMessage, readRecord, readString, readStringOrNull } from './osirisClientUtils';
 
 export type OsirisOrgLocation = {
   id: string;
@@ -40,22 +41,6 @@ export type OsirisLocationAdminClientOptions = {
   baseUrl?: string;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-
-function readRecord(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value : {};
-}
-
-function readStringOrNull(value: unknown): string | null {
-  return typeof value === 'string' ? value : null;
-}
-
-function readString(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback;
-}
-
 function normalizeLocation(row: unknown): OsirisOrgLocation {
   const value = readRecord(row);
   return {
@@ -76,21 +61,6 @@ function normalizeLocation(row: unknown): OsirisOrgLocation {
     postalCode: readStringOrNull(value.postal_code ?? value.postalCode),
     isActive: value.is_active === false || value.isActive === false ? false : true,
   };
-}
-
-async function readErrorMessage(response: Response, fallback: string) {
-  const text = await response.text();
-  if (!text) return fallback;
-  try {
-    const payload: unknown = JSON.parse(text);
-    if (isRecord(payload) && typeof payload.message === 'string') return payload.message;
-    if (isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === 'string') {
-      return payload.error.message;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
 }
 
 async function readLocationResponse(response: Response): Promise<OsirisOrgLocation> {
