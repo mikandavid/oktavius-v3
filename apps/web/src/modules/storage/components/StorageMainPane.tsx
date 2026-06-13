@@ -15,6 +15,7 @@ import {
   useTrash,
 } from '../data/useStorageData';
 import type { StorageViewState } from '../useStorageViewState';
+import { StorageDetailsDrawer } from './StorageDetailsDrawer';
 import { StorageGrid } from './StorageGrid';
 import type { StorageItemActions } from './StorageItemMenu';
 import { StorageList } from './StorageList';
@@ -65,6 +66,8 @@ export function StorageMainPane({
       }),
     [nodes],
   );
+
+  const selectedNode = orderedNodes.find((node) => node.id === state.selectedNodeId) ?? null;
 
   const actions: StorageItemActions = {
     isStarred: (node) => starredIds.has(node.id),
@@ -118,6 +121,17 @@ export function StorageMainPane({
           />
         )}
       </div>
+      <StorageDetailsDrawer
+        node={selectedNode}
+        starred={selectedNode ? starredIds.has(selectedNode.id) : false}
+        onClose={() => state.setSelectedNodeId(null)}
+        onOpen={(node) => {
+          state.setSelectedNodeId(null);
+          actions.onOpen(node);
+        }}
+        onDownload={actions.onDownload}
+        onToggleStar={actions.onToggleStar}
+      />
     </section>
   );
 }
