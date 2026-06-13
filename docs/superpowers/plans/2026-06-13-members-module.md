@@ -487,6 +487,13 @@ Expected: FAIL — module not found.
 ```ts
 // apps/web/src/runtime/osiris/invitationsAdminClient.ts
 import { joinOsirisApiBaseUrl } from './apiBaseUrl';
+import {
+  readErrorMessage,
+  readNumber,
+  readRecord,
+  readString,
+  readStringOrNull,
+} from './osirisClientUtils';
 
 export type OsirisInvitationRole = 'admin' | 'member' | 'viewer';
 export type OsirisInviteLinkRole = 'member' | 'viewer';
@@ -536,22 +543,6 @@ export type OsirisCreatedInviteLink = { link: OsirisInviteLink; inviteUrl: strin
 
 export type OsirisInvitationsAdminClientOptions = { baseUrl?: string };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-function readRecord(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value : {};
-}
-function readStringOrNull(value: unknown): string | null {
-  return typeof value === 'string' ? value : null;
-}
-function readString(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback;
-}
-function readNumber(value: unknown, fallback = 0) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-}
-
 function normalizeInvitation(row: unknown): OsirisInvitation {
   const v = readRecord(row);
   const role = v.role;
@@ -583,22 +574,6 @@ function normalizeInviteLink(row: unknown): OsirisInviteLink {
     expiresAt: readStringOrNull(v.expires_at ?? v.expiresAt),
     createdAt: readStringOrNull(v.created_at ?? v.createdAt),
   };
-}
-
-async function readErrorMessage(response: Response, fallback: string) {
-  const text = await response.text();
-  if (!text) return fallback;
-  try {
-    const payload: unknown = JSON.parse(text);
-    if (isRecord(payload) && typeof payload.message === 'string') return payload.message;
-    if (isRecord(payload) && typeof payload.error === 'string') return payload.error;
-    if (isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === 'string') {
-      return payload.error.message;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
 }
 
 export function createOsirisInvitationsAdminClient(
@@ -845,6 +820,13 @@ Expected: FAIL — module not found.
 ```ts
 // apps/web/src/runtime/osiris/customRolesAdminClient.ts
 import { joinOsirisApiBaseUrl } from './apiBaseUrl';
+import {
+  readErrorMessage,
+  readNumber,
+  readRecord,
+  readString,
+  readStringArray,
+} from './osirisClientUtils';
 
 export type OsirisCustomRoleBase = 'member' | 'viewer';
 
@@ -872,24 +854,6 @@ export type OsirisUpdateCustomRoleInput = Partial<OsirisCreateCustomRoleInput>;
 
 export type OsirisCustomRolesAdminClientOptions = { baseUrl?: string };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-function readRecord(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value : {};
-}
-function readString(value: unknown, fallback = '') {
-  return typeof value === 'string' ? value : fallback;
-}
-function readNumber(value: unknown, fallback = 0) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-}
-function readStringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((entry): entry is string => typeof entry === 'string')
-    : [];
-}
-
 function normalizeCustomRole(row: unknown): OsirisCustomRole {
   const v = readRecord(row);
   return {
@@ -902,22 +866,6 @@ function normalizeCustomRole(row: unknown): OsirisCustomRole {
     allowedModules: readStringArray(v.allowed_modules ?? v.allowedModules),
     memberCount: readNumber(v.member_count ?? v.memberCount),
   };
-}
-
-async function readErrorMessage(response: Response, fallback: string) {
-  const text = await response.text();
-  if (!text) return fallback;
-  try {
-    const payload: unknown = JSON.parse(text);
-    if (isRecord(payload) && typeof payload.message === 'string') return payload.message;
-    if (isRecord(payload) && typeof payload.error === 'string') return payload.error;
-    if (isRecord(payload) && isRecord(payload.error) && typeof payload.error.message === 'string') {
-      return payload.error.message;
-    }
-  } catch {
-    return fallback;
-  }
-  return fallback;
 }
 
 async function readRoleResponse(response: Response): Promise<OsirisCustomRole> {
