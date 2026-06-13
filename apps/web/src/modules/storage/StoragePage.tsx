@@ -4,7 +4,6 @@ import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { UploadIcon } from '@/lib/icons';
 import { storagePageIcon } from '@/lib/modulePageIcons';
 
-import { StorageHeaderControls } from './components/StorageHeaderControls';
 import { StorageMainPane } from './components/StorageMainPane';
 import { StorageRail } from './components/StorageRail';
 import { useStorageViewState } from './useStorageViewState';
@@ -15,15 +14,10 @@ export function StoragePage() {
   const state = useStorageViewState();
 
   const headerActions = (
-    <>
-      <StorageHeaderControls state={state} />
-      <PageHeaderCtaButton
-        onClick={() => document.dispatchEvent(new CustomEvent('storage:upload'))}
-      >
-        <UploadIcon size={16} />
-        {t('storage.actions.upload', undefined, 'Upload')}
-      </PageHeaderCtaButton>
-    </>
+    <PageHeaderCtaButton onClick={() => document.dispatchEvent(new CustomEvent('storage:upload'))}>
+      <UploadIcon size={16} />
+      {t('storage.actions.upload', undefined, 'Upload')}
+    </PageHeaderCtaButton>
   );
 
   if (!ready) return null;

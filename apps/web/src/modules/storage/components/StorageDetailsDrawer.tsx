@@ -36,15 +36,15 @@ export function StorageDetailsDrawer({
 
   return (
     <Drawer open={open} onOpenChange={(value) => (!value ? onClose() : undefined)}>
-      <DrawerContent side="right">
+      <DrawerContent side="right" className="min-w-0">
         {node && Icon && (
           <>
-            <DrawerHeader>
+            <DrawerHeader className="min-w-0">
               <DrawerTitle className="truncate pr-8" title={node.name}>
                 {node.name}
               </DrawerTitle>
             </DrawerHeader>
-            <div className="flex flex-col gap-4 px-4 pb-4">
+            <div className="flex min-w-0 flex-col gap-4 px-4 pb-4">
               <div className="flex h-32 items-center justify-center rounded-card bg-muted/60">
                 <Icon size={56} weight="duotone" className={fileAccentClass(getFileKind(node))} />
               </div>

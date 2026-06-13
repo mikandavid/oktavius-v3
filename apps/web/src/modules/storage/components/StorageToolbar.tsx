@@ -3,6 +3,7 @@ import { ChevronRightIcon } from '@/lib/icons';
 
 import type { StorageTreeNode } from '../data/types';
 import type { StorageViewState } from '../useStorageViewState';
+import { StorageHeaderControls } from './StorageHeaderControls';
 
 interface Crumb {
   id: string | null;
@@ -41,7 +42,7 @@ export function StorageToolbar({
     : [{ id: null, label: t(`storage.nav.${state.view}`) }];
 
   return (
-    <div className="flex items-center gap-3 pb-3">
+    <div className="flex flex-wrap items-center gap-3 pb-3">
       <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1 text-sm">
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
@@ -64,6 +65,8 @@ export function StorageToolbar({
           );
         })}
       </nav>
+
+      <StorageHeaderControls state={state} />
     </div>
   );
 }
