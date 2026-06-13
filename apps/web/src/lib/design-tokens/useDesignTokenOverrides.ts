@@ -124,3 +124,5 @@ export function useDesignTokenOverrides(active: boolean) {
     setPersist,
   };
 }
+
+export type DesignTokenOverridesController = ReturnType<typeof useDesignTokenOverrides>;
