@@ -8,6 +8,7 @@ import {
 } from '@oktavius/base-ui';
 import { useEffect, useState } from 'react';
 
+import { DiscardChangesDialog } from '@/components/common/DiscardChangesDialog';
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
 import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
@@ -45,7 +46,15 @@ export function DocumentGenerateDialog({
 }: DocumentGenerateDialogProps) {
   const [templateId, setTemplateId] = useState<string | undefined>(templates[0]?.id);
   const [formKey, setFormKey] = useState(0);
-  const { handleOpenChange, requestClose, onDirtyChange } = useDirtyDialogClose(onOpenChange);
+  const {
+    handleOpenChange,
+    requestClose,
+    onDirtyChange,
+    pendingClose,
+    confirmDiscard,
+    cancelDiscard,
+    discardMessage,
+  } = useDirtyDialogClose(onOpenChange);
 
   useEffect(() => {
     if (open) {
@@ -65,44 +74,52 @@ export function DocumentGenerateDialog({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
 
-        <TemplatePicker
-          embedded
-          templates={templates}
-          value={templateId}
-          onChange={setTemplateId}
-        />
+          <TemplatePicker
+            embedded
+            templates={templates}
+            value={templateId}
+            onChange={setTemplateId}
+          />
 
-        <EntityForm<GenerateFormValues>
-          key={formKey}
-          surface="dialog"
-          showHeader={false}
-          title={title}
-          fields={generateFormFields}
-          defaultValues={{ format: formatOptions[0]?.value ?? 'pdf' }}
-          submitLabel="Generate"
-          warnOnDirty
-          onDirtyChange={onDirtyChange}
-          onSubmit={async (values) => {
-            if (!templateId) return;
-            const result = await onGenerate({ templateId, format: values.format });
-            if (result !== false) {
-              onOpenChange(false);
+          <EntityForm<GenerateFormValues>
+            key={formKey}
+            surface="dialog"
+            showHeader={false}
+            title={title}
+            fields={generateFormFields}
+            defaultValues={{ format: formatOptions[0]?.value ?? 'pdf' }}
+            submitLabel="Generate"
+            warnOnDirty
+            onDirtyChange={onDirtyChange}
+            onSubmit={async (values) => {
+              if (!templateId) return;
+              const result = await onGenerate({ templateId, format: values.format });
+              if (result !== false) {
+                onOpenChange(false);
+              }
+            }}
+            footerActions={
+              <Button type="button" variant="ghost" onClick={requestClose}>
+                Cancel
+              </Button>
             }
-          }}
-          footerActions={
-            <Button type="button" variant="ghost" onClick={requestClose}>
-              Cancel
-            </Button>
-          }
-        />
-      </DialogContent>
-    </Dialog>
+          />
+        </DialogContent>
+      </Dialog>
+      <DiscardChangesDialog
+        open={pendingClose}
+        description={discardMessage}
+        onConfirm={confirmDiscard}
+        onCancel={cancelDiscard}
+      />
+    </>
   );
 }

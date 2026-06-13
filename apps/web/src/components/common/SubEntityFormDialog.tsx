@@ -9,6 +9,7 @@ import {
 } from '@oktavius/base-ui';
 import { useEffect, useState } from 'react';
 
+import { DiscardChangesDialog } from '@/components/common/DiscardChangesDialog';
 import { EntityForm, type FormField, type FormFieldValue } from '@/components/forms/EntityForm';
 import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
@@ -37,7 +38,14 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
   onSubmit,
 }: SubEntityFormDialogProps<T>) {
   const [formKey, setFormKey] = useState(0);
-  const { handleOpenChange, onDirtyChange } = useDirtyDialogClose(onOpenChange);
+  const {
+    handleOpenChange,
+    onDirtyChange,
+    pendingClose,
+    confirmDiscard,
+    cancelDiscard,
+    discardMessage,
+  } = useDirtyDialogClose(onOpenChange);
 
   useEffect(() => {
     if (open) {
@@ -46,36 +54,44 @@ export function SubEntityFormDialog<T extends Record<string, FormFieldValue>>({
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="gap-5 sm:max-w-md">
-        <DialogHeader className="space-y-1 pr-6">
-          <DialogTitle>{title}</DialogTitle>
-          {description ? <DialogDescription>{description}</DialogDescription> : null}
-        </DialogHeader>
-        <EntityForm<T>
-          key={formKey}
-          surface="dialog"
-          showHeader={false}
-          title={title}
-          fields={fields}
-          defaultValues={defaultValues}
-          submitLabel={submitLabel}
-          isSubmitting={isSubmitting}
-          warnOnDirty
-          onDirtyChange={onDirtyChange}
-          onSubmit={async (values) => {
-            await onSubmit(values);
-            onOpenChange(false);
-          }}
-          footerActions={
-            <DialogClose asChild>
-              <Button type="button" variant="ghost">
-                Cancel
-              </Button>
-            </DialogClose>
-          }
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="gap-5 sm:max-w-md">
+          <DialogHeader className="space-y-1 pr-6">
+            <DialogTitle>{title}</DialogTitle>
+            {description ? <DialogDescription>{description}</DialogDescription> : null}
+          </DialogHeader>
+          <EntityForm<T>
+            key={formKey}
+            surface="dialog"
+            showHeader={false}
+            title={title}
+            fields={fields}
+            defaultValues={defaultValues}
+            submitLabel={submitLabel}
+            isSubmitting={isSubmitting}
+            warnOnDirty
+            onDirtyChange={onDirtyChange}
+            onSubmit={async (values) => {
+              await onSubmit(values);
+              onOpenChange(false);
+            }}
+            footerActions={
+              <DialogClose asChild>
+                <Button type="button" variant="ghost">
+                  Cancel
+                </Button>
+              </DialogClose>
+            }
+          />
+        </DialogContent>
+      </Dialog>
+      <DiscardChangesDialog
+        open={pendingClose}
+        description={discardMessage}
+        onConfirm={confirmDiscard}
+        onCancel={cancelDiscard}
+      />
+    </>
   );
 }

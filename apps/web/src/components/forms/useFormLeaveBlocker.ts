@@ -1,4 +1,4 @@
-import { type RefObject, useEffect } from 'react';
+import { type RefObject } from 'react';
 import { useBlocker } from 'react-router-dom';
 
 import type { FormFieldValue } from '@/components/forms/EntityForm';
@@ -20,7 +20,7 @@ export function useFormLeaveBlocker<T extends Record<string, FormFieldValue>>({
   initialValues,
   isDirty: isDirtyProp,
   enabled = true,
-  message = 'You have unsaved changes. Leave this page anyway?',
+  message = 'You have unsaved changes. If you leave this page, your changes will be lost.',
   allowNavigationRef,
 }: UseFormLeaveBlockerOptions<T>) {
   const isDirty =
@@ -33,15 +33,12 @@ export function useFormLeaveBlocker<T extends Record<string, FormFieldValue>>({
     return Boolean(isDirty);
   });
 
-  useEffect(() => {
-    if (blocker.state !== 'blocked') return;
-    const shouldLeave = window.confirm(message);
-    if (shouldLeave) {
-      blocker.proceed();
-      return;
-    }
-    blocker.reset();
-  }, [blocker, message]);
-
-  return { isDirty: enabled && isDirty, blockerState: blocker.state };
+  return {
+    isDirty: enabled && isDirty,
+    blockerState: blocker.state,
+    isBlocked: blocker.state === 'blocked',
+    proceed: () => blocker.proceed?.(),
+    reset: () => blocker.reset?.(),
+    message,
+  };
 }

@@ -8,6 +8,7 @@ import {
 } from '@oktavius/base-ui';
 import { useEffect, useState } from 'react';
 
+import { DiscardChangesDialog } from '@/components/common/DiscardChangesDialog';
 import { EntityForm, type FormField } from '@/components/forms/EntityForm';
 import { useDirtyDialogClose } from '@/lib/useDirtyDialogClose';
 
@@ -70,7 +71,15 @@ export function DocumentSendDialog({
 }: DocumentSendDialogProps) {
   const [templateId, setTemplateId] = useState<string | undefined>(emailTemplates[0]?.id);
   const [formKey, setFormKey] = useState(0);
-  const { handleOpenChange, requestClose, onDirtyChange } = useDirtyDialogClose(onOpenChange);
+  const {
+    handleOpenChange,
+    requestClose,
+    onDirtyChange,
+    pendingClose,
+    confirmDiscard,
+    cancelDiscard,
+    discardMessage,
+  } = useDirtyDialogClose(onOpenChange);
 
   useEffect(() => {
     if (open) {
@@ -96,53 +105,61 @@ export function DocumentSendDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{resolvedDescription}</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{resolvedDescription}</DialogDescription>
+          </DialogHeader>
 
-        <EmailTemplatePicker
-          embedded
-          templates={emailTemplates}
-          value={templateId}
-          onChange={handleTemplateChange}
-        />
+          <EmailTemplatePicker
+            embedded
+            templates={emailTemplates}
+            value={templateId}
+            onChange={handleTemplateChange}
+          />
 
-        <EntityForm<SendFormValues>
-          key={`${formKey}-${templateId ?? 'none'}`}
-          surface="dialog"
-          showHeader={false}
-          title={title}
-          fields={sendFormFields}
-          defaultValues={{
-            recipient: defaultRecipient,
-            subject: defaultSubject,
-            message: '',
-          }}
-          submitLabel="Send"
-          warnOnDirty
-          onDirtyChange={onDirtyChange}
-          onSubmit={async (values) => {
-            if (!templateId || !values.recipient.trim() || !values.subject.trim()) return;
-            const result = await onSend({
-              templateId,
-              recipient: values.recipient.trim(),
-              subject: values.subject.trim(),
-              message: values.message.trim(),
-            });
-            if (result !== false) {
-              onOpenChange(false);
+          <EntityForm<SendFormValues>
+            key={`${formKey}-${templateId ?? 'none'}`}
+            surface="dialog"
+            showHeader={false}
+            title={title}
+            fields={sendFormFields}
+            defaultValues={{
+              recipient: defaultRecipient,
+              subject: defaultSubject,
+              message: '',
+            }}
+            submitLabel="Send"
+            warnOnDirty
+            onDirtyChange={onDirtyChange}
+            onSubmit={async (values) => {
+              if (!templateId || !values.recipient.trim() || !values.subject.trim()) return;
+              const result = await onSend({
+                templateId,
+                recipient: values.recipient.trim(),
+                subject: values.subject.trim(),
+                message: values.message.trim(),
+              });
+              if (result !== false) {
+                onOpenChange(false);
+              }
+            }}
+            footerActions={
+              <Button type="button" variant="ghost" onClick={requestClose}>
+                Cancel
+              </Button>
             }
-          }}
-          footerActions={
-            <Button type="button" variant="ghost" onClick={requestClose}>
-              Cancel
-            </Button>
-          }
-        />
-      </DialogContent>
-    </Dialog>
+          />
+        </DialogContent>
+      </Dialog>
+      <DiscardChangesDialog
+        open={pendingClose}
+        description={discardMessage}
+        onConfirm={confirmDiscard}
+        onCancel={cancelDiscard}
+      />
+    </>
   );
 }

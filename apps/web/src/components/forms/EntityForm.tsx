@@ -12,6 +12,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type DefaultValues, type Path, type Resolver, useForm } from 'react-hook-form';
 
+import { DiscardChangesDialog } from '@/components/common/DiscardChangesDialog';
 import { FIELD_GROUP_LABEL_CLASS } from '@/components/common/pageChrome';
 import { usePreloadNamespaces } from '@/core/i18n';
 import { buildFormZodSchema } from '@/lib/buildFormZodSchema';
@@ -372,7 +373,7 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
   );
 
   useFormDirtyGuard({ enabled: warnOnDirty, isDirty });
-  useFormLeaveBlocker({
+  const leaveBlocker = useFormLeaveBlocker({
     enabled: warnOnDirty && !isSubmitting,
     isDirty,
     allowNavigationRef,
@@ -523,13 +524,32 @@ export function EntityForm<T extends Record<string, FormFieldValue>>({
     </form>
   );
 
+  const leaveBlockerDialog = (
+    <DiscardChangesDialog
+      open={leaveBlocker.isBlocked}
+      title="Leave this page?"
+      description="You have unsaved changes. If you leave this page, your changes will be lost."
+      confirmLabel="Leave"
+      onConfirm={leaveBlocker.proceed}
+      onCancel={leaveBlocker.reset}
+    />
+  );
+
   if (surface === 'dialog') {
-    return form;
+    return (
+      <>
+        {form}
+        {leaveBlockerDialog}
+      </>
+    );
   }
 
   return (
-    <SectionCard title={title} meta={subtitle}>
-      {form}
-    </SectionCard>
+    <>
+      <SectionCard title={title} meta={subtitle}>
+        {form}
+      </SectionCard>
+      {leaveBlockerDialog}
+    </>
   );
 }
