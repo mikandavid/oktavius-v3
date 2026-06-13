@@ -1,5 +1,5 @@
 import { cn, InlineEmptyState, Skeleton } from '@oktavius/base-ui';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 import { appToast } from '@/lib/toast';
@@ -16,6 +16,7 @@ import {
 } from '../data/useStorageData';
 import type { StorageViewState } from '../useStorageViewState';
 import { StorageDetailsDrawer } from './StorageDetailsDrawer';
+import { ConfirmDialog, MoveDialog, NameDialog } from './StorageDialogs';
 import { StorageGrid } from './StorageGrid';
 import type { StorageItemActions } from './StorageItemMenu';
 import { StorageList } from './StorageList';
@@ -70,6 +71,32 @@ export function StorageMainPane({
   );
 
   const selectedNode = orderedNodes.find((node) => node.id === state.selectedNodeId) ?? null;
+
+  const [renameNode, setRenameNode] = useState<StorageNode | null>(null);
+  const [moveNode, setMoveNode] = useState<StorageNode | null>(null);
+  const [trashNode, setTrashNode] = useState<StorageNode | null>(null);
+  const [purgeNode, setPurgeNode] = useState<StorageNode | null>(null);
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+
+  useEffect(() => {
+    const onRename = (event: Event) => setRenameNode((event as CustomEvent<StorageNode>).detail);
+    const onMove = (event: Event) => setMoveNode((event as CustomEvent<StorageNode>).detail);
+    const onTrash = (event: Event) => setTrashNode((event as CustomEvent<StorageNode>).detail);
+    const onPurge = (event: Event) => setPurgeNode((event as CustomEvent<StorageNode>).detail);
+    const onNewFolder = () => setNewFolderOpen(true);
+    document.addEventListener('storage:rename', onRename);
+    document.addEventListener('storage:move', onMove);
+    document.addEventListener('storage:trash', onTrash);
+    document.addEventListener('storage:purge', onPurge);
+    document.addEventListener('storage:newFolder', onNewFolder);
+    return () => {
+      document.removeEventListener('storage:rename', onRename);
+      document.removeEventListener('storage:move', onMove);
+      document.removeEventListener('storage:trash', onTrash);
+      document.removeEventListener('storage:purge', onPurge);
+      document.removeEventListener('storage:newFolder', onNewFolder);
+    };
+  }, []);
 
   const actions: StorageItemActions = {
     isStarred: (node) => starredIds.has(node.id),
@@ -142,6 +169,67 @@ export function StorageMainPane({
         onNavigate={(id) => state.setPreviewNodeId(id)}
         onClose={() => state.setPreviewNodeId(null)}
         onDownload={actions.onDownload}
+      />
+      <NameDialog
+        open={newFolderOpen}
+        title={t('storage.dialogs.newFolderTitle')}
+        label={t('storage.dialogs.newFolderLabel')}
+        confirmLabel={t('storage.dialogs.create')}
+        initialValue=""
+        onClose={() => setNewFolderOpen(false)}
+        onConfirm={(name) => {
+          mutations.createFolder.mutate(
+            { name, parentId: state.view === 'folder' ? state.currentFolderId : null },
+            { onError: (error) => appToast.fromApiError(error, t('storage.errors.load')) },
+          );
+          setNewFolderOpen(false);
+        }}
+      />
+      <NameDialog
+        open={Boolean(renameNode)}
+        title={t('storage.dialogs.renameTitle')}
+        label={t('storage.dialogs.renameLabel')}
+        confirmLabel={t('storage.dialogs.save')}
+        initialValue={renameNode?.name ?? ''}
+        onClose={() => setRenameNode(null)}
+        onConfirm={(name) => {
+          if (renameNode) mutations.rename.mutate({ id: renameNode.id, name });
+          setRenameNode(null);
+        }}
+      />
+      <MoveDialog
+        open={Boolean(moveNode)}
+        tree={treeQuery.data ?? []}
+        node={moveNode}
+        onClose={() => setMoveNode(null)}
+        onConfirm={(targetFolderId) => {
+          if (moveNode) mutations.move.mutate({ nodeIds: [moveNode.id], targetFolderId });
+          setMoveNode(null);
+        }}
+      />
+      <ConfirmDialog
+        open={Boolean(trashNode)}
+        title={t('storage.dialogs.trashTitle')}
+        body={t('storage.dialogs.trashBody', { name: trashNode?.name ?? '' })}
+        destructive
+        confirmLabel={t('storage.actions.trash')}
+        onClose={() => setTrashNode(null)}
+        onConfirm={() => {
+          if (trashNode) mutations.trash.mutate([trashNode.id]);
+          setTrashNode(null);
+        }}
+      />
+      <ConfirmDialog
+        open={Boolean(purgeNode)}
+        title={t('storage.dialogs.purgeTitle')}
+        body={t('storage.dialogs.purgeBody', { name: purgeNode?.name ?? '' })}
+        destructive
+        confirmLabel={t('storage.actions.deleteForever')}
+        onClose={() => setPurgeNode(null)}
+        onConfirm={() => {
+          if (purgeNode) mutations.purge.mutate([purgeNode.id]);
+          setPurgeNode(null);
+        }}
       />
     </section>
   );

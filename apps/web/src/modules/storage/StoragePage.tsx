@@ -38,7 +38,11 @@ export function StoragePage() {
       fillHeight
     >
       <div className="flex h-full min-h-0 gap-4">
-        <StorageRail state={state} className="hidden w-60 shrink-0 lg:flex" />
+        <StorageRail
+          state={state}
+          className="hidden w-60 shrink-0 lg:flex"
+          onNewFolder={() => document.dispatchEvent(new CustomEvent('storage:newFolder'))}
+        />
         <StorageMainPane state={state} className="min-w-0 flex-1" />
       </div>
     </ModulePage>
