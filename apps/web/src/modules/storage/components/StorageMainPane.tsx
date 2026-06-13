@@ -19,6 +19,7 @@ import { StorageDetailsDrawer } from './StorageDetailsDrawer';
 import { StorageGrid } from './StorageGrid';
 import type { StorageItemActions } from './StorageItemMenu';
 import { StorageList } from './StorageList';
+import { StoragePreviewModal } from './StoragePreviewModal';
 import { StorageToolbar } from './StorageToolbar';
 
 export function StorageMainPane({
@@ -131,6 +132,13 @@ export function StorageMainPane({
         }}
         onDownload={actions.onDownload}
         onToggleStar={actions.onToggleStar}
+      />
+      <StoragePreviewModal
+        nodes={orderedNodes}
+        currentId={state.previewNodeId}
+        onNavigate={(id) => state.setPreviewNodeId(id)}
+        onClose={() => state.setPreviewNodeId(null)}
+        onDownload={actions.onDownload}
       />
     </section>
   );
