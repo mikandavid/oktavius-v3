@@ -21,6 +21,7 @@ import type { StorageItemActions } from './StorageItemMenu';
 import { StorageList } from './StorageList';
 import { StoragePreviewModal } from './StoragePreviewModal';
 import { StorageToolbar } from './StorageToolbar';
+import { StorageUploadLayer } from './StorageUploadLayer';
 
 export function StorageMainPane({
   state,
@@ -94,34 +95,36 @@ export function StorageMainPane({
   return (
     <section className={cn('flex flex-col', className)} data-testid="storage-main">
       <StorageToolbar state={state} tree={treeQuery.data ?? []} />
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {isLoading ? (
-          <GridSkeleton />
-        ) : orderedNodes.length === 0 ? (
-          <InlineEmptyState
-            centered
-            text={t(state.search.term ? 'storage.empty.search' : `storage.empty.${state.view}`)}
-          />
-        ) : state.displayMode === 'grid' ? (
-          <StorageGrid
-            nodes={orderedNodes}
-            actions={actions}
-            inTrash={inTrash}
-            selectedId={state.selectedNodeId}
-            onSelect={(node) => state.setSelectedNodeId(node.id)}
-            onOpen={actions.onOpen}
-          />
-        ) : (
-          <StorageList
-            nodes={orderedNodes}
-            actions={actions}
-            inTrash={inTrash}
-            selectedId={state.selectedNodeId}
-            onSelect={(node) => state.setSelectedNodeId(node.id)}
-            onOpen={actions.onOpen}
-          />
-        )}
-      </div>
+      <StorageUploadLayer folderId={state.view === 'folder' ? state.currentFolderId : null}>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {isLoading ? (
+            <GridSkeleton />
+          ) : orderedNodes.length === 0 ? (
+            <InlineEmptyState
+              centered
+              text={t(state.search.term ? 'storage.empty.search' : `storage.empty.${state.view}`)}
+            />
+          ) : state.displayMode === 'grid' ? (
+            <StorageGrid
+              nodes={orderedNodes}
+              actions={actions}
+              inTrash={inTrash}
+              selectedId={state.selectedNodeId}
+              onSelect={(node) => state.setSelectedNodeId(node.id)}
+              onOpen={actions.onOpen}
+            />
+          ) : (
+            <StorageList
+              nodes={orderedNodes}
+              actions={actions}
+              inTrash={inTrash}
+              selectedId={state.selectedNodeId}
+              onSelect={(node) => state.setSelectedNodeId(node.id)}
+              onOpen={actions.onOpen}
+            />
+          )}
+        </div>
+      </StorageUploadLayer>
       <StorageDetailsDrawer
         node={selectedNode}
         starred={selectedNode ? starredIds.has(selectedNode.id) : false}
