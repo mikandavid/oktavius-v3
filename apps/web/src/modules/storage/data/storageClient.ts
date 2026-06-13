@@ -203,7 +203,12 @@ export function createOsirisStorageClient(options: OsirisStorageClientOptions = 
       await send('/storage/bulk/trash', 'POST', { nodeIds }, 'Move to trash failed.');
     },
     async restore(id: string): Promise<void> {
-      await send(`/storage/${encodeURIComponent(id)}/restore`, 'POST', {}, 'Restore failed.');
+      await send(
+        `/storage/${encodeURIComponent(id)}/restore`,
+        'POST',
+        undefined,
+        'Restore failed.',
+      );
     },
     async purge(nodeIds: string[]): Promise<void> {
       await send('/storage/bulk/purge', 'POST', { nodeIds }, 'Delete failed.');
@@ -216,7 +221,7 @@ export function createOsirisStorageClient(options: OsirisStorageClientOptions = 
       await send(
         `/storage/favorites/${encodeURIComponent(id)}`,
         'POST',
-        {},
+        undefined,
         'Could not star file.',
       );
     },
