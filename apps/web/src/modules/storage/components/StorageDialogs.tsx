@@ -7,7 +7,7 @@ import {
   DialogTitle,
   Input,
 } from '@oktavius/base-ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 
@@ -31,6 +31,7 @@ export function NameDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const inputId = useId();
   const [value, setValue] = useState(initialValue);
   useEffect(() => {
     if (open) setValue(initialValue);
@@ -42,8 +43,11 @@ export function NameDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <label className="text-sm font-medium text-foreground">{label}</label>
+        <label htmlFor={inputId} className="text-sm font-medium text-foreground">
+          {label}
+        </label>
         <Input
+          id={inputId}
           autoFocus
           value={value}
           onChange={(event) => setValue(event.target.value)}
@@ -117,6 +121,9 @@ export function MoveDialog({
 }) {
   const { t } = useTranslation();
   const [target, setTarget] = useState<string | null>(null);
+  useEffect(() => {
+    if (open) setTarget(null);
+  }, [open]);
 
   function renderRow(folder: StorageTreeNode, depth: number) {
     if (folder.id === node?.id) return null;

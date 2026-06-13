@@ -22,12 +22,13 @@ export function useStorageTree() {
   return useQuery({ queryKey: storageKeys.tree(org), queryFn: () => client.listTree() });
 }
 
-export function useStorageNodes(params: ListNodesParams) {
+export function useStorageNodes(params: ListNodesParams, enabled = true) {
   const client = useStorageClient();
   const org = useOrgId();
   return useQuery({
     queryKey: storageKeys.nodes(org, params),
     queryFn: () => client.listNodes(params),
+    enabled,
   });
 }
 

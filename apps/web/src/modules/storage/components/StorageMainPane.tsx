@@ -36,13 +36,16 @@ export function StorageMainPane({
   const treeQuery = useStorageTree();
   const mutations = useStorageMutations();
 
-  const folderQuery = useStorageNodes({
-    folderId: state.currentFolderId,
-    sortBy: state.sort.by,
-    sortDir: state.sort.dir,
-    search: state.search.term || undefined,
-    scope: state.search.scope,
-  });
+  const folderQuery = useStorageNodes(
+    {
+      folderId: state.currentFolderId,
+      sortBy: state.sort.by,
+      sortDir: state.sort.dir,
+      search: state.search.term || undefined,
+      scope: state.search.scope,
+    },
+    state.view === 'folder',
+  );
   const recentQuery = useRecent(state.view === 'recent');
   const starredQuery = useFavorites(state.view === 'starred');
   const trashQuery = useTrash(1, state.view === 'trash');
@@ -193,7 +196,11 @@ export function StorageMainPane({
         initialValue={renameNode?.name ?? ''}
         onClose={() => setRenameNode(null)}
         onConfirm={(name) => {
-          if (renameNode) mutations.rename.mutate({ id: renameNode.id, name });
+          if (renameNode)
+            mutations.rename.mutate(
+              { id: renameNode.id, name },
+              { onError: (error) => appToast.fromApiError(error, t('storage.errors.load')) },
+            );
           setRenameNode(null);
         }}
       />
@@ -203,7 +210,11 @@ export function StorageMainPane({
         node={moveNode}
         onClose={() => setMoveNode(null)}
         onConfirm={(targetFolderId) => {
-          if (moveNode) mutations.move.mutate({ nodeIds: [moveNode.id], targetFolderId });
+          if (moveNode)
+            mutations.move.mutate(
+              { nodeIds: [moveNode.id], targetFolderId },
+              { onError: (error) => appToast.fromApiError(error, t('storage.errors.load')) },
+            );
           setMoveNode(null);
         }}
       />
@@ -217,6 +228,7 @@ export function StorageMainPane({
         onConfirm={() => {
           if (trashNode) mutations.trash.mutate([trashNode.id]);
           setTrashNode(null);
+          state.setSelectedNodeId(null);
         }}
       />
       <ConfirmDialog
@@ -229,6 +241,7 @@ export function StorageMainPane({
         onConfirm={() => {
           if (purgeNode) mutations.purge.mutate([purgeNode.id]);
           setPurgeNode(null);
+          state.setSelectedNodeId(null);
         }}
       />
     </section>

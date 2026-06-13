@@ -49,7 +49,11 @@ export function StorageDetailsDrawer({
               <div>
                 <MetaRow
                   label={t('storage.details.type')}
-                  value={node.mimeType ?? node.fileExtension ?? '—'}
+                  value={
+                    node.nodeType === 'folder'
+                      ? t('storage.details.folder')
+                      : (node.mimeType ?? node.fileExtension ?? '—')
+                  }
                 />
                 {node.nodeType === 'file' && (
                   <MetaRow
@@ -82,14 +86,16 @@ export function StorageDetailsDrawer({
                     <DownloadIcon size={16} />
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label={t('storage.actions.star')}
-                  onClick={() => onToggleStar(node)}
-                >
-                  <StarIcon size={16} weight={starred ? 'fill' : 'regular'} />
-                </Button>
+                {node.nodeType === 'file' && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label={t('storage.actions.star')}
+                    onClick={() => onToggleStar(node)}
+                  >
+                    <StarIcon size={16} weight={starred ? 'fill' : 'regular'} />
+                  </Button>
+                )}
               </div>
             </div>
           </>
