@@ -10,7 +10,7 @@ import {
   SettingsPageFactory,
   type SettingsSectionConfig,
 } from '@/components/settings/SettingsPageFactory';
-import { NotificationsIcon, OrganizationIcon, TeamIcon, UserAddIcon } from '@/lib/icons';
+import { LinkIcon, LockIcon, TeamIcon, UserAddIcon } from '@/lib/icons';
 import { membersPageIcon } from '@/lib/modulePageIcons';
 import { appToast } from '@/lib/toast';
 import type { OsirisCustomRole } from '@/runtime/osiris/customRolesAdminClient';
@@ -222,7 +222,7 @@ export function MembersPage() {
     {
       id: 'links',
       label: 'Invite links',
-      icon: <OrganizationIcon size={16} weight="duotone" />,
+      icon: <LinkIcon size={16} weight="duotone" />,
       title: 'Invite links',
       sectionDescription: 'Shareable links anyone can use to join.',
       render: () => (
@@ -245,7 +245,7 @@ export function MembersPage() {
     {
       id: 'roles',
       label: 'Roles',
-      icon: <NotificationsIcon size={16} weight="duotone" />,
+      icon: <LockIcon size={16} weight="duotone" />,
       title: 'Custom roles',
       sectionDescription: 'Organization-specific permission roles.',
       render: () => (
@@ -310,7 +310,10 @@ export function MembersPage() {
 
       <SubEntityFormDialog<Record<string, FormFieldValue>>
         open={roleOpen}
-        onOpenChange={setRoleOpen}
+        onOpenChange={(open) => {
+          setRoleOpen(open);
+          if (!open) setEditingRole(null);
+        }}
         title={editingRole ? 'Edit custom role' : 'Add custom role'}
         fields={CUSTOM_ROLE_FORM_FIELDS}
         defaultValues={{
