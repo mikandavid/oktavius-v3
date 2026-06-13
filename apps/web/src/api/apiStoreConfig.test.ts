@@ -4,7 +4,6 @@ import type { CatalogOption } from '@/components/settings/CatalogOptionsManager'
 
 import {
   createConfiguredCatalogOptionsStore,
-  createConfiguredReportStore,
   createConfiguredSavedViewsStore,
 } from './apiStoreConfig';
 
@@ -94,29 +93,6 @@ describe('API-backed generated store configuration', () => {
     expect(fetcher).toHaveBeenCalledWith('/api/generated-stores/catalog-options/paymentTerms', {
       method: 'GET',
       headers: undefined,
-    });
-  });
-
-  it('routes saved reports to the production endpoint', async () => {
-    const fetcher = vi.fn(async () =>
-      response([{ id: 'report_1', name: 'Pipeline', chartType: 'bar', dataset: 'pipeline' }]),
-    );
-    const store = createConfiguredReportStore({
-      storageKey: 'reports',
-      fetcher,
-      env: {
-        VITE_OKTAVIUS_API_BASE_URL: '/api/',
-      },
-    });
-
-    await store.save([{ id: 'report_1', name: 'Pipeline', chartType: 'bar', dataset: 'pipeline' }]);
-
-    expect(fetcher).toHaveBeenCalledWith('/api/generated-stores/reports/reports', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify([
-        { id: 'report_1', name: 'Pipeline', chartType: 'bar', dataset: 'pipeline' },
-      ]),
     });
   });
 });

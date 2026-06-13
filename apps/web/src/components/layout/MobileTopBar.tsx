@@ -5,6 +5,7 @@ import { useCommandPalette } from '@/components/command/CommandPalette';
 import { APP_SHELL_BORDER_CLASS, APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { BotIcon, ListIcon } from '@/lib/icons';
 import { useOrgProfile } from '@/lib/org-profiles/useOrgProfile';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { BrandMark } from './BrandMark';
 import { HeaderAccountMenu } from './HeaderAccountMenu';
@@ -17,8 +18,13 @@ type MobileTopBarProps = {
 
 export function MobileTopBar({ onToggleSidebar, showChatLink = true }: MobileTopBarProps) {
   const { setOpen } = useCommandPalette();
+  const osirisRuntime = useOptionalOsirisRuntime();
   const profile = useOrgProfile();
   const brandTitle = profile.brandTitle ?? 'Oktavius ERP';
+  const activeOrgId = osirisRuntime?.activeOrgId ?? null;
+  const activeOrganization = osirisRuntime?.organizations.find((org) => org.id === activeOrgId);
+  const activeOrganizationLogoUrl =
+    osirisRuntime?.config?.org.logoUrl ?? activeOrganization?.logoUrl ?? null;
 
   return (
     <div
@@ -32,7 +38,7 @@ export function MobileTopBar({ onToggleSidebar, showChatLink = true }: MobileTop
         <ListIcon size={18} />
       </Button>
       <div className="ml-2 flex min-w-0 items-center gap-2">
-        <BrandMark />
+        <BrandMark logoUrl={activeOrganizationLogoUrl} />
         <span className="truncate text-sm font-semibold">{brandTitle}</span>
       </div>
       <div className="ml-auto flex items-center gap-1">

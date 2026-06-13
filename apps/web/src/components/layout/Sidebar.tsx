@@ -407,6 +407,8 @@ function SidebarContent({
   const organizations = osirisRuntime?.organizations ?? [];
   const permissionSubject = osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT;
   const activeOrganization = organizations.find((organization) => organization.id === activeOrgId);
+  const activeOrganizationLogoUrl =
+    osirisRuntime?.config?.org.logoUrl ?? activeOrganization?.logoUrl ?? null;
   const profile = useMemo(
     () => getLocalizedOrgProfile(buildRuntimeOrgProfile(activeOrganization), locale),
     [activeOrganization, locale],
@@ -454,11 +456,14 @@ function SidebarContent({
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   const draggingItemIdRef = useRef<string | null>(null);
   const [isLabelsVisible, setIsLabelsVisible] = useState(false);
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const brandRowRef = useRef<HTMLDivElement>(null);
   const collapseRowRef = useRef<HTMLDivElement>(null);
+  const suppressHoverExpandUntilLeaveRef = useRef(false);
   const brandFlyout = useSidebarFlyout('brand');
   const collapseFlyout = useSidebarFlyout('collapse');
-  const isExpanded = mobile || embedded ? true : !isSidebarCompact;
+  const isSidebarLayoutCompact = !mobile && !embedded && isSidebarCompact;
+  const isExpanded = mobile || embedded ? true : !isSidebarCompact || isHoverExpanded;
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -477,8 +482,32 @@ function SidebarContent({
   }, [preferredModuleOrder]);
 
   const toggleCollapsed = useCallback(() => {
+    if (isSidebarLayoutCompact) {
+      suppressHoverExpandUntilLeaveRef.current = false;
+    } else if (!mobile && !embedded) {
+      suppressHoverExpandUntilLeaveRef.current = true;
+    }
+    setIsHoverExpanded(false);
     toggleSidebarCollapsed();
-  }, [toggleSidebarCollapsed]);
+  }, [embedded, isSidebarLayoutCompact, mobile, toggleSidebarCollapsed]);
+
+  useEffect(() => {
+    if (!isSidebarLayoutCompact) {
+      suppressHoverExpandUntilLeaveRef.current = false;
+      setIsHoverExpanded(false);
+    }
+  }, [isSidebarLayoutCompact]);
+
+  const handleSidebarMouseEnter = useCallback(() => {
+    if (!isSidebarLayoutCompact || suppressHoverExpandUntilLeaveRef.current) return;
+    setIsHoverExpanded(true);
+  }, [isSidebarLayoutCompact]);
+
+  const handleSidebarMouseLeave = useCallback(() => {
+    if (!isSidebarLayoutCompact) return;
+    suppressHoverExpandUntilLeaveRef.current = false;
+    setIsHoverExpanded(false);
+  }, [isSidebarLayoutCompact]);
 
   const orderedModuleItems = orderItems(visibleModuleItems, preferredModuleOrder);
 
@@ -526,161 +555,91 @@ function SidebarContent({
   return (
     <aside
       className={cn(
-        'relative z-40 flex shrink-0 flex-col overflow-x-hidden border-r transition-[width] duration-200 ease-out',
-        APP_SHELL_BORDER_CLASS,
-        APP_SHELL_SURFACE_CLASS,
+        'relative z-40 flex shrink-0 flex-col transition-[width] duration-200 ease-out',
         embedded
           ? 'h-full w-full max-h-full overflow-x-hidden'
           : mobile
             ? cn(
-                'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh overflow-x-hidden shadow-elevated transition-[width,transform]',
+                'fixed inset-y-0 left-0 h-dvh w-[min(20rem,88vw)] max-h-dvh overflow-x-hidden transition-[width,transform]',
                 open ? 'translate-x-0' : '-translate-x-full',
               )
-            : isExpanded
-              ? 'h-dvh w-52 max-h-dvh'
-              : 'h-dvh w-12 max-h-dvh',
+            : isSidebarCompact
+              ? 'h-dvh w-12 max-h-dvh overflow-visible'
+              : 'h-dvh w-52 max-h-dvh overflow-x-hidden',
       )}
     >
-      {isExpanded ? (
-        <Link
-          to={ORG_HOME_PATH}
-          onClick={onNavigate}
-          className={cn(
-            'flex h-12 w-full shrink-0 items-center gap-2 px-3 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] active:bg-sidebar-foreground/[0.08]',
-          )}
-        >
-          <BrandMark />
-          <span
-            className={cn(
-              'truncate text-sm font-semibold text-sidebar-foreground transition-opacity duration-150',
-              isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-            )}
-          >
-            {brandTitle}
-          </span>
-        </Link>
-      ) : (
-        <div
-          ref={brandRowRef}
-          className={cn('relative flex h-12 w-full shrink-0 items-center justify-center')}
-          onMouseEnter={brandFlyout.show}
-          onMouseLeave={brandFlyout.hide}
-        >
+      <div
+        data-sidebar-hover-panel
+        className={cn(
+          'flex min-h-0 flex-col overflow-x-hidden border-r transition-[width] duration-200 ease-out',
+          APP_SHELL_BORDER_CLASS,
+          APP_SHELL_SURFACE_CLASS,
+          embedded
+            ? 'h-full w-full'
+            : mobile
+              ? 'h-full w-full shadow-elevated'
+              : isSidebarLayoutCompact
+                ? cn('absolute inset-y-0 left-0 h-dvh', isHoverExpanded ? 'w-52' : 'w-12')
+                : 'h-dvh w-full',
+        )}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
+      >
+        {isExpanded ? (
           <Link
             to={ORG_HOME_PATH}
             onClick={onNavigate}
-            aria-label={brandTitle}
             className={cn(
-              'mx-auto flex h-9 w-9 items-center justify-center rounded-full',
-              (brandFlyout.open || brandIsActive) && 'bg-sidebar-primary/10',
-              !brandFlyout.open && !brandIsActive && 'hover:bg-sidebar-foreground/[0.05]',
+              'flex h-12 w-full shrink-0 items-center gap-2 px-3 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] active:bg-sidebar-foreground/[0.08]',
             )}
           >
-            <BrandMark />
-          </Link>
-          <SidebarNavPill
-            anchorRef={brandRowRef}
-            open={brandFlyout.open}
-            label={brandTitle}
-            isActive={brandIsActive}
-            href={ORG_HOME_PATH}
-            onNavigate={onNavigate}
-            onPointerEnter={brandFlyout.show}
-            onPointerLeave={brandFlyout.hide}
-          />
-        </div>
-      )}
-
-      <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
-        <div>
-          <div className="mb-1.5 h-5 px-3" />
-          <div className="space-y-0.5">
-            {visiblePrimaryItems.map((item) => (
-              <NavItemRow
-                key={item.id}
-                item={item}
-                expanded={isExpanded}
-                labelsVisible={isLabelsVisible}
-                onNavigate={onNavigate}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <div className="group/module-header mb-1.5 flex h-5 items-center justify-between px-3">
+            <BrandMark logoUrl={activeOrganizationLogoUrl} />
             <span
               className={cn(
-                'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                'truncate text-sm font-semibold text-sidebar-foreground transition-opacity duration-150',
                 isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
               )}
             >
-              {t('common.modules', undefined, 'Modules')}
+              {brandTitle}
             </span>
-            {isExpanded ? (
-              <MouseTooltip
-                content={
-                  isEditingModules
-                    ? t('common.saveOrder', undefined, 'Save order')
-                    : t('common.editOrder', undefined, 'Edit order')
-                }
-              >
-                <button
-                  type="button"
-                  className={cn(
-                    'h-5 w-5 rounded-full text-sidebar-foreground/45 transition-opacity duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
-                    !isEditingModules &&
-                      'pointer-events-none opacity-0 group-hover/module-header:pointer-events-auto group-hover/module-header:opacity-100',
-                  )}
-                  onClick={toggleModuleEditing}
-                  aria-label={
-                    isEditingModules
-                      ? t('common.saveOrder', undefined, 'Save order')
-                      : t('common.editOrder', undefined, 'Edit order')
-                  }
-                >
-                  {isEditingModules ? (
-                    <CheckIcon size={12} className="mx-auto" />
-                  ) : (
-                    <EditIcon size={12} className="mx-auto" />
-                  )}
-                </button>
-              </MouseTooltip>
-            ) : null}
+          </Link>
+        ) : (
+          <div
+            ref={brandRowRef}
+            className={cn('relative flex h-12 w-full shrink-0 items-center justify-center')}
+            onMouseEnter={brandFlyout.show}
+            onMouseLeave={brandFlyout.hide}
+          >
+            <Link
+              to={ORG_HOME_PATH}
+              onClick={onNavigate}
+              aria-label={brandTitle}
+              className={cn(
+                'mx-auto flex h-9 w-9 items-center justify-center rounded-full',
+                (brandFlyout.open || brandIsActive) && 'bg-sidebar-primary/10',
+                !brandFlyout.open && !brandIsActive && 'hover:bg-sidebar-foreground/[0.05]',
+              )}
+            >
+              <BrandMark logoUrl={activeOrganizationLogoUrl} />
+            </Link>
+            <SidebarNavPill
+              anchorRef={brandRowRef}
+              open={brandFlyout.open}
+              label={brandTitle}
+              isActive={brandIsActive}
+              href={ORG_HOME_PATH}
+              onNavigate={onNavigate}
+              onPointerEnter={brandFlyout.show}
+              onPointerLeave={brandFlyout.hide}
+            />
           </div>
-          <div className="space-y-0.5">
-            {orderedModuleItems.map((item) => (
-              <NavItemRow
-                key={item.id}
-                item={item}
-                expanded={isExpanded}
-                labelsVisible={isLabelsVisible}
-                onNavigate={onNavigate}
-                draggable={isEditingModules && isExpanded}
-                isDragging={draggingItemId === item.id}
-                onDragStart={startModuleDrag}
-                onDragOver={moveModuleItem}
-                onDrop={finishModuleDrag}
-                dragHandleTitle={t('common.dragToReorder', undefined, 'Drag to reorder')}
-              />
-            ))}
-          </div>
-        </div>
+        )}
 
-        {visibleAdminItems.length > 0 ? (
-          <div className="mt-4">
-            <div className="mb-1.5 h-5 px-3">
-              <span
-                className={cn(
-                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
-                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
-                )}
-              >
-                {t('common.admin', undefined, 'Admin')}
-              </span>
-            </div>
+        <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
+          <div>
+            <div className="mb-1.5 h-5 px-3" />
             <div className="space-y-0.5">
-              {visibleAdminItems.map((item) => (
+              {visiblePrimaryItems.map((item) => (
                 <NavItemRow
                   key={item.id}
                   item={item}
@@ -691,85 +650,171 @@ function SidebarContent({
               ))}
             </div>
           </div>
-        ) : null}
-      </nav>
 
-      {!mobile && !embedded ? (
-        <div className={cn('shrink-0 border-t px-2 py-2', APP_SHELL_BORDER_CLASS)}>
-          {isExpanded ? (
-            <button
-              type="button"
-              className="flex h-8 w-full items-center gap-3 rounded-md px-3 py-1.5 text-sidebar-foreground/40 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground active:bg-sidebar-foreground/[0.08] active:scale-[0.98]"
-              onClick={toggleCollapsed}
-              aria-label={
-                isSidebarCompact
-                  ? t('common.expandSidebar', undefined, 'Expand sidebar')
-                  : t('common.compactSidebar', undefined, 'Compact sidebar')
-              }
-            >
-              {isSidebarCompact ? (
-                <PanelLeftIcon className="h-4 w-4 shrink-0" />
-              ) : (
-                <PanelLeftCloseIcon className="h-4 w-4 shrink-0" />
-              )}
+          <div className="mt-4">
+            <div className="group/module-header mb-1.5 flex h-5 items-center justify-between px-3">
               <span
                 className={cn(
-                  'text-sm transition-[width,opacity] duration-150',
-                  isLabelsVisible
-                    ? 'w-auto opacity-100'
-                    : 'pointer-events-none w-0 select-none opacity-0',
+                  'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                  isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
                 )}
               >
-                {isSidebarCompact
-                  ? t('common.expand', undefined, 'Expand')
-                  : t('common.compact', undefined, 'Compact')}
+                {t('common.modules', undefined, 'Modules')}
               </span>
-            </button>
-          ) : (
-            <div
-              ref={collapseRowRef}
-              className="relative flex h-8 w-full items-center justify-center"
-              onMouseEnter={collapseFlyout.show}
-              onMouseLeave={collapseFlyout.hide}
-            >
+              {isExpanded ? (
+                <MouseTooltip
+                  content={
+                    isEditingModules
+                      ? t('common.saveOrder', undefined, 'Save order')
+                      : t('common.editOrder', undefined, 'Edit order')
+                  }
+                >
+                  <button
+                    type="button"
+                    className={cn(
+                      'h-5 w-5 rounded-full text-sidebar-foreground/45 transition-opacity duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
+                      !isEditingModules &&
+                        'pointer-events-none opacity-0 group-hover/module-header:pointer-events-auto group-hover/module-header:opacity-100',
+                    )}
+                    onClick={toggleModuleEditing}
+                    aria-label={
+                      isEditingModules
+                        ? t('common.saveOrder', undefined, 'Save order')
+                        : t('common.editOrder', undefined, 'Edit order')
+                    }
+                  >
+                    {isEditingModules ? (
+                      <CheckIcon size={12} className="mx-auto" />
+                    ) : (
+                      <EditIcon size={12} className="mx-auto" />
+                    )}
+                  </button>
+                </MouseTooltip>
+              ) : null}
+            </div>
+            <div className="space-y-0.5">
+              {orderedModuleItems.map((item) => (
+                <NavItemRow
+                  key={item.id}
+                  item={item}
+                  expanded={isExpanded}
+                  labelsVisible={isLabelsVisible}
+                  onNavigate={onNavigate}
+                  draggable={isEditingModules && isExpanded}
+                  isDragging={draggingItemId === item.id}
+                  onDragStart={startModuleDrag}
+                  onDragOver={moveModuleItem}
+                  onDrop={finishModuleDrag}
+                  dragHandleTitle={t('common.dragToReorder', undefined, 'Drag to reorder')}
+                />
+              ))}
+            </div>
+          </div>
+
+          {visibleAdminItems.length > 0 ? (
+            <div className="mt-4">
+              <div className="mb-1.5 h-5 px-3">
+                <span
+                  className={cn(
+                    'text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/40 transition-opacity duration-150',
+                    isLabelsVisible ? 'opacity-100' : 'pointer-events-none select-none opacity-0',
+                  )}
+                >
+                  {t('common.admin', undefined, 'Admin')}
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                {visibleAdminItems.map((item) => (
+                  <NavItemRow
+                    key={item.id}
+                    item={item}
+                    expanded={isExpanded}
+                    labelsVisible={isLabelsVisible}
+                    onNavigate={onNavigate}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </nav>
+
+        {!mobile && !embedded ? (
+          <div className={cn('shrink-0 border-t px-2 py-2', APP_SHELL_BORDER_CLASS)}>
+            {isExpanded ? (
               <button
                 type="button"
+                className="flex h-8 w-full items-center gap-3 rounded-md px-3 py-1.5 text-sidebar-foreground/40 transition-colors duration-150 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground active:bg-sidebar-foreground/[0.08] active:scale-[0.98]"
+                onClick={toggleCollapsed}
                 aria-label={
                   isSidebarCompact
                     ? t('common.expandSidebar', undefined, 'Expand sidebar')
                     : t('common.compactSidebar', undefined, 'Compact sidebar')
                 }
-                className={cn(
-                  'mx-auto flex h-8 w-8 items-center justify-center rounded-full',
-                  collapseFlyout.open && 'bg-sidebar-foreground/[0.08] text-sidebar-foreground',
-                  !collapseFlyout.open &&
-                    'text-sidebar-foreground/40 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
-                )}
-                onClick={toggleCollapsed}
               >
                 {isSidebarCompact ? (
                   <PanelLeftIcon className="h-4 w-4 shrink-0" />
                 ) : (
                   <PanelLeftCloseIcon className="h-4 w-4 shrink-0" />
                 )}
+                <span
+                  className={cn(
+                    'text-sm transition-[width,opacity] duration-150',
+                    isLabelsVisible
+                      ? 'w-auto opacity-100'
+                      : 'pointer-events-none w-0 select-none opacity-0',
+                  )}
+                >
+                  {isSidebarCompact
+                    ? t('common.expand', undefined, 'Expand')
+                    : t('common.compact', undefined, 'Compact')}
+                </span>
               </button>
-              <SidebarNavPill
-                anchorRef={collapseRowRef}
-                open={collapseFlyout.open}
-                label={
-                  isSidebarCompact
-                    ? t('common.expandSidebar', undefined, 'Expand sidebar')
-                    : t('common.compactSidebar', undefined, 'Compact sidebar')
-                }
-                isActive={false}
-                onClick={toggleCollapsed}
-                onPointerEnter={collapseFlyout.show}
-                onPointerLeave={collapseFlyout.hide}
-              />
-            </div>
-          )}
-        </div>
-      ) : null}
+            ) : (
+              <div
+                ref={collapseRowRef}
+                className="relative flex h-8 w-full items-center justify-center"
+                onMouseEnter={collapseFlyout.show}
+                onMouseLeave={collapseFlyout.hide}
+              >
+                <button
+                  type="button"
+                  aria-label={
+                    isSidebarCompact
+                      ? t('common.expandSidebar', undefined, 'Expand sidebar')
+                      : t('common.compactSidebar', undefined, 'Compact sidebar')
+                  }
+                  className={cn(
+                    'mx-auto flex h-8 w-8 items-center justify-center rounded-full',
+                    collapseFlyout.open && 'bg-sidebar-foreground/[0.08] text-sidebar-foreground',
+                    !collapseFlyout.open &&
+                      'text-sidebar-foreground/40 hover:bg-sidebar-foreground/[0.05] hover:text-sidebar-foreground',
+                  )}
+                  onClick={toggleCollapsed}
+                >
+                  {isSidebarCompact ? (
+                    <PanelLeftIcon className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <PanelLeftCloseIcon className="h-4 w-4 shrink-0" />
+                  )}
+                </button>
+                <SidebarNavPill
+                  anchorRef={collapseRowRef}
+                  open={collapseFlyout.open}
+                  label={
+                    isSidebarCompact
+                      ? t('common.expandSidebar', undefined, 'Expand sidebar')
+                      : t('common.compactSidebar', undefined, 'Compact sidebar')
+                  }
+                  isActive={false}
+                  onClick={toggleCollapsed}
+                  onPointerEnter={collapseFlyout.show}
+                  onPointerLeave={collapseFlyout.hide}
+                />
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
     </aside>
   );
 }

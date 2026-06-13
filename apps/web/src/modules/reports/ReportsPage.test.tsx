@@ -25,21 +25,6 @@ vi.mock('@oktavius/base-ui', async () => {
   };
 });
 
-vi.mock('@/components/reports/ReportBuilderPanel', () => ({
-  COMBO_DATA: [],
-  MULTI_LINE_REVENUE: [],
-  ORDER_STATUS_DATA: [],
-  PIPELINE_FUNNEL: [],
-  RADAR_KPIS: [],
-  RADAR_SERIES: [],
-  REVENUE_DATA: [],
-  REVENUE_SERIES: [],
-  STACKED_PIPELINE: [],
-  TOP_CLIENTS: [],
-  // eslint-disable-next-line oktavius/no-bare-jsx-strings
-  ReportBuilderPanel: () => <section>Report builder</section>,
-}));
-
 vi.mock('@/lib/locations/ActiveLocationContext', () => ({
   useActiveLocation: () => ({
     activeLocationId: 'site_1',

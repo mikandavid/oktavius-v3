@@ -1,4 +1,5 @@
 import {
+  Avatar,
   DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -30,6 +31,7 @@ type OrganizationMenuSectionProps = {
     id: string;
     name: string;
     slug: string;
+    logoUrl?: string | null;
   }[];
   onSelectOrg?: (orgId: string) => void;
 };
@@ -48,7 +50,7 @@ export function OrganizationMenuSection({
 
   return (
     <AccountSubmenu
-      icon={<OrganizationIcon size={14} className="text-muted-foreground" />}
+      icon={<OrganizationLogo name={activeOrg?.name} logoUrl={activeOrg?.logoUrl} />}
       label="Organisation"
       hint={activeOrg?.name}
     >
@@ -67,19 +69,33 @@ export function OrganizationMenuSection({
               onSelectOrg(org.id);
             }}
           >
-            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-              {isActive ? <CheckIcon size={14} weight="bold" className="text-foreground" /> : null}
-            </span>
+            <OrganizationLogo name={org.name} logoUrl={org.logoUrl} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm text-foreground">{org.name}</p>
               <p className="text-xs text-muted-foreground">
                 {isActive ? 'Active organization' : isReadOnly ? 'Switching unavailable' : org.slug}
               </p>
             </div>
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+              {isActive ? <CheckIcon size={14} weight="bold" className="text-foreground" /> : null}
+            </span>
           </DropdownMenuItem>
         );
       })}
     </AccountSubmenu>
+  );
+}
+
+function OrganizationLogo({ logoUrl, name }: { logoUrl?: string | null; name?: string | null }) {
+  return (
+    <Avatar
+      label={name ?? 'Organization'}
+      src={logoUrl ?? null}
+      size="xs"
+      tone="muted"
+      icon={<OrganizationIcon size={12} weight="duotone" />}
+      className="h-4 w-4 [&_svg]:size-3"
+    />
   );
 }
 

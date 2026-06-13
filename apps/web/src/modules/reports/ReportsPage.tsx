@@ -3,13 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { useApiRegistry } from '@/api/ApiProvider';
-import { createConfiguredReportStore } from '@/api/apiStoreConfig';
 import { MODULE_TABS_CONTENT_SCROLL_CLASS } from '@/components/common/pageChrome';
 import { ModulePage } from '@/components/common/PageLayout';
-import { ReportBuilderPanel } from '@/components/reports/ReportBuilderPanel';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import { reportsPageIcon } from '@/lib/modulePageIcons';
-import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 const REPORTS_PAGE_SIZE = '250';
@@ -57,16 +54,6 @@ export function ReportsPage() {
   const activeOrgId = osirisRuntime?.activeOrgId ?? null;
   const { activeLocationId, viewAllLocations } = useActiveLocation();
   const activeSiteScope = viewAllLocations ? null : activeLocationId;
-  const storage = getWindowStorage('localStorage');
-  const reportStore = useMemo(
-    () =>
-      createConfiguredReportStore({
-        storageKey: 'reports',
-        storage,
-        env: import.meta.env,
-      }),
-    [storage],
-  );
   const reportsQuery = useQuery({
     queryKey: ['scope', activeOrgId, activeSiteScope, 'reports-page-summary'],
     queryFn: async () => {
@@ -173,10 +160,6 @@ export function ReportsPage() {
             gaugeValue={Math.round(((paidVsOpen[0]?.value ?? 0) / Math.max(totalRevenue, 1)) * 100)}
             gaugeLabel="Collected"
           />
-        </div>
-
-        <div className="mt-4">
-          <ReportBuilderPanel store={reportStore} />
         </div>
       </div>
     </ModulePage>

@@ -1,6 +1,22 @@
 import { normalizeOsirisRole } from './permissions';
 import { normalizeOsirisRuntimeConfig } from './runtimeConfig';
-import type { OsirisBootstrapResponse, OsirisRuntimeState } from './types';
+import type {
+  OsirisBootstrapOrganization,
+  OsirisBootstrapResponse,
+  OsirisOrganizationSummary,
+  OsirisRuntimeState,
+} from './types';
+
+function normalizeOrganizationSummary(
+  organization: OsirisBootstrapOrganization,
+): OsirisOrganizationSummary {
+  return {
+    id: organization.id,
+    name: organization.name,
+    slug: organization.slug,
+    logoUrl: organization.logoUrl ?? organization.logo_data ?? null,
+  };
+}
 
 export function normalizeOsirisBootstrap(payload: OsirisBootstrapResponse): OsirisRuntimeState {
   const activeOrgId = payload.profile?.active_org_id ?? null;
@@ -20,7 +36,7 @@ export function normalizeOsirisBootstrap(payload: OsirisBootstrapResponse): Osir
         ? { preferredLanguage: payload.profile.preferred_language }
         : {}),
     },
-    organizations: payload.organizations,
+    organizations: payload.organizations.map(normalizeOrganizationSummary),
     memberships: payload.memberships,
     activeOrgId,
     activeSiteId: payload.profile?.active_site_id ?? payload.locationAccess?.activeSiteId ?? null,

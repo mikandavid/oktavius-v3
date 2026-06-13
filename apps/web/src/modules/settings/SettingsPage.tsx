@@ -1,5 +1,5 @@
 import { Button, Combobox, SettingsRow, Switch } from '@oktavius/base-ui';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createConfiguredCatalogOptionsStore } from '@/api/apiStoreConfig';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
@@ -8,19 +8,27 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
+import { AiSettingsSection } from '@/components/settings/AiSettingsSection';
+import { AutosaveStatus } from '@/components/settings/AutosaveStatus';
 import {
   type CatalogOption,
   CatalogOptionsManager,
 } from '@/components/settings/CatalogOptionsManager';
+import { LocationPolicySettingsSection } from '@/components/settings/LocationPolicySettingsSection';
+import { OrganizationSettingsSection } from '@/components/settings/OrganizationSettingsSection';
 import {
   SettingsPageFactory,
   type SettingsSectionConfig,
 } from '@/components/settings/SettingsPageFactory';
 import { WorkspaceLocationsOverview } from '@/components/settings/WorkspaceLocationsOverview';
+import { useTranslation } from '@/core/i18n';
+import { useDebouncedAutosave } from '@/lib/hooks/useDebouncedAutosave';
 import {
+  BrainIcon,
   DocumentIcon,
   LocationIcon,
   NotificationsIcon,
+  OrganizationIcon,
   PlusIcon,
   Settings2Icon,
 } from '@/lib/icons';
@@ -48,7 +56,6 @@ const INITIAL_PAYMENT_TERMS: CatalogOption[] = [
   { id: 'pt_eom', label: 'End of month', code: 'EOM', active: false, sortOrder: 4 },
 ];
 
-const SAVE_WORKSPACE_SETTINGS_LABEL = 'Save workspace settings';
 const LOCATIONS_TITLE = 'Locations';
 const LOCATIONS_DESCRIPTION = 'Branches and sites available in the active workspace.';
 const ADD_LOCATION_LABEL = 'Add location';
@@ -137,6 +144,7 @@ function formValuesToLocationInput(values: Record<string, FormFieldValue>): Osir
 }
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const { locations } = useActiveLocation();
   const osirisRuntime = useOptionalOsirisRuntime();
   const activeOrgId = osirisRuntime?.activeOrgId ?? null;
@@ -148,6 +156,11 @@ export function SettingsPage() {
     createDefaultOsirisWorkspaceSettings(),
   );
   const [isSavingWorkspaceSettings, setIsSavingWorkspaceSettings] = useState(false);
+  const [workspaceSettingsSavedAt, setWorkspaceSettingsSavedAt] = useState<number | null>(null);
+  // Gates autosave: stays false through the async load so the loaded value is
+  // never written straight back; the first user edit flips it true for good.
+  const hasEditedWorkspaceSettingsRef = useRef(false);
+  const [hasEditedWorkspaceSettings, setHasEditedWorkspaceSettings] = useState(false);
   const [managedLocations, setManagedLocations] = useState<OsirisOrgLocation[]>([]);
   const [hasManagedLocationsResult, setHasManagedLocationsResult] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
@@ -183,6 +196,10 @@ export function SettingsPage() {
   useEffect(() => {
     if (!activeOrgId || !osirisRuntime?.loadWorkspaceSettings) return;
     let cancelled = false;
+    // Loading (or switching orgs) disarms autosave until the next user edit.
+    hasEditedWorkspaceSettingsRef.current = false;
+    setHasEditedWorkspaceSettings(false);
+    setWorkspaceSettingsSavedAt(null);
 
     void osirisRuntime
       .loadWorkspaceSettings(activeOrgId)
@@ -247,45 +264,53 @@ export function SettingsPage() {
     appToast.success('Payment term removed.');
   };
 
+  // Single entry point for user edits to workspace settings: marks the form
+  // dirty so the debounced autosave arms, then applies the change.
+  const handleWorkspaceSettingsChange = useCallback((next: OsirisWorkspaceSettings) => {
+    if (!hasEditedWorkspaceSettingsRef.current) {
+      hasEditedWorkspaceSettingsRef.current = true;
+      setHasEditedWorkspaceSettings(true);
+    }
+    setWorkspaceSettings(next);
+  }, []);
+
   const updateWorkspaceDateTime = (
     key: keyof OsirisWorkspaceSettings['dateTime'],
     value: string,
   ) => {
-    setWorkspaceSettings((current) => ({
-      ...current,
+    handleWorkspaceSettingsChange({
+      ...workspaceSettings,
       dateTime: {
-        ...current.dateTime,
+        ...workspaceSettings.dateTime,
         [key]: value,
       },
-    }));
+    });
   };
 
-  const updateWorkspaceLocations = (
-    key: keyof OsirisWorkspaceSettings['locations'],
-    value: boolean | string[],
-  ) => {
-    setWorkspaceSettings((current) => ({
-      ...current,
-      locations: {
-        ...current.locations,
-        [key]: value,
-      },
-    }));
-  };
+  const saveWorkspaceSettings = useCallback(
+    async (settingsToSave: OsirisWorkspaceSettings) => {
+      if (!activeOrgId || !osirisRuntime?.updateWorkspaceSettings) return;
+      setIsSavingWorkspaceSettings(true);
+      try {
+        // Intentionally do not write the normalized response back into state:
+        // the local value already matches what we sent, and a write-back during
+        // active editing would both re-trigger the autosave and move the caret.
+        await osirisRuntime.updateWorkspaceSettings(settingsToSave, activeOrgId);
+        setWorkspaceSettingsSavedAt(Date.now());
+      } catch (error) {
+        appToast.fromApiError(error, 'Workspace settings could not be saved.');
+      } finally {
+        setIsSavingWorkspaceSettings(false);
+      }
+    },
+    [activeOrgId, osirisRuntime],
+  );
 
-  const handleSaveWorkspaceSettings = async () => {
-    if (!activeOrgId || !osirisRuntime?.updateWorkspaceSettings) return;
-    setIsSavingWorkspaceSettings(true);
-    try {
-      const saved = await osirisRuntime.updateWorkspaceSettings(workspaceSettings, activeOrgId);
-      setWorkspaceSettings(saved);
-      appToast.success('Workspace settings saved.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Workspace settings could not be saved.');
-    } finally {
-      setIsSavingWorkspaceSettings(false);
-    }
-  };
+  useDebouncedAutosave(workspaceSettings, {
+    onSave: saveWorkspaceSettings,
+    enabled: hasEditedWorkspaceSettings && Boolean(activeOrgId),
+    delayMs: 1000,
+  });
 
   const locationRows = hasManagedLocationsResult
     ? managedLocations.map(locationToDetailItem)
@@ -392,27 +417,63 @@ export function SettingsPage() {
               className="w-[220px]"
             />
           </SettingsRow>
-          <SettingsRow
-            label="Require locations"
-            description="Records that support sites must be assigned to a location."
-          >
-            <Switch
-              checked={workspaceSettings.locations.enforcementEnabled}
-              onCheckedChange={(checked) => updateWorkspaceLocations('enforcementEnabled', checked)}
-            />
-          </SettingsRow>
-          <div className="flex justify-end border-b border-border/50 py-3">
-            <Button
-              type="button"
-              size="sm"
-              aria-label="Save workspace settings"
-              loading={isSavingWorkspaceSettings}
-              onClick={() => void handleSaveWorkspaceSettings()}
-            >
-              {SAVE_WORKSPACE_SETTINGS_LABEL}
-            </Button>
+          <div className="flex min-h-[1.25rem] justify-end border-b border-border/50 py-3">
+            <AutosaveStatus saving={isSavingWorkspaceSettings} savedAt={workspaceSettingsSavedAt} />
           </div>
-          <div className="border-b border-border/50 py-3 last:border-b-0">
+        </>
+      ),
+    },
+    {
+      id: 'organization',
+      label: t('settings.orgSettings', undefined, 'Organization Settings'),
+      icon: <OrganizationIcon size={16} weight="duotone" />,
+      title: t('settings.orgSettings', undefined, 'Organization Settings'),
+      sectionDescription: t(
+        'settings.orgSettingsRouteDescription',
+        undefined,
+        'Manage company profile, invoicing defaults, and legal details for your active organization.',
+      ),
+      permission: 'org.manage',
+      render: () => (
+        <OrganizationSettingsSection
+          settings={workspaceSettings}
+          saving={isSavingWorkspaceSettings}
+          savedAt={workspaceSettingsSavedAt}
+          onChange={handleWorkspaceSettingsChange}
+        />
+      ),
+    },
+    {
+      id: 'ai',
+      label: 'AI',
+      icon: <BrainIcon size={16} weight="duotone" />,
+      title: 'AI',
+      sectionDescription: 'Usage guardrails and org-wide instructions for AI-assisted work.',
+      permission: 'org.manage',
+      render: () => (
+        <AiSettingsSection
+          settings={workspaceSettings}
+          saving={isSavingWorkspaceSettings}
+          savedAt={workspaceSettingsSavedAt}
+          onChange={handleWorkspaceSettingsChange}
+        />
+      ),
+    },
+    {
+      id: 'locations',
+      label: 'Locations',
+      icon: <LocationIcon size={16} weight="duotone" />,
+      title: 'Locations',
+      sectionDescription: 'Manage branches and workspace site defaults.',
+      render: () => (
+        <div className="space-y-5">
+          <LocationPolicySettingsSection
+            settings={workspaceSettings}
+            saving={isSavingWorkspaceSettings}
+            savedAt={workspaceSettingsSavedAt}
+            onChange={handleWorkspaceSettingsChange}
+          />
+          <div>
             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-medium text-foreground">{LOCATIONS_TITLE}</p>
@@ -435,25 +496,7 @@ export function SettingsPage() {
               }
             />
           </div>
-        </>
-      ),
-    },
-    {
-      id: 'locations',
-      label: 'Locations',
-      icon: <LocationIcon size={16} weight="duotone" />,
-      title: 'Locations',
-      sectionDescription: 'Manage branches and workspace site defaults.',
-      render: () => (
-        <WorkspaceLocationsOverview
-          locations={locationRows}
-          onEdit={osirisRuntime?.updateOrgLocation ? openEditLocation : undefined}
-          onDeactivate={
-            osirisRuntime?.updateOrgLocation
-              ? (location) => void handleDeactivateLocation(location)
-              : undefined
-          }
-        />
+        </div>
       ),
     },
     {

@@ -3,11 +3,6 @@ import {
   createLocalSavedViewsStore,
   type SavedViewsStore,
 } from '@/components/data/savedViewsStorage';
-import {
-  createApiReportStore,
-  createLocalReportStore,
-  type ReportStore,
-} from '@/components/reports/reportStorage';
 import type { CatalogOption } from '@/components/settings/CatalogOptionsManager';
 import {
   type CatalogOptionsStore,
@@ -24,7 +19,6 @@ export type ApiStoreEnvironment = {
 const GENERATED_STORE_ENDPOINTS = {
   savedViews: '/generated-stores/saved-views',
   catalogOptions: '/generated-stores/catalog-options',
-  reports: '/generated-stores/reports',
 } as const;
 
 function joinPath(base: string, path: string) {
@@ -84,27 +78,6 @@ export function createConfiguredCatalogOptionsStore({
   return createApiCatalogOptionsStore({
     endpoint: storeEndpoint(baseUrl, GENERATED_STORE_ENDPOINTS.catalogOptions, catalogKey),
     defaults,
-    fetcher,
-    headers: configuredHeaders(env),
-  });
-}
-
-export function createConfiguredReportStore({
-  storageKey,
-  storage,
-  env,
-  fetcher,
-}: {
-  storageKey: string;
-  storage?: Storage;
-  env: ApiStoreEnvironment;
-  fetcher?: ApiArrayStoreFetcher;
-}): ReportStore {
-  const baseUrl = configuredBaseUrl(env);
-  if (!baseUrl) return createLocalReportStore(storage, storageKey);
-
-  return createApiReportStore({
-    endpoint: storeEndpoint(baseUrl, GENERATED_STORE_ENDPOINTS.reports, storageKey),
     fetcher,
     headers: configuredHeaders(env),
   });

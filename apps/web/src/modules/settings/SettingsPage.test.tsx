@@ -32,7 +32,44 @@ vi.mock('@/components/common/LanguageSelector', () => ({
   LanguageSelector: () => <div data-testid="language-selector" />,
 }));
 
+// useCountryOptions reads the locale via UserPreferencesProvider, which this
+// unit test does not mount (the real app shell provides it).
+vi.mock('@/lib/reference-data', () => ({
+  useCountryOptions: () => [
+    { value: 'AT', label: 'Austria' },
+    { value: 'DE', label: 'Germany' },
+  ],
+  normalizeCountryCode: (value: string) => value || undefined,
+}));
+
 const workspaceSettings = createDefaultOsirisWorkspaceSettings({
+  company: {
+    legalName: 'Oktavius Demo GmbH',
+    address: {
+      line1: 'Ring 1',
+      line2: '',
+      city: 'Vienna',
+      postalCode: '1010',
+      country: 'AT',
+    },
+    taxId: '123/4567',
+    vatId: 'ATU12345678',
+    registrationNumber: 'FN 123456a',
+    phone: '+43 1 234',
+    email: 'office@example.test',
+    website: 'https://example.test',
+  },
+  banking: {
+    bankName: 'Erste Bank',
+    iban: 'AT611904300234573201',
+    bic: 'GIBAATWWXXX',
+    accountHolder: 'Oktavius Demo GmbH',
+  },
+  invoicing: {
+    defaultPaymentTermsDays: 14,
+    footerText: 'Danke fuer Ihren Auftrag.',
+    dunningEnabled: true,
+  },
   dateTime: { dateFormat: 'YYYY-MM-DD', timeFormat: '24h', timezone: 'Europe/Vienna' },
   locations: { enforcementEnabled: false, sharedModules: [] },
 });
@@ -114,6 +151,15 @@ async function renderSettingsPage(value: OsirisRuntimeContextValue = runtime) {
   return { container, root };
 }
 
+function changeInput(input: HTMLInputElement, value: string) {
+  act(() => {
+    const valueSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+    valueSetter?.call(input, value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+}
+
 describe('SettingsPage', () => {
   let roots: Root[] = [];
 
@@ -124,31 +170,34 @@ describe('SettingsPage', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     for (const root of roots) {
       act(() => root.unmount());
     }
     document.body.innerHTML = '';
   });
 
-  it('loads and saves backend-backed workspace settings', async () => {
+  it('loads workspace settings without autosaving on load', async () => {
     const rendered = await renderSettingsPage();
     roots.push(rendered.root);
 
     expect(runtime.loadWorkspaceSettings).toHaveBeenCalledWith('org_1');
     expect(rendered.container.textContent).toContain('YYYY-MM-DD');
 
-    await act(async () => {
-      rendered.container
-        .querySelector('button[aria-label="Save workspace settings"]')
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(runtime.updateWorkspaceSettings).toHaveBeenCalledWith(workspaceSettings, 'org_1');
+    // Loading (or switching orgs) must not trigger a write-back; autosave only
+    // arms after a user edit.
+    expect(runtime.updateWorkspaceSettings).not.toHaveBeenCalled();
   });
 
   it('loads real locations and can deactivate a location', async () => {
     const rendered = await renderSettingsPage();
     roots.push(rendered.root);
+
+    await act(async () => {
+      [...rendered.container.querySelectorAll('button')]
+        .find((button) => button.textContent?.includes('Locations'))
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
 
     expect(runtime.listOrgLocations).toHaveBeenCalledWith('org_1');
     expect(rendered.container.textContent).toContain('Vienna');
@@ -163,5 +212,82 @@ describe('SettingsPage', () => {
     expect(runtime.updateOrgLocation).toHaveBeenCalledWith('org_1', 'site_1', {
       isActive: false,
     });
+  });
+
+  it('keeps organization settings focused on company, banking, and invoicing details', async () => {
+    const rendered = await renderSettingsPage();
+    roots.push(rendered.root);
+
+    await act(async () => {
+      [...rendered.container.querySelectorAll('button')]
+        .find((button) => button.textContent?.includes('Organization Settings'))
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(rendered.container.textContent).toContain('Company Information');
+    expect(rendered.container.textContent).toContain('Bank Details');
+    expect(rendered.container.textContent).toContain('Invoice Settings');
+    expect(rendered.container.textContent).not.toContain('Date & Time');
+    expect(rendered.container.textContent).not.toContain('AI Usage Budget');
+    expect(rendered.container.textContent).not.toContain('Agent Instructions');
+    expect(rendered.container.textContent).not.toContain('Location enforcement');
+    expect(rendered.container.textContent).not.toContain('14 days');
+
+    const legalNameInput = rendered.container.querySelector<HTMLInputElement>(
+      'input[name="company.legalName"]',
+    );
+    if (!legalNameInput) throw new Error('Expected legal name input to render.');
+
+    expect(legalNameInput.value).toBe('Oktavius Demo GmbH');
+    expect(
+      rendered.container.querySelector<HTMLInputElement>('input[name="banking.bankName"]')?.value,
+    ).toBe('Erste Bank');
+
+    // Editing arms the debounced autosave; the save fires once the timer settles.
+    vi.useFakeTimers();
+    changeInput(legalNameInput, 'Oktavius V3 GmbH');
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+
+    expect(runtime.updateWorkspaceSettings).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        company: expect.objectContaining({ legalName: 'Oktavius V3 GmbH' }),
+      }),
+      'org_1',
+    );
+  });
+
+  it('shows AI-owned organization controls in the AI settings tab', async () => {
+    const rendered = await renderSettingsPage();
+    roots.push(rendered.root);
+
+    await act(async () => {
+      [...rendered.container.querySelectorAll('button')]
+        .find((button) => button.textContent?.includes('AI'))
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(rendered.container.textContent).toContain('AI Usage Budget');
+    expect(rendered.container.textContent).toContain('Agent Instructions');
+    expect(rendered.container.textContent).not.toContain('Company Information');
+    expect(rendered.container.textContent).not.toContain('Bank Details');
+  });
+
+  it('shows location policy controls in the locations settings tab', async () => {
+    const rendered = await renderSettingsPage();
+    roots.push(rendered.root);
+
+    await act(async () => {
+      [...rendered.container.querySelectorAll('button')]
+        .find((button) => button.textContent?.includes('Locations'))
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(rendered.container.textContent).toContain('Location enforcement');
+    expect(rendered.container.textContent).toContain('Org-shared modules');
+    expect(rendered.container.textContent).not.toContain('AI Usage Budget');
+    expect(rendered.container.textContent).not.toContain('Invoice Settings');
   });
 });

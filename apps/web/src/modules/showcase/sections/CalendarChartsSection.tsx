@@ -7,8 +7,6 @@ import {
 } from '@oktavius/base-ui';
 import { useState } from 'react';
 
-import { ReportBuilderPanel } from '@/components/reports/ReportBuilderPanel';
-
 import { useShowcaseCalendarDemo } from '../fixtures/calendarDemo';
 import { ShowcaseBlock } from '../shared';
 
@@ -240,10 +238,6 @@ export function CalendarChartsSection() {
           gaugeLabel="Quota"
         />
       </div>
-
-      <ShowcaseBlock title="ReportBuilderPanel" meta="Saved report configs · live chart preview">
-        <ReportBuilderPanel />
-      </ShowcaseBlock>
     </div>
   );
 }

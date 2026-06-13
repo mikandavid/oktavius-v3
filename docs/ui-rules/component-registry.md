@@ -350,12 +350,6 @@ Shared helpers: `documentPreviewUtils.ts` (download, list-row → preview), `doc
 | `@` mention composer          | `<MentionComposer>` | `@/components/workflow/MentionComposer` |
 | Rich text with mentions/links | `<FormattedText>`   | `@/components/common/FormattedText`     |
 
-### Reports (apps/web)
-
-| Need                 | Component              | Import                                    |
-| -------------------- | ---------------------- | ----------------------------------------- |
-| Report builder panel | `<ReportBuilderPanel>` | `@/components/reports/ReportBuilderPanel` |
-
 ### Toast
 
 ```ts

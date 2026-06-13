@@ -61,7 +61,10 @@ describe('normalizeOsirisBootstrap', () => {
       isSuperadmin: false,
       preferredLanguage: 'de',
     });
-    expect(result.organizations).toBe(payload.organizations);
+    expect(result.organizations).toEqual([
+      { id: 'org_1', name: 'Osiris Demo', slug: 'osiris-demo', logoUrl: null },
+      { id: 'org_2', name: 'Other Org', slug: 'other-org', logoUrl: null },
+    ]);
     expect(result.memberships).toBe(payload.memberships);
     expect(result.permissions).toBe(payload.permissions);
     expect(result.config?.org?.enabledModules).toEqual(['contacts']);
@@ -138,5 +141,41 @@ describe('normalizeOsirisBootstrap', () => {
       role: 'viewer',
       permissions: ['reports.view'],
     });
+  });
+
+  it('normalizes organization logo data for UI organization summaries', () => {
+    const payload = {
+      user: { id: 'usr_4', email: 'lena@example.test' },
+      profile: {
+        user_id: 'usr_4',
+        email: 'lena@example.test',
+        full_name: null,
+        is_super_admin: false,
+        active_org_id: 'org_1',
+        active_site_id: null,
+      },
+      memberships: [{ org_id: 'org_1', role: 'admin', is_active: true }],
+      organizations: [
+        {
+          id: 'org_1',
+          name: 'Logo Org',
+          slug: 'logo-org',
+          logo_data: 'data:image/png;base64,org-logo',
+        },
+      ],
+      permissions: [],
+      config: null,
+    } as unknown as OsirisBootstrapResponse;
+
+    const result = normalizeOsirisBootstrap(payload);
+
+    expect(result.organizations).toEqual([
+      {
+        id: 'org_1',
+        name: 'Logo Org',
+        slug: 'logo-org',
+        logoUrl: 'data:image/png;base64,org-logo',
+      },
+    ]);
   });
 });

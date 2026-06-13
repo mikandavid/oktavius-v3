@@ -47,6 +47,21 @@ export type OsirisLocationAccess = {
   }[];
 };
 
+export type OsirisBootstrapOrganization = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+  logo_data?: string | null;
+};
+
+export type OsirisOrganizationSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string | null;
+};
+
 export type OsirisBootstrapResponse = {
   user: {
     id: string;
@@ -66,11 +81,7 @@ export type OsirisBootstrapResponse = {
     role: string;
     is_active: boolean;
   }[];
-  organizations: readonly {
-    id: string;
-    name: string;
-    slug: string;
-  }[];
+  organizations: readonly OsirisBootstrapOrganization[];
   permissions: readonly OsirisPermissionKey[];
   locationAccess?: OsirisLocationAccess | null;
   config: unknown | null;
@@ -85,7 +96,7 @@ export type OsirisRuntimeState = {
     isSuperadmin: boolean;
     preferredLanguage?: string | null;
   };
-  organizations: OsirisBootstrapResponse['organizations'];
+  organizations: readonly OsirisOrganizationSummary[];
   memberships: OsirisBootstrapResponse['memberships'];
   activeOrgId: string | null;
   activeSiteId: string | null;
