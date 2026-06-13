@@ -108,3 +108,13 @@ describe('app navigation module manifest', () => {
     expect(getAppCreateActionForProfile(apex, 'reports')).toBeNull();
   });
 });
+
+describe('members manifest entry', () => {
+  it('is an admin module gated by org.members.manage', () => {
+    const entry = APP_NAV_MODULES.find((module) => module.id === 'members');
+    expect(entry).toBeDefined();
+    expect(entry?.section).toBe('admin');
+    expect(entry?.path).toBe('/members');
+    expect(entry?.permission).toBe('org.members.manage');
+  });
+});

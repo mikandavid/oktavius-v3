@@ -44,6 +44,7 @@ export const usersPageIcon = () => modulePageIcon(UsersIcon);
 export const userRecordPageIcon = () => modulePageIcon(UserCircleIcon);
 export const reportsPageIcon = () => modulePageIcon(ReportsIcon);
 export const settingsPageIcon = () => modulePageIcon(SettingsIcon);
+export const membersPageIcon = () => modulePageIcon(TeamIcon);
 export const organizationPageIcon = () => modulePageIcon(OrganizationIcon);
 export const showcasePageIcon = () => modulePageIcon(SlidersHorizontalIcon);
 export const accessDeniedPageIcon = () => modulePageIcon(LockIcon);

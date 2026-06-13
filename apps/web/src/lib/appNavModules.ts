@@ -9,6 +9,7 @@ import {
   ReportsIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
+  TeamIcon,
 } from '@/lib/icons';
 import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 
@@ -104,6 +105,17 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     permission: 'reports.view',
     loadPage: () => import('@/modules/reports/ReportsPage'),
     pageExport: 'ReportsPage',
+  },
+  {
+    id: 'members',
+    path: '/members',
+    label: 'Members',
+    labelKey: 'navigation.members',
+    icon: TeamIcon,
+    section: 'admin',
+    permission: 'org.members.manage',
+    loadPage: () => import('@/modules/members/MembersPage'),
+    pageExport: 'MembersPage',
   },
   {
     id: 'settings',
