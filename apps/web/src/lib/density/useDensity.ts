@@ -1,15 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { type RootPrefConfig, useRootPref } from '@/lib/showcase-prefs/useRootPref';
 
-import { getWindowStorage, safeStorageRemove, safeStorageSet } from '@/lib/storage/safeStorage';
-
-import {
-  applyDensityToDom,
-  clearDensityFromDom,
-  DEFAULT_DENSITY,
-  type Density,
-  DENSITY_STORAGE_KEY,
-  readStoredDensity,
-} from './density';
+import { DEFAULT_DENSITY, type Density, DENSITY_STORAGE_KEY, isDensity } from './density';
 
 export type DensityController = {
   density: Density;
@@ -21,27 +12,22 @@ export type DensityController = {
   reset: () => void;
 };
 
+const DENSITY_PREF: RootPrefConfig<Density> = {
+  attribute: 'data-density',
+  storageKey: DENSITY_STORAGE_KEY,
+  defaultValue: DEFAULT_DENSITY,
+  parse: (raw) => (isDensity(raw) ? raw : null),
+  serialize: (value) => value,
+  toAttribute: (value) => value, // density always sets the attribute
+};
+
 export function useDensity(): DensityController {
-  const storedOnMount = readStoredDensity(getWindowStorage('localStorage'));
-  const [density, setDensity] = useState<Density>(() => storedOnMount ?? DEFAULT_DENSITY);
-  const [persist, setPersist] = useState<boolean>(() => storedOnMount !== null);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    applyDensityToDom(root, density);
-    if (persist) {
-      safeStorageSet(getWindowStorage('localStorage'), DENSITY_STORAGE_KEY, density);
-    } else {
-      safeStorageRemove(getWindowStorage('localStorage'), DENSITY_STORAGE_KEY);
-    }
-    return () => {
-      // On unmount: restore the baseline (no data-density). On a dependency change
-      // React re-runs the effect immediately, so the removal is transient and harmless.
-      clearDensityFromDom(root);
-    };
-  }, [density, persist]);
-
-  const reset = useCallback(() => setDensity(DEFAULT_DENSITY), []);
-
-  return { density, setDensity, persist, setPersist, reset };
+  const pref = useRootPref(DENSITY_PREF);
+  return {
+    density: pref.value,
+    setDensity: pref.setValue,
+    persist: pref.persist,
+    setPersist: pref.setPersist,
+    reset: pref.reset,
+  };
 }

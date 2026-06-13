@@ -8,6 +8,7 @@ import { useDensity } from '@/lib/density/useDensity';
 import { useDesignTokenOverrides } from '@/lib/design-tokens/useDesignTokenOverrides';
 import { SettingsIcon } from '@/lib/icons';
 import { showcasePageIcon } from '@/lib/modulePageIcons';
+import { useReducedMotion } from '@/lib/showcase-prefs/useReducedMotion';
 
 import { ShowcaseSettingsDrawer } from './components/ShowcaseSettingsDrawer';
 import { AgentSection } from './sections/AgentSection';
@@ -82,12 +83,19 @@ export function ComponentShowcasePage() {
   // its content when closed) is shut.
   const tokens = useDesignTokenOverrides(true);
   const density = useDensity();
+  const reducedMotion = useReducedMotion();
+
+  const setAppearancePersist = (value: boolean) => {
+    density.setPersist(value);
+    reducedMotion.setPersist(value);
+  };
 
   const handleResetEverything = () => {
     tokens.resetAll();
     tokens.setPersist(false);
     density.reset();
-    density.setPersist(false);
+    reducedMotion.reset();
+    setAppearancePersist(false);
   };
 
   return (
@@ -135,8 +143,10 @@ export function ComponentShowcasePage() {
         tokens={tokens}
         density={density.density}
         onDensityChange={density.setDensity}
-        densityPersist={density.persist}
-        onDensityPersistChange={density.setPersist}
+        reducedMotion={reducedMotion.enabled}
+        onReducedMotionChange={reducedMotion.setEnabled}
+        appearancePersist={density.persist}
+        onAppearancePersistChange={setAppearancePersist}
         onResetEverything={handleResetEverything}
       />
     </ModulePage>

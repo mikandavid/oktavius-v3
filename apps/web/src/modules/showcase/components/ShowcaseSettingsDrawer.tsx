@@ -1,6 +1,5 @@
 import {
   Button,
-  cn,
   Drawer,
   DrawerContent,
   DrawerFooter,
@@ -17,6 +16,8 @@ import { DENSITIES, type Density } from '@/lib/density/density';
 import type { DesignTokenOverridesController } from '@/lib/design-tokens/useDesignTokenOverrides';
 import { UI_LOCALE_OPTIONS, UI_THEME_OPTIONS, useUserPreferences } from '@/lib/userPreferences';
 
+import { AppearanceTokenControls } from './AppearanceTokenControls';
+import { Segmented } from './Segmented';
 import { TokenEditorPanel } from './TokenEditorPanel';
 
 const DENSITY_LABELS: Record<Density, string> = {
@@ -25,40 +26,9 @@ const DENSITY_LABELS: Record<Density, string> = {
   spacious: 'Spacious',
 };
 
-const toggleVariant = (active: boolean): 'secondary' | 'ghost' => (active ? 'secondary' : 'ghost');
+const DENSITY_OPTIONS = DENSITIES.map((id) => ({ id, label: DENSITY_LABELS[id] }));
 
-function DensitySegmented({
-  value,
-  onChange,
-}: {
-  value: Density;
-  onChange: (value: Density) => void;
-}) {
-  return (
-    <div
-      role="group"
-      aria-label="Density"
-      className="inline-flex rounded-control border border-border p-0.5"
-    >
-      {DENSITIES.map((option) => (
-        <button
-          key={option}
-          type="button"
-          aria-pressed={value === option}
-          onClick={() => onChange(option)}
-          className={cn(
-            'rounded-[0.4rem] px-3 py-1 text-xs font-medium transition-colors',
-            value === option
-              ? 'bg-sidebar-primary/10 text-sidebar-primary'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
-          {DENSITY_LABELS[option]}
-        </button>
-      ))}
-    </div>
-  );
-}
+const toggleVariant = (active: boolean): 'secondary' | 'ghost' => (active ? 'secondary' : 'ghost');
 
 export type ShowcaseSettingsDrawerProps = {
   open: boolean;
@@ -66,8 +36,11 @@ export type ShowcaseSettingsDrawerProps = {
   tokens: DesignTokenOverridesController;
   density: Density;
   onDensityChange: (value: Density) => void;
-  densityPersist: boolean;
-  onDensityPersistChange: (value: boolean) => void;
+  reducedMotion: boolean;
+  onReducedMotionChange: (value: boolean) => void;
+  /** Drives persistence for the DOM-attribute prefs (density + reduced motion). */
+  appearancePersist: boolean;
+  onAppearancePersistChange: (value: boolean) => void;
   onResetEverything: () => void;
 };
 
@@ -77,8 +50,10 @@ export function ShowcaseSettingsDrawer({
   tokens,
   density,
   onDensityChange,
-  densityPersist,
-  onDensityPersistChange,
+  reducedMotion,
+  onReducedMotionChange,
+  appearancePersist,
+  onAppearancePersistChange,
   onResetEverything,
 }: ShowcaseSettingsDrawerProps) {
   const { theme, setTheme, locale, setLocale } = useUserPreferences();
@@ -136,20 +111,38 @@ export function ShowcaseSettingsDrawer({
             </SettingsRow>
 
             <SettingsRow label="Density" description="Scales spacing and type across the app.">
-              <DensitySegmented value={density} onChange={onDensityChange} />
+              <Segmented
+                ariaLabel="Density"
+                value={density}
+                options={DENSITY_OPTIONS}
+                onChange={onDensityChange}
+              />
             </SettingsRow>
 
+            <SettingsRow label="Reduced motion" description="Disable animations and transitions.">
+              <Button
+                size="sm"
+                variant={toggleVariant(reducedMotion)}
+                aria-pressed={reducedMotion}
+                onClick={() => onReducedMotionChange(!reducedMotion)}
+              >
+                {reducedMotion ? 'On' : 'Off'}
+              </Button>
+            </SettingsRow>
+
+            <AppearanceTokenControls controller={tokens} />
+
             <SettingsRow
-              label="Remember density"
-              description="Save the density choice to localStorage."
+              label="Remember appearance"
+              description="Save density and motion preferences to localStorage."
             >
               <Button
                 size="sm"
-                variant={toggleVariant(densityPersist)}
-                aria-pressed={densityPersist}
-                onClick={() => onDensityPersistChange(!densityPersist)}
+                variant={toggleVariant(appearancePersist)}
+                aria-pressed={appearancePersist}
+                onClick={() => onAppearancePersistChange(!appearancePersist)}
               >
-                {densityPersist ? 'On' : 'Off'}
+                {appearancePersist ? 'On' : 'Off'}
               </Button>
             </SettingsRow>
           </TabsContent>
