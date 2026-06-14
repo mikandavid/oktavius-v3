@@ -1,9 +1,9 @@
-import { MultiSelect, SettingsRow, Switch } from '@oktavius/base-ui';
+import { MultiSelect, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
 
 import { useTranslation } from '@/core/i18n';
 import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
 
-import { AutosaveStatus } from './AutosaveStatus';
+import { SettingsAutosaveFooter } from './settingsForm';
 import { SHARED_MODULE_OPTIONS } from './sharedModuleOptions';
 
 type LocationPolicySettingsSectionProps = {
@@ -36,18 +36,14 @@ export function LocationPolicySettingsSection({
   };
 
   return (
-    <section className="space-y-2 border-b border-border/50 pb-5">
-      <div>
-        <h4 className="text-sm font-semibold text-foreground">
-          {s('locationsTitle', 'Locations')}
-        </h4>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          {s(
-            'locationsDescription',
-            'Manage organization locations and control where location-owned data is created and visible.',
-          )}
-        </p>
-      </div>
+    <SettingsSection
+      title={s('locationsTitle', 'Locations')}
+      description={s(
+        'locationsDescription',
+        'Manage organization locations and control where location-owned data is created and visible.',
+      )}
+      className="border-b border-border/50 pb-5"
+    >
       <SettingsRow
         label={s('locationEnforcementEnabled', 'Location enforcement')}
         description={s(
@@ -76,14 +72,12 @@ export function LocationPolicySettingsSection({
           searchPlaceholder={s('sharedLocationModulesSearch', 'Search modules…')}
         />
       </SettingsRow>
-      <div className="flex min-h-[1.25rem] justify-end pt-2">
-        <AutosaveStatus
-          saving={saving}
-          savedAt={savedAt}
-          savingLabel={t('common.saving', undefined, 'Saving…')}
-          savedLabel={s('saved', 'Saved')}
-        />
-      </div>
-    </section>
+      <SettingsAutosaveFooter
+        saving={saving}
+        savedAt={savedAt}
+        savingLabel={t('common.saving', undefined, 'Saving…')}
+        savedLabel={s('saved', 'Saved')}
+      />
+    </SettingsSection>
   );
 }
