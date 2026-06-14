@@ -297,7 +297,7 @@ export function WhatsAppContactsConfig() {
         )}
       </section>
 
-      <div className="border-t border-border" />
+      <div className="border-t border-border/50" />
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">

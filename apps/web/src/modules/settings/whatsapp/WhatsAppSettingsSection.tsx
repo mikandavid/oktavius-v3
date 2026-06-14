@@ -19,7 +19,7 @@ export function WhatsAppSettingsSection() {
   return (
     <div className="space-y-6">
       <WhatsAppConnection />
-      <div className="border-t border-border" />
+      <div className="border-t border-border/50" />
       <WhatsAppContactsConfig />
     </div>
   );
