@@ -1,6 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppShellLayoutProvider } from '@/components/layout/AppShellLayoutContext';
@@ -19,6 +19,11 @@ vi.mock('@/lib/toast', () => ({
   },
 }));
 
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location-probe">{`${location.pathname}${location.search}`}</div>;
+}
+
 function renderEmailPage() {
   const container = document.createElement('div');
   document.body.append(container);
@@ -31,6 +36,7 @@ function renderEmailPage() {
           <UserPreferencesProvider>
             <I18nProvider>
               <EmailPage />
+              <LocationProbe />
             </I18nProvider>
           </UserPreferencesProvider>
         </AppShellLayoutProvider>
@@ -81,12 +87,25 @@ describe('EmailPage empty mailbox', () => {
     document.body.innerHTML = '';
   });
 
-  it('blocks compose when no mailbox data source is connected', async () => {
+  it('prompts to connect a mail provider when none is connected', async () => {
     const rendered = renderEmailPage();
     roots.push(rendered.root);
     const composeButton = await waitForButtonByText(rendered.container, 'Compose');
 
-    expect(rendered.container.textContent).toContain('Email data source is not connected.');
+    expect(rendered.container.textContent).toContain('No mail provider connected');
     expect(composeButton.disabled).toBe(true);
+  });
+
+  it('navigates to the mail settings tab from the connect-provider CTA', async () => {
+    const rendered = renderEmailPage();
+    roots.push(rendered.root);
+    const connectButton = await waitForButtonByText(rendered.container, 'Connect a provider');
+
+    act(() => {
+      connectButton.click();
+    });
+
+    const probe = rendered.container.querySelector('[data-testid="location-probe"]');
+    expect(probe?.textContent).toBe('/settings?section=mail');
   });
 });

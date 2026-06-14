@@ -181,6 +181,9 @@ import {
   UsersThree,
 } from '@phosphor-icons/react';
 
+// ─── Mail settings ───────────────────────────────────────────────────────────
+export { PlugsConnected as EmailConnectionIcon } from '@phosphor-icons/react';
+
 // ─── WhatsApp settings ───────────────────────────────────────────────────────
 export {
   WifiHigh as WhatsAppConnectionIcon,

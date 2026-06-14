@@ -1,6 +1,8 @@
-import { InlineEmptyState, SplitView } from '@oktavius/base-ui';
+import { Button, SplitView } from '@oktavius/base-ui';
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
+import { EmptyState } from '@/components/common/EmptyState';
 import {
   PageHeaderCtaButton,
   PageHeaderOutlineButton,
@@ -53,6 +55,7 @@ const EMPTY_EMAIL_CONTACT_OPTIONS: EmailContactOption[] = [];
 export function EmailPage() {
   const { ready } = usePreloadNamespaces(['email']);
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const storage = getWindowStorage('localStorage');
   const [threads, setThreads] = useState(() =>
     loadStoredEmailThreads(storage, EMPTY_EMAIL_THREADS),
@@ -286,16 +289,28 @@ export function EmailPage() {
             onMarkUnread={handleMarkUnread}
             onFlag={handleFlag}
           />
-        ) : (
+        ) : hasEmailDataSource ? (
           <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
-            {hasEmailDataSource ? (
-              <>
-                <EmailIcon size={16} className="mr-2" />
-                {t('email.noThreadSelected')}
-              </>
-            ) : (
-              <InlineEmptyState text="Email data source is not connected." centered />
-            )}
+            <EmailIcon size={16} className="mr-2" />
+            {t('email.noThreadSelected')}
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 items-center justify-center p-6">
+            <EmptyState
+              className="w-full max-w-sm"
+              title={t('email.noProviderTitle', undefined, 'No mail provider connected')}
+              description={t(
+                'email.noProviderDescription',
+                undefined,
+                'Connect Google, Microsoft, or Exchange to sync your mailbox and start sending email.',
+              )}
+              action={
+                <Button type="button" size="sm" onClick={() => navigate('/settings?section=mail')}>
+                  <PlusIcon size={14} />
+                  {t('email.connectProvider', undefined, 'Connect a provider')}
+                </Button>
+              }
+            />
           </div>
         )}
       </SplitView>
