@@ -31,12 +31,14 @@ import {
   OrganizationIcon,
   PlusIcon,
   Settings2Icon,
+  WhatsAppIcon,
 } from '@/lib/icons';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
 import type { LocationDetailItem } from '@/lib/locations/types';
 import { settingsPageIcon } from '@/lib/modulePageIcons';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
+import { WhatsAppSettingsSection } from '@/modules/settings/whatsapp/WhatsAppSettingsSection';
 import type {
   OsirisOrgLocation,
   OsirisOrgLocationInput,
@@ -521,6 +523,19 @@ export function SettingsPage() {
           </SettingsRow>
         </>
       ),
+    },
+    {
+      id: 'whatsapp',
+      label: t('settings.whatsappTab', undefined, 'WhatsApp'),
+      icon: <WhatsAppIcon size={16} weight="duotone" />,
+      title: t('settings.whatsappSettingsTitle', undefined, 'WhatsApp'),
+      sectionDescription: t(
+        'settings.whatsappSettingsDescription',
+        undefined,
+        'Connect the WhatsApp bot, set messaging policies, and manage the contact allowlist.',
+      ),
+      permission: 'org.manage',
+      render: () => <WhatsAppSettingsSection />,
     },
     {
       id: 'catalogs',

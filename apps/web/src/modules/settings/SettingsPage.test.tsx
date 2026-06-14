@@ -177,6 +177,13 @@ describe('SettingsPage', () => {
     document.body.innerHTML = '';
   });
 
+  it('shows the WhatsApp settings tab for org managers', async () => {
+    const rendered = await renderSettingsPage();
+    roots.push(rendered.root);
+
+    expect(rendered.container.textContent).toContain('WhatsApp');
+  });
+
   it('loads workspace settings without autosaving on load', async () => {
     const rendered = await renderSettingsPage();
     roots.push(rendered.root);
