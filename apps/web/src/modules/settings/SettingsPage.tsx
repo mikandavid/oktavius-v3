@@ -414,7 +414,7 @@ export function SettingsPage() {
               label="Date & time format"
               description="Default display across this workspace."
             >
-              <PackedField caption="Date format">
+              <PackedField caption="Date Format">
                 <Combobox
                   value={workspaceSettings.dateTime.dateFormat}
                   onChange={(value) => {
@@ -424,7 +424,7 @@ export function SettingsPage() {
                   className="w-full"
                 />
               </PackedField>
-              <PackedField caption="Time format">
+              <PackedField caption="Time Format">
                 <Combobox
                   value={workspaceSettings.dateTime.timeFormat}
                   onChange={(value) => {
