@@ -1,11 +1,18 @@
-import { Button, NumberInput, SettingsRow, Switch, Textarea } from '@oktavius/base-ui';
+import {
+  Button,
+  NumberInput,
+  SettingsRow,
+  SettingsSection,
+  Switch,
+  Textarea,
+} from '@oktavius/base-ui';
 import { useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
-import { BrainIcon, DeleteIcon, PlusIcon } from '@/lib/icons';
+import { DeleteIcon, PlusIcon } from '@/lib/icons';
 import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
 
-import { AutosaveStatus } from './AutosaveStatus';
+import { SettingsAutosaveFooter } from './settingsForm';
 
 type AiSettingsSectionProps = {
   settings: OsirisWorkspaceSettings;
@@ -89,90 +96,69 @@ export function AiSettingsSection({ settings, saving, savedAt, onChange }: AiSet
 
   return (
     <div className="space-y-6">
-      <section className="space-y-2">
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-            <BrainIcon size={16} weight="duotone" aria-hidden="true" />
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-foreground">
-              {s('aiUsageTitle', 'AI Usage Budget')}
-            </h4>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {s(
-                'aiUsageDescription',
-                'Configure the thresholds used for AI usage notifications and blocking.',
-              )}
-            </p>
-          </div>
-        </div>
-        <div>
-          <div className="grid gap-x-4 sm:grid-cols-2">
-            <SettingsRow
-              label={s('aiUsageWarningThresholdPercent', 'Warning threshold (%)')}
-              layout="stacked"
-            >
-              <NumberInput
-                decimals={0}
-                min={0}
-                value={settings.aiUsage.warningThresholdPercent}
-                onChange={(value) =>
-                  updateAiUsage(
-                    'warningThresholdPercent',
-                    parseInteger(value, settings.aiUsage.warningThresholdPercent),
-                  )
-                }
-              />
-            </SettingsRow>
-            <SettingsRow
-              label={s('aiUsageHardLimitPercent', 'Hard limit threshold (%)')}
-              layout="stacked"
-            >
-              <NumberInput
-                decimals={0}
-                min={0}
-                value={settings.aiUsage.hardLimitPercent}
-                onChange={(value) =>
-                  updateAiUsage(
-                    'hardLimitPercent',
-                    parseInteger(value, settings.aiUsage.hardLimitPercent),
-                  )
-                }
-              />
-            </SettingsRow>
-          </div>
+      <SettingsSection
+        title={s('aiUsageTitle', 'AI Usage Budget')}
+        description={s(
+          'aiUsageDescription',
+          'Configure the thresholds used for AI usage notifications and blocking.',
+        )}
+      >
+        <div className="grid gap-x-4 sm:grid-cols-2">
           <SettingsRow
-            label={s('aiUsageOverageAllowed', 'Allow overage')}
-            description={s(
-              'aiUsageOverageAllowedDescription',
-              'When enabled, AI usage continues after the hard threshold and additional estimated costs are shown instead of blocking users.',
-            )}
+            label={s('aiUsageWarningThresholdPercent', 'Warning threshold (%)')}
+            layout="stacked"
           >
-            <Switch
-              checked={settings.aiUsage.overageAllowed}
-              onCheckedChange={(checked) => updateAiUsage('overageAllowed', checked)}
+            <NumberInput
+              decimals={0}
+              min={0}
+              value={settings.aiUsage.warningThresholdPercent}
+              onChange={(value) =>
+                updateAiUsage(
+                  'warningThresholdPercent',
+                  parseInteger(value, settings.aiUsage.warningThresholdPercent),
+                )
+              }
+            />
+          </SettingsRow>
+          <SettingsRow
+            label={s('aiUsageHardLimitPercent', 'Hard limit threshold (%)')}
+            layout="stacked"
+          >
+            <NumberInput
+              decimals={0}
+              min={0}
+              value={settings.aiUsage.hardLimitPercent}
+              onChange={(value) =>
+                updateAiUsage(
+                  'hardLimitPercent',
+                  parseInteger(value, settings.aiUsage.hardLimitPercent),
+                )
+              }
             />
           </SettingsRow>
         </div>
-      </section>
+        <SettingsRow
+          label={s('aiUsageOverageAllowed', 'Allow overage')}
+          description={s(
+            'aiUsageOverageAllowedDescription',
+            'When enabled, AI usage continues after the hard threshold and additional estimated costs are shown instead of blocking users.',
+          )}
+        >
+          <Switch
+            checked={settings.aiUsage.overageAllowed}
+            onCheckedChange={(checked) => updateAiUsage('overageAllowed', checked)}
+          />
+        </SettingsRow>
+      </SettingsSection>
 
-      <section className="space-y-2 border-t border-border/50 pt-6">
-        <div className="flex items-start gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-            <BrainIcon size={16} weight="duotone" aria-hidden="true" />
-          </div>
-          <div>
-            <h4 className="text-sm font-semibold text-foreground">
-              {s('agentInstructions', 'Agent Instructions')}
-            </h4>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {s(
-                'agentInstructionsDescription',
-                'Org-wide custom instructions injected into every agent conversation. Add separate rules so they can be toggled individually.',
-              )}
-            </p>
-          </div>
-        </div>
+      <SettingsSection
+        title={s('agentInstructions', 'Agent Instructions')}
+        description={s(
+          'agentInstructionsDescription',
+          'Org-wide custom instructions injected into every agent conversation. Add separate rules so they can be toggled individually.',
+        )}
+        className="border-t border-border/50 pt-6"
+      >
         <div className="space-y-3">
           {settings.agent.customInstructions.length > 0 ? (
             settings.agent.customInstructions.map((instruction) => (
@@ -229,16 +215,14 @@ export function AiSettingsSection({ settings, saving, savedAt, onChange }: AiSet
             </Button>
           </div>
         </div>
-      </section>
+      </SettingsSection>
 
-      <div className="flex min-h-[1.25rem] justify-end border-t border-border/50 pt-4">
-        <AutosaveStatus
-          saving={saving}
-          savedAt={savedAt}
-          savingLabel={t('common.saving', undefined, 'Saving…')}
-          savedLabel={s('saved', 'Saved')}
-        />
-      </div>
+      <SettingsAutosaveFooter
+        saving={saving}
+        savedAt={savedAt}
+        savingLabel={t('common.saving', undefined, 'Saving…')}
+        savedLabel={s('saved', 'Saved')}
+      />
     </div>
   );
 }
