@@ -19,14 +19,12 @@ export interface StorageViewState {
   displayMode: StorageDisplayMode;
   sort: StorageSort;
   search: { term: string; scope: StorageSearchScope };
-  selectedNodeId: string | null;
   previewNodeId: string | null;
   setView: (view: StorageView) => void;
   openFolder: (folderId: string | null) => void;
   setDisplayMode: (mode: StorageDisplayMode) => void;
   setSort: (sort: StorageSort) => void;
   setSearch: (search: { term: string; scope: StorageSearchScope }) => void;
-  setSelectedNodeId: (id: string | null) => void;
   setPreviewNodeId: (id: string | null) => void;
 }
 
@@ -47,7 +45,6 @@ export function useStorageViewState(): StorageViewState {
     term: '',
     scope: 'current',
   });
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [previewNodeId, setPreviewNodeId] = useState<string | null>(null);
 
   const setDisplayMode = useCallback(
@@ -60,7 +57,6 @@ export function useStorageViewState(): StorageViewState {
 
   const setView = useCallback(
     (next: StorageView) => {
-      setSelectedNodeId(null);
       setSearchParams((params) => {
         params.set('view', next);
         params.delete('folder');
@@ -72,7 +68,6 @@ export function useStorageViewState(): StorageViewState {
 
   const openFolder = useCallback(
     (folderId: string | null) => {
-      setSelectedNodeId(null);
       setSearchParams((params) => {
         params.set('view', 'folder');
         if (folderId) params.set('folder', folderId);
@@ -93,14 +88,12 @@ export function useStorageViewState(): StorageViewState {
     displayMode,
     sort,
     search,
-    selectedNodeId,
     previewNodeId,
     setView,
     openFolder,
     setDisplayMode,
     setSort,
     setSearch,
-    setSelectedNodeId,
     setPreviewNodeId,
   };
 }

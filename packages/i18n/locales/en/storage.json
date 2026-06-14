@@ -13,7 +13,12 @@
   "viewRecent": "Recent",
   "viewFavorites": "Favorites",
   "viewTrash": "Trash",
-  "upload": "Upload",
+  "upload": {
+    "dropHere": "Drop files to upload",
+    "uploading": "Uploading {{name}}",
+    "failed": "Upload failed: {{name}}",
+    "duplicate": "{{name}} already exists in storage"
+  },
   "dropOrClick": "Drop files here, or click to browse",
   "dropOrClickHint": "Multiple files allowed",
   "uploading": "Uploading...",
@@ -257,12 +262,6 @@
     "trash": "Trash is empty",
     "search": "No files match your search"
   },
-  "upload": {
-    "dropHere": "Drop files to upload",
-    "uploading": "Uploading {{name}}",
-    "failed": "Upload failed: {{name}}",
-    "duplicate": "{{name}} already exists in storage"
-  },
   "dialogs": {
     "newFolderTitle": "New folder",
     "newFolderLabel": "Folder name",
@@ -276,7 +275,9 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "create": "Create",
-    "save": "Save"
+    "save": "Save",
+    "trashBodyMany": "{{count}} items will be moved to trash and can be restored within 30 days.",
+    "purgeBodyMany": "{{count}} items will be permanently deleted. This cannot be undone."
   },
   "usage": "{{used}} of {{limit}} used",
   "errors": {

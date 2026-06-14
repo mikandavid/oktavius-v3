@@ -11,7 +11,7 @@ import { useEffect, useId, useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 
-import type { StorageNode, StorageTreeNode } from '../data/types';
+import type { StorageTreeNode } from '../data/types';
 
 export function NameDialog({
   open,
@@ -109,13 +109,13 @@ export function ConfirmDialog({
 export function MoveDialog({
   open,
   tree,
-  node,
+  excludeIds,
   onConfirm,
   onClose,
 }: {
   open: boolean;
   tree: StorageTreeNode[];
-  node: StorageNode | null;
+  excludeIds: string[];
   onConfirm: (targetFolderId: string | null) => void;
   onClose: () => void;
 }) {
@@ -126,7 +126,7 @@ export function MoveDialog({
   }, [open]);
 
   function renderRow(folder: StorageTreeNode, depth: number) {
-    if (folder.id === node?.id) return null;
+    if (excludeIds.includes(folder.id)) return null;
     return (
       <div key={folder.id}>
         <button

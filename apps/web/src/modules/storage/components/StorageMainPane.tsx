@@ -1,8 +1,14 @@
 import { cn, InlineEmptyState, Skeleton } from '@oktavius/base-ui';
 import { useEffect, useMemo, useState } from 'react';
 
+import { CrudTableBulkActionBar } from '@/components/data/CrudTableBulkActionBar';
+import type { BulkAction } from '@/components/data/crudTableTypes';
+import { toggleAllIds, toggleId } from '@/components/data/gridUtils';
 import { useTranslation } from '@/core/i18n';
+import { DeleteIcon, DownloadIcon, MoveToFolderIcon } from '@/lib/icons';
+import type { PermissionSubject } from '@/lib/permissions';
 import { appToast } from '@/lib/toast';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import type { StorageNode } from '../data/types';
 import {
@@ -15,7 +21,6 @@ import {
   useTrash,
 } from '../data/useStorageData';
 import type { StorageViewState } from '../useStorageViewState';
-import { StorageDetailsDrawer } from './StorageDetailsDrawer';
 import { ConfirmDialog, MoveDialog, NameDialog } from './StorageDialogs';
 import { StorageGrid } from './StorageGrid';
 import type { StorageItemActions } from './StorageItemMenu';
@@ -23,6 +28,8 @@ import { StorageList } from './StorageList';
 import { StoragePreviewModal } from './StoragePreviewModal';
 import { StorageToolbar } from './StorageToolbar';
 import { StorageUploadLayer } from './StorageUploadLayer';
+
+const EMPTY_SUBJECT: PermissionSubject = { isSuperadmin: false, role: null, permissions: [] };
 
 export function StorageMainPane({
   state,
@@ -35,6 +42,7 @@ export function StorageMainPane({
   const client = useStorageClient();
   const treeQuery = useStorageTree();
   const mutations = useStorageMutations();
+  const permissionSubject = useOptionalOsirisRuntime()?.permissionSubject ?? EMPTY_SUBJECT;
 
   const folderQuery = useStorageNodes(
     {
@@ -79,19 +87,25 @@ export function StorageMainPane({
     });
   }, [nodes, state.sort.by, state.sort.dir]);
 
-  const selectedNode = orderedNodes.find((node) => node.id === state.selectedNodeId) ?? null;
+  const rowIds = useMemo(() => orderedNodes.map((node) => node.id), [orderedNodes]);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [renameNode, setRenameNode] = useState<StorageNode | null>(null);
-  const [moveNode, setMoveNode] = useState<StorageNode | null>(null);
-  const [trashNode, setTrashNode] = useState<StorageNode | null>(null);
-  const [purgeNode, setPurgeNode] = useState<StorageNode | null>(null);
+  const [moveIds, setMoveIds] = useState<string[] | null>(null);
+  const [trashIds, setTrashIds] = useState<string[] | null>(null);
+  const [purgeIds, setPurgeIds] = useState<string[] | null>(null);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
+
+  // Reset selection when the visible list changes.
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [state.view, state.currentFolderId, state.search.term]);
 
   useEffect(() => {
     const onRename = (event: Event) => setRenameNode((event as CustomEvent<StorageNode>).detail);
-    const onMove = (event: Event) => setMoveNode((event as CustomEvent<StorageNode>).detail);
-    const onTrash = (event: Event) => setTrashNode((event as CustomEvent<StorageNode>).detail);
-    const onPurge = (event: Event) => setPurgeNode((event as CustomEvent<StorageNode>).detail);
+    const onMove = (event: Event) => setMoveIds([(event as CustomEvent<StorageNode>).detail.id]);
+    const onTrash = (event: Event) => setTrashIds([(event as CustomEvent<StorageNode>).detail.id]);
+    const onPurge = (event: Event) => setPurgeIds([(event as CustomEvent<StorageNode>).detail.id]);
     const onNewFolder = () => setNewFolderOpen(true);
     document.addEventListener('storage:rename', onRename);
     document.addEventListener('storage:move', onMove);
@@ -107,6 +121,11 @@ export function StorageMainPane({
     };
   }, []);
 
+  const onError = (error: unknown) => appToast.fromApiError(error, t('storage.errors.load'));
+  const nameOf = (id: string) => orderedNodes.find((node) => node.id === id)?.name ?? '';
+  const confirmBody = (ids: string[], one: string, many: string) =>
+    ids.length === 1 ? t(one, { name: nameOf(ids[0] ?? '') }) : t(many, { count: ids.length });
+
   const actions: StorageItemActions = {
     isStarred: (node) => starredIds.has(node.id),
     onOpen: (node) =>
@@ -116,7 +135,7 @@ export function StorageMainPane({
         const url = await client.downloadUrl(node.id);
         window.open(url, '_blank', 'noopener');
       } catch (error) {
-        appToast.fromApiError(error, t('storage.errors.load'));
+        onError(error);
       }
     },
     onRename: (node) => document.dispatchEvent(new CustomEvent('storage:rename', { detail: node })),
@@ -128,9 +147,68 @@ export function StorageMainPane({
     onPurge: (node) => document.dispatchEvent(new CustomEvent('storage:purge', { detail: node })),
   };
 
+  const bulkActions: BulkAction[] = inTrash
+    ? [
+        {
+          key: 'restore',
+          label: t('storage.actions.restore'),
+          onClick: (ids) => {
+            ids.forEach((id) => mutations.restore.mutate(id));
+            setSelectedIds([]);
+          },
+        },
+        {
+          key: 'purge',
+          label: t('storage.actions.deleteForever'),
+          icon: <DeleteIcon size={16} />,
+          destructive: true,
+          onClick: (ids) => setPurgeIds(ids),
+        },
+      ]
+    : [
+        {
+          key: 'download',
+          label: t('storage.actions.download'),
+          icon: <DownloadIcon size={16} />,
+          onClick: async (ids) => {
+            for (const id of ids) {
+              try {
+                const url = await client.downloadUrl(id);
+                window.open(url, '_blank', 'noopener');
+              } catch (error) {
+                onError(error);
+              }
+            }
+          },
+        },
+        {
+          key: 'move',
+          label: t('storage.actions.move'),
+          icon: <MoveToFolderIcon size={16} />,
+          onClick: (ids) => setMoveIds(ids),
+        },
+        {
+          key: 'trash',
+          label: t('storage.actions.trash'),
+          icon: <DeleteIcon size={16} />,
+          destructive: true,
+          onClick: (ids) => setTrashIds(ids),
+        },
+      ];
+
   return (
     <section className={cn('flex flex-col', className)} data-testid="storage-main">
       <StorageToolbar state={state} tree={treeQuery.data ?? []} />
+      <CrudTableBulkActionBar
+        selectedCount={selectedIds.length}
+        actions={bulkActions}
+        selectedIds={selectedIds}
+        rowIds={rowIds}
+        onClear={() => setSelectedIds([])}
+        onToggleAll={() => setSelectedIds(toggleAllIds(rowIds, selectedIds))}
+        invokeBulkAction={(action, ids) => action.onClick(ids)}
+        permissionSubject={permissionSubject}
+      />
       <StorageUploadLayer folderId={state.view === 'folder' ? state.currentFolderId : null}>
         <div className="min-h-0 flex-1 overflow-y-auto">
           {isLoading ? (
@@ -145,8 +223,8 @@ export function StorageMainPane({
               nodes={orderedNodes}
               actions={actions}
               inTrash={inTrash}
-              selectedId={state.selectedNodeId}
-              onSelect={(node) => state.setSelectedNodeId(node.id)}
+              selectedIds={selectedIds}
+              onToggleSelect={(node) => setSelectedIds(toggleId(selectedIds, node.id))}
               onOpen={actions.onOpen}
             />
           ) : (
@@ -154,24 +232,14 @@ export function StorageMainPane({
               nodes={orderedNodes}
               actions={actions}
               inTrash={inTrash}
-              selectedId={state.selectedNodeId}
-              onSelect={(node) => state.setSelectedNodeId(node.id)}
+              selectedIds={selectedIds}
+              onToggleSelect={(node) => setSelectedIds(toggleId(selectedIds, node.id))}
+              onToggleAll={() => setSelectedIds(toggleAllIds(rowIds, selectedIds))}
               onOpen={actions.onOpen}
             />
           )}
         </div>
       </StorageUploadLayer>
-      <StorageDetailsDrawer
-        node={selectedNode}
-        starred={selectedNode ? starredIds.has(selectedNode.id) : false}
-        onClose={() => state.setSelectedNodeId(null)}
-        onOpen={(node) => {
-          state.setSelectedNodeId(null);
-          actions.onOpen(node);
-        }}
-        onDownload={actions.onDownload}
-        onToggleStar={actions.onToggleStar}
-      />
       <StoragePreviewModal
         nodes={orderedNodes}
         currentId={state.previewNodeId}
@@ -189,7 +257,7 @@ export function StorageMainPane({
         onConfirm={(name) => {
           mutations.createFolder.mutate(
             { name, parentId: state.view === 'folder' ? state.currentFolderId : null },
-            { onError: (error) => appToast.fromApiError(error, t('storage.errors.load')) },
+            { onError },
           );
           setNewFolderOpen(false);
         }}
@@ -202,52 +270,53 @@ export function StorageMainPane({
         initialValue={renameNode?.name ?? ''}
         onClose={() => setRenameNode(null)}
         onConfirm={(name) => {
-          if (renameNode)
-            mutations.rename.mutate(
-              { id: renameNode.id, name },
-              { onError: (error) => appToast.fromApiError(error, t('storage.errors.load')) },
-            );
+          if (renameNode) mutations.rename.mutate({ id: renameNode.id, name }, { onError });
           setRenameNode(null);
         }}
       />
       <MoveDialog
-        open={Boolean(moveNode)}
+        open={Boolean(moveIds)}
         tree={treeQuery.data ?? []}
-        node={moveNode}
-        onClose={() => setMoveNode(null)}
+        excludeIds={moveIds ?? []}
+        onClose={() => setMoveIds(null)}
         onConfirm={(targetFolderId) => {
-          if (moveNode)
-            mutations.move.mutate(
-              { nodeIds: [moveNode.id], targetFolderId },
-              { onError: (error) => appToast.fromApiError(error, t('storage.errors.load')) },
-            );
-          setMoveNode(null);
+          if (moveIds) mutations.move.mutate({ nodeIds: moveIds, targetFolderId }, { onError });
+          setMoveIds(null);
+          setSelectedIds([]);
         }}
       />
       <ConfirmDialog
-        open={Boolean(trashNode)}
+        open={Boolean(trashIds)}
         title={t('storage.dialogs.trashTitle')}
-        body={t('storage.dialogs.trashBody', { name: trashNode?.name ?? '' })}
+        body={confirmBody(
+          trashIds ?? [],
+          'storage.dialogs.trashBody',
+          'storage.dialogs.trashBodyMany',
+        )}
         destructive
         confirmLabel={t('storage.actions.trash')}
-        onClose={() => setTrashNode(null)}
+        onClose={() => setTrashIds(null)}
         onConfirm={() => {
-          if (trashNode) mutations.trash.mutate([trashNode.id]);
-          setTrashNode(null);
-          state.setSelectedNodeId(null);
+          if (trashIds) mutations.trash.mutate(trashIds, { onError });
+          setTrashIds(null);
+          setSelectedIds([]);
         }}
       />
       <ConfirmDialog
-        open={Boolean(purgeNode)}
+        open={Boolean(purgeIds)}
         title={t('storage.dialogs.purgeTitle')}
-        body={t('storage.dialogs.purgeBody', { name: purgeNode?.name ?? '' })}
+        body={confirmBody(
+          purgeIds ?? [],
+          'storage.dialogs.purgeBody',
+          'storage.dialogs.purgeBodyMany',
+        )}
         destructive
         confirmLabel={t('storage.actions.deleteForever')}
-        onClose={() => setPurgeNode(null)}
+        onClose={() => setPurgeIds(null)}
         onConfirm={() => {
-          if (purgeNode) mutations.purge.mutate([purgeNode.id]);
-          setPurgeNode(null);
-          state.setSelectedNodeId(null);
+          if (purgeIds) mutations.purge.mutate(purgeIds, { onError });
+          setPurgeIds(null);
+          setSelectedIds([]);
         }}
       />
     </section>

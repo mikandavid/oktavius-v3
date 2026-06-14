@@ -13,7 +13,12 @@
   "viewRecent": "Zuletzt verwendet",
   "viewFavorites": "Favoriten",
   "viewTrash": "Papierkorb",
-  "upload": "Hochladen",
+  "upload": {
+    "dropHere": "Dateien zum Hochladen ablegen",
+    "uploading": "Lädt {{name}} hoch",
+    "failed": "Hochladen fehlgeschlagen: {{name}}",
+    "duplicate": "{{name}} ist bereits in der Ablage vorhanden"
+  },
   "dropOrClick": "Dateien hier ablegen oder klicken zum Auswählen",
   "dropOrClickHint": "Mehrere Dateien möglich",
   "uploading": "Wird hochgeladen...",
@@ -257,12 +262,6 @@
     "trash": "Papierkorb ist leer",
     "search": "Keine Dateien gefunden"
   },
-  "upload": {
-    "dropHere": "Dateien zum Hochladen ablegen",
-    "uploading": "Lädt {{name}} hoch",
-    "failed": "Hochladen fehlgeschlagen: {{name}}",
-    "duplicate": "{{name}} ist bereits in der Ablage vorhanden"
-  },
   "dialogs": {
     "newFolderTitle": "Neuer Ordner",
     "newFolderLabel": "Ordnername",
@@ -276,7 +275,9 @@
     "confirm": "Bestätigen",
     "cancel": "Abbrechen",
     "create": "Erstellen",
-    "save": "Speichern"
+    "save": "Speichern",
+    "trashBodyMany": "{{count}} Elemente werden in den Papierkorb verschoben und können 30 Tage lang wiederhergestellt werden.",
+    "purgeBodyMany": "{{count}} Elemente werden dauerhaft gelöscht. Dies kann nicht rückgängig gemacht werden."
   },
   "usage": "{{used}} von {{limit}} belegt",
   "errors": {
