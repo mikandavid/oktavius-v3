@@ -118,9 +118,18 @@ describe('OrganizationSettingsSection', () => {
       'Bank Details',
       'Invoice Settings',
     ]);
+    // Packed rows collapse related fields onto one row.
     expect(rowLabels).toContain('Legal Name');
-    expect(rowLabels).toContain('Bank Name');
+    expect(rowLabels).toContain('Address');
+    expect(rowLabels).toContain('Postal code & city');
+    expect(rowLabels).toContain('Bank');
     expect(rowLabels).toContain('Payment Terms (days)');
-    expect(rows.length).toBeGreaterThan(12);
+    // Per-field labels that became captions are no longer row labels.
+    expect(rowLabels).not.toContain('Bank Name');
+    expect(rowLabels).not.toContain('Account Holder');
+    // Captions still render inside the packed rows.
+    expect(rendered.container.textContent).toContain('Account holder');
+    expect(rendered.container.textContent).toContain('Street');
+    expect(rows.length).toBe(14);
   });
 });

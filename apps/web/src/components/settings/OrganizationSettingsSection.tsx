@@ -13,7 +13,14 @@ import { normalizeCountryCode, useCountryOptions } from '@/lib/reference-data';
 import { isValidBic, isValidIban } from '@/lib/validation/bankIdentifiers';
 import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
 
-import { AutosaveStatus } from './AutosaveStatus';
+import {
+  CONTROL_WIDTH,
+  INPUT_WIDTH,
+  PackedField,
+  PackedRow,
+  SettingsAutosaveFooter,
+  SHORT_INPUT_WIDTH,
+} from './settingsForm';
 
 type OrganizationSettingsSectionProps = {
   settings: OsirisWorkspaceSettings;
@@ -22,8 +29,6 @@ type OrganizationSettingsSectionProps = {
   onChange: (settings: OsirisWorkspaceSettings) => void;
 };
 
-const INPUT_CLASS = 'w-full sm:w-[24rem]';
-const SHORT_INPUT_CLASS = 'w-full sm:w-[12rem]';
 const TEXTAREA_CLASS = 'min-h-[88px]';
 
 function parseInteger(value: string, fallback: number) {
@@ -105,43 +110,47 @@ export function OrganizationSettingsSection({
       >
         <SettingsRow label={s('legalName', 'Legal Name')}>
           <Input
-            className={INPUT_CLASS}
+            className={INPUT_WIDTH}
             name="company.legalName"
             value={settings.company.legalName}
             onChange={(event) => updateCompany('legalName', event.target.value)}
           />
         </SettingsRow>
-        <SettingsRow label={s('address', 'Address')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.company.address.line1}
-            onChange={(event) => updateAddress('line1', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow label={s('addressLine2', 'Address Line 2')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.company.address.line2}
-            onChange={(event) => updateAddress('line2', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow label={s('postalCode', 'Postal Code')}>
-          <Input
-            className={SHORT_INPUT_CLASS}
-            value={settings.company.address.postalCode}
-            onChange={(event) => updateAddress('postalCode', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow label={s('city', 'City')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.company.address.city}
-            onChange={(event) => updateAddress('city', event.target.value)}
-          />
-        </SettingsRow>
+        <PackedRow label={s('address', 'Address')}>
+          <PackedField caption={s('street', 'Street')}>
+            <Input
+              className="w-full"
+              value={settings.company.address.line1}
+              onChange={(event) => updateAddress('line1', event.target.value)}
+            />
+          </PackedField>
+          <PackedField caption={s('addressLine2', 'Address Line 2')}>
+            <Input
+              className="w-full"
+              value={settings.company.address.line2}
+              onChange={(event) => updateAddress('line2', event.target.value)}
+            />
+          </PackedField>
+        </PackedRow>
+        <PackedRow label={s('postalCity', 'Postal code & city')}>
+          <PackedField caption={s('postalCode', 'Postal Code')}>
+            <Input
+              className="w-full"
+              value={settings.company.address.postalCode}
+              onChange={(event) => updateAddress('postalCode', event.target.value)}
+            />
+          </PackedField>
+          <PackedField caption={s('city', 'City')}>
+            <Input
+              className="w-full"
+              value={settings.company.address.city}
+              onChange={(event) => updateAddress('city', event.target.value)}
+            />
+          </PackedField>
+        </PackedRow>
         <SettingsRow label={s('country', 'Country')}>
           <Combobox
-            className={SHORT_INPUT_CLASS}
+            className={CONTROL_WIDTH}
             options={countryOptions}
             value={countryValue}
             onChange={(value) => updateAddress('country', value ?? '')}
@@ -158,23 +167,25 @@ export function OrganizationSettingsSection({
           'Legal identifiers used for official documents and finance workflows.',
         )}
       >
-        <SettingsRow label={s('taxId', 'Tax ID')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.company.taxId}
-            onChange={(event) => updateCompany('taxId', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow label={s('vatId', 'VAT ID')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.company.vatId}
-            onChange={(event) => updateCompany('vatId', event.target.value)}
-          />
-        </SettingsRow>
+        <PackedRow label={s('taxAndVatId', 'Tax & VAT ID')}>
+          <PackedField caption={s('taxId', 'Tax ID')}>
+            <Input
+              className="w-full"
+              value={settings.company.taxId}
+              onChange={(event) => updateCompany('taxId', event.target.value)}
+            />
+          </PackedField>
+          <PackedField caption={s('vatId', 'VAT ID')}>
+            <Input
+              className="w-full"
+              value={settings.company.vatId}
+              onChange={(event) => updateCompany('vatId', event.target.value)}
+            />
+          </PackedField>
+        </PackedRow>
         <SettingsRow label={s('registrationNumber', 'Registration Number')}>
           <Input
-            className={INPUT_CLASS}
+            className={INPUT_WIDTH}
             value={settings.company.registrationNumber}
             onChange={(event) => updateCompany('registrationNumber', event.target.value)}
           />
@@ -185,24 +196,26 @@ export function OrganizationSettingsSection({
         title={s('contact', 'Contact')}
         description={s('contactDesc', 'Public company contact details for documents and emails.')}
       >
-        <SettingsRow label={s('email', 'Email')}>
-          <Input
-            className={INPUT_CLASS}
-            type="email"
-            value={settings.company.email}
-            onChange={(event) => updateCompany('email', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow label={s('phone', 'Phone')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.company.phone}
-            onChange={(event) => updateCompany('phone', event.target.value)}
-          />
-        </SettingsRow>
+        <PackedRow label={s('emailPhone', 'Email & phone')}>
+          <PackedField caption={s('email', 'Email')}>
+            <Input
+              className="w-full"
+              type="email"
+              value={settings.company.email}
+              onChange={(event) => updateCompany('email', event.target.value)}
+            />
+          </PackedField>
+          <PackedField caption={s('phone', 'Phone')}>
+            <Input
+              className="w-full"
+              value={settings.company.phone}
+              onChange={(event) => updateCompany('phone', event.target.value)}
+            />
+          </PackedField>
+        </PackedRow>
         <SettingsRow label={s('website', 'Website')}>
           <Input
-            className={INPUT_CLASS}
+            className={INPUT_WIDTH}
             value={settings.company.website}
             onChange={(event) => updateCompany('website', event.target.value)}
           />
@@ -213,25 +226,27 @@ export function OrganizationSettingsSection({
         title={s('banking', 'Bank Details')}
         description={s('bankingDesc', 'Displayed on invoices and dunning letters.')}
       >
-        <SettingsRow label={s('bankName', 'Bank Name')}>
-          <Input
-            className={INPUT_CLASS}
-            name="banking.bankName"
-            value={settings.banking.bankName}
-            onChange={(event) => updateBanking('bankName', event.target.value)}
-          />
-        </SettingsRow>
-        <SettingsRow label={s('accountHolder', 'Account Holder')}>
-          <Input
-            className={INPUT_CLASS}
-            value={settings.banking.accountHolder}
-            onChange={(event) => updateBanking('accountHolder', event.target.value)}
-          />
-        </SettingsRow>
+        <PackedRow label={s('bank', 'Bank')}>
+          <PackedField caption={s('bankName', 'Bank Name')}>
+            <Input
+              className="w-full"
+              name="banking.bankName"
+              value={settings.banking.bankName}
+              onChange={(event) => updateBanking('bankName', event.target.value)}
+            />
+          </PackedField>
+          <PackedField caption={s('accountHolder', 'Account holder')}>
+            <Input
+              className="w-full"
+              value={settings.banking.accountHolder}
+              onChange={(event) => updateBanking('accountHolder', event.target.value)}
+            />
+          </PackedField>
+        </PackedRow>
         <SettingsRow label={s('iban', 'IBAN')} layout="stacked">
           <div className="space-y-1">
             <Input
-              className={`${INPUT_CLASS} font-mono`}
+              className={`${INPUT_WIDTH} font-mono`}
               value={settings.banking.iban}
               validationState={ibanInvalid ? 'invalid' : undefined}
               aria-invalid={ibanInvalid || undefined}
@@ -247,7 +262,7 @@ export function OrganizationSettingsSection({
         <SettingsRow label={s('bic', 'BIC')} layout="stacked">
           <div className="space-y-1">
             <Input
-              className={`${INPUT_CLASS} font-mono`}
+              className={`${INPUT_WIDTH} font-mono`}
               value={settings.banking.bic}
               validationState={bicInvalid ? 'invalid' : undefined}
               aria-invalid={bicInvalid || undefined}
@@ -268,7 +283,7 @@ export function OrganizationSettingsSection({
       >
         <SettingsRow label={s('paymentTermsDays', 'Payment Terms (days)')}>
           <NumberInput
-            className={`${SHORT_INPUT_CLASS} text-right`}
+            className={`${SHORT_INPUT_WIDTH} text-right`}
             decimals={0}
             min={0}
             value={settings.invoicing.defaultPaymentTermsDays}
@@ -302,14 +317,12 @@ export function OrganizationSettingsSection({
         </SettingsRow>
       </SettingsSection>
 
-      <div className="flex min-h-[1.25rem] justify-end border-t border-border/50 pt-4">
-        <AutosaveStatus
-          saving={saving}
-          savedAt={savedAt}
-          savingLabel={t('common.saving', undefined, 'Saving…')}
-          savedLabel={s('saved', 'Saved')}
-        />
-      </div>
+      <SettingsAutosaveFooter
+        saving={saving}
+        savedAt={savedAt}
+        savingLabel={t('common.saving', undefined, 'Saving…')}
+        savedLabel={s('saved', 'Saved')}
+      />
     </div>
   );
 }
