@@ -16,12 +16,7 @@ import {
 } from '@/components/settings/CatalogOptionsManager';
 import { LocationPolicySettingsSection } from '@/components/settings/LocationPolicySettingsSection';
 import { OrganizationSettingsSection } from '@/components/settings/OrganizationSettingsSection';
-import {
-  CONTROL_WIDTH,
-  PackedField,
-  PackedRow,
-  SettingsAutosaveFooter,
-} from '@/components/settings/settingsForm';
+import { CONTROL_WIDTH, SettingsAutosaveFooter } from '@/components/settings/settingsForm';
 import {
   SettingsPageFactory,
   type SettingsSectionConfig,
@@ -410,31 +405,32 @@ export function SettingsPage() {
             <SettingsRow label="Interface language" description="Labels and navigation copy.">
               <LanguageSelector />
             </SettingsRow>
-            <PackedRow
-              label="Date & time format"
-              description="Default display across this workspace."
+            <SettingsRow
+              label="Date format"
+              description="Default date display across this workspace."
             >
-              <PackedField caption="Date Format">
-                <Combobox
-                  value={workspaceSettings.dateTime.dateFormat}
-                  onChange={(value) => {
-                    if (value) updateWorkspaceDateTime('dateFormat', value);
-                  }}
-                  options={DATE_FORMAT_OPTIONS}
-                  className="w-full"
-                />
-              </PackedField>
-              <PackedField caption="Time Format">
-                <Combobox
-                  value={workspaceSettings.dateTime.timeFormat}
-                  onChange={(value) => {
-                    if (value) updateWorkspaceDateTime('timeFormat', value);
-                  }}
-                  options={TIME_FORMAT_OPTIONS}
-                  className="w-full"
-                />
-              </PackedField>
-            </PackedRow>
+              <Combobox
+                value={workspaceSettings.dateTime.dateFormat}
+                onChange={(value) => {
+                  if (value) updateWorkspaceDateTime('dateFormat', value);
+                }}
+                options={DATE_FORMAT_OPTIONS}
+                className={CONTROL_WIDTH}
+              />
+            </SettingsRow>
+            <SettingsRow
+              label="Time format"
+              description="Default time display across this workspace."
+            >
+              <Combobox
+                value={workspaceSettings.dateTime.timeFormat}
+                onChange={(value) => {
+                  if (value) updateWorkspaceDateTime('timeFormat', value);
+                }}
+                options={TIME_FORMAT_OPTIONS}
+                className={CONTROL_WIDTH}
+              />
+            </SettingsRow>
             <SettingsRow label="Timezone" description="Used for backend-generated timestamps.">
               <Combobox
                 value={workspaceSettings.dateTime.timezone}

@@ -3,7 +3,7 @@ import { MultiSelect, SettingsRow, SettingsSection, Switch } from '@oktavius/bas
 import { useTranslation } from '@/core/i18n';
 import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
 
-import { SettingsAutosaveFooter } from './settingsForm';
+import { INPUT_WIDTH, SettingsAutosaveFooter } from './settingsForm';
 import { SHARED_MODULE_OPTIONS } from './sharedModuleOptions';
 
 type LocationPolicySettingsSectionProps = {
@@ -62,15 +62,17 @@ export function LocationPolicySettingsSection({
           'sharedLocationModulesDescription',
           'Modules that stay organization-wide instead of being scoped to a location.',
         )}
-        layout="stacked"
+        align="start"
       >
-        <MultiSelect
-          options={SHARED_MODULE_OPTIONS}
-          value={settings.locations.sharedModules}
-          onChange={(value) => updateLocations('sharedModules', value)}
-          placeholder={s('sharedLocationModulesPlaceholder', 'Select modules…')}
-          searchPlaceholder={s('sharedLocationModulesSearch', 'Search modules…')}
-        />
+        <div className={INPUT_WIDTH}>
+          <MultiSelect
+            options={SHARED_MODULE_OPTIONS}
+            value={settings.locations.sharedModules}
+            onChange={(value) => updateLocations('sharedModules', value)}
+            placeholder={s('sharedLocationModulesPlaceholder', 'Select modules…')}
+            searchPlaceholder={s('sharedLocationModulesSearch', 'Search modules…')}
+          />
+        </div>
       </SettingsRow>
       <SettingsAutosaveFooter
         saving={saving}

@@ -12,7 +12,7 @@ import { useTranslation } from '@/core/i18n';
 import { DeleteIcon, PlusIcon } from '@/lib/icons';
 import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
 
-import { SettingsAutosaveFooter } from './settingsForm';
+import { SettingsAutosaveFooter, SHORT_INPUT_WIDTH } from './settingsForm';
 
 type AiSettingsSectionProps = {
   settings: OsirisWorkspaceSettings;
@@ -103,40 +103,34 @@ export function AiSettingsSection({ settings, saving, savedAt, onChange }: AiSet
           'Configure the thresholds used for AI usage notifications and blocking.',
         )}
       >
-        <div className="grid gap-x-4 sm:grid-cols-2">
-          <SettingsRow
-            label={s('aiUsageWarningThresholdPercent', 'Warning threshold (%)')}
-            layout="stacked"
-          >
-            <NumberInput
-              decimals={0}
-              min={0}
-              value={settings.aiUsage.warningThresholdPercent}
-              onChange={(value) =>
-                updateAiUsage(
-                  'warningThresholdPercent',
-                  parseInteger(value, settings.aiUsage.warningThresholdPercent),
-                )
-              }
-            />
-          </SettingsRow>
-          <SettingsRow
-            label={s('aiUsageHardLimitPercent', 'Hard limit threshold (%)')}
-            layout="stacked"
-          >
-            <NumberInput
-              decimals={0}
-              min={0}
-              value={settings.aiUsage.hardLimitPercent}
-              onChange={(value) =>
-                updateAiUsage(
-                  'hardLimitPercent',
-                  parseInteger(value, settings.aiUsage.hardLimitPercent),
-                )
-              }
-            />
-          </SettingsRow>
-        </div>
+        <SettingsRow label={s('aiUsageWarningThresholdPercent', 'Warning threshold (%)')}>
+          <NumberInput
+            className={`${SHORT_INPUT_WIDTH} text-right`}
+            decimals={0}
+            min={0}
+            value={settings.aiUsage.warningThresholdPercent}
+            onChange={(value) =>
+              updateAiUsage(
+                'warningThresholdPercent',
+                parseInteger(value, settings.aiUsage.warningThresholdPercent),
+              )
+            }
+          />
+        </SettingsRow>
+        <SettingsRow label={s('aiUsageHardLimitPercent', 'Hard limit threshold (%)')}>
+          <NumberInput
+            className={`${SHORT_INPUT_WIDTH} text-right`}
+            decimals={0}
+            min={0}
+            value={settings.aiUsage.hardLimitPercent}
+            onChange={(value) =>
+              updateAiUsage(
+                'hardLimitPercent',
+                parseInteger(value, settings.aiUsage.hardLimitPercent),
+              )
+            }
+          />
+        </SettingsRow>
         <SettingsRow
           label={s('aiUsageOverageAllowed', 'Allow overage')}
           description={s(

@@ -205,6 +205,12 @@ export interface SettingsRowProps {
   className?: string;
   /** Inline: label left, control right (default). Stacked: full-width content below the label. */
   layout?: 'inline' | 'stacked';
+  /**
+   * Vertical alignment of the control against the label in inline layout (default 'center').
+   * Use 'start' for taller controls (multi-select, an input with a validation message).
+   * Ignored when `layout="stacked"`.
+   */
+  align?: 'center' | 'start';
 }
 
 /** Single settings control row: label+description left, control right. */
@@ -214,6 +220,7 @@ export function SettingsRow({
   children,
   className,
   layout = 'inline',
+  align = 'center',
 }: SettingsRowProps) {
   const stacked = layout === 'stacked';
 
@@ -221,7 +228,8 @@ export function SettingsRow({
     <div
       className={cn(
         'flex flex-col gap-3 border-b border-border/50 py-3 last:border-b-0',
-        !stacked && 'sm:flex-row sm:items-center sm:justify-between',
+        !stacked && 'sm:flex-row sm:justify-between',
+        !stacked && (align === 'start' ? 'sm:items-start' : 'sm:items-center'),
         className,
       )}
     >

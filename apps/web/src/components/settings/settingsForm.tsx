@@ -1,6 +1,3 @@
-import { SettingsRow } from '@oktavius/base-ui';
-import type { ReactNode } from 'react';
-
 import { AutosaveStatus } from './AutosaveStatus';
 
 /** Standard control widths shared across all settings tabs. */
@@ -31,32 +28,5 @@ export function SettingsAutosaveFooter({
         savedLabel={savedLabel}
       />
     </div>
-  );
-}
-
-/** One captioned input inside a PackedRow. The caption labels the control. */
-export function PackedField({ caption, children }: { caption: string; children: ReactNode }) {
-  return (
-    <label className="flex min-w-0 flex-1 flex-col gap-1">
-      <span className="text-xs font-medium text-muted-foreground">{caption}</span>
-      {children}
-    </label>
-  );
-}
-
-/** A SettingsRow whose control area holds two captioned inputs side-by-side. */
-export function PackedRow({
-  label,
-  description,
-  children,
-}: {
-  label: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <SettingsRow label={label} description={description} layout="stacked">
-      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">{children}</div>
-    </SettingsRow>
   );
 }

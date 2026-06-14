@@ -1,9 +1,8 @@
-import { Input } from '@oktavius/base-ui';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { PackedField, PackedRow, SettingsAutosaveFooter } from './settingsForm';
+import { SettingsAutosaveFooter } from './settingsForm';
 
 describe('settingsForm primitives', () => {
   let roots: Root[] = [];
@@ -26,24 +25,6 @@ describe('settingsForm primitives', () => {
     act(() => root.render(node));
     return container;
   }
-
-  it('PackedRow renders the row label and both captioned inputs', () => {
-    const container = render(
-      <PackedRow label="Address">
-        <PackedField caption="Street">
-          <Input value="" onChange={() => {}} />
-        </PackedField>
-        <PackedField caption="Line 2">
-          <Input value="" onChange={() => {}} />
-        </PackedField>
-      </PackedRow>,
-    );
-
-    expect(container.textContent).toContain('Address');
-    expect(container.textContent).toContain('Street');
-    expect(container.textContent).toContain('Line 2');
-    expect(container.querySelectorAll('input').length).toBe(2);
-  });
 
   it('SettingsAutosaveFooter renders the saved label when not saving', () => {
     const container = render(

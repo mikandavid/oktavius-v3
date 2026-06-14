@@ -16,8 +16,6 @@ import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettings
 import {
   CONTROL_WIDTH,
   INPUT_WIDTH,
-  PackedField,
-  PackedRow,
   SettingsAutosaveFooter,
   SHORT_INPUT_WIDTH,
 } from './settingsForm';
@@ -116,38 +114,34 @@ export function OrganizationSettingsSection({
             onChange={(event) => updateCompany('legalName', event.target.value)}
           />
         </SettingsRow>
-        <PackedRow label={s('address', 'Address')}>
-          <PackedField caption={s('street', 'Street')}>
-            <Input
-              className="w-full"
-              value={settings.company.address.line1}
-              onChange={(event) => updateAddress('line1', event.target.value)}
-            />
-          </PackedField>
-          <PackedField caption={s('addressLine2', 'Address Line 2')}>
-            <Input
-              className="w-full"
-              value={settings.company.address.line2}
-              onChange={(event) => updateAddress('line2', event.target.value)}
-            />
-          </PackedField>
-        </PackedRow>
-        <PackedRow label={s('postalCity', 'Postal code & city')}>
-          <PackedField caption={s('postalCode', 'Postal Code')}>
-            <Input
-              className="w-full"
-              value={settings.company.address.postalCode}
-              onChange={(event) => updateAddress('postalCode', event.target.value)}
-            />
-          </PackedField>
-          <PackedField caption={s('city', 'City')}>
-            <Input
-              className="w-full"
-              value={settings.company.address.city}
-              onChange={(event) => updateAddress('city', event.target.value)}
-            />
-          </PackedField>
-        </PackedRow>
+        <SettingsRow label={s('street', 'Street')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.address.line1}
+            onChange={(event) => updateAddress('line1', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('addressLine2', 'Address Line 2')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.address.line2}
+            onChange={(event) => updateAddress('line2', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('postalCode', 'Postal Code')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.address.postalCode}
+            onChange={(event) => updateAddress('postalCode', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('city', 'City')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.address.city}
+            onChange={(event) => updateAddress('city', event.target.value)}
+          />
+        </SettingsRow>
         <SettingsRow label={s('country', 'Country')}>
           <Combobox
             className={CONTROL_WIDTH}
@@ -167,22 +161,20 @@ export function OrganizationSettingsSection({
           'Legal identifiers used for official documents and finance workflows.',
         )}
       >
-        <PackedRow label={s('taxAndVatId', 'Tax & VAT ID')}>
-          <PackedField caption={s('taxId', 'Tax ID')}>
-            <Input
-              className="w-full"
-              value={settings.company.taxId}
-              onChange={(event) => updateCompany('taxId', event.target.value)}
-            />
-          </PackedField>
-          <PackedField caption={s('vatId', 'VAT ID')}>
-            <Input
-              className="w-full"
-              value={settings.company.vatId}
-              onChange={(event) => updateCompany('vatId', event.target.value)}
-            />
-          </PackedField>
-        </PackedRow>
+        <SettingsRow label={s('taxId', 'Tax ID')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.taxId}
+            onChange={(event) => updateCompany('taxId', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('vatId', 'VAT ID')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.vatId}
+            onChange={(event) => updateCompany('vatId', event.target.value)}
+          />
+        </SettingsRow>
         <SettingsRow label={s('registrationNumber', 'Registration Number')}>
           <Input
             className={INPUT_WIDTH}
@@ -196,23 +188,21 @@ export function OrganizationSettingsSection({
         title={s('contact', 'Contact')}
         description={s('contactDesc', 'Public company contact details for documents and emails.')}
       >
-        <PackedRow label={s('emailPhone', 'Email & phone')}>
-          <PackedField caption={s('email', 'Email')}>
-            <Input
-              className="w-full"
-              type="email"
-              value={settings.company.email}
-              onChange={(event) => updateCompany('email', event.target.value)}
-            />
-          </PackedField>
-          <PackedField caption={s('phone', 'Phone')}>
-            <Input
-              className="w-full"
-              value={settings.company.phone}
-              onChange={(event) => updateCompany('phone', event.target.value)}
-            />
-          </PackedField>
-        </PackedRow>
+        <SettingsRow label={s('email', 'Email')}>
+          <Input
+            className={INPUT_WIDTH}
+            type="email"
+            value={settings.company.email}
+            onChange={(event) => updateCompany('email', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('phone', 'Phone')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.company.phone}
+            onChange={(event) => updateCompany('phone', event.target.value)}
+          />
+        </SettingsRow>
         <SettingsRow label={s('website', 'Website')}>
           <Input
             className={INPUT_WIDTH}
@@ -226,24 +216,22 @@ export function OrganizationSettingsSection({
         title={s('banking', 'Bank Details')}
         description={s('bankingDesc', 'Displayed on invoices and dunning letters.')}
       >
-        <PackedRow label={s('bank', 'Bank')}>
-          <PackedField caption={s('bankName', 'Bank Name')}>
-            <Input
-              className="w-full"
-              name="banking.bankName"
-              value={settings.banking.bankName}
-              onChange={(event) => updateBanking('bankName', event.target.value)}
-            />
-          </PackedField>
-          <PackedField caption={s('accountHolder', 'Account Holder')}>
-            <Input
-              className="w-full"
-              value={settings.banking.accountHolder}
-              onChange={(event) => updateBanking('accountHolder', event.target.value)}
-            />
-          </PackedField>
-        </PackedRow>
-        <SettingsRow label={s('iban', 'IBAN')} layout="stacked">
+        <SettingsRow label={s('bankName', 'Bank Name')}>
+          <Input
+            className={INPUT_WIDTH}
+            name="banking.bankName"
+            value={settings.banking.bankName}
+            onChange={(event) => updateBanking('bankName', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('accountHolder', 'Account Holder')}>
+          <Input
+            className={INPUT_WIDTH}
+            value={settings.banking.accountHolder}
+            onChange={(event) => updateBanking('accountHolder', event.target.value)}
+          />
+        </SettingsRow>
+        <SettingsRow label={s('iban', 'IBAN')} align="start">
           <div className="space-y-1">
             <Input
               className={`${INPUT_WIDTH} font-mono`}
@@ -259,7 +247,7 @@ export function OrganizationSettingsSection({
             ) : null}
           </div>
         </SettingsRow>
-        <SettingsRow label={s('bic', 'BIC')} layout="stacked">
+        <SettingsRow label={s('bic', 'BIC')} align="start">
           <div className="space-y-1">
             <Input
               className={`${INPUT_WIDTH} font-mono`}

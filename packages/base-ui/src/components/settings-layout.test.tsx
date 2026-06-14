@@ -7,10 +7,45 @@ import {
   groupSettingsNavItems,
   SettingsLayout,
   type SettingsNavItem,
+  SettingsRow,
 } from './settings-layout';
 
 afterEach(() => {
   cleanup();
+});
+
+describe('SettingsRow inline alignment', () => {
+  it('vertically centers the control by default', () => {
+    const { container } = render(
+      <SettingsRow label="Name">
+        <input aria-label="name" />
+      </SettingsRow>,
+    );
+    const row = container.firstElementChild as HTMLElement;
+    expect(row.className).toContain('sm:items-center');
+  });
+
+  it('top-aligns the control when align is "start"', () => {
+    const { container } = render(
+      <SettingsRow label="IBAN" align="start">
+        <input aria-label="iban" />
+      </SettingsRow>,
+    );
+    const row = container.firstElementChild as HTMLElement;
+    expect(row.className).toContain('sm:items-start');
+    expect(row.className).not.toContain('sm:items-center');
+  });
+
+  it('ignores align when the row is stacked', () => {
+    const { container } = render(
+      <SettingsRow label="Footer" layout="stacked" align="start">
+        <textarea aria-label="footer" />
+      </SettingsRow>,
+    );
+    const row = container.firstElementChild as HTMLElement;
+    expect(row.className).not.toContain('sm:items-start');
+    expect(row.className).not.toContain('sm:items-center');
+  });
 });
 
 const items: SettingsNavItem[] = [

@@ -44,16 +44,19 @@ vi.mock('@oktavius/base-ui', async (importOriginal) => {
       children,
       className,
       layout,
+      align,
     }: {
       label: string;
       description?: string;
       children: React.ReactNode;
       className?: string;
       layout?: 'inline' | 'stacked';
+      align?: 'center' | 'start';
     }) => (
       <div
         className={className}
         data-layout={layout ?? 'inline'}
+        data-align={align ?? 'center'}
         data-label={label}
         data-testid="settings-row"
       >
@@ -103,7 +106,7 @@ describe('OrganizationSettingsSection', () => {
     vi.clearAllMocks();
   });
 
-  it('composes organization settings from base settings primitives', () => {
+  it('renders every field as its own one-line row, label left / control right', () => {
     const rendered = renderOrganizationSettingsSection();
     roots.push(rendered.root);
 
@@ -118,18 +121,52 @@ describe('OrganizationSettingsSection', () => {
       'Bank Details',
       'Invoice Settings',
     ]);
-    // Packed rows collapse related fields onto one row.
-    expect(rowLabels).toContain('Legal Name');
-    expect(rowLabels).toContain('Address');
-    expect(rowLabels).toContain('Postal code & city');
-    expect(rowLabels).toContain('Bank');
-    expect(rowLabels).toContain('Payment Terms (days)');
-    // Per-field labels that became captions are no longer row labels.
-    expect(rowLabels).not.toContain('Bank Name');
-    expect(rowLabels).not.toContain('Account Holder');
-    // Captions still render inside the packed rows.
-    expect(rendered.container.textContent).toContain('Account Holder');
-    expect(rendered.container.textContent).toContain('Street');
-    expect(rows.length).toBe(14);
+
+    // Previously-paired fields are now standalone rows.
+    expect(rowLabels).toEqual([
+      'Legal Name',
+      'Street',
+      'Address Line 2',
+      'Postal Code',
+      'City',
+      'Country',
+      'Tax ID',
+      'VAT ID',
+      'Registration Number',
+      'Email',
+      'Phone',
+      'Website',
+      'Bank Name',
+      'Account Holder',
+      'IBAN',
+      'BIC',
+      'Payment Terms (days)',
+      'Dunning enabled',
+      'Invoice Footer Text',
+    ]);
+
+    // The old combined labels are gone.
+    expect(rowLabels).not.toContain('Address');
+    expect(rowLabels).not.toContain('Postal code & city');
+    expect(rowLabels).not.toContain('Tax & VAT ID');
+    expect(rowLabels).not.toContain('Email & phone');
+    expect(rowLabels).not.toContain('Bank');
+  });
+
+  it('keeps multi-line / validated controls aligned to the top, footer stacked', () => {
+    const rendered = renderOrganizationSettingsSection();
+    roots.push(rendered.root);
+
+    const rowByLabel = (label: string) =>
+      rendered.container.querySelector(`[data-testid="settings-row"][data-label="${label}"]`);
+
+    // IBAN/BIC carry a validation message under the input → top-aligned inline.
+    expect(rowByLabel('IBAN')?.getAttribute('data-align')).toBe('start');
+    expect(rowByLabel('BIC')?.getAttribute('data-align')).toBe('start');
+    // The invoice footer textarea stays stacked.
+    expect(rowByLabel('Invoice Footer Text')?.getAttribute('data-layout')).toBe('stacked');
+    // Simple fields stay inline, centered.
+    expect(rowByLabel('Legal Name')?.getAttribute('data-layout')).toBe('inline');
+    expect(rowByLabel('Legal Name')?.getAttribute('data-align')).toBe('center');
   });
 });
