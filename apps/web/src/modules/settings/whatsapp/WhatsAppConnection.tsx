@@ -1,12 +1,9 @@
 import { Badge } from '@oktavius/base-ui';
-import { useEffect, useMemo, useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
 import { WhatsAppConnectionIcon } from '@/lib/icons';
-import { resolveOsirisApiBaseUrl } from '@/runtime/osiris/apiBaseUrl';
-import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import { createOsirisWhatsAppClient, type OsirisWhatsAppStatus } from './data/whatsappClient';
+import { useWhatsAppStatus } from './data/useWhatsApp';
 
 function formatUptime(seconds: number): string {
   if (seconds < 60) return `${seconds}s`;
@@ -18,43 +15,7 @@ function formatUptime(seconds: number): string {
 
 export function WhatsAppConnection() {
   const { t } = useTranslation();
-  const client = useMemo(
-    () => createOsirisWhatsAppClient({ baseUrl: resolveOsirisApiBaseUrl() }),
-    [],
-  );
-  const _orgId = useOptionalOsirisRuntime()?.activeOrgId ?? null;
-
-  const [status, setStatus] = useState<OsirisWhatsAppStatus | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const result = await client.getStatus();
-        if (!cancelled) {
-          setStatus(result);
-          setIsLoading(false);
-        }
-      } catch {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    const interval = setInterval(() => {
-      void load();
-    }, 30_000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [client]);
+  const { data: status, isLoading } = useWhatsAppStatus();
 
   const isConnected = status?.status === 'connected';
   const isConnecting = status?.status === 'connecting';
