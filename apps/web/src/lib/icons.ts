@@ -181,6 +181,13 @@ import {
   UsersThree,
 } from '@phosphor-icons/react';
 
+// ─── WhatsApp settings ───────────────────────────────────────────────────────
+export {
+  WifiHigh as WhatsAppConnectionIcon,
+  WhatsappLogo as WhatsAppIcon,
+  ShieldCheck as WhatsAppPolicyIcon,
+} from '@phosphor-icons/react';
+
 export const icons = {
   House,
   Users,
