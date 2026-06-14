@@ -40,12 +40,18 @@ export interface DialogContentProps extends React.ComponentPropsWithoutRef<
    * (or similar) when the dialog should keep the underlying surface fully visible.
    */
   overlayClassName?: string;
+  /**
+   * Render the built-in close button in the top-right corner. Defaults to `true`.
+   * Set to `false` when the content provides its own close affordance in the header,
+   * so the two don't overlap.
+   */
+  showCloseButton?: boolean;
 }
 
 export const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, overlayClassName, ...props }, ref) => (
+>(({ className, children, overlayClassName, showCloseButton = true, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
@@ -63,10 +69,12 @@ export const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:pointer-events-none">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      {showCloseButton ? (
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:pointer-events-none">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      ) : null}
     </DialogPrimitive.Content>
   </DialogPortal>
 ));

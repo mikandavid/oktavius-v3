@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import type { PreviewDocument } from '@/components/documents/documentPreviewTypes';
 import { useTranslation } from '@/core/i18n';
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from '@/lib/icons';
+import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, DownloadIcon } from '@/lib/icons';
 
 import type { StorageNode } from '../data/types';
 import { useFilePreviewUrl } from '../data/useStorageData';
@@ -39,7 +39,10 @@ export function StoragePreviewModal({
 
   return (
     <Dialog open={Boolean(node)} onOpenChange={(value) => (!value ? onClose() : undefined)}>
-      <DialogContent className="flex h-[85vh] w-[85vw] max-w-[1100px] flex-col gap-3 p-4">
+      <DialogContent
+        showCloseButton={false}
+        className="flex h-[85vh] w-[85vw] max-w-[1100px] flex-col gap-3 p-4"
+      >
         {node && (
           <>
             <div className="flex items-center gap-2">
@@ -51,6 +54,14 @@ export function StoragePreviewModal({
                 onClick={() => onDownload(node)}
               >
                 <DownloadIcon size={16} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('storage.dialogs.cancel')}
+                onClick={onClose}
+              >
+                <CloseIcon size={16} />
               </Button>
             </div>
             <div className="relative min-h-0 flex-1">
