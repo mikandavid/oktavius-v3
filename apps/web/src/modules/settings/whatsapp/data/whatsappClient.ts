@@ -108,6 +108,7 @@ function normalizeConfig(payload: unknown): OsirisWhatsAppConfig {
   const v = readRecord(payload);
   return {
     orgId: readString(v.org_id ?? v.orgId),
+    // auto-reply is opt-in by default when the backend omits the field
     autoReply: readBoolean(v.auto_reply ?? v.autoReply, true),
     dmPolicy: readPolicy(v.dm_policy ?? v.dmPolicy, 'allowlist'),
     groupPolicy: readPolicy(v.group_policy ?? v.groupPolicy, 'disabled'),

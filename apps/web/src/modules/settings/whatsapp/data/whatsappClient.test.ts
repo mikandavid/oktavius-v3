@@ -45,6 +45,27 @@ describe('createOsirisWhatsAppClient', () => {
     });
   });
 
+  it('normalizes snake_case status fields', async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        status: 'connected',
+        phone_number: '+439999999',
+        connected_at: 's',
+        uptime: 120,
+      }),
+    );
+    const client = createOsirisWhatsAppClient({ baseUrl: BASE });
+
+    const status = await client.getStatus();
+
+    expect(status).toEqual({
+      status: 'connected',
+      phoneNumber: '+439999999',
+      connectedAt: 's',
+      uptime: 120,
+    });
+  });
+
   it('falls back to disconnected for an unknown status value', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ status: 'weird', phoneNumber: null }));
     const client = createOsirisWhatsAppClient({ baseUrl: BASE });
