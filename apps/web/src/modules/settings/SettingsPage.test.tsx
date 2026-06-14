@@ -1,5 +1,6 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { TestI18nProvider } from '@/core/i18n';
@@ -140,11 +141,13 @@ async function renderSettingsPage(value: OsirisRuntimeContextValue = runtime) {
 
   await act(async () => {
     root.render(
-      <TestI18nProvider>
-        <OsirisRuntimeContext.Provider value={value}>
-          <SettingsPage />
-        </OsirisRuntimeContext.Provider>
-      </TestI18nProvider>,
+      <MemoryRouter>
+        <TestI18nProvider>
+          <OsirisRuntimeContext.Provider value={value}>
+            <SettingsPage />
+          </OsirisRuntimeContext.Provider>
+        </TestI18nProvider>
+      </MemoryRouter>,
     );
   });
 
