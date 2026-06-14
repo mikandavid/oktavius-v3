@@ -38,7 +38,7 @@ export function useStorageViewState(): StorageViewState {
   const currentFolderId = searchParams.get('folder');
 
   const [displayMode, setDisplayModeState] = useState<StorageDisplayMode>(
-    () => (storage?.getItem(DISPLAY_MODE_KEY) as StorageDisplayMode) || 'grid',
+    () => (storage?.getItem(DISPLAY_MODE_KEY) as StorageDisplayMode) || 'list',
   );
   const [sort, setSort] = useState<StorageSort>({ by: 'name', dir: 'asc' });
   const [search, setSearch] = useState<{ term: string; scope: StorageSearchScope }>({

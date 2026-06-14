@@ -41,13 +41,16 @@ export function StorageHeaderControls({ state }: { state: StorageViewState }) {
             state.setSearch({ term: event.target.value, scope: state.search.scope })
           }
           placeholder={t('storage.search.placeholder')}
-          className="pl-9"
+          className="h-9 pl-9"
         />
       </div>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button
+            variant="ghost"
+            className="h-9 gap-1.5 px-3 text-muted-foreground hover:text-foreground"
+          >
             <DirIcon size={14} />
             {t(`storage.sort.${state.sort.by}`)}
           </Button>

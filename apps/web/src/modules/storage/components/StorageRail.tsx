@@ -38,7 +38,7 @@ export function StorageRail({
 
   return (
     <aside
-      className={cn('flex-col gap-4 rounded-card bg-card p-3', className)}
+      className={cn('flex min-h-0 flex-col gap-4 self-stretch rounded-card bg-card p-3', className)}
       data-testid="storage-rail"
     >
       <nav className="flex flex-col gap-0.5">

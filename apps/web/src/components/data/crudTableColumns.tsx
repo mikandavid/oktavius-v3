@@ -18,11 +18,12 @@ import type { ColumnStretchMode, CrudGridSpec } from './crudTableColumnState';
 import {
   CRUD_TABLE_CELL_INNER_BASE,
   CRUD_TABLE_COLUMN_PADDING_ACTIONS,
-  CRUD_TABLE_COLUMN_PADDING_SELECT,
   CRUD_TABLE_HEADER_INNER_BASE,
+  CRUD_TABLE_SELECT_COLUMN_WIDTH_PX,
   CRUD_TABLE_SELECTION_CHECKBOX_CLASS,
   crudTableAlignClass,
   crudTableColumnPaddingClass,
+  crudTableSelectCellInnerClass,
   resolveCrudColumnAlign,
 } from './crudTableDensity';
 import type { ColumnType, CrudColumn, CrudRowAction } from './crudTableTypes';
@@ -94,17 +95,15 @@ export function buildSelectColumn<T extends { id: string }>({
   return {
     id: '__select__',
     name: '',
-    width: 44,
-    widthMin: 44,
-    widthMax: 44,
+    width: CRUD_TABLE_SELECT_COLUMN_WIDTH_PX,
+    widthMin: CRUD_TABLE_SELECT_COLUMN_WIDTH_PX,
+    widthMax: CRUD_TABLE_SELECT_COLUMN_WIDTH_PX,
     pin: 'start',
     movable: false,
     resizable: false,
     hide: false,
     headerRenderer: () => (
-      <div
-        className={cn('flex h-full items-center justify-center', CRUD_TABLE_COLUMN_PADDING_SELECT)}
-      >
+      <div className={cn('flex h-full', crudTableSelectCellInnerClass())}>
         <Checkbox
           className={CRUD_TABLE_SELECTION_CHECKBOX_CLASS}
           checked={
@@ -123,12 +122,7 @@ export function buildSelectColumn<T extends { id: string }>({
       if (row.kind !== 'leaf' || !row.data) return null;
       const rowData = row.data;
       return (
-        <div
-          className={cn(
-            'flex h-full items-center justify-center',
-            CRUD_TABLE_COLUMN_PADDING_SELECT,
-          )}
-        >
+        <div className={cn('flex h-full', crudTableSelectCellInnerClass())}>
           <Checkbox
             className={CRUD_TABLE_SELECTION_CHECKBOX_CLASS}
             checked={selectedIds.includes(rowData.id)}

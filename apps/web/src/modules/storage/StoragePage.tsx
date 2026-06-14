@@ -30,7 +30,7 @@ export function StoragePage() {
       actions={headerActions}
       fillHeight
     >
-      <div className="flex h-full min-h-0 gap-4">
+      <div className="flex h-full min-h-0 items-stretch gap-4">
         <StorageRail
           state={state}
           className="hidden w-60 shrink-0 lg:flex"

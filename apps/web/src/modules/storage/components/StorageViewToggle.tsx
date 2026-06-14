@@ -12,8 +12,8 @@ export function StorageViewToggle({
   onChange: (mode: StorageDisplayMode) => void;
 }) {
   return (
-    <div className="flex items-center rounded-control bg-muted p-0.5" role="tablist">
-      {(['grid', 'list'] as const).map((value) => {
+    <div className="flex h-9 items-center rounded-control bg-muted p-0.5" role="tablist">
+      {(['list', 'grid'] as const).map((value) => {
         const Icon = value === 'grid' ? GridIcon : ListIcon;
         const active = mode === value;
         return (
@@ -25,7 +25,7 @@ export function StorageViewToggle({
             aria-label={value}
             onClick={() => onChange(value)}
             className={cn(
-              'flex h-7 w-7 items-center justify-center rounded-[7px]',
+              'flex h-8 w-8 items-center justify-center rounded-[7px]',
               active ? 'bg-card text-foreground shadow-elevated' : 'text-muted-foreground',
             )}
           >

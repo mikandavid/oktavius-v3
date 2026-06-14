@@ -197,8 +197,13 @@ export function StorageMainPane({
       ];
 
   return (
-    <section className={cn('flex flex-col', className)} data-testid="storage-main">
-      <StorageToolbar state={state} tree={treeQuery.data ?? []} />
+    <section
+      className={cn('flex min-h-0 flex-col overflow-hidden rounded-card bg-card', className)}
+      data-testid="storage-main"
+    >
+      <div className="shrink-0 border-b border-border/50">
+        <StorageToolbar state={state} tree={treeQuery.data ?? []} />
+      </div>
       <CrudTableBulkActionBar
         selectedCount={selectedIds.length}
         actions={bulkActions}
@@ -210,7 +215,7 @@ export function StorageMainPane({
         permissionSubject={permissionSubject}
       />
       <StorageUploadLayer folderId={state.view === 'folder' ? state.currentFolderId : null}>
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]">
           {isLoading ? (
             <GridSkeleton />
           ) : orderedNodes.length === 0 ? (
@@ -346,9 +351,9 @@ function selectViewData(
 
 function GridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {Array.from({ length: 10 }).map((_, index) => (
-        <Skeleton key={index} className="h-28 w-full rounded-card" />
+    <div className="grid grid-cols-1 gap-3 px-4 py-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <Skeleton key={index} className="h-[3.75rem] w-full rounded-card" />
       ))}
     </div>
   );

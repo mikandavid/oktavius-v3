@@ -42,7 +42,7 @@ export function StorageToolbar({
     : [{ id: null, label: t(`storage.nav.${state.view}`) }];
 
   return (
-    <div className="flex flex-wrap items-center gap-3 pb-3">
+    <div className="flex flex-wrap items-center gap-3 px-5 py-3">
       <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1 text-sm">
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;

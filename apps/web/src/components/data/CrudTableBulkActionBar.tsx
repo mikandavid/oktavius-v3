@@ -1,8 +1,11 @@
-import { Button, Checkbox } from '@oktavius/base-ui';
+import { Button, Checkbox, cn } from '@oktavius/base-ui';
 
 import { type PermissionSubject, permitted } from '@/lib/permissions';
 
-import { CRUD_TABLE_SELECTION_CHECKBOX_CLASS } from './crudTableDensity';
+import {
+  CRUD_TABLE_SELECTION_CHECKBOX_CLASS,
+  crudTableSelectColumnSlotClass,
+} from './crudTableDensity';
 import type { BulkAction } from './crudTableTypes';
 
 function bulkActionVisible(
@@ -47,15 +50,17 @@ export function CrudTableBulkActionBar({
     <div
       role="toolbar"
       aria-label="Bulk actions"
-      className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-3 border-b border-sidebar-primary/15 bg-sidebar-primary/[0.06] px-5 py-2"
+      className="flex min-h-11 shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-sidebar-primary/15 bg-sidebar-primary/[0.06] py-2 pr-5"
     >
-      <div className="flex min-w-0 items-center gap-2.5">
-        <Checkbox
-          className={CRUD_TABLE_SELECTION_CHECKBOX_CLASS}
-          checked={allRowsSelected ? true : hasPartialSelection ? 'indeterminate' : false}
-          aria-label="Select all on this page"
-          onCheckedChange={onToggleAll}
-        />
+      <div className="flex min-w-0 items-center gap-x-3">
+        <div className={crudTableSelectColumnSlotClass()}>
+          <Checkbox
+            className={CRUD_TABLE_SELECTION_CHECKBOX_CLASS}
+            checked={allRowsSelected ? true : hasPartialSelection ? 'indeterminate' : false}
+            aria-label="Select all on this page"
+            onCheckedChange={onToggleAll}
+          />
+        </div>
         <span className="truncate text-sm font-medium text-foreground">
           {selectedCount} selected
         </span>
@@ -66,7 +71,7 @@ export function CrudTableBulkActionBar({
             key={action.key}
             variant={action.destructive ? 'destructive' : 'outline'}
             size="sm"
-            className="h-8 gap-1.5 bg-background/80"
+            className={cn('h-8 gap-1.5', !action.destructive && 'bg-background/80')}
             onClick={() => invokeBulkAction(action, selectedIds)}
           >
             {action.icon}

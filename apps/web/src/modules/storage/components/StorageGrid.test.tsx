@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -40,10 +41,12 @@ function makeActions(): StorageItemActions {
 
 let container: HTMLDivElement;
 let root: Root;
+let queryClient: QueryClient;
 
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   root = createRoot(container);
 });
 afterEach(() => {
@@ -58,16 +61,18 @@ async function renderGrid(props: {
 }) {
   await act(async () => {
     root.render(
-      <TestI18nProvider>
-        <StorageGrid
-          nodes={[node]}
-          actions={makeActions()}
-          inTrash={false}
-          selectedIds={props.selectedIds ?? []}
-          onToggleSelect={props.onToggleSelect}
-          onOpen={props.onOpen}
-        />
-      </TestI18nProvider>,
+      <QueryClientProvider client={queryClient}>
+        <TestI18nProvider>
+          <StorageGrid
+            nodes={[node]}
+            actions={makeActions()}
+            inTrash={false}
+            selectedIds={props.selectedIds ?? []}
+            onToggleSelect={props.onToggleSelect}
+            onOpen={props.onOpen}
+          />
+        </TestI18nProvider>
+      </QueryClientProvider>,
     );
   });
 }

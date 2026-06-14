@@ -12,6 +12,20 @@ export function crudTableRowHeightPx(compact: boolean) {
 export const CRUD_TABLE_SELECTION_CHECKBOX_CLASS =
   'border-border/80 data-[state=checked]:border-sidebar-primary data-[state=checked]:bg-sidebar-primary data-[state=checked]:text-sidebar-primary-foreground data-[state=indeterminate]:border-sidebar-primary data-[state=indeterminate]:bg-sidebar-primary/80 data-[state=indeterminate]:text-sidebar-primary-foreground';
 
+/** Pinned selection column width — keep in sync with `buildSelectColumn`. */
+export const CRUD_TABLE_SELECT_COLUMN_WIDTH_PX = 44;
+export const CRUD_TABLE_SELECT_COLUMN_WIDTH_CLASS = 'w-11';
+
+/** Inner wrapper for a selection cell inside a grid row/column. */
+export function crudTableSelectCellInnerClass(className?: string) {
+  return `flex items-center justify-center ${CRUD_TABLE_COLUMN_PADDING_SELECT}${className ? ` ${className}` : ''}`;
+}
+
+/** Fixed-width selection slot for toolbars (e.g. bulk action bar). */
+export function crudTableSelectColumnSlotClass(className?: string) {
+  return `${CRUD_TABLE_SELECT_COLUMN_WIDTH_CLASS} flex shrink-0 items-center justify-center ${CRUD_TABLE_COLUMN_PADDING_SELECT}${className ? ` ${className}` : ''}`;
+}
+
 export const CRUD_TABLE_HEADER_INNER_BASE =
   'flex h-full w-full items-center gap-1.5 text-xs font-medium';
 
