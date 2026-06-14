@@ -128,7 +128,7 @@ describe('OrganizationSettingsSection', () => {
     expect(rowLabels).not.toContain('Bank Name');
     expect(rowLabels).not.toContain('Account Holder');
     // Captions still render inside the packed rows.
-    expect(rendered.container.textContent).toContain('Account holder');
+    expect(rendered.container.textContent).toContain('Account Holder');
     expect(rendered.container.textContent).toContain('Street');
     expect(rows.length).toBe(14);
   });

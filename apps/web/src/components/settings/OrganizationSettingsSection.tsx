@@ -235,7 +235,7 @@ export function OrganizationSettingsSection({
               onChange={(event) => updateBanking('bankName', event.target.value)}
             />
           </PackedField>
-          <PackedField caption={s('accountHolder', 'Account holder')}>
+          <PackedField caption={s('accountHolder', 'Account Holder')}>
             <Input
               className="w-full"
               value={settings.banking.accountHolder}
