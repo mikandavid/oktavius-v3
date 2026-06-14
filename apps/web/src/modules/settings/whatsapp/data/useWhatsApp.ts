@@ -26,6 +26,7 @@ export function useWhatsAppStatus() {
   return useQuery({
     queryKey: whatsappKeys.status(orgId),
     queryFn: () => client.getStatus(),
+    enabled: Boolean(orgId),
     refetchInterval: 30_000,
   });
 }
