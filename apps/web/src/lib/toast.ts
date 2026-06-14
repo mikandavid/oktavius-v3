@@ -38,18 +38,17 @@ export const sonnerToasterProps = {
   toastOptions: {
     classNames: {
       toast:
-        'group rounded-control border border-border bg-card text-foreground shadow-none backdrop-blur-none',
+        'group rounded-control border-0 bg-card text-foreground shadow-elevated backdrop-blur-none',
       title: 'text-foreground font-medium',
       description: 'text-muted-foreground',
       actionButton: 'bg-primary text-primary-foreground',
       cancelButton: 'bg-muted text-foreground',
       closeButton:
         'border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
-      success: '!border-success/40 !bg-success/10 text-foreground [&_[data-icon]]:!text-success',
-      error:
-        '!border-destructive/40 !bg-destructive/10 text-foreground [&_[data-icon]]:!text-destructive',
-      warning: '!border-warning/40 !bg-warning/10 text-foreground [&_[data-icon]]:!text-warning',
-      info: '!border-info/40 !bg-info/10 text-foreground [&_[data-icon]]:!text-info',
+      success: '!bg-success/10 text-foreground [&_[data-icon]]:!text-success',
+      error: '!bg-destructive/10 text-foreground [&_[data-icon]]:!text-destructive',
+      warning: '!bg-warning/10 text-foreground [&_[data-icon]]:!text-warning',
+      info: '!bg-info/10 text-foreground [&_[data-icon]]:!text-info',
     },
   },
 } satisfies Pick<ToasterProps, 'toastOptions'>;

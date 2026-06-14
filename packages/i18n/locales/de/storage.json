@@ -223,6 +223,7 @@
   "actions": {
     "upload": "Hochladen",
     "open": "Öffnen",
+    "openInNewTab": "In neuem Tab öffnen",
     "download": "Herunterladen",
     "rename": "Umbenennen",
     "move": "Verschieben",
@@ -283,5 +284,10 @@
   "errors": {
     "load": "Dateien konnten nicht geladen werden.",
     "quota": "Speicherlimit erreicht. Bitte Speicher freigeben und erneut versuchen."
+  },
+  "zip": {
+    "preparing": "Download wird vorbereitet…",
+    "ready": "Download bereit",
+    "failed": "Download konnte nicht erstellt werden."
   }
 }

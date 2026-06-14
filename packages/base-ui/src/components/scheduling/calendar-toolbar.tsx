@@ -37,8 +37,9 @@ export function CalendarToolbar({
         {leadingAction}
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
+          className="h-8 text-foreground"
           onClick={() => onAnchorChange(new Date())}
         >
           Today

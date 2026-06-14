@@ -11,10 +11,7 @@ export interface CalendarViewSwitcherProps {
 export function CalendarViewSwitcher({ view, onViewChange, className }: CalendarViewSwitcherProps) {
   return (
     <div
-      className={cn(
-        'inline-flex rounded-control border border-border/60 bg-muted/40 p-0.5',
-        className,
-      )}
+      className={cn('inline-flex rounded-control bg-muted/40 p-0.5', className)}
       role="tablist"
       aria-label="Calendar view"
     >

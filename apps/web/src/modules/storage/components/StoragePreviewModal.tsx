@@ -4,7 +4,14 @@ import { useMemo } from 'react';
 import { DocumentPreview } from '@/components/documents/DocumentPreview';
 import type { PreviewDocument } from '@/components/documents/documentPreviewTypes';
 import { useTranslation } from '@/core/i18n';
-import { ChevronLeftIcon, ChevronRightIcon, CloseIcon, DownloadIcon } from '@/lib/icons';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CloseIcon,
+  DeleteIcon,
+  DownloadIcon,
+  ExternalLinkIcon,
+} from '@/lib/icons';
 
 import type { StorageNode } from '../data/types';
 import { useFilePreviewUrl } from '../data/useStorageData';
@@ -15,12 +22,14 @@ export function StoragePreviewModal({
   onNavigate,
   onClose,
   onDownload,
+  onDelete,
 }: {
   nodes: StorageNode[];
   currentId: string | null;
   onNavigate: (id: string) => void;
   onClose: () => void;
   onDownload: (node: StorageNode) => void;
+  onDelete: (node: StorageNode) => void;
 }) {
   const { t } = useTranslation();
   const files = useMemo(() => nodes.filter((node) => node.nodeType === 'file'), [nodes]);
@@ -50,10 +59,30 @@ export function StoragePreviewModal({
               <Button
                 variant="outline"
                 size="icon"
+                aria-label={t('storage.actions.openInNewTab')}
+                disabled={!previewQuery.data}
+                onClick={() => {
+                  if (previewQuery.data) window.open(previewQuery.data, '_blank', 'noopener');
+                }}
+              >
+                <ExternalLinkIcon size={16} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
                 aria-label={t('storage.actions.download')}
                 onClick={() => onDownload(node)}
               >
                 <DownloadIcon size={16} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="text-destructive"
+                aria-label={t('storage.actions.trash')}
+                onClick={() => onDelete(node)}
+              >
+                <DeleteIcon size={16} />
               </Button>
               <Button
                 variant="ghost"
@@ -70,6 +99,7 @@ export function StoragePreviewModal({
                 isLoading={previewQuery.isLoading}
                 errorMessage={previewQuery.isError ? t('storage.errors.load') : null}
                 className="h-full"
+                fillHeight
               />
               {index > 0 && (
                 <Button

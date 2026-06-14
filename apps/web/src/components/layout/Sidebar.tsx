@@ -637,7 +637,6 @@ function SidebarContent({
 
         <nav className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-2 py-3">
           <div>
-            <div className="mb-1.5 h-5 px-3" />
             <div className="space-y-0.5">
               {visiblePrimaryItems.map((item) => (
                 <NavItemRow

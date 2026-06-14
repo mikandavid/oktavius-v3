@@ -68,7 +68,7 @@ export function ChatComposer({
   return (
     <div
       className={cn(
-        'rounded-[20px] border border-border bg-background px-1.5 py-1.5 transition-colors duration-150 focus-within:border-primary/30',
+        'rounded-[20px] bg-background px-1.5 py-1.5 transition-colors duration-150',
         className,
       )}
     >

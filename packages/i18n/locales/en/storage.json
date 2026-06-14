@@ -223,6 +223,7 @@
   "actions": {
     "upload": "Upload",
     "open": "Open",
+    "openInNewTab": "Open in new tab",
     "download": "Download",
     "rename": "Rename",
     "move": "Move",
@@ -283,5 +284,10 @@
   "errors": {
     "load": "Files could not be loaded.",
     "quota": "Storage limit reached. Free up space and try again."
+  },
+  "zip": {
+    "preparing": "Preparing download…",
+    "ready": "Download ready",
+    "failed": "Could not create the download."
   }
 }

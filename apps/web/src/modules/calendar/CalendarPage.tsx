@@ -16,6 +16,7 @@ export function CalendarPage() {
       title="Calendar"
       subtitle="Click events to edit · drag to reschedule · click or drag slots to create"
       icon={calendarPageIcon()}
+      fillHeight
     >
       <CalendarView
         anchor={anchor}
@@ -36,7 +37,7 @@ export function CalendarPage() {
         onEventResize={calendar.onEventResize}
         onSlotClick={calendar.onSlotClick}
         onSlotRangeSelect={calendar.onSlotRangeSelect}
-        className="min-h-[520px] rounded-card bg-card"
+        className="min-h-0 flex-1 rounded-card bg-card"
       />
 
       <CalendarEventEditorDialog

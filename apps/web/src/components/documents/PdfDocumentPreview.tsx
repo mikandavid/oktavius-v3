@@ -18,12 +18,22 @@ export function PdfDocumentPreview({
   fitMode = 'page-width',
 }: PdfDocumentPreviewProps) {
   return (
-    <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col', className)}>
+    // Surface lives on the wrapper with `overflow-hidden` so the rounded corners actually
+    // clip the iframe — a border-radius on the iframe itself leaves square content corners.
+    <div
+      className={cn(
+        'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
+        PREVIEW_SURFACE_CLASS,
+        className,
+      )}
+    >
       <iframe
         title={title}
         src={withPdfFitMode(sourceUrl, fitMode)}
-        className={cn('min-h-[min(420px,60vh)] w-full flex-1 border-0', PREVIEW_SURFACE_CLASS)}
-        sandbox="allow-same-origin"
+        className="min-h-[min(420px,60vh)] w-full flex-1 border-0 bg-transparent"
+        // The browser's built-in PDF viewer is a scripted plugin — without `allow-scripts`
+        // the frame renders blank. `allow-popups`/`allow-downloads` enable its toolbar actions.
+        sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
       />
     </div>
   );

@@ -8,8 +8,10 @@ import { useTranslation } from '@/core/i18n';
 import { DeleteIcon, DownloadIcon, MoveToFolderIcon } from '@/lib/icons';
 import type { PermissionSubject } from '@/lib/permissions';
 import { appToast } from '@/lib/toast';
+import { formatUserFacingApiError } from '@/lib/userFacingApiError';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
+import { buildStorageZip } from '../data/downloadZip';
 import type { StorageNode } from '../data/types';
 import {
   useFavorites,
@@ -133,7 +135,7 @@ export function StorageMainPane({
     onDownload: async (node) => {
       try {
         const url = await client.downloadUrl(node.id);
-        window.open(url, '_blank', 'noopener');
+        startFileDownload(url, node.name);
       } catch (error) {
         onError(error);
       }
@@ -171,14 +173,34 @@ export function StorageMainPane({
           label: t('storage.actions.download'),
           icon: <DownloadIcon size={16} />,
           onClick: async (ids) => {
-            for (const id of ids) {
+            const selected = ids
+              .map((id) => orderedNodes.find((node) => node.id === id))
+              .filter((node): node is StorageNode => Boolean(node));
+            const single = selected.length === 1 ? selected[0] : null;
+
+            // A single file downloads directly; anything else (multiple files or
+            // a folder) is bundled into a single ZIP.
+            if (single && single.nodeType === 'file') {
               try {
-                const url = await client.downloadUrl(id);
-                window.open(url, '_blank', 'noopener');
+                const url = await client.downloadUrl(single.id);
+                startFileDownload(url, single.name);
               } catch (error) {
                 onError(error);
               }
+              return;
             }
+
+            const zipName =
+              single && single.nodeType === 'folder' ? `${single.name}.zip` : 'storage-export.zip';
+            await appToast.promise(
+              buildStorageZip(client, selected).then((blob) => startBlobDownload(blob, zipName)),
+              {
+                loading: t('storage.zip.preparing'),
+                success: t('storage.zip.ready'),
+                error: (error: unknown) =>
+                  formatUserFacingApiError(error, { fallback: t('storage.zip.failed') }),
+              },
+            );
           },
         },
         {
@@ -251,6 +273,10 @@ export function StorageMainPane({
         onNavigate={(id) => state.setPreviewNodeId(id)}
         onClose={() => state.setPreviewNodeId(null)}
         onDownload={actions.onDownload}
+        onDelete={(node) => {
+          state.setPreviewNodeId(null);
+          actions.onTrash(node);
+        }}
       />
       <NameDialog
         open={newFolderOpen}
@@ -326,6 +352,35 @@ export function StorageMainPane({
       />
     </section>
   );
+}
+
+// Forces a real download instead of opening the file in the browser. The signed
+// download URL is a Supabase storage URL; appending `download` makes the server
+// respond with Content-Disposition: attachment (the param is outside the token,
+// so it is safe to add) and the anchor click triggers the save dialog.
+function startFileDownload(url: string, filename: string) {
+  const target = new URL(url);
+  target.searchParams.set('download', filename);
+  const anchor = document.createElement('a');
+  anchor.href = target.toString();
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
+// Triggers a download for an in-memory blob (e.g. a generated ZIP) via a
+// temporary object URL that is revoked once the click is dispatched.
+function startBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 function selectViewData(

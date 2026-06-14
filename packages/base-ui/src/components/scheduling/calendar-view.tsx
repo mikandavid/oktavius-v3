@@ -172,10 +172,11 @@ function MonthGrid({
   onDayClick?: (day: Date) => void;
 }) {
   const days = getMonthGridDays(anchor);
+  const weekCount = Math.max(1, Math.round(days.length / 7));
 
   return (
     <>
-      <div className="mb-2 grid grid-cols-7">
+      <div className="mb-2 grid shrink-0 grid-cols-7">
         {CALENDAR_WEEKDAY_LABELS.map((label) => (
           <div
             key={label}
@@ -185,7 +186,10 @@ function MonthGrid({
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-px overflow-hidden rounded-control bg-border/40">
+      <div
+        className="grid flex-1 grid-cols-7 gap-px overflow-hidden rounded-control bg-border/40"
+        style={{ gridTemplateRows: `repeat(${weekCount}, minmax(7.5rem, 1fr))` }}
+      >
         {days.map((day) => (
           <MonthDayCell
             key={day.toISOString()}
@@ -281,7 +285,7 @@ export function CalendarView({
   };
 
   const calendarBody = (
-    <div className="flex min-h-[28rem] flex-col lg:min-h-0 lg:flex-row">
+    <div className="flex min-h-[28rem] flex-1 flex-col lg:min-h-0 lg:flex-row">
       {sidebarVisible ? (
         <CalendarSidebar
           anchor={anchor}
@@ -308,7 +312,8 @@ export function CalendarView({
 
         <div
           className={cn(
-            'min-h-0 min-w-0 flex-1',
+            'min-h-0 min-w-0 flex-1 overflow-y-auto',
+            view === 'month' && 'flex flex-col',
             view === 'agenda' ? '' : cn(schedulingBodyClass, view !== 'month' && 'overflow-x-auto'),
           )}
         >
@@ -377,7 +382,7 @@ export function CalendarView({
   );
 
   return (
-    <div className={cn(schedulingShellClass, className)}>
+    <div className={cn(schedulingShellClass, 'flex min-h-0 flex-col', className)}>
       {draggable ? (
         <DndContext
           sensors={sensors}

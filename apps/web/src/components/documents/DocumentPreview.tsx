@@ -4,7 +4,6 @@ import {
   InlineEmptyState,
   ScrollArea,
   Skeleton,
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -40,6 +39,11 @@ export interface DocumentPreviewProps {
   comfortableImagePreview?: boolean;
   /** Browser PDF viewer fit mode — use `page-fit` when the whole page should be visible. */
   pdfFitMode?: PdfPreviewFitMode;
+  /**
+   * Grow text/table/image previews to fill the available height and scroll internally
+   * instead of capping at ~420px. Use in full-screen contexts (e.g. the storage preview modal).
+   */
+  fillHeight?: boolean;
 }
 
 function PreviewFallback({
@@ -118,19 +122,33 @@ async function loadSpreadsheet(document: PreviewDocument): Promise<TablePreviewD
   };
 }
 
-function TablePreview({ data }: { data: TablePreviewData }) {
+function TablePreview({
+  data,
+  fillHeight = false,
+}: {
+  data: TablePreviewData;
+  fillHeight?: boolean;
+}) {
   if (data.headers.length === 0) {
     return <InlineEmptyState text="No rows in this file." centered />;
   }
 
   return (
-    <div className="space-y-2">
-      <ScrollArea className="max-h-[min(420px,60vh)] rounded-control border border-border/50">
-        <Table>
-          <TableHeader>
+    <div className={cn('space-y-2', fillHeight && 'flex min-h-0 flex-1 flex-col')}>
+      {/* Native overflow-auto so the table scrolls on BOTH axes — wide CSVs need horizontal scroll. */}
+      <div
+        className={cn(
+          'relative overflow-auto rounded-control border border-border/50',
+          fillHeight ? 'min-h-0 flex-1' : 'max-h-[min(420px,60vh)]',
+        )}
+      >
+        <table className="w-full caption-bottom text-sm">
+          <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>
-              {data.headers.map((header) => (
-                <TableHead key={header}>{header}</TableHead>
+              {data.headers.map((header, headerIndex) => (
+                <TableHead key={`head-${headerIndex}`} className="whitespace-nowrap">
+                  {header}
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -138,13 +156,15 @@ function TablePreview({ data }: { data: TablePreviewData }) {
             {data.rows.map((row, rowIndex) => (
               <TableRow key={`row-${rowIndex}`}>
                 {row.map((cell, cellIndex) => (
-                  <TableCell key={`cell-${rowIndex}-${cellIndex}`}>{cell}</TableCell>
+                  <TableCell key={`cell-${rowIndex}-${cellIndex}`} className="whitespace-nowrap">
+                    {cell}
+                  </TableCell>
                 ))}
               </TableRow>
             ))}
           </TableBody>
-        </Table>
-      </ScrollArea>
+        </table>
+      </div>
       {data.totalRows > MAX_PREVIEW_ROWS ? (
         <p className="text-xs text-muted-foreground">
           Showing {MAX_PREVIEW_ROWS} of {data.totalRows} rows.
@@ -163,6 +183,7 @@ export function DocumentPreview({
   errorMessage = null,
   comfortableImagePreview = false,
   pdfFitMode = 'page-fit',
+  fillHeight = false,
 }: DocumentPreviewProps) {
   const kind = useMemo(() => (document ? inferPreviewDocumentKind(document) : 'other'), [document]);
   const [textContent, setTextContent] = useState<string | null>(null);
@@ -250,9 +271,15 @@ export function DocumentPreview({
 
   if (isLoading || isFetching) {
     return (
-      <div className={cn('space-y-3', className, bodyClassName)}>
+      <div
+        className={cn(
+          fillHeight ? 'flex min-h-0 flex-col gap-3' : 'space-y-3',
+          className,
+          bodyClassName,
+        )}
+      >
         <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-[min(420px,60vh)] w-full" />
+        <Skeleton className={cn('w-full', fillHeight ? 'min-h-0 flex-1' : 'h-[min(420px,60vh)]')} />
       </div>
     );
   }
@@ -280,7 +307,12 @@ export function DocumentPreview({
       ) : null}
 
       {kind === 'image' && sourceUrl ? (
-        <div className="flex justify-center rounded-control bg-muted/15 p-4">
+        <div
+          className={cn(
+            'flex justify-center rounded-control bg-muted/15 p-4',
+            fillHeight && 'min-h-0 flex-1 items-center',
+          )}
+        >
           <img
             src={sourceUrl}
             alt={document.name}
@@ -289,7 +321,8 @@ export function DocumentPreview({
             loading="lazy"
             decoding="async"
             className={cn(
-              'max-h-[min(420px,60vh)] rounded-control object-contain',
+              'rounded-control object-contain',
+              fillHeight ? 'max-h-full' : 'max-h-[min(420px,60vh)]',
               comfortableImagePreview ? 'max-w-md' : 'max-w-full',
             )}
           />
@@ -297,13 +330,18 @@ export function DocumentPreview({
       ) : null}
 
       {kind === 'text' && textContent !== null ? (
-        <ScrollArea className="max-h-[min(420px,60vh)] rounded-control border border-border/50 bg-muted/15 p-3">
+        <ScrollArea
+          className={cn(
+            'rounded-control border border-border/50 bg-muted/15 p-3',
+            fillHeight ? 'min-h-0 flex-1' : 'max-h-[min(420px,60vh)]',
+          )}
+        >
           <pre className="whitespace-pre-wrap text-xs text-foreground">{textContent}</pre>
         </ScrollArea>
       ) : null}
 
       {(kind === 'csv' || kind === 'excel') && tableContent ? (
-        <TablePreview data={tableContent} />
+        <TablePreview data={tableContent} fillHeight={fillHeight} />
       ) : null}
 
       {kind === 'other' ? (
