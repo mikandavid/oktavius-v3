@@ -1,5 +1,6 @@
-import { Button, Combobox, SettingsRow, Switch } from '@oktavius/base-ui';
+import { Button, Combobox, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { createConfiguredCatalogOptionsStore } from '@/api/apiStoreConfig';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
@@ -9,13 +10,18 @@ import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
 import { AiSettingsSection } from '@/components/settings/AiSettingsSection';
-import { AutosaveStatus } from '@/components/settings/AutosaveStatus';
 import {
   type CatalogOption,
   CatalogOptionsManager,
 } from '@/components/settings/CatalogOptionsManager';
 import { LocationPolicySettingsSection } from '@/components/settings/LocationPolicySettingsSection';
 import { OrganizationSettingsSection } from '@/components/settings/OrganizationSettingsSection';
+import {
+  CONTROL_WIDTH,
+  PackedField,
+  PackedRow,
+  SettingsAutosaveFooter,
+} from '@/components/settings/settingsForm';
 import {
   SettingsPageFactory,
   type SettingsSectionConfig,
@@ -26,6 +32,7 @@ import { useDebouncedAutosave } from '@/lib/hooks/useDebouncedAutosave';
 import {
   BrainIcon,
   DocumentIcon,
+  EmailIcon,
   LocationIcon,
   NotificationsIcon,
   OrganizationIcon,
@@ -38,6 +45,11 @@ import type { LocationDetailItem } from '@/lib/locations/types';
 import { settingsPageIcon } from '@/lib/modulePageIcons';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
+import { MailSettingsSection } from '@/modules/settings/mail/MailSettingsSection';
+import {
+  resolveInitialSettingsSection,
+  SETTINGS_SECTION_PARAM,
+} from '@/modules/settings/settingsSectionParam';
 import { WhatsAppSettingsSection } from '@/modules/settings/whatsapp/WhatsAppSettingsSection';
 import type {
   OsirisOrgLocation,
@@ -151,7 +163,10 @@ export function SettingsPage() {
   const osirisRuntime = useOptionalOsirisRuntime();
   const activeOrgId = osirisRuntime?.activeOrgId ?? null;
   const { isSidebarCollapsed, setSidebarCollapsed } = useAppShellLayout();
-  const [activeSection, setActiveSection] = useState('general');
+  const [searchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState(() =>
+    resolveInitialSettingsSection(searchParams.get(SETTINGS_SECTION_PARAM)),
+  );
   const [emailDigest, setEmailDigest] = useState(true);
   const [approvalAlerts, setApprovalAlerts] = useState(true);
   const [workspaceSettings, setWorkspaceSettings] = useState<OsirisWorkspaceSettings>(() =>
@@ -379,50 +394,63 @@ export function SettingsPage() {
       title: 'General',
       sectionDescription: 'Defaults applied across the workspace.',
       render: () => (
-        <>
-          <SettingsRow
-            label="Compact sidebar"
-            description="Keep the app navigation rail icon-only on list pages."
+        <div className="space-y-8">
+          <SettingsSection title="Appearance" description="How the workspace looks for you.">
+            <SettingsRow
+              label="Compact sidebar"
+              description="Keep the app navigation rail icon-only on list pages."
+            >
+              <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
+            </SettingsRow>
+          </SettingsSection>
+          <SettingsSection
+            title="Localization"
+            description="Language and date/time defaults applied across the workspace."
           >
-            <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
-          </SettingsRow>
-          <SettingsRow label="Interface language" description="Labels and navigation copy.">
-            <LanguageSelector />
-          </SettingsRow>
-          <SettingsRow label="Date format" description="Default date display for this workspace.">
-            <Combobox
-              value={workspaceSettings.dateTime.dateFormat}
-              onChange={(value) => {
-                if (value) updateWorkspaceDateTime('dateFormat', value);
-              }}
-              options={DATE_FORMAT_OPTIONS}
-              className="w-[220px]"
-            />
-          </SettingsRow>
-          <SettingsRow label="Time format" description="Default time display for this workspace.">
-            <Combobox
-              value={workspaceSettings.dateTime.timeFormat}
-              onChange={(value) => {
-                if (value) updateWorkspaceDateTime('timeFormat', value);
-              }}
-              options={TIME_FORMAT_OPTIONS}
-              className="w-[220px]"
-            />
-          </SettingsRow>
-          <SettingsRow label="Timezone" description="Used for backend-generated timestamps.">
-            <Combobox
-              value={workspaceSettings.dateTime.timezone}
-              onChange={(value) => {
-                if (value) updateWorkspaceDateTime('timezone', value);
-              }}
-              options={TIMEZONE_OPTIONS}
-              className="w-[220px]"
-            />
-          </SettingsRow>
-          <div className="flex min-h-[1.25rem] justify-end border-b border-border/50 py-3">
-            <AutosaveStatus saving={isSavingWorkspaceSettings} savedAt={workspaceSettingsSavedAt} />
-          </div>
-        </>
+            <SettingsRow label="Interface language" description="Labels and navigation copy.">
+              <LanguageSelector />
+            </SettingsRow>
+            <PackedRow
+              label="Date & time format"
+              description="Default display across this workspace."
+            >
+              <PackedField caption="Date format">
+                <Combobox
+                  value={workspaceSettings.dateTime.dateFormat}
+                  onChange={(value) => {
+                    if (value) updateWorkspaceDateTime('dateFormat', value);
+                  }}
+                  options={DATE_FORMAT_OPTIONS}
+                  className="w-full"
+                />
+              </PackedField>
+              <PackedField caption="Time format">
+                <Combobox
+                  value={workspaceSettings.dateTime.timeFormat}
+                  onChange={(value) => {
+                    if (value) updateWorkspaceDateTime('timeFormat', value);
+                  }}
+                  options={TIME_FORMAT_OPTIONS}
+                  className="w-full"
+                />
+              </PackedField>
+            </PackedRow>
+            <SettingsRow label="Timezone" description="Used for backend-generated timestamps.">
+              <Combobox
+                value={workspaceSettings.dateTime.timezone}
+                onChange={(value) => {
+                  if (value) updateWorkspaceDateTime('timezone', value);
+                }}
+                options={TIMEZONE_OPTIONS}
+                className={CONTROL_WIDTH}
+              />
+            </SettingsRow>
+          </SettingsSection>
+          <SettingsAutosaveFooter
+            saving={isSavingWorkspaceSettings}
+            savedAt={workspaceSettingsSavedAt}
+          />
+        </div>
       ),
     },
     {
@@ -447,9 +475,9 @@ export function SettingsPage() {
     },
     {
       id: 'ai',
-      label: 'AI',
+      label: 'Agent',
       icon: <BrainIcon size={16} weight="duotone" />,
-      title: 'AI',
+      title: 'Agent',
       sectionDescription: 'Usage guardrails and org-wide instructions for AI-assisted work.',
       permission: 'org.manage',
       render: () => (
@@ -508,7 +536,10 @@ export function SettingsPage() {
       title: 'Notifications',
       sectionDescription: 'Choose how Oktavius keeps you informed.',
       render: () => (
-        <>
+        <SettingsSection
+          title="Notifications"
+          description="Choose how Oktavius keeps you informed."
+        >
           <SettingsRow
             label="Daily email digest"
             description="Summary of tasks, approvals, and overdue items."
@@ -521,8 +552,21 @@ export function SettingsPage() {
           >
             <Switch checked={approvalAlerts} onCheckedChange={setApprovalAlerts} />
           </SettingsRow>
-        </>
+        </SettingsSection>
       ),
+    },
+    {
+      id: 'mail',
+      label: t('settings.mailTab', undefined, 'Mail'),
+      icon: <EmailIcon size={16} weight="duotone" />,
+      title: t('settings.mailSettingsTitle', undefined, 'Mail'),
+      sectionDescription: t(
+        'settings.mailSettingsDescription',
+        undefined,
+        'Connect a mail provider to sync your mailbox and send email from Oktavius.',
+      ),
+      permission: 'org.manage',
+      render: () => <MailSettingsSection />,
     },
     {
       id: 'whatsapp',

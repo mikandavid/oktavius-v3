@@ -272,7 +272,7 @@ describe('SettingsPage', () => {
 
     await act(async () => {
       [...rendered.container.querySelectorAll('button')]
-        .find((button) => button.textContent?.includes('AI'))
+        .find((button) => button.textContent?.includes('Agent'))
         ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
