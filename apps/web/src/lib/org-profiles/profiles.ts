@@ -6,10 +6,11 @@ const DEFAULT_ORG_MODULES: OrgModuleId[] = [
   'ai-chat',
   'email',
   'calendar',
-  'reports',
   'storage',
   'members',
   'settings',
+  'support',
+  'support-inbox',
 ];
 
 export function createDefaultOrgProfile(orgId?: string | null): OrgProfile {

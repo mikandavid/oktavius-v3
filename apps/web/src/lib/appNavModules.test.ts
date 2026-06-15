@@ -31,7 +31,7 @@ const REMOVED_BUSINESS_MODULE_IDS = [
 
 const genericProfile: OrgProfile = {
   ...createDefaultOrgProfile('org_generic'),
-  enabledModules: ['dashboard', 'ai-chat', 'email', 'calendar', 'reports', 'settings'],
+  enabledModules: ['dashboard', 'ai-chat', 'email', 'calendar', 'storage', 'settings'],
 };
 
 const funeralProfile: OrgProfile = {
@@ -54,8 +54,8 @@ describe('app navigation module manifest', () => {
   it('keeps profile-disabled modules out of enabled navigation', () => {
     const moduleById = new Map(APP_NAV_MODULES.map((item) => [item.id, item]));
 
-    expect(isAppNavItemEnabled(genericProfile, moduleById.get('reports')!)).toBe(true);
-    expect(isAppNavItemEnabled(funeralProfile, moduleById.get('reports')!)).toBe(false);
+    expect(isAppNavItemEnabled(genericProfile, moduleById.get('storage')!)).toBe(true);
+    expect(isAppNavItemEnabled(funeralProfile, moduleById.get('storage')!)).toBe(false);
   });
 
   it('does not expose removed business CRUD modules', () => {
@@ -71,7 +71,8 @@ describe('app navigation module manifest', () => {
       'ai-chat': 'agent-chat.view',
       email: 'email.view_own',
       calendar: 'calendar.view',
-      reports: 'reports.view',
+      storage: 'storage.view',
+      support: 'support.view',
     });
   });
 
@@ -105,7 +106,7 @@ describe('app navigation module manifest', () => {
     expect(getAppQuickActionsForProfile(apex).map((action) => action.routeId)).not.toContain(
       'superadmin',
     );
-    expect(getAppCreateActionForProfile(apex, 'reports')).toBeNull();
+    expect(getAppCreateActionForProfile(apex, 'storage')).toBeNull();
   });
 });
 
@@ -116,5 +117,24 @@ describe('members manifest entry', () => {
     expect(entry?.section).toBe('admin');
     expect(entry?.path).toBe('/members');
     expect(entry?.permission).toBe('org.members.manage');
+  });
+});
+
+describe('support manifest entries', () => {
+  it('registers a requester support module in the modules section', () => {
+    const entry = APP_NAV_MODULES.find((module) => module.id === 'support');
+    expect(entry).toBeDefined();
+    expect(entry?.section).toBe('modules');
+    expect(entry?.path).toBe('/support');
+    expect(entry?.permission).toBe('support.view');
+    expect(entry?.superadminOnly).toBeUndefined();
+  });
+
+  it('registers an admin support-inbox module gated to superadmins', () => {
+    const entry = APP_NAV_MODULES.find((module) => module.id === 'support-inbox');
+    expect(entry).toBeDefined();
+    expect(entry?.section).toBe('admin');
+    expect(entry?.path).toBe('/support-inbox');
+    expect(entry?.superadminOnly).toBe(true);
   });
 });

@@ -6,11 +6,12 @@ export type OrgModuleId =
   | 'ai-chat'
   | 'email'
   | 'calendar'
-  | 'reports'
   | 'storage'
   | 'members'
   | 'settings'
-  | 'showcase';
+  | 'showcase'
+  | 'support'
+  | 'support-inbox';
 
 /** Free-form vocabulary map; industry presets fill it per locale. */
 export type OrgTerminology = Record<string, string>;
