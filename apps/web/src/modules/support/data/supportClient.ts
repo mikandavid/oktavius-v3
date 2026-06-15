@@ -11,6 +11,8 @@ import type {
   CreateTicketInput,
   ListTicketsParams,
   SupportAttachment,
+  SupportAttachmentNodeType,
+  SupportAttachmentUploadStatus,
   SupportCategory,
   SupportComment,
   SupportPriority,
@@ -27,6 +29,17 @@ const CATEGORIES: readonly SupportCategory[] = ['bug', 'feature_request', 'other
 const STATUSES: readonly SupportStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
 const PRIORITIES: readonly SupportPriority[] = ['low', 'normal', 'high', 'urgent'];
 const SOURCES: readonly SupportSource[] = ['web', 'agent', 'email'];
+const ATTACHMENT_NODE_TYPES: readonly SupportAttachmentNodeType[] = ['folder', 'file'];
+const ATTACHMENT_UPLOAD_STATUSES: readonly SupportAttachmentUploadStatus[] = [
+  'pending',
+  'uploading',
+  'ready',
+  'failed',
+];
+
+function readNumberOrNull(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
 
 function oneOf<T extends string>(allowed: readonly T[], value: unknown, fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
@@ -68,6 +81,35 @@ function normalizeComment(row: unknown): SupportComment {
     userEmail: readStringOrNull(v.user_email ?? v.userEmail),
     message: readString(v.message),
     isInternal: Boolean(v.is_internal ?? v.isInternal),
+    createdAt: readString(v.created_at ?? v.createdAt),
+    updatedAt: readString(v.updated_at ?? v.updatedAt),
+  };
+}
+
+function normalizeAttachment(row: unknown): SupportAttachment {
+  const v = readRecord(row);
+  const nodeType = ATTACHMENT_NODE_TYPES.includes(
+    (v.node_type ?? v.nodeType) as SupportAttachmentNodeType,
+  )
+    ? ((v.node_type ?? v.nodeType) as SupportAttachmentNodeType)
+    : 'file';
+  const uploadStatus = ATTACHMENT_UPLOAD_STATUSES.includes(
+    (v.upload_status ?? v.uploadStatus) as SupportAttachmentUploadStatus,
+  )
+    ? ((v.upload_status ?? v.uploadStatus) as SupportAttachmentUploadStatus)
+    : 'ready';
+  return {
+    id: readString(v.id),
+    parentId: readStringOrNull(v.parent_id ?? v.parentId),
+    nodeType,
+    name: readString(v.name),
+    mimeType: readStringOrNull(v.mime_type ?? v.mimeType),
+    fileExtension: readStringOrNull(v.file_extension ?? v.fileExtension),
+    fileSizeBytes: readNumberOrNull(v.file_size_bytes ?? v.fileSizeBytes),
+    uploadStatus,
+    trashedAt: readStringOrNull(v.trashed_at ?? v.trashedAt),
+    purgeAfterAt: readStringOrNull(v.purge_after_at ?? v.purgeAfterAt),
+    createdBy: readStringOrNull(v.created_by ?? v.createdBy),
     createdAt: readString(v.created_at ?? v.createdAt),
     updatedAt: readString(v.updated_at ?? v.updatedAt),
   };
@@ -153,7 +195,7 @@ export function createSupportClient(options: SupportClientOptions = {}) {
           'Attachments could not be loaded.',
         ),
       );
-      return Array.isArray(v.data) ? (v.data as SupportAttachment[]) : [];
+      return Array.isArray(v.data) ? v.data.map(normalizeAttachment) : [];
     },
     async createTicket(input: CreateTicketInput): Promise<SupportTicket> {
       return normalizeTicket(

@@ -49,12 +49,12 @@ export interface SupportStats {
 export interface ListTicketsParams {
   page?: number;
   pageSize?: number;
-  status?: SupportStatus | undefined;
-  priority?: SupportPriority | undefined;
-  category?: SupportCategory | undefined;
-  search?: string | undefined;
-  sort?: string | undefined;
-  tag?: string | undefined;
+  status?: SupportStatus;
+  priority?: SupportPriority;
+  category?: SupportCategory;
+  search?: string;
+  sort?: string;
+  tag?: string;
 }
 
 export interface TicketListResult {

@@ -108,6 +108,43 @@ describe('createSupportClient', () => {
     expect((init as RequestInit).body).toBeInstanceOf(FormData);
   });
 
+  it('lists attachments and normalizes snake_case', async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({
+        data: [
+          {
+            id: 'n1',
+            parent_id: 'p1',
+            node_type: 'file',
+            name: 'report.pdf',
+            mime_type: 'application/pdf',
+            file_extension: 'pdf',
+            file_size_bytes: 204800,
+            upload_status: 'ready',
+            trashed_at: null,
+            purge_after_at: null,
+            created_by: 'u1',
+            created_at: '2026-01-01T00:00:00Z',
+            updated_at: '2026-01-02T00:00:00Z',
+          },
+        ],
+      }),
+    );
+
+    const client = createSupportClient({ baseUrl: BASE });
+    const result = await client.listAttachments('t1');
+
+    expect(result).toHaveLength(1);
+    expect(result[0]!.id).toBe('n1');
+    expect(result[0]!.parentId).toBe('p1');
+    expect(result[0]!.nodeType).toBe('file');
+    expect(result[0]!.mimeType).toBe('application/pdf');
+    expect(result[0]!.fileSizeBytes).toBe(204800);
+    expect(result[0]!.fileExtension).toBe('pdf');
+    expect(result[0]!.uploadStatus).toBe('ready');
+    expect(result[0]!.createdAt).toBe('2026-01-01T00:00:00Z');
+  });
+
   it('updateStatus throws NOT_IMPLEMENTED (scaffold)', async () => {
     const client = createSupportClient({ baseUrl: BASE });
     await expect(client.updateStatus('t1', 'resolved')).rejects.toThrow('NOT_IMPLEMENTED');
