@@ -4,6 +4,7 @@ import {
   type ApiCrudResourceHandlers,
   type ApiListParams,
   type ApiRegistry,
+  ApiRequestError,
   type ApiResourceKey,
   ApiValidationError,
   type ListResponse,
@@ -129,8 +130,12 @@ async function requestJson<T>(
   }
 
   if (!response.ok) {
-    throw new Error(
-      `${method} ${path} failed with ${response.status} ${response.statusText}`.trim(),
+    throw new ApiRequestError(
+      messageFromPayload(
+        payload,
+        `${method} ${path} failed with ${response.status} ${response.statusText}`.trim(),
+      ),
+      response.status,
     );
   }
 

@@ -1,15 +1,18 @@
 import { Badge, cn, SettingsRow, SettingsSection } from '@oktavius/base-ui';
-import { useCallback, useEffect, useState } from 'react';
 
 import type {
   NotificationChannel,
   NotificationExplicitPreferenceState,
-  NotificationSettings,
   NotificationSettingsChannel,
   NotificationsRuntimeAdapter,
 } from '@/components/layout/NotificationsRuntime';
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { appToast } from '@/lib/toast';
+
+import {
+  useNotificationSettings,
+  useUpdateNotificationSubscription,
+} from './notificationSettingsData';
 
 type NotificationSettingsSectionProps = {
   runtime?: NotificationsRuntimeAdapter;
@@ -54,90 +57,68 @@ function availableStates(
 export function NotificationSettingsSection({ runtime }: NotificationSettingsSectionProps) {
   const { ready } = usePreloadNamespaces(['profile']);
   const { t } = useTranslation();
-  const [settings, setSettings] = useState<NotificationSettings | null>(null);
-  const [isLoading, setIsLoading] = useState(Boolean(runtime));
-  const [error, setError] = useState<string | null>(null);
-  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const settingsQuery = useNotificationSettings(runtime);
+  const updateSubscription = useUpdateNotificationSubscription(runtime);
 
-  const loadSettings = useCallback(async () => {
-    if (!runtime) {
-      setSettings({ modules: [] });
-      setIsLoading(false);
-      return;
-    }
+  const isLoading = settingsQuery.isLoading;
+  // The currently-saving control, derived from the in-flight mutation so a
+  // single dropdown is disabled while its change persists.
+  const savingKey = updateSubscription.isPending
+    ? `${updateSubscription.variables.notificationTypeKey}:${updateSubscription.variables.channel}`
+    : null;
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      setSettings(await runtime.fetchSettings());
-    } catch (nextError) {
-      const message =
-        nextError instanceof Error
-          ? nextError.message
-          : t(
-              'profile.notificationSettingsLoadError',
-              undefined,
-              'Failed to load notification preferences.',
-            );
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [runtime, t]);
+  const loadError = settingsQuery.error
+    ? settingsQuery.error instanceof Error
+      ? settingsQuery.error.message
+      : t(
+          'profile.notificationSettingsLoadError',
+          undefined,
+          'Failed to load notification preferences.',
+        )
+    : null;
+  const saveError = updateSubscription.error
+    ? updateSubscription.error instanceof Error
+      ? updateSubscription.error.message
+      : t('common.genericError', undefined, 'Something went wrong.')
+    : null;
+  const error = saveError ?? loadError;
 
-  useEffect(() => {
-    void loadSettings();
-  }, [loadSettings]);
-
-  const updateChannel = async (
+  const updateChannel = (
     notificationTypeKey: string,
     channel: NotificationChannel,
     state: NotificationExplicitPreferenceState,
   ) => {
     if (!runtime) return;
-    const key = `${notificationTypeKey}:${channel}`;
-    setSavingKey(key);
-    setError(null);
-    try {
-      await runtime.updateSubscription({ notificationTypeKey, channel, state });
-      appToast.success(
-        t('profile.notificationSettingsSaved', undefined, 'Notification preferences updated.'),
-      );
-      await loadSettings();
-    } catch (nextError) {
-      const message =
-        nextError instanceof Error
-          ? nextError.message
-          : t('common.genericError', undefined, 'Something went wrong.');
-      setError(message);
-      appToast.error(message);
-    } finally {
-      setSavingKey(null);
-    }
+    updateSubscription.mutate(
+      { notificationTypeKey, channel, state },
+      {
+        onSuccess: () =>
+          appToast.success(
+            t('profile.notificationSettingsSaved', undefined, 'Notification preferences updated.'),
+          ),
+        onError: (nextError) => {
+          const message =
+            nextError instanceof Error
+              ? nextError.message
+              : t('common.genericError', undefined, 'Something went wrong.');
+          appToast.error(message);
+        },
+      },
+    );
   };
 
-  const modules = settings?.modules ?? [];
+  const modules = settingsQuery.data?.modules ?? [];
 
   if (!ready) {
     return (
-      <SettingsSection
-        title="Notification preferences"
-        description="Choose which notification types reach you immediately or as a summary."
-      >
+      <SettingsSection title="Notification preferences">
         <p className="text-sm text-muted-foreground">{t('common.loading', undefined, 'Loading')}</p>
       </SettingsSection>
     );
   }
 
   return (
-    <SettingsSection
-      title={t('profile.notificationsTitle', undefined, 'Notification preferences')}
-      description={t(
-        'profile.notificationsDescription',
-        undefined,
-        'Choose which notification types reach you immediately or as a summary.',
-      )}
-    >
+    <SettingsSection title={t('profile.notificationsTitle', undefined, 'Notification preferences')}>
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t('common.loading', undefined, 'Loading')}</p>
       ) : null}
@@ -200,7 +181,7 @@ export function NotificationSettingsSection({ runtime }: NotificationSettingsSec
                             value={channel.explicitState}
                             disabled={!channel.allowed || savingKey === controlKey}
                             onChange={(event) =>
-                              void updateChannel(
+                              updateChannel(
                                 typeItem.key,
                                 channel.channel,
                                 event.target.value as NotificationExplicitPreferenceState,

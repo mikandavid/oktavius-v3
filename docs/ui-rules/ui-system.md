@@ -19,15 +19,15 @@ When in doubt, use these docs — do not invent layouts.
 
 ## Choose the page shell
 
-| Need                             | Shell                                                                  |
-| -------------------------------- | ---------------------------------------------------------------------- |
-| Entity list                      | `CrudMainView` + `shared.tsx` columns/formFields                       |
-| Create/edit                      | `ModulePage` + `EntityForm`                                            |
-| Simple detail                    | `ModulePage` + `DetailView`                                            |
-| Many sections (scan one record)  | `ModulePage` + `MODULE_PAGE_SECTION_NAV_CLASS` + `AppSectionNavLayout` |
-| Queue / master-detail            | `ModulePage fillHeight` + `SplitView`                                  |
-| Peer work modes (case workspace) | `ModulePage` + `Tabs` + `SectionCard` per tab — **last resort**        |
-| Settings / catalogs              | `AppSectionNavLayout` + `SettingsSection` / `SettingsRow`              |
+| Need                             | Shell                                                                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Entity list                      | `CrudMainView` + `shared.tsx` columns/formFields                                                                                    |
+| Create/edit                      | `ModulePage` + `EntityForm`                                                                                                         |
+| Simple detail                    | `ModulePage` + `DetailView`                                                                                                         |
+| Many sections (scan one record)  | `ModulePage` + `MODULE_PAGE_SECTION_NAV_CLASS` + `AppSectionNavLayout`                                                              |
+| Queue / master-detail            | `ModulePage fillHeight` + `SplitView`                                                                                               |
+| Peer work modes (case workspace) | `ModulePage` + `Tabs` + `SectionCard` per tab — **last resort**                                                                     |
+| Settings / catalogs              | `AppSectionNavLayout` + `SettingsSection` / `SettingsRow` — info left, control right ([`patterns.md`](./patterns.md#settings-rows)) |
 
 Every route uses **`ModulePage`**. Never custom page headers.
 
@@ -107,6 +107,7 @@ Adapted for dense data — chunk **per screen**, not “cap total modules.”
 ❌ TooltipProvider in components; arbitrary spacing (mt-7, px-11)
 ❌ DetailView inside Tabs; manual Button spinners
 ❌ Raw Calendar classNames in sidebar — use CalendarMiniPicker
+❌ Sliders / stacked two-control rows in settings — info left, control right; toggle > dropdown > field > slider
 ```
 
 Full pattern examples: [`patterns.md`](./patterns.md) + [`foundation.md`](./foundation.md).
@@ -131,4 +132,5 @@ Full pattern examples: [`patterns.md`](./patterns.md) + [`foundation.md`](./foun
 - `@phosphor-icons/react` — only `src/lib/icons.ts`
 - `Select` from `@oktavius/base-ui` — use `Combobox`
 - Forbidden Tailwind: `text-gray-*`, `bg-white`, raw scales, `rounded-lg`
+- `border` / `shadow` on `Card` / `SectionCard` / `CrudMainView` / `SplitView` surfaces
 - Tab/filter UX limits (see table above)

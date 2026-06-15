@@ -1,7 +1,8 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createContext, type ReactNode, useContext, useMemo } from 'react';
 
 import type { ApiRegistry } from './contracts';
+import { createAppQueryClient } from './queryClient';
 
 export type { ApiRegistry } from './contracts';
 
@@ -11,14 +12,7 @@ type ApiContextValue = {
 
 const ApiContext = createContext<ApiContextValue | null>(null);
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = createAppQueryClient();
 
 type ApiProviderProps = {
   children: ReactNode;

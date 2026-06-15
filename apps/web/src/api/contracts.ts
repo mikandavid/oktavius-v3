@@ -18,6 +18,21 @@ export class ApiAuthorizationError extends Error {
   }
 }
 
+/**
+ * Thrown for any non-OK response not already mapped to a more specific error
+ * (validation / authorization). Carries `statusCode` so retry policy can tell
+ * a retryable 5xx/429 from a terminal 4xx.
+ */
+export class ApiRequestError extends Error {
+  readonly statusCode: number;
+
+  constructor(message: string, statusCode: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.statusCode = statusCode;
+  }
+}
+
 export type ListResponse<T> = {
   data: T[];
   total: number;

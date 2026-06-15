@@ -203,13 +203,13 @@ export function DetailLayoutSection() {
           onSelect={setSettingsKey}
         >
           {settingsKey === 'general' ? (
-            <SettingsSection title="General" description="Workspace preferences">
+            <SettingsSection title="General">
               <SettingsRow label="Auto-sync CRM" description="Updates client records nightly.">
                 <Switch checked={syncEnabled} onCheckedChange={setSyncEnabled} />
               </SettingsRow>
             </SettingsSection>
           ) : (
-            <SettingsSection title="Notifications" description="Email and in-app alerts">
+            <SettingsSection title="Notifications">
               <SettingsRow label="Daily digest" description="Summary of open tasks each morning.">
                 <Switch defaultChecked />
               </SettingsRow>

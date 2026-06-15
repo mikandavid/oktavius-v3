@@ -45,6 +45,12 @@ export default defineConfig({
           ) {
             return 'app-vendor';
           }
+          // Split Sentry (init + replay + tracing) out of the entry chunk; it
+          // still loads eagerly via instrument.ts but must not bloat the
+          // budgeted entry bundle.
+          if (id.includes('/node_modules/@sentry')) {
+            return 'sentry-vendor';
+          }
           if (
             id.includes('/node_modules/@1771technologies') ||
             id.includes('/node_modules/@dnd-kit')

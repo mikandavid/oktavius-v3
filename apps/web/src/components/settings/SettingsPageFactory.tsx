@@ -1,4 +1,4 @@
-import { type SettingsNavItem, SettingsSection } from '@oktavius/base-ui';
+import { type SettingsNavItem } from '@oktavius/base-ui';
 import { type ComponentType, type ReactNode, useMemo, useState } from 'react';
 
 import { AppSectionNavLayout } from '@/components/layout/AppSectionNavLayout';
@@ -25,12 +25,16 @@ export type SettingsSectionConfig = {
   sectionDescription?: string;
   render: () => ReactNode;
   permission?: PermissionRequirement;
+  /** Optional nav group header (e.g. 'Account' vs 'Workspace'). */
+  group?: string;
 };
 
 type SettingsPageFactoryProps = {
   sections: SettingsSectionConfig[];
   activeKey?: string;
   onActiveKeyChange?: (key: string) => void;
+  /** Ordered group names; groups not listed are appended in first-seen order. */
+  groupOrder?: string[];
 };
 
 function renderIcon(icon: SettingsSectionConfig['icon']): ReactNode {
@@ -46,6 +50,7 @@ export function buildSettingsFactoryNavItems(sections: SettingsSectionConfig[]):
     label: section.label,
     icon: renderIcon(section.icon),
     description: section.description,
+    group: section.group,
   }));
 }
 
@@ -53,6 +58,7 @@ export function SettingsPageFactory({
   sections,
   activeKey,
   onActiveKeyChange,
+  groupOrder,
 }: SettingsPageFactoryProps) {
   const [internalActiveKey, setInternalActiveKey] = useState(sections[0]?.id ?? '');
   const osirisRuntime = useOptionalOsirisRuntime();
@@ -81,15 +87,23 @@ export function SettingsPageFactory({
       items={buildSettingsFactoryNavItems(permittedSections)}
       activeKey={activeSection?.id ?? ''}
       onSelect={handleSelect}
+      groupOrder={groupOrder}
     >
       {activeSection ? (
         <SectionErrorBoundary sectionId={`settings.${activeSection.id}`}>
-          <SettingsSection
-            title={activeSection.title ?? activeSection.label}
-            description={activeSection.sectionDescription ?? activeSection.description}
-          >
+          <div className="space-y-5">
+            <div className="border-b border-border pb-4">
+              <h2 className="text-base font-semibold text-foreground">
+                {activeSection.title ?? activeSection.label}
+              </h2>
+              {(activeSection.sectionDescription ?? activeSection.description) ? (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {activeSection.sectionDescription ?? activeSection.description}
+                </p>
+              ) : null}
+            </div>
             {activeSection.render()}
-          </SettingsSection>
+          </div>
         </SectionErrorBoundary>
       ) : null}
     </AppSectionNavLayout>

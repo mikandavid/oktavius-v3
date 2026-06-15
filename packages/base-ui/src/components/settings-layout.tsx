@@ -180,19 +180,15 @@ export function SettingsLayout({
 
 export interface SettingsSectionProps {
   title: string;
-  description?: string;
   children: ReactNode;
   className?: string;
 }
 
-/** Semantic wrapper for a settings section (title + description + controls). */
-export function SettingsSection({ title, description, children, className }: SettingsSectionProps) {
+/** Semantic wrapper for a settings section (subheading title + controls). */
+export function SettingsSection({ title, children, className }: SettingsSectionProps) {
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="space-y-0.5">
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
-      </div>
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="space-y-4">{children}</div>
     </div>
   );

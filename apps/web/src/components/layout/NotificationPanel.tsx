@@ -89,7 +89,7 @@ export function NotificationPanel({
         <ScrollArea className="max-h-72">
           <div className="px-1 py-1">
             {notifications.length === 0 ? (
-              <div className="animate-in fade-in-0 slide-in-from-bottom-1 flex flex-col items-center justify-center px-4 py-9 text-center duration-300 ease-out">
+              <div className="animate-in fade-in-0 slide-in-from-bottom-1 flex flex-col items-center justify-center px-4 py-8 text-center duration-300 ease-out">
                 <div
                   className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground"
                   style={{ animation: 'notif-bell-ring 0.65s ease-in-out 0.3s 1 both' }}

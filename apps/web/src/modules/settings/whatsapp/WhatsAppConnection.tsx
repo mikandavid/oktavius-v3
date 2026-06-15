@@ -1,7 +1,6 @@
-import { Badge } from '@oktavius/base-ui';
+import { Badge, SettingsSection } from '@oktavius/base-ui';
 
 import { useTranslation } from '@/core/i18n';
-import { WhatsAppConnectionIcon } from '@/lib/icons';
 
 import { useWhatsAppStatus } from './data/useWhatsApp';
 
@@ -21,14 +20,7 @@ export function WhatsAppConnection() {
   const isConnecting = status?.status === 'connecting';
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <WhatsAppConnectionIcon size={14} className="text-muted-foreground" aria-hidden="true" />
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('settings.whatsappConnection', undefined, 'Connection')}
-        </h2>
-      </div>
-
+    <SettingsSection title={t('settings.whatsappConnection', undefined, 'Connection')}>
       {isLoading ? (
         <p className="text-sm text-muted-foreground">
           {t('common.loading', undefined, 'Loading…')}
@@ -73,6 +65,6 @@ export function WhatsAppConnection() {
           ) : null}
         </div>
       )}
-    </section>
+    </SettingsSection>
   );
 }

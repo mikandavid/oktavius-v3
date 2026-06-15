@@ -11,26 +11,24 @@ import {
   Button,
   Combobox,
   type ComboboxOption,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Input,
-  Label,
-  PhoneInput,
+  SettingsRow,
+  SettingsSection,
+  SettingsTable,
+  type SettingsTableColumn,
   Switch,
 } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
 
+import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
+import type { FormField } from '@/components/forms/EntityForm';
+import { SHORT_INPUT_WIDTH } from '@/components/settings/settingsForm';
 import { useTranslation } from '@/core/i18n';
-import { MoreIcon, PhoneIcon, PlusIcon, WhatsAppPolicyIcon } from '@/lib/icons';
+import { MoreIcon, PhoneIcon, PlusIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
 
 import {
@@ -68,15 +66,6 @@ export function WhatsAppContactsConfig() {
   const [editing, setEditing] = useState<OsirisWhatsAppContact | null>(null);
   const [pendingDelete, setPendingDelete] = useState<OsirisWhatsAppContact | null>(null);
 
-  const [newPhone, setNewPhone] = useState('');
-  const [newName, setNewName] = useState('');
-  const [newUserId, setNewUserId] = useState<string | null>(null);
-  const [newRole, setNewRole] = useState<WhatsAppRole>('viewer');
-
-  const [editUserId, setEditUserId] = useState<string | null>(null);
-  const [editRole, setEditRole] = useState<WhatsAppRole>('viewer');
-  const [editAutoReply, setEditAutoReply] = useState(true);
-
   const contacts = contactsData?.contacts ?? [];
 
   const roleLabel = (role: WhatsAppRole) =>
@@ -86,13 +75,6 @@ export function WhatsAppContactsConfig() {
     if (policy === 'allowlist')
       return t('settings.whatsappPolicyAllowlist', undefined, 'Allowlist');
     return t('settings.whatsappPolicyDisabled', undefined, 'Disabled');
-  };
-
-  const resetAddForm = () => {
-    setNewPhone('');
-    setNewName('');
-    setNewUserId(null);
-    setNewRole('viewer');
   };
 
   const roleOptions: ComboboxOption[] = useMemo(
@@ -133,54 +115,103 @@ export function WhatsAppContactsConfig() {
     }
   };
 
-  const handleAdd = async () => {
-    const phoneNumber = newPhone.replace(/\s+/g, '');
-    if (!phoneNumber) {
-      appToast.error(t('settings.whatsappPhoneRequired', undefined, 'Enter a phone number.'));
-      return;
-    }
+  const addFields: FormField[] = useMemo(
+    () => [
+      {
+        name: 'phoneNumber',
+        label: t('settings.whatsappPhoneNumber', undefined, 'Phone number'),
+        type: 'phone',
+        required: true,
+        description: t(
+          'settings.whatsappPhoneHint',
+          undefined,
+          'Select the country and enter the number; it is normalized to international format.',
+        ),
+      },
+      {
+        name: 'displayName',
+        label: t('settings.whatsappDisplayNameOptional', undefined, 'Display name (optional)'),
+        type: 'text',
+      },
+      {
+        name: 'userId',
+        label: t('settings.whatsappLinkUser', undefined, 'Linked user'),
+        type: 'combobox',
+        options: memberOptions,
+      },
+      {
+        name: 'waRole',
+        label: t('settings.whatsappRoleOverride', undefined, 'Role override'),
+        type: 'combobox',
+        required: true,
+        options: roleOptions,
+      },
+    ],
+    [t, memberOptions, roleOptions],
+  );
+
+  const editFields: FormField[] = useMemo(
+    () => [
+      {
+        name: 'userId',
+        label: t('settings.whatsappLinkUser', undefined, 'Linked user'),
+        type: 'combobox',
+        options: memberOptions,
+      },
+      {
+        name: 'waRole',
+        label: t('settings.whatsappRoleOverride', undefined, 'Role override'),
+        type: 'combobox',
+        required: true,
+        options: roleOptions,
+      },
+      {
+        name: 'autoReply',
+        label: t('settings.whatsappAutoReply', undefined, 'Auto-reply'),
+        type: 'switch',
+      },
+    ],
+    [t, memberOptions, roleOptions],
+  );
+
+  const handleAddSubmit = async (values: Record<string, unknown>) => {
+    const phoneNumber = String(values.phoneNumber ?? '').replace(/\s+/g, '');
+    const userId = values.userId === '__none__' ? null : (values.userId as string | null);
     try {
       await addContact.mutateAsync({
         phoneNumber,
-        displayName: newName.trim() || undefined,
+        displayName: String(values.displayName ?? '').trim() || undefined,
         autoReply: true,
-        userId: newUserId,
-        waRole: newRole,
+        userId,
+        waRole: values.waRole as WhatsAppRole,
       });
-      resetAddForm();
-      setAddOpen(false);
       appToast.success(t('settings.whatsappContactAdded', undefined, 'Contact added.'));
     } catch (error) {
       appToast.fromApiError(
         error,
         t('settings.whatsappAddContactFailed', undefined, 'Contact could not be added.'),
       );
+      throw error;
     }
   };
 
-  const openEdit = (contact: OsirisWhatsAppContact) => {
-    setEditUserId(contact.userId ?? null);
-    setEditRole(contact.waRole);
-    setEditAutoReply(contact.autoReply);
-    setEditing(contact);
-  };
-
-  const handleEditSave = async () => {
+  const handleEditSubmit = async (values: Record<string, unknown>) => {
     if (!editing) return;
+    const userId = values.userId === '__none__' ? null : (values.userId as string | null);
     try {
       await updateContact.mutateAsync({
         id: editing.id,
-        userId: editUserId,
-        waRole: editRole,
-        autoReply: editAutoReply,
+        userId,
+        waRole: values.waRole as WhatsAppRole,
+        autoReply: Boolean(values.autoReply),
       });
-      setEditing(null);
       appToast.success(t('settings.whatsappContactUpdated', undefined, 'Contact updated.'));
     } catch (error) {
       appToast.fromApiError(
         error,
         t('settings.whatsappUpdateContactFailed', undefined, 'Contact could not be updated.'),
       );
+      throw error;
     }
   };
 
@@ -209,56 +240,102 @@ export function WhatsAppContactsConfig() {
     }
   };
 
+  const contactColumns: SettingsTableColumn<OsirisWhatsAppContact>[] = [
+    {
+      key: 'contact',
+      header: t('settings.whatsappContact', undefined, 'Contact'),
+      cell: (contact) => (
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+            <PhoneIcon size={14} aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {contact.displayName || contact.phoneNumber}
+            </p>
+            {contact.displayName ? (
+              <p className="font-mono text-xs text-muted-foreground">{contact.phoneNumber}</p>
+            ) : null}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      header: t('settings.whatsappRoleOverride', undefined, 'Role'),
+      cell: (contact) => (
+        <Badge variant={ROLE_VARIANT[contact.waRole]} className="text-xs">
+          {roleLabel(contact.waRole)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-10 text-right',
+      cell: (contact) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground">
+              <MoreIcon size={14} aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onSelect={() => setEditing(contact)}>
+              {t('settings.whatsappEditContact', undefined, 'Edit contact')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => void handleToggleAutoReply(contact)}>
+              {contact.autoReply
+                ? t('settings.whatsappDisableAutoReply', undefined, 'Disable auto-reply')
+                : t('settings.whatsappEnableAutoReply', undefined, 'Enable auto-reply')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={() => setPendingDelete(contact)}
+            >
+              {t('common.delete', undefined, 'Delete')}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
   return (
     <>
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <WhatsAppPolicyIcon size={14} className="text-muted-foreground" aria-hidden="true" />
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t('settings.whatsappMessagingPolicies', undefined, 'Messaging policies')}
-          </h2>
-        </div>
-
+      <SettingsSection
+        title={t('settings.whatsappMessagingPolicies', undefined, 'Messaging policies')}
+      >
         {configLoading ? (
           <p className="text-sm text-muted-foreground">
             {t('common.loading', undefined, 'Loading…')}
           </p>
         ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label className="text-sm">
-                  {t('settings.whatsappAutoReply', undefined, 'Auto-reply')}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    'settings.whatsappAutoReplyDescription',
-                    undefined,
-                    'Let the bot reply automatically to allowed contacts.',
-                  )}
-                </p>
-              </div>
+          <>
+            <SettingsRow
+              label={t('settings.whatsappAutoReply', undefined, 'Auto-reply')}
+              description={t(
+                'settings.whatsappAutoReplyDescription',
+                undefined,
+                'Let the bot reply automatically to allowed contacts.',
+              )}
+            >
               <Switch
                 checked={configData?.autoReply ?? true}
                 onCheckedChange={(checked) => void handleConfigChange({ autoReply: checked })}
               />
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label className="text-sm">
-                  {t('settings.whatsappDmPolicy', undefined, 'Direct messages')}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    'settings.whatsappDmPolicyDescription',
-                    undefined,
-                    'Who the bot responds to in direct chats.',
-                  )}
-                </p>
-              </div>
+            </SettingsRow>
+            <SettingsRow
+              label={t('settings.whatsappDmPolicy', undefined, 'Direct messages')}
+              description={t(
+                'settings.whatsappDmPolicyDescription',
+                undefined,
+                'Who the bot responds to in direct chats.',
+              )}
+            >
               <Combobox
-                className="w-[150px]"
+                className={SHORT_INPUT_WIDTH}
                 value={configData?.dmPolicy ?? 'allowlist'}
                 options={policyOptions}
                 clearable={false}
@@ -267,23 +344,17 @@ export function WhatsAppContactsConfig() {
                   void handleConfigChange({ dmPolicy: value as WhatsAppPolicy });
                 }}
               />
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <Label className="text-sm">
-                  {t('settings.whatsappGroupPolicy', undefined, 'Group messages')}
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {t(
-                    'settings.whatsappGroupPolicyDescription',
-                    undefined,
-                    'Who the bot responds to in group chats.',
-                  )}
-                </p>
-              </div>
+            </SettingsRow>
+            <SettingsRow
+              label={t('settings.whatsappGroupPolicy', undefined, 'Group messages')}
+              description={t(
+                'settings.whatsappGroupPolicyDescription',
+                undefined,
+                'Who the bot responds to in group chats.',
+              )}
+            >
               <Combobox
-                className="w-[150px]"
+                className={SHORT_INPUT_WIDTH}
                 value={configData?.groupPolicy ?? 'disabled'}
                 options={policyOptions}
                 clearable={false}
@@ -292,33 +363,20 @@ export function WhatsAppContactsConfig() {
                   void handleConfigChange({ groupPolicy: value as WhatsAppPolicy });
                 }}
               />
-            </div>
-          </div>
+            </SettingsRow>
+          </>
         )}
-      </section>
+      </SettingsSection>
 
-      <div className="border-t border-border/50" />
-
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <PhoneIcon size={14} className="text-muted-foreground" aria-hidden="true" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {t('settings.whatsappAllowedContacts', undefined, 'Allowed contacts')}
-            </h2>
+      <div className="space-y-4 border-t border-border/50 pt-6">
+        <div className="flex items-center justify-between gap-4">
+          <h3 className="text-sm font-semibold text-foreground">
+            {t('settings.whatsappAllowedContacts', undefined, 'Allowed contacts')}
             {!contactsLoading && contacts.length > 0 ? (
-              <span className="text-xs text-muted-foreground">({contacts.length})</span>
+              <span className="ml-1.5 font-normal text-muted-foreground">({contacts.length})</span>
             ) : null}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              resetAddForm();
-              setAddOpen(true);
-            }}
-          >
+          </h3>
+          <Button type="button" variant="outline" size="sm" onClick={() => setAddOpen(true)}>
             <PlusIcon size={14} aria-hidden="true" />
             {t('settings.whatsappAddContact', undefined, 'Add contact')}
           </Button>
@@ -333,195 +391,47 @@ export function WhatsAppContactsConfig() {
             {t('settings.whatsappNoContacts', undefined, 'No contacts yet.')}
           </p>
         ) : (
-          <div className="divide-y divide-border rounded-control border border-border">
-            {contacts.map((contact) => (
-              <div key={contact.id} className="flex items-center justify-between gap-4 px-3 py-2.5">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                    <PhoneIcon size={14} aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {contact.displayName || contact.phoneNumber}
-                    </p>
-                    {contact.displayName ? (
-                      <p className="font-mono text-xs text-muted-foreground">
-                        {contact.phoneNumber}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Badge variant={ROLE_VARIANT[contact.waRole]} className="text-xs">
-                    {roleLabel(contact.waRole)}
-                  </Badge>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground"
-                      >
-                        <MoreIcon size={14} aria-hidden="true" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onSelect={() => openEdit(contact)}>
-                        {t('settings.whatsappEditContact', undefined, 'Edit contact')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => void handleToggleAutoReply(contact)}>
-                        {contact.autoReply
-                          ? t('settings.whatsappDisableAutoReply', undefined, 'Disable auto-reply')
-                          : t('settings.whatsappEnableAutoReply', undefined, 'Enable auto-reply')}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive"
-                        onSelect={() => setPendingDelete(contact)}
-                      >
-                        {t('common.delete', undefined, 'Delete')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
-          </div>
+          <SettingsTable
+            columns={contactColumns}
+            rows={contacts}
+            getRowId={(contact) => contact.id}
+          />
         )}
-      </section>
+      </div>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('settings.whatsappAddContact', undefined, 'Add contact')}</DialogTitle>
-            <DialogDescription>
-              {t(
-                'settings.whatsappAllowedContactsDescription',
-                undefined,
-                'Only contacts on this list can interact with the bot.',
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="wa-phone" className="text-xs text-muted-foreground">
-                {t('settings.whatsappPhoneNumber', undefined, 'Phone number')}
-              </Label>
-              <PhoneInput id="wa-phone" value={newPhone} onChange={setNewPhone} />
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  'settings.whatsappPhoneHint',
-                  undefined,
-                  'Select the country and enter the number; it is normalized to international format.',
-                )}
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="wa-name" className="text-xs text-muted-foreground">
-                {t('settings.whatsappDisplayNameOptional', undefined, 'Display name (optional)')}
-              </Label>
-              <Input
-                id="wa-name"
-                value={newName}
-                onChange={(event) => setNewName(event.target.value)}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">
-                  {t('settings.whatsappLinkUser', undefined, 'Linked user')}
-                </Label>
-                <Combobox
-                  value={newUserId ?? '__none__'}
-                  options={memberOptions}
-                  clearable={false}
-                  onChange={(value) => {
-                    setNewUserId(value === '__none__' || !value ? null : value);
-                  }}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">
-                  {t('settings.whatsappRoleOverride', undefined, 'Role override')}
-                </Label>
-                <Combobox
-                  value={newRole}
-                  options={roleOptions}
-                  clearable={false}
-                  onChange={(value) => {
-                    if (value) setNewRole(value as WhatsAppRole);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setAddOpen(false)}>
-              {t('common.cancel', undefined, 'Cancel')}
-            </Button>
-            <Button size="sm" onClick={() => void handleAdd()} disabled={addContact.isPending}>
-              {t('settings.whatsappAddContact', undefined, 'Add contact')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SubEntityFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        title={t('settings.whatsappAddContact', undefined, 'Add contact')}
+        description={t(
+          'settings.whatsappAllowedContactsDescription',
+          undefined,
+          'Only contacts on this list can interact with the bot.',
+        )}
+        submitLabel={t('settings.whatsappAddContact', undefined, 'Add contact')}
+        isSubmitting={addContact.isPending}
+        fields={addFields}
+        defaultValues={{ phoneNumber: '', displayName: '', userId: '__none__', waRole: 'viewer' }}
+        onSubmit={handleAddSubmit}
+      />
 
-      <Dialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t('settings.whatsappEditContact', undefined, 'Edit contact')}
-            </DialogTitle>
-            <DialogDescription>{editing?.displayName || editing?.phoneNumber}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">
-                {t('settings.whatsappLinkUser', undefined, 'Linked user')}
-              </Label>
-              <Combobox
-                value={editUserId ?? '__none__'}
-                options={memberOptions}
-                clearable={false}
-                onChange={(value) => {
-                  setEditUserId(value === '__none__' || !value ? null : value);
-                }}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">
-                {t('settings.whatsappRoleOverride', undefined, 'Role override')}
-              </Label>
-              <Combobox
-                value={editRole}
-                options={roleOptions}
-                clearable={false}
-                onChange={(value) => {
-                  if (value) setEditRole(value as WhatsAppRole);
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4">
-              <Label className="text-sm">
-                {t('settings.whatsappAutoReply', undefined, 'Auto-reply')}
-              </Label>
-              <Switch checked={editAutoReply} onCheckedChange={setEditAutoReply} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditing(null)}>
-              {t('common.cancel', undefined, 'Cancel')}
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => void handleEditSave()}
-              disabled={updateContact.isPending}
-            >
-              {t('common.save', undefined, 'Save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {editing ? (
+        <SubEntityFormDialog
+          open
+          onOpenChange={(open) => !open && setEditing(null)}
+          title={t('settings.whatsappEditContact', undefined, 'Edit contact')}
+          description={editing.displayName || editing.phoneNumber}
+          submitLabel={t('common.save', undefined, 'Save')}
+          isSubmitting={updateContact.isPending}
+          fields={editFields}
+          defaultValues={{
+            userId: editing.userId ?? '__none__',
+            waRole: editing.waRole,
+            autoReply: editing.autoReply,
+          }}
+          onSubmit={handleEditSubmit}
+        />
+      ) : null}
 
       <AlertDialog
         open={Boolean(pendingDelete)}

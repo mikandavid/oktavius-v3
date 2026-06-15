@@ -10,6 +10,7 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 }
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -39,7 +40,10 @@ import {
   type OsirisRuntimeContextValue,
 } from '@/runtime/osiris/useOsirisRuntime';
 
+import { membersKeys } from './data/membersKeys';
 import { MembersPage } from './MembersPage';
+
+type MemberRowData = { fullName: string };
 
 const runtime = {
   sessionStatus: 'authenticated',
@@ -72,11 +76,13 @@ const runtime = {
 
 let container: HTMLDivElement;
 let root: Root;
+let queryClient: QueryClient;
 
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
 
 afterEach(() => {
@@ -84,27 +90,69 @@ afterEach(() => {
   container.remove();
 });
 
-describe('MembersPage', () => {
-  it('loads members from the runtime and renders the page shell', async () => {
-    await act(async () => {
-      root.render(
-        <TestI18nProvider>
+async function renderMembers(rt: OsirisRuntimeContextValue) {
+  await act(async () => {
+    root.render(
+      <TestI18nProvider>
+        <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={['/members']}>
             <NuqsAdapter>
-              <OsirisRuntimeContext.Provider value={runtime}>
+              <OsirisRuntimeContext.Provider value={rt}>
                 <MembersPage />
               </OsirisRuntimeContext.Provider>
             </NuqsAdapter>
           </MemoryRouter>
-        </TestI18nProvider>,
-      );
-    });
+        </QueryClientProvider>
+      </TestI18nProvider>,
+    );
+  });
+  // Flush the react-query fetches (queryFn runs in an effect, then resolves).
+  for (let i = 0; i < 5; i += 1) {
     await act(async () => {
       await Promise.resolve();
     });
+  }
+}
+
+describe('MembersPage', () => {
+  it('loads members from the runtime and renders the page shell', async () => {
+    await renderMembers(runtime);
 
     expect(runtime.listOrgMembers).toHaveBeenCalledWith('org_1');
     expect(container.textContent).toContain('Invite member');
     expect(container.textContent).toContain('Invitations');
+
+    const org1Members = queryClient.getQueryData<MemberRowData[]>(membersKeys.members('org_1'));
+    expect(org1Members?.[0]?.fullName).toBe('Anna');
+  });
+
+  it('does not bleed the previous org members after switching org', async () => {
+    await renderMembers(runtime);
+
+    // Switch active org: org-scoped query keys give org_2 its own cache entry
+    // instead of serving org_1's stale rows (the manual-fetch race).
+    const org2Runtime = {
+      ...runtime,
+      activeOrgId: 'org_2',
+      listOrgMembers: vi.fn(async () => [
+        {
+          userId: 'u2',
+          membershipId: 'm2',
+          role: 'member' as const,
+          customRoleId: null,
+          email: 'b@x.test',
+          fullName: 'Bob',
+        },
+      ]),
+    } as unknown as OsirisRuntimeContextValue;
+
+    await renderMembers(org2Runtime);
+
+    expect(org2Runtime.listOrgMembers).toHaveBeenCalledWith('org_2');
+    // Each org's data lives under its own key — no cross-contamination.
+    const org1Members = queryClient.getQueryData<MemberRowData[]>(membersKeys.members('org_1'));
+    const org2Members = queryClient.getQueryData<MemberRowData[]>(membersKeys.members('org_2'));
+    expect(org2Members?.[0]?.fullName).toBe('Bob');
+    expect(org1Members?.some((m) => m.fullName === 'Bob')).not.toBe(true);
   });
 });

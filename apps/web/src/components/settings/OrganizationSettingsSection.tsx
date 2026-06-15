@@ -102,10 +102,7 @@ export function OrganizationSettingsSection({
 
   return (
     <div className="space-y-8">
-      <SettingsSection
-        title={s('companyInfo', 'Company Information')}
-        description={s('companyInfoDesc', 'This data appears on invoices and quotes.')}
-      >
+      <SettingsSection title={s('companyInfo', 'Company Information')}>
         <SettingsRow label={s('legalName', 'Legal Name')}>
           <Input
             className={INPUT_WIDTH}
@@ -154,13 +151,7 @@ export function OrganizationSettingsSection({
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection
-        title={s('taxAndRegistry', 'Tax & Registry')}
-        description={s(
-          'taxAndRegistryDesc',
-          'Legal identifiers used for official documents and finance workflows.',
-        )}
-      >
+      <SettingsSection title={s('taxAndRegistry', 'Tax & Registry')}>
         <SettingsRow label={s('taxId', 'Tax ID')}>
           <Input
             className={INPUT_WIDTH}
@@ -184,10 +175,7 @@ export function OrganizationSettingsSection({
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection
-        title={s('contact', 'Contact')}
-        description={s('contactDesc', 'Public company contact details for documents and emails.')}
-      >
+      <SettingsSection title={s('contact', 'Contact')}>
         <SettingsRow label={s('email', 'Email')}>
           <Input
             className={INPUT_WIDTH}
@@ -212,10 +200,7 @@ export function OrganizationSettingsSection({
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection
-        title={s('banking', 'Bank Details')}
-        description={s('bankingDesc', 'Displayed on invoices and dunning letters.')}
-      >
+      <SettingsSection title={s('banking', 'Bank Details')}>
         <SettingsRow label={s('bankName', 'Bank Name')}>
           <Input
             className={INPUT_WIDTH}
@@ -265,10 +250,7 @@ export function OrganizationSettingsSection({
         </SettingsRow>
       </SettingsSection>
 
-      <SettingsSection
-        title={s('invoicing', 'Invoice Settings')}
-        description={s('invoicingDesc', 'Default values for new invoices and dunning.')}
-      >
+      <SettingsSection title={s('invoicing', 'Invoice Settings')}>
         <SettingsRow label={s('paymentTermsDays', 'Payment Terms (days)')}>
           <NumberInput
             className={`${SHORT_INPUT_WIDTH} text-right`}

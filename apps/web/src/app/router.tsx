@@ -1,6 +1,13 @@
+import * as Sentry from '@sentry/react';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
-import { type ComponentType, lazy, type ReactNode, Suspense } from 'react';
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import { type ComponentType, lazy, type ReactNode, Suspense, useEffect, useRef } from 'react';
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from 'react-router-dom';
 
 import { AgentPageContextProvider } from '@/components/agent/page-context';
 import { CommandPaletteProvider } from '@/components/command/CommandPalette';
@@ -10,6 +17,7 @@ import { AppShellSpinner } from '@/components/layout/AppShellSpinner';
 import { ShortcutHelpProvider } from '@/components/layout/ShortcutHelpProvider';
 import { ModuleErrorBoundary } from '@/core/errors/ModuleErrorBoundary';
 import { APP_NAV_MODULES, type AppNavModule, type AppNavRouteId } from '@/lib/appNavModules';
+import { setLastHealthyLocation } from '@/lib/chunkLoadRecovery';
 import { canAccessAppNavItem } from '@/lib/permissions';
 import { OsirisAccessGate } from '@/runtime/osiris/OsirisAccessGate';
 import { useOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
@@ -120,11 +128,32 @@ function moduleRouteElement(module: AppNavModule) {
   return modulePageElement(module.id, Page);
 }
 
+/**
+ * Records the last successfully-rendered URL so a later chunk-load failure can
+ * offer "Return to last page". Tracks the *previous* healthy URL: the current
+ * one isn't yet known to render cleanly when this effect runs.
+ */
+function NavigationRecoveryTracker() {
+  const location = useLocation();
+  const previousUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const currentUrl = window.location.href;
+    if (previousUrlRef.current && previousUrlRef.current !== currentUrl) {
+      setLastHealthyLocation(previousUrlRef.current);
+    }
+    previousUrlRef.current = currentUrl;
+  }, [location.key, location.pathname, location.search, location.hash]);
+
+  return null;
+}
+
 function AppRootProviders() {
   return (
     <AgentPageContextProvider>
       <ShortcutHelpProvider>
         <CommandPaletteProvider>
+          <NavigationRecoveryTracker />
           <Outlet />
         </CommandPaletteProvider>
       </ShortcutHelpProvider>
@@ -132,7 +161,11 @@ function AppRootProviders() {
   );
 }
 
-const appRouter = createBrowserRouter([
+// Sentry-instrumented router factory: captures route-level traces and errors.
+// No-op when Sentry is disabled (no DSN).
+const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV6(createBrowserRouter);
+
+const appRouter = sentryCreateBrowserRouter([
   {
     element: <AppRootProviders />,
     children: [

@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -39,23 +40,40 @@ const baseRuntime = {
   changePassword: vi.fn(async () => {}),
 } satisfies OsirisRuntimeContextValue;
 
-async function renderProfile(runtime: OsirisRuntimeContextValue = baseRuntime) {
-  const container = document.createElement('div');
-  document.body.append(container);
-  const root = createRoot(container);
+function newQueryClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+}
 
-  await act(async () => {
-    root.render(
-      <MemoryRouter initialEntries={['/profile']}>
-        <TestI18nProvider>
+function ProfileTree({
+  runtime,
+  queryClient,
+}: {
+  runtime: OsirisRuntimeContextValue;
+  queryClient: QueryClient;
+}) {
+  return (
+    <MemoryRouter initialEntries={['/profile']}>
+      <TestI18nProvider>
+        <QueryClientProvider client={queryClient}>
           <AppShellLayoutProvider>
             <OsirisRuntimeContext.Provider value={runtime}>
               <ProfilePage />
             </OsirisRuntimeContext.Provider>
           </AppShellLayoutProvider>
-        </TestI18nProvider>
-      </MemoryRouter>,
-    );
+        </QueryClientProvider>
+      </TestI18nProvider>
+    </MemoryRouter>
+  );
+}
+
+async function renderProfile(runtime: OsirisRuntimeContextValue = baseRuntime) {
+  const container = document.createElement('div');
+  document.body.append(container);
+  const root = createRoot(container);
+  const queryClient = newQueryClient();
+
+  await act(async () => {
+    root.render(<ProfileTree runtime={runtime} queryClient={queryClient} />);
   });
 
   return { container, root };
@@ -133,6 +151,61 @@ describe('ProfilePage account settings', () => {
     });
 
     expect(baseRuntime.updateProfile).toHaveBeenCalledWith({ fullName: 'Anna Beispiel' });
+  });
+
+  it('keeps an in-progress name edit when a background runtime refresh recomputes the same user', async () => {
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    roots.push(root);
+    const queryClient = newQueryClient();
+
+    const render = (runtime: OsirisRuntimeContextValue) =>
+      act(() => {
+        root.render(<ProfileTree runtime={runtime} queryClient={queryClient} />);
+      });
+
+    await render(baseRuntime);
+
+    const fullName = container.querySelector('input[name="fullName"]');
+    if (!(fullName instanceof HTMLInputElement)) throw new Error('Expected full name input.');
+
+    changeInput(fullName, 'Edited but unsaved');
+
+    // Background refresh: same user id, new runtime object (e.g. unrelated field updated).
+    await render({ ...baseRuntime, currentUser: { ...baseRuntime.currentUser } });
+
+    const after = container.querySelector('input[name="fullName"]');
+    if (!(after instanceof HTMLInputElement)) throw new Error('Expected full name input.');
+    expect(after.value).toBe('Edited but unsaved');
+  });
+
+  it('resets the name field when a different user loads', async () => {
+    const container = document.createElement('div');
+    document.body.append(container);
+    const root = createRoot(container);
+    roots.push(root);
+    const queryClient = newQueryClient();
+
+    const render = (runtime: OsirisRuntimeContextValue) =>
+      act(() => {
+        root.render(<ProfileTree runtime={runtime} queryClient={queryClient} />);
+      });
+
+    await render(baseRuntime);
+    await render({
+      ...baseRuntime,
+      currentUser: {
+        id: 'usr_2',
+        email: 'mara@example.test',
+        fullName: 'Mara',
+        isSuperadmin: false,
+      },
+    });
+
+    const after = container.querySelector('input[name="fullName"]');
+    if (!(after instanceof HTMLInputElement)) throw new Error('Expected full name input.');
+    expect(after.value).toBe('Mara');
   });
 
   it('changes passwords through the Osiris runtime after matching confirmation', async () => {

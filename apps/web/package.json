@@ -22,6 +22,7 @@
     "@oktavius/i18n": "workspace:*",
     "@oktavius/reference-data": "workspace:*",
     "@phosphor-icons/react": "^2.1.10",
+    "@sentry/react": "^10.40.0",
     "@tanstack/react-query": "^5.90.2",
     "fflate": "^0.8.3",
     "nuqs": "^2.8.9",

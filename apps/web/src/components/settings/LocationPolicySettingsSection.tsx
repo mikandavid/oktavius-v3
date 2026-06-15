@@ -1,4 +1,4 @@
-import { MultiSelect, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
+import { MultiSelect, SettingsRow, Switch } from '@oktavius/base-ui';
 
 import { useTranslation } from '@/core/i18n';
 import type { OsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
@@ -36,14 +36,7 @@ export function LocationPolicySettingsSection({
   };
 
   return (
-    <SettingsSection
-      title={s('locationsTitle', 'Locations')}
-      description={s(
-        'locationsDescription',
-        'Manage organization locations and control where location-owned data is created and visible.',
-      )}
-      className="border-b border-border/50 pb-5"
-    >
+    <div className="border-b border-border/50 pb-5">
       <SettingsRow
         label={s('locationEnforcementEnabled', 'Location enforcement')}
         description={s(
@@ -80,6 +73,6 @@ export function LocationPolicySettingsSection({
         savingLabel={t('common.saving', undefined, 'Saving…')}
         savedLabel={s('saved', 'Saved')}
       />
-    </SettingsSection>
+    </div>
   );
 }

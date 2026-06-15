@@ -1,7 +1,7 @@
 /** Query-string key used to deep-link a specific settings tab (e.g. `/settings?section=mail`). */
 export const SETTINGS_SECTION_PARAM = 'section';
 
-const DEFAULT_SETTINGS_SECTION = 'general';
+const DEFAULT_SETTINGS_SECTION = 'account';
 
 /**
  * Resolves the settings tab to open from the `?section=` query param. Falls back

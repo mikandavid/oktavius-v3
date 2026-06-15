@@ -63,6 +63,39 @@ Multi-select: `<MultiSelect>`. `clearable={false}` for required “All” filter
 
 ---
 
+## Settings rows {#settings-rows}
+
+Shell: `AppSectionNavLayout` + `SettingsSection` / `SettingsRow` (see [`ui-system.md`](./ui-system.md)).
+
+**Layout — one line, info left, control right.** Every simple field is an inline `SettingsRow`: label (+ optional `description`) on the left, a single control on the right. `align="start"` only for tall controls (`MultiSelect`, input with an error message). `layout="stacked"` is reserved for genuine multi-line controls (textarea) and table/list managers (catalogs, locations) — not for squeezing two controls onto one row.
+
+**Pick the control — in this order:**
+
+| Prefer      | Control                    | When                                                                             |
+| ----------- | -------------------------- | -------------------------------------------------------------------------------- |
+| 1. Toggle   | `Switch`                   | Boolean on/off                                                                   |
+| 2. Dropdown | `Combobox`                 | Choice from a known/bounded set — incl. bounded numbers (percent, counts)        |
+| 3. Field    | `NumberInput` / text input | Free-form value with no sensible preset set — **use sparingly**                  |
+| 4. Slider   | `PercentSliderInput`       | **Last resort** — only when dragging a continuous range is genuinely the best UX |
+
+- Default a bounded percentage/threshold to a **`Combobox` of presets**, not a slider or a free field.
+- Single-select dropdown is always `Combobox`, never `Select` (hard ban, [`ui-system.md`](./ui-system.md)).
+- Right-column widths come from `settingsForm.tsx` — `CONTROL_WIDTH` (selects), `SHORT_INPUT_WIDTH` (short/percent), `INPUT_WIDTH` (text) — so every control’s right edge lines up.
+
+**Taller / multi-value controls — how they sit in a row:**
+
+| Control                    | Layout                                                                |
+| -------------------------- | --------------------------------------------------------------------- |
+| `MultiSelect`              | inline `align="start"`, right column `INPUT_WIDTH`; chips wrap inside |
+| `DatePicker` / date-range  | inline `align="start"` (popover trigger is control-height; align top) |
+| `RadioGroup` (2–4 options) | inline `align="start"`; **>4 options → use a `Combobox` instead**     |
+| `Textarea`                 | `layout="stacked"` (full-width below the label) — always              |
+| Table/list manager         | `SettingsTable` full-width (own section, not a `SettingsRow`)         |
+
+**Sections with an add/manage action:** `SettingsSection` has no action slot — render a header row (`<h3 className="text-sm font-semibold text-foreground">` to match `SettingsSection`) with the action `Button variant="outline" size="sm"` on the right, then the body below. Small catalogs use `SettingsTable` (its light border is sanctioned — do **not** hand-roll a bordered list).
+
+---
+
 ## Entity form {#entity-form}
 
 Always `<EntityForm>`. Surfaces: `page` (submit `default`) vs `dialog` (submit `cta`, `showHeader={false}` when parent has title).

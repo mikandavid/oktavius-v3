@@ -1,4 +1,4 @@
-import { Button, Checkbox, cn } from '@oktavius/base-ui';
+import { Button, Checkbox, cn, formatDisplayDate } from '@oktavius/base-ui';
 
 import {
   CRUD_TABLE_COLUMN_PADDING_ACTIONS,
@@ -17,8 +17,7 @@ const COLUMNS = 'grid-cols-[2.75rem_minmax(0,1fr)_7.5rem_8.75rem_2.5rem]';
 
 function formatDate(iso: string): string {
   if (!iso) return '—';
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString();
+  return formatDisplayDate(iso);
 }
 
 export function StorageList({

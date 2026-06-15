@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useMemo } from 'react';
 
 import { ApiProvider } from '@/api/ApiProvider';
 import { createOsirisApiRegistry } from '@/api/apiRegistryConfig';
+import { setSentryUser } from '@/core/errors/sentry';
 import { I18nProvider } from '@/core/i18n';
 import { useOsirisI18nRuntime } from '@/core/i18n/osirisRuntimeAdapter';
 import { ActiveLocationProvider } from '@/lib/locations/ActiveLocationContext';
@@ -53,6 +54,18 @@ function UserPreferencesBridge({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+function SentryUserBridge({ children }: { children: ReactNode }) {
+  const runtime = useOsirisRuntime();
+  const userId = runtime.currentUser.id;
+
+  useEffect(() => {
+    setSentryUser(userId ?? null);
+    return () => setSentryUser(null);
+  }, [userId]);
+
+  return <>{children}</>;
+}
+
 function OsirisApiProvider({ children }: { children: ReactNode }) {
   const runtime = useOsirisRuntime();
   const { activeOrgId, activeSiteId, expireSession } = runtime;
@@ -76,15 +89,17 @@ export function RuntimeProviders({ children }: { children: ReactNode }) {
   return (
     <UserPreferencesProvider>
       <OsirisAuthProvider>
-        <UserPreferencesBridge>
-          <I18nBridge>
-            <OsirisApiProvider>
-              <ActiveLocationProvider>
-                <AgentChatProvider>{children}</AgentChatProvider>
-              </ActiveLocationProvider>
-            </OsirisApiProvider>
-          </I18nBridge>
-        </UserPreferencesBridge>
+        <SentryUserBridge>
+          <UserPreferencesBridge>
+            <I18nBridge>
+              <OsirisApiProvider>
+                <ActiveLocationProvider>
+                  <AgentChatProvider>{children}</AgentChatProvider>
+                </ActiveLocationProvider>
+              </OsirisApiProvider>
+            </I18nBridge>
+          </UserPreferencesBridge>
+        </SentryUserBridge>
       </OsirisAuthProvider>
     </UserPreferencesProvider>
   );

@@ -1,5 +1,5 @@
 import { Button, Input, SettingsRow, SettingsSection } from '@oktavius/base-ui';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
@@ -32,6 +32,7 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const osirisRuntime = useOptionalOsirisRuntime();
   const osirisUser = osirisRuntime?.currentUser;
+  const userId = osirisUser?.id;
   const activeOrgId = osirisRuntime?.activeOrgId;
   const osirisOrganization = osirisRuntime?.organizations.find((org) => org.id === activeOrgId);
   const userName = osirisUser?.fullName ?? osirisUser?.email ?? 'User';
@@ -50,9 +51,18 @@ export function ProfilePage() {
   const [activeSection, setActiveSection] =
     useState<(typeof PROFILE_NAV)[number]['key']>('account');
 
+  // Reset the editable name only when a *different* user loads/switches — not on
+  // every recompute of `userName`. A background runtime refresh recomputes
+  // `userName` from `currentUser`; re-syncing on that would silently clobber an
+  // in-progress edit (data loss). Identity-keyed reset still handles the
+  // initial async load (undefined id → real id).
+  const lastSyncedUserIdRef = useRef(userId);
   useEffect(() => {
-    setFullName(userName);
-  }, [userName]);
+    if (lastSyncedUserIdRef.current !== userId) {
+      lastSyncedUserIdRef.current = userId;
+      setFullName(userName);
+    }
+  }, [userId, userName]);
 
   const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -129,7 +139,7 @@ export function ProfilePage() {
         onSelect={(key) => setActiveSection(key as (typeof PROFILE_NAV)[number]['key'])}
       >
         {activeSection === 'account' ? (
-          <SettingsSection title="Account" description="Your personal details in this workspace.">
+          <SettingsSection title="Account">
             <form data-testid="profile-form" onSubmit={handleProfileSubmit}>
               <SettingsRow
                 label="Full name"
@@ -234,10 +244,7 @@ export function ProfilePage() {
         ) : null}
 
         {activeSection === 'workspace' ? (
-          <SettingsSection
-            title="Workspace"
-            description="Defaults and catalog configuration for the active organisation."
-          >
+          <SettingsSection title="Workspace">
             <SettingsRow
               label="Workspace settings"
               description="Language, notifications, locations, and catalog values."

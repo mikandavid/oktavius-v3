@@ -51,9 +51,7 @@ export function GeneratedSettingsModule({
       onSelect={handleSelect}
     >
       {activeSection ? (
-        <SettingsSection title={activeSection.title} description={activeSection.sectionDescription}>
-          {activeSection.render()}
-        </SettingsSection>
+        <SettingsSection title={activeSection.title}>{activeSection.render()}</SettingsSection>
       ) : null}
     </AppSectionNavLayout>
   );

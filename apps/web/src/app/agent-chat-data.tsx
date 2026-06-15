@@ -80,7 +80,6 @@ const DEFAULT_AGENT_MODULES: OrgModuleId[] = [
   'ai-chat',
   'email',
   'calendar',
-  'reports',
   'settings',
 ];
 

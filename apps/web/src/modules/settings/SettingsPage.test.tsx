@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -11,6 +12,15 @@ import {
 import { createDefaultOsirisWorkspaceSettings } from '@/runtime/osiris/workspaceSettingsClient';
 
 import { SettingsPage } from './SettingsPage';
+
+// jsdom does not ship ResizeObserver; the AI settings sliders need it.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
 
 vi.mock('@/components/layout/AppShellLayoutContext', () => ({
   useAppShellLayout: () => ({ isSidebarCollapsed: false, setSidebarCollapsed: vi.fn() }),
@@ -138,18 +148,27 @@ async function renderSettingsPage(value: OsirisRuntimeContextValue = runtime) {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   await act(async () => {
     root.render(
       <MemoryRouter>
         <TestI18nProvider>
-          <OsirisRuntimeContext.Provider value={value}>
-            <SettingsPage />
-          </OsirisRuntimeContext.Provider>
+          <QueryClientProvider client={queryClient}>
+            <OsirisRuntimeContext.Provider value={value}>
+              <SettingsPage />
+            </OsirisRuntimeContext.Provider>
+          </QueryClientProvider>
         </TestI18nProvider>
       </MemoryRouter>,
     );
   });
+  // Flush the react-query fetches (queryFn runs in an effect, then resolves).
+  for (let i = 0; i < 5; i += 1) {
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
 
   return { container, root };
 }

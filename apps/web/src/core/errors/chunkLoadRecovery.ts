@@ -170,3 +170,31 @@ export function triggerChunkLoadAutoReload(error: unknown): boolean {
   window.location.reload();
   return true;
 }
+
+type ChunkRecoveryWindow = Window & {
+  __oktaviusChunkRecoveryInstalled?: boolean;
+};
+
+/**
+ * Installs global listeners that auto-reload once on a stale-chunk failure
+ * surfacing outside a React render boundary (where ModuleErrorBoundary can't
+ * catch it) — e.g. a dynamic import or CSS preload rejected after a deploy
+ * swapped the hashed assets. Idempotent.
+ */
+export function installChunkLoadRecoveryHandlers(): void {
+  if (typeof window === 'undefined') return;
+
+  const recoveryWindow = window as ChunkRecoveryWindow;
+  if (recoveryWindow.__oktaviusChunkRecoveryInstalled) return;
+  recoveryWindow.__oktaviusChunkRecoveryInstalled = true;
+
+  window.addEventListener('error', (event) => {
+    triggerChunkLoadAutoReload(event.error ?? event.message);
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    if (triggerChunkLoadAutoReload(event.reason)) {
+      event.preventDefault();
+    }
+  });
+}

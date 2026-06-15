@@ -1,5 +1,5 @@
 // apps/web/src/modules/members/MembersPage.tsx
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { MODULE_PAGE_SECTION_NAV_CLASS } from '@/components/common/pageChrome';
 import { PageHeaderCtaButton } from '@/components/common/PageHeaderButtons';
@@ -12,13 +12,16 @@ import {
 } from '@/components/settings/SettingsPageFactory';
 import { LinkIcon, LockIcon, TeamIcon, UserAddIcon } from '@/lib/icons';
 import { membersPageIcon } from '@/lib/modulePageIcons';
-import { appToast } from '@/lib/toast';
 import type { OsirisCustomRole } from '@/runtime/osiris/customRolesAdminClient';
-import type { OsirisInvitation, OsirisInviteLink } from '@/runtime/osiris/invitationsAdminClient';
-import type { OsirisOrgMember } from '@/runtime/osiris/membersAdminClient';
-import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { CustomRolesSection } from './CustomRolesSection';
+import {
+  useCustomRoles,
+  useInvitations,
+  useInviteLinks,
+  useMembers,
+  useMembersMutations,
+} from './data/useMembersData';
 import { InvitationsSection } from './InvitationsSection';
 import { InviteLinksSection } from './InviteLinksSection';
 import { MembersSection } from './MembersSection';
@@ -31,155 +34,98 @@ import {
 } from './shared';
 
 export function MembersPage() {
-  const runtime = useOptionalOsirisRuntime();
-  const orgId = runtime?.activeOrgId ?? null;
+  const membersQuery = useMembers();
+  const invitationsQuery = useInvitations();
+  const linksQuery = useInviteLinks();
+  const rolesQuery = useCustomRoles();
+  const mutations = useMembersMutations();
 
-  const [members, setMembers] = useState<OsirisOrgMember[]>([]);
-  const [invitations, setInvitations] = useState<OsirisInvitation[]>([]);
-  const [links, setLinks] = useState<OsirisInviteLink[]>([]);
-  const [customRoles, setCustomRoles] = useState<OsirisCustomRole[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('members');
-
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [isInviting, setIsInviting] = useState(false);
-  const [linkOpen, setLinkOpen] = useState(false);
-  const [isCreatingLink, setIsCreatingLink] = useState(false);
-  const [roleOpen, setRoleOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<OsirisCustomRole | null>(null);
-  const [isSavingRole, setIsSavingRole] = useState(false);
-
-  const refreshMembers = useCallback(async () => {
-    if (!orgId || !runtime?.listOrgMembers) return;
-    setMembers(await runtime.listOrgMembers(orgId));
-  }, [orgId, runtime]);
-  const refreshInvitations = useCallback(async () => {
-    if (!orgId || !runtime?.listInvitations) return;
-    setInvitations(await runtime.listInvitations(orgId));
-  }, [orgId, runtime]);
-  const refreshLinks = useCallback(async () => {
-    if (!orgId || !runtime?.listInviteLinks) return;
-    setLinks(await runtime.listInviteLinks(orgId));
-  }, [orgId, runtime]);
-  const refreshRoles = useCallback(async () => {
-    if (!orgId || !runtime?.listCustomRoles) return;
-    setCustomRoles(await runtime.listCustomRoles(orgId));
-  }, [orgId, runtime]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setIsLoading(true);
-    void Promise.all([refreshMembers(), refreshInvitations(), refreshLinks(), refreshRoles()])
-      .catch((error: unknown) => appToast.fromApiError(error, 'Members could not be loaded.'))
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshMembers, refreshInvitations, refreshLinks, refreshRoles]);
-
+  const members = useMemo(() => membersQuery.data ?? [], [membersQuery.data]);
+  const invitations = useMemo(() => invitationsQuery.data ?? [], [invitationsQuery.data]);
+  const links = useMemo(() => linksQuery.data ?? [], [linksQuery.data]);
+  const customRoles = useMemo(() => rolesQuery.data ?? [], [rolesQuery.data]);
   const roleOptions = useMemo(() => buildRoleOptions(customRoles), [customRoles]);
 
+  const [activeSection, setActiveSection] = useState('members');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [roleOpen, setRoleOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<OsirisCustomRole | null>(null);
+
+  // Inline actions resolve once the request settles (so each section's confirm
+  // dialog closes on completion) and never reject — failures are surfaced by
+  // the mutation's own onError toast.
   const handleChangeRole = async (userId: string, value: string) => {
-    if (!runtime?.updateMemberRole) return;
     try {
-      await runtime.updateMemberRole(orgId, userId, roleValueToInput(value));
-      await refreshMembers();
-      appToast.success('Role updated.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Role could not be updated.');
+      await mutations.updateMemberRole.mutateAsync({ userId, input: roleValueToInput(value) });
+    } catch {
+      /* surfaced by onError toast */
     }
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (!runtime?.removeMember) return;
     try {
-      await runtime.removeMember(orgId, userId);
-      await refreshMembers();
-      appToast.success('Member removed.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Member could not be removed.');
+      await mutations.removeMember.mutateAsync(userId);
+    } catch {
+      /* surfaced by onError toast */
+    }
+  };
+
+  const handleRevokeInvitation = async (id: string) => {
+    try {
+      await mutations.revokeInvitation.mutateAsync(id);
+    } catch {
+      /* surfaced by onError toast */
+    }
+  };
+
+  const handleRevokeLink = async (id: string) => {
+    try {
+      await mutations.revokeInviteLink.mutateAsync(id);
+    } catch {
+      /* surfaced by onError toast */
     }
   };
 
   const handleInvite = async (values: Record<string, FormFieldValue>) => {
-    if (!runtime?.createInvitation) return;
-    setIsInviting(true);
-    try {
-      const { role, customRoleId } = roleValueToInput(String(values.role ?? 'member'));
-      await runtime.createInvitation(orgId, {
-        email: String(values.email ?? '').trim(),
-        // roleValueToInput never yields 'owner' here (not an invitable option); narrow to the invite role union.
-        role: role === 'owner' ? 'member' : role,
-        customRoleId,
-        expiresInDays: Number(values.expiresInDays ?? 7),
-      });
-      await refreshInvitations();
-      appToast.success('Invitation sent.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Invitation could not be sent.');
-      throw error;
-    } finally {
-      setIsInviting(false);
-    }
+    const { role, customRoleId } = roleValueToInput(String(values.role ?? 'member'));
+    await mutations.createInvitation.mutateAsync({
+      email: String(values.email ?? '').trim(),
+      // roleValueToInput never yields 'owner' here (not an invitable option); narrow to the invite role union.
+      role: role === 'owner' ? 'member' : role,
+      customRoleId,
+      expiresInDays: Number(values.expiresInDays ?? 7),
+    });
   };
 
   const handleCreateLink = async (values: Record<string, FormFieldValue>) => {
-    if (!runtime?.createInviteLink) return;
-    setIsCreatingLink(true);
-    try {
-      await runtime.createInviteLink(orgId, {
-        role: String(values.role ?? 'member') as 'member' | 'viewer',
-        maxUses: Number(values.maxUses ?? 10),
-        expiresInDays: Number(values.expiresInDays ?? 7),
-      });
-      await refreshLinks();
-      appToast.success('Invite link created.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Invite link could not be created.');
-      throw error;
-    } finally {
-      setIsCreatingLink(false);
-    }
+    await mutations.createInviteLink.mutateAsync({
+      role: String(values.role ?? 'member') as 'member' | 'viewer',
+      maxUses: Number(values.maxUses ?? 10),
+      expiresInDays: Number(values.expiresInDays ?? 7),
+    });
   };
 
   const handleSaveRole = async (values: Record<string, FormFieldValue>) => {
-    if (!runtime) return;
-    setIsSavingRole(true);
     // TODO(members): permission + module multiselect editors (sent empty for now).
-    const input = {
-      name: String(values.name ?? '').trim(),
-      description: String(values.description ?? '').trim(),
-      baseRole: String(values.baseRole ?? 'member') as 'member' | 'viewer',
-      agentAccess: Boolean(values.agentAccess),
-      permissions: [] as string[],
-      allowedModules: [] as string[],
-    };
-    try {
-      if (editingRole && runtime.updateCustomRole) {
-        await runtime.updateCustomRole(orgId, editingRole.id, input);
-      } else if (runtime.createCustomRole) {
-        await runtime.createCustomRole(orgId, input);
-      }
-      await refreshRoles();
-      appToast.success(editingRole ? 'Role saved.' : 'Role created.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Role could not be saved.');
-      throw error;
-    } finally {
-      setIsSavingRole(false);
-    }
+    await mutations.saveCustomRole.mutateAsync({
+      roleId: editingRole?.id ?? null,
+      input: {
+        name: String(values.name ?? '').trim(),
+        description: String(values.description ?? '').trim(),
+        baseRole: String(values.baseRole ?? 'member') as 'member' | 'viewer',
+        agentAccess: Boolean(values.agentAccess),
+        permissions: [],
+        allowedModules: [],
+      },
+    });
   };
 
   const handleDeleteRole = async (roleId: string) => {
-    if (!runtime?.deleteCustomRole) return;
     try {
-      await runtime.deleteCustomRole(orgId, roleId);
-      await refreshRoles();
-      appToast.success('Role deleted.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Role could not be deleted.');
+      await mutations.deleteCustomRole.mutateAsync(roleId);
+    } catch {
+      /* surfaced by onError toast */
     }
   };
 
@@ -194,7 +140,7 @@ export function MembersPage() {
         <MembersSection
           members={members}
           customRoles={customRoles}
-          isLoading={isLoading}
+          isLoading={membersQuery.isLoading}
           onChangeRole={handleChangeRole}
           onRemove={handleRemoveMember}
         />
@@ -207,19 +153,7 @@ export function MembersPage() {
       title: 'Invitations',
       sectionDescription: 'Pending email invitations.',
       render: () => (
-        <InvitationsSection
-          invitations={invitations}
-          onRevoke={async (id) => {
-            if (!runtime?.revokeInvitation) return;
-            try {
-              await runtime.revokeInvitation(orgId, id);
-              await refreshInvitations();
-              appToast.success('Invitation revoked.');
-            } catch (error) {
-              appToast.fromApiError(error, 'Invitation could not be revoked.');
-            }
-          }}
-        />
+        <InvitationsSection invitations={invitations} onRevoke={handleRevokeInvitation} />
       ),
     },
     {
@@ -232,16 +166,7 @@ export function MembersPage() {
         <InviteLinksSection
           links={links}
           onCreate={() => setLinkOpen(true)}
-          onRevoke={async (id) => {
-            if (!runtime?.revokeInviteLink) return;
-            try {
-              await runtime.revokeInviteLink(orgId, id);
-              await refreshLinks();
-              appToast.success('Invite link revoked.');
-            } catch (error) {
-              appToast.fromApiError(error, 'Invite link could not be revoked.');
-            }
-          }}
+          onRevoke={handleRevokeLink}
         />
       ),
     },
@@ -296,7 +221,7 @@ export function MembersPage() {
         fields={inviteFormFields(roleOptions)}
         defaultValues={{ email: '', role: 'member', expiresInDays: 7 }}
         submitLabel="Send invite"
-        isSubmitting={isInviting}
+        isSubmitting={mutations.createInvitation.isPending}
         onSubmit={handleInvite}
       />
 
@@ -308,7 +233,7 @@ export function MembersPage() {
         fields={INVITE_LINK_FORM_FIELDS}
         defaultValues={{ role: 'member', maxUses: 10, expiresInDays: 7 }}
         submitLabel="Create link"
-        isSubmitting={isCreatingLink}
+        isSubmitting={mutations.createInviteLink.isPending}
         onSubmit={handleCreateLink}
       />
 
@@ -327,7 +252,7 @@ export function MembersPage() {
           agentAccess: editingRole?.agentAccess ?? false,
         }}
         submitLabel={editingRole ? 'Save' : 'Create'}
-        isSubmitting={isSavingRole}
+        isSubmitting={mutations.saveCustomRole.isPending}
         onSubmit={handleSaveRole}
       />
     </ModulePage>

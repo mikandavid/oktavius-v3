@@ -3,10 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import {
-  PageHeaderCtaButton,
-  PageHeaderOutlineButton,
-} from '@/components/common/PageHeaderButtons';
+import { PageHeaderCtaButton } from '@/components/common/PageHeaderButtons';
 import { ModulePage } from '@/components/common/PageLayout';
 import {
   buildForwardDraft,
@@ -242,10 +239,16 @@ export function EmailPage() {
       icon={emailPageIcon()}
       actions={
         <>
-          <PageHeaderOutlineButton type="button" onClick={() => setTemplatesDialogOpen(true)}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="shrink-0"
+            onClick={() => setTemplatesDialogOpen(true)}
+          >
             <TemplatesIcon size={14} />
             {t('email.templates')}
-          </PageHeaderOutlineButton>
+          </Button>
           <PageHeaderCtaButton type="button" onClick={startNewDraft} disabled={!hasEmailDataSource}>
             <PlusIcon size={14} />
             {t('email.compose')}
@@ -305,7 +308,12 @@ export function EmailPage() {
                 'Connect Google, Microsoft, or Exchange to sync your mailbox and start sending email.',
               )}
               action={
-                <Button type="button" size="sm" onClick={() => navigate('/settings?section=mail')}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/settings?section=mail')}
+                >
                   <PlusIcon size={14} />
                   {t('email.connectProvider', undefined, 'Connect a provider')}
                 </Button>

@@ -1,8 +1,7 @@
-import { Badge } from '@oktavius/base-ui';
+import { Badge, SettingsSection } from '@oktavius/base-ui';
 
 import { hostedNylasProviderLabel } from '@/components/common/ConnectedAccountsHeaderMenu';
 import { useTranslation } from '@/core/i18n';
-import { EmailConnectionIcon } from '@/lib/icons';
 
 import { SUPPORTED_MAIL_PROVIDERS, useMailProviderStatus } from './data/useMailProviderStatus';
 
@@ -12,14 +11,7 @@ export function MailProviderConnection() {
   const isConnected = status.status === 'connected';
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <EmailConnectionIcon size={14} className="text-muted-foreground" aria-hidden="true" />
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          {t('settings.mailConnection', undefined, 'Connection')}
-        </h2>
-      </div>
-
+    <SettingsSection title={t('settings.mailConnection', undefined, 'Connection')}>
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-foreground">
@@ -53,6 +45,6 @@ export function MailProviderConnection() {
           )}
         </p>
       </div>
-    </section>
+    </SettingsSection>
   );
 }

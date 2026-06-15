@@ -349,7 +349,7 @@ function ConversationHistoryEmptyState({
     return (
       <EmptyState
         compact
-        className="mx-2 border-0 bg-transparent"
+        className="mx-2"
         title="No matching conversations"
         description="Try a different search term."
       />
@@ -359,7 +359,7 @@ function ConversationHistoryEmptyState({
   return (
     <EmptyState
       compact
-      className="mx-2 border-0 bg-transparent"
+      className="mx-2"
       title="No conversations yet"
       description="Start the first conversation."
       action={

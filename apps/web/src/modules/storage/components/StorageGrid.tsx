@@ -1,4 +1,4 @@
-import { Button, Checkbox, cn } from '@oktavius/base-ui';
+import { Button, Checkbox, cn, formatDisplayDate } from '@oktavius/base-ui';
 
 import { CRUD_TABLE_SELECTION_CHECKBOX_CLASS } from '@/components/data/crudTableDensity';
 import { MoreIcon } from '@/lib/icons';
@@ -9,8 +9,7 @@ import { type StorageItemActions, StorageItemMenu } from './StorageItemMenu';
 
 function formatModified(iso: string): string {
   if (!iso) return '—';
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString();
+  return formatDisplayDate(iso);
 }
 
 export function StorageGrid({

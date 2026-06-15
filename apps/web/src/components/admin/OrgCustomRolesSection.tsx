@@ -24,7 +24,7 @@ export function OrgCustomRolesSection({
   onCreateRole,
 }: OrgCustomRolesSectionProps) {
   return (
-    <SettingsSection title="Custom roles" description="Organization-specific permission roles.">
+    <SettingsSection title="Custom roles">
       <SettingsRow label="Active role">
         <RoleSelector
           value={selectedRoleId}

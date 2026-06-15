@@ -32,6 +32,84 @@ const FORBIDDEN = [
   },
 ];
 
+/** Named surface components that must never carry a border or shadow (ui-system.md hard ban). */
+const SURFACE_COMPONENTS = new Set(['Card', 'SectionCard', 'CrudMainView', 'SplitView']);
+
+/** A width-drawing border utility (`border`, `border-2`, `border-t`, `border-x-2`, …) — NOT a color/style utility (`border-border`, `border-input`, `border-dashed`). */
+function isBorderWidthToken(token) {
+  return (
+    token === 'border' || /^border-[0-8]$/.test(token) || /^border-[xytrbl](-[0-8])?$/.test(token)
+  );
+}
+
+/** A shadow utility (`shadow`, `shadow-sm`, …) — but not `shadow-none`. */
+function isShadowToken(token) {
+  return token === 'shadow' || /^shadow-(sm|md|lg|xl|2xl|inner)$/.test(token);
+}
+
+function inspectSurfaceString(node, value, context) {
+  if (typeof value !== 'string') return;
+
+  for (const token of value.split(/\s+/)) {
+    if (isBorderWidthToken(token)) {
+      context.report({
+        node,
+        message:
+          'No border on Card / SectionCard / CrudMainView / SplitView surfaces (ui-system.md). Remove the border utility or use a sanctioned bordered component (e.g. SettingsTable).',
+      });
+    } else if (isShadowToken(token)) {
+      context.report({
+        node,
+        message:
+          'No shadow on Card / SectionCard / CrudMainView / SplitView surfaces (ui-system.md).',
+      });
+    }
+  }
+}
+
+function inspectSurfaceExpression(node, context) {
+  if (!node) return;
+
+  switch (node.type) {
+    case 'Literal':
+      inspectSurfaceString(node, node.value, context);
+      return;
+    case 'TemplateLiteral':
+      for (const quasi of node.quasis) {
+        inspectSurfaceString(quasi, quasi.value.cooked ?? quasi.value.raw, context);
+      }
+      return;
+    case 'CallExpression':
+      if (node.callee.type === 'Identifier' && node.callee.name === 'cn') {
+        for (const arg of node.arguments) {
+          inspectSurfaceExpression(arg, context);
+        }
+      }
+      return;
+    case 'ArrayExpression':
+      for (const element of node.elements) {
+        inspectSurfaceExpression(element, context);
+      }
+      return;
+    case 'ConditionalExpression':
+      inspectSurfaceExpression(node.consequent, context);
+      inspectSurfaceExpression(node.alternate, context);
+      return;
+    case 'LogicalExpression':
+      inspectSurfaceExpression(node.left, context);
+      inspectSurfaceExpression(node.right, context);
+      return;
+    default:
+      return;
+  }
+}
+
+function isSurfaceComponentAttribute(node) {
+  const opening = node.parent;
+  if (!opening || opening.type !== 'JSXOpeningElement') return false;
+  return opening.name.type === 'JSXIdentifier' && SURFACE_COMPONENTS.has(opening.name.name);
+}
+
 function inspectString(node, value, context) {
   if (typeof value !== 'string') return;
 
@@ -94,13 +172,17 @@ export default {
           return;
         }
 
+        const onSurface = isSurfaceComponentAttribute(node);
+
         if (node.value.type === 'Literal') {
           inspectExpression(node.value, context);
+          if (onSurface) inspectSurfaceExpression(node.value, context);
           return;
         }
 
         if (node.value.type === 'JSXExpressionContainer') {
           inspectExpression(node.value.expression, context);
+          if (onSurface) inspectSurfaceExpression(node.value.expression, context);
         }
       },
     };

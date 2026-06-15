@@ -1,6 +1,7 @@
 import {
   Button,
-  NumberInput,
+  Combobox,
+  type ComboboxOption,
   SettingsRow,
   SettingsSection,
   Switch,
@@ -21,16 +22,21 @@ type AiSettingsSectionProps = {
   onChange: (settings: OsirisWorkspaceSettings) => void;
 };
 
+const AI_USAGE_PERCENT_STEPS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+/** Percent dropdown options; always includes the active value so a stored off-step value stays selectable. */
+function percentOptions(active: number): ComboboxOption[] {
+  const values = AI_USAGE_PERCENT_STEPS.includes(active)
+    ? AI_USAGE_PERCENT_STEPS
+    : [...AI_USAGE_PERCENT_STEPS, active].sort((a, b) => a - b);
+  return values.map((percent) => ({ value: String(percent), label: `${percent}%` }));
+}
+
 function createInstructionId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
   return `instruction-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-}
-
-function parseInteger(value: string, fallback: number) {
-  const next = Number.parseInt(value, 10);
-  return Number.isFinite(next) ? next : fallback;
 }
 
 export function AiSettingsSection({ settings, saving, savedAt, onChange }: AiSettingsSectionProps) {
@@ -96,39 +102,37 @@ export function AiSettingsSection({ settings, saving, savedAt, onChange }: AiSet
 
   return (
     <div className="space-y-6">
-      <SettingsSection
-        title={s('aiUsageTitle', 'AI Usage Budget')}
-        description={s(
-          'aiUsageDescription',
-          'Configure the thresholds used for AI usage notifications and blocking.',
-        )}
-      >
-        <SettingsRow label={s('aiUsageWarningThresholdPercent', 'Warning threshold (%)')}>
-          <NumberInput
-            className={`${SHORT_INPUT_WIDTH} text-right`}
-            decimals={0}
-            min={0}
-            value={settings.aiUsage.warningThresholdPercent}
-            onChange={(value) =>
-              updateAiUsage(
-                'warningThresholdPercent',
-                parseInteger(value, settings.aiUsage.warningThresholdPercent),
-              )
-            }
+      <SettingsSection title={s('aiUsageTitle', 'AI Usage Budget')}>
+        <SettingsRow
+          label={s('aiUsageWarningThresholdPercent', 'Warning threshold')}
+          description={s(
+            'aiUsageWarningThresholdDescription',
+            'Notify users once usage reaches this share of the budget.',
+          )}
+        >
+          <Combobox
+            value={String(settings.aiUsage.warningThresholdPercent)}
+            onChange={(value) => {
+              if (value) updateAiUsage('warningThresholdPercent', Number(value));
+            }}
+            options={percentOptions(settings.aiUsage.warningThresholdPercent)}
+            className={SHORT_INPUT_WIDTH}
           />
         </SettingsRow>
-        <SettingsRow label={s('aiUsageHardLimitPercent', 'Hard limit threshold (%)')}>
-          <NumberInput
-            className={`${SHORT_INPUT_WIDTH} text-right`}
-            decimals={0}
-            min={0}
-            value={settings.aiUsage.hardLimitPercent}
-            onChange={(value) =>
-              updateAiUsage(
-                'hardLimitPercent',
-                parseInteger(value, settings.aiUsage.hardLimitPercent),
-              )
-            }
+        <SettingsRow
+          label={s('aiUsageHardLimitPercent', 'Hard limit')}
+          description={s(
+            'aiUsageHardLimitDescription',
+            'Usage stops at this share of the budget unless overage is allowed.',
+          )}
+        >
+          <Combobox
+            value={String(settings.aiUsage.hardLimitPercent)}
+            onChange={(value) => {
+              if (value) updateAiUsage('hardLimitPercent', Number(value));
+            }}
+            options={percentOptions(settings.aiUsage.hardLimitPercent)}
+            className={SHORT_INPUT_WIDTH}
           />
         </SettingsRow>
         <SettingsRow
@@ -147,10 +151,6 @@ export function AiSettingsSection({ settings, saving, savedAt, onChange }: AiSet
 
       <SettingsSection
         title={s('agentInstructions', 'Agent Instructions')}
-        description={s(
-          'agentInstructionsDescription',
-          'Org-wide custom instructions injected into every agent conversation. Add separate rules so they can be toggled individually.',
-        )}
         className="border-t border-border/50 pt-6"
       >
         <div className="space-y-3">

@@ -9,12 +9,14 @@ import { ModulePage } from '@/components/common/PageLayout';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
+import { AccountSettingsSection } from '@/components/settings/AccountSettingsSection';
 import { AiSettingsSection } from '@/components/settings/AiSettingsSection';
 import {
   type CatalogOption,
   CatalogOptionsManager,
 } from '@/components/settings/CatalogOptionsManager';
 import { LocationPolicySettingsSection } from '@/components/settings/LocationPolicySettingsSection';
+import { NotificationSettingsSection } from '@/components/settings/NotificationSettingsSection';
 import { OrganizationSettingsSection } from '@/components/settings/OrganizationSettingsSection';
 import { CONTROL_WIDTH, SettingsAutosaveFooter } from '@/components/settings/settingsForm';
 import {
@@ -28,11 +30,13 @@ import {
   BrainIcon,
   DocumentIcon,
   EmailIcon,
+  GlobeIcon,
   LocationIcon,
   NotificationsIcon,
   OrganizationIcon,
   PlusIcon,
-  Settings2Icon,
+  SlidersHorizontalIcon,
+  UserCircleIcon,
   WhatsAppIcon,
 } from '@/lib/icons';
 import { useActiveLocation } from '@/lib/locations/ActiveLocationContext';
@@ -40,6 +44,7 @@ import type { LocationDetailItem } from '@/lib/locations/types';
 import { settingsPageIcon } from '@/lib/modulePageIcons';
 import { getWindowStorage } from '@/lib/storage/safeStorage';
 import { appToast } from '@/lib/toast';
+import { useOrgLocationMutations, useOrgLocations } from '@/modules/settings/locationsData';
 import { MailSettingsSection } from '@/modules/settings/mail/MailSettingsSection';
 import {
   resolveInitialSettingsSection,
@@ -65,8 +70,6 @@ const INITIAL_PAYMENT_TERMS: CatalogOption[] = [
   { id: 'pt_eom', label: 'End of month', code: 'EOM', active: false, sortOrder: 4 },
 ];
 
-const LOCATIONS_TITLE = 'Locations';
-const LOCATIONS_DESCRIPTION = 'Branches and sites available in the active workspace.';
 const ADD_LOCATION_LABEL = 'Add location';
 
 const DATE_FORMAT_OPTIONS: { value: OsirisDateFormat; label: string }[] = [
@@ -162,8 +165,6 @@ export function SettingsPage() {
   const [activeSection, setActiveSection] = useState(() =>
     resolveInitialSettingsSection(searchParams.get(SETTINGS_SECTION_PARAM)),
   );
-  const [emailDigest, setEmailDigest] = useState(true);
-  const [approvalAlerts, setApprovalAlerts] = useState(true);
   const [workspaceSettings, setWorkspaceSettings] = useState<OsirisWorkspaceSettings>(() =>
     createDefaultOsirisWorkspaceSettings(),
   );
@@ -173,11 +174,10 @@ export function SettingsPage() {
   // never written straight back; the first user edit flips it true for good.
   const hasEditedWorkspaceSettingsRef = useRef(false);
   const [hasEditedWorkspaceSettings, setHasEditedWorkspaceSettings] = useState(false);
-  const [managedLocations, setManagedLocations] = useState<OsirisOrgLocation[]>([]);
-  const [hasManagedLocationsResult, setHasManagedLocationsResult] = useState(false);
+  const locationsQuery = useOrgLocations();
+  const locationMutations = useOrgLocationMutations();
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<LocationDetailItem | null>(null);
-  const [isSavingLocation, setIsSavingLocation] = useState(false);
   const [paymentTerms, setPaymentTerms] = useState(INITIAL_PAYMENT_TERMS);
   const storage = getWindowStorage('localStorage');
   const paymentTermsStore = useMemo(
@@ -220,31 +220,6 @@ export function SettingsPage() {
       })
       .catch((error: unknown) => {
         appToast.fromApiError(error, 'Workspace settings could not be loaded.');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [activeOrgId, osirisRuntime]);
-
-  useEffect(() => {
-    if (!activeOrgId || !osirisRuntime?.listOrgLocations) {
-      setManagedLocations([]);
-      setHasManagedLocationsResult(false);
-      return;
-    }
-    let cancelled = false;
-
-    void osirisRuntime
-      .listOrgLocations(activeOrgId)
-      .then((loadedLocations) => {
-        if (!cancelled) {
-          setManagedLocations(loadedLocations);
-          setHasManagedLocationsResult(true);
-        }
-      })
-      .catch((error: unknown) => {
-        appToast.fromApiError(error, 'Locations could not be loaded.');
       });
 
     return () => {
@@ -324,8 +299,10 @@ export function SettingsPage() {
     delayMs: 1000,
   });
 
-  const locationRows = hasManagedLocationsResult
-    ? managedLocations.map(locationToDetailItem)
+  // Until the org-locations query has loaded, fall back to the locations the
+  // active-location context already knows about.
+  const locationRows = locationsQuery.isSuccess
+    ? (locationsQuery.data ?? []).map(locationToDetailItem)
     : locations;
 
   const openCreateLocation = () => {
@@ -339,72 +316,74 @@ export function SettingsPage() {
   };
 
   const handleSaveLocation = async (values: Record<string, FormFieldValue>) => {
-    if (!activeOrgId || !osirisRuntime) return;
     const input = formValuesToLocationInput(values);
     if (!input.name) throw new Error('Site name is required.');
-
-    setIsSavingLocation(true);
-    try {
-      const saved = editingLocation
-        ? await osirisRuntime.updateOrgLocation?.(activeOrgId, editingLocation.id, input)
-        : await osirisRuntime.createOrgLocation?.(activeOrgId, input);
-      if (saved) {
-        setManagedLocations((current) => {
-          const exists = current.some((location) => location.id === saved.id);
-          return exists
-            ? current.map((location) => (location.id === saved.id ? saved : location))
-            : [...current, saved];
-        });
-        setHasManagedLocationsResult(true);
-      }
-      appToast.success(editingLocation ? 'Location saved.' : 'Location created.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Location could not be saved.');
-      throw error;
-    } finally {
-      setIsSavingLocation(false);
-    }
+    // mutateAsync rejects on failure so the dialog stays open; the toast is
+    // raised by the mutation's onError.
+    await locationMutations.saveLocation.mutateAsync({
+      id: editingLocation?.id ?? null,
+      input,
+    });
   };
 
   const handleDeactivateLocation = async (location: LocationDetailItem) => {
-    if (!activeOrgId || !osirisRuntime?.updateOrgLocation) return;
     try {
-      const saved = await osirisRuntime.updateOrgLocation(activeOrgId, location.id, {
-        isActive: false,
-      });
-      setManagedLocations((current) =>
-        current.map((entry) => (entry.id === saved.id ? saved : entry)),
-      );
-      appToast.success('Location deactivated.');
-    } catch (error) {
-      appToast.fromApiError(error, 'Location could not be deactivated.');
+      await locationMutations.deactivateLocation.mutateAsync(location.id);
+    } catch {
+      /* surfaced by the mutation's onError toast */
     }
   };
 
   const settingsSections: SettingsSectionConfig[] = [
     {
-      id: 'general',
-      label: 'General',
-      icon: <Settings2Icon size={16} weight="duotone" />,
-      title: 'General',
-      sectionDescription: 'Defaults applied across the workspace.',
+      id: 'account',
+      label: 'Account',
+      group: 'Account',
+      icon: <UserCircleIcon size={16} weight="duotone" />,
+      title: 'Account',
+      sectionDescription: 'Your name, sign-in details, and password.',
+      render: () => <AccountSettingsSection />,
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      group: 'Account',
+      icon: <NotificationsIcon size={16} weight="duotone" />,
+      title: 'Notifications',
+      sectionDescription: 'Choose how Oktavius keeps you informed.',
+      render: () => <NotificationSettingsSection runtime={osirisRuntime?.notificationsRuntime} />,
+    },
+    {
+      id: 'appearance',
+      label: 'Appearance',
+      group: 'Account',
+      icon: <SlidersHorizontalIcon size={16} weight="duotone" />,
+      title: 'Appearance',
+      sectionDescription: 'Personal display preferences for this device.',
+      render: () => (
+        <SettingsSection title="Appearance">
+          <SettingsRow
+            label="Compact sidebar"
+            description="Keep the app navigation rail icon-only on list pages."
+          >
+            <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
+          </SettingsRow>
+          <SettingsRow label="Interface language" description="Labels and navigation copy.">
+            <LanguageSelector />
+          </SettingsRow>
+        </SettingsSection>
+      ),
+    },
+    {
+      id: 'localization',
+      label: 'Localization',
+      group: 'Workspace',
+      icon: <GlobeIcon size={16} weight="duotone" />,
+      title: 'Localization',
+      sectionDescription: 'Date, time, and timezone defaults applied across the workspace.',
       render: () => (
         <div className="space-y-8">
-          <SettingsSection title="Appearance" description="How the workspace looks for you.">
-            <SettingsRow
-              label="Compact sidebar"
-              description="Keep the app navigation rail icon-only on list pages."
-            >
-              <Switch checked={isSidebarCollapsed} onCheckedChange={setSidebarCollapsed} />
-            </SettingsRow>
-          </SettingsSection>
-          <SettingsSection
-            title="Localization"
-            description="Language and date/time defaults applied across the workspace."
-          >
-            <SettingsRow label="Interface language" description="Labels and navigation copy.">
-              <LanguageSelector />
-            </SettingsRow>
+          <SettingsSection title="Localization">
             <SettingsRow
               label="Date format"
               description="Default date display across this workspace."
@@ -451,6 +430,7 @@ export function SettingsPage() {
     },
     {
       id: 'organization',
+      group: 'Workspace',
       label: t('settings.orgSettings', undefined, 'Organization Settings'),
       icon: <OrganizationIcon size={16} weight="duotone" />,
       title: t('settings.orgSettings', undefined, 'Organization Settings'),
@@ -471,6 +451,7 @@ export function SettingsPage() {
     },
     {
       id: 'ai',
+      group: 'Workspace',
       label: 'Agent',
       icon: <BrainIcon size={16} weight="duotone" />,
       title: 'Agent',
@@ -487,10 +468,12 @@ export function SettingsPage() {
     },
     {
       id: 'locations',
+      group: 'Workspace',
       label: 'Locations',
       icon: <LocationIcon size={16} weight="duotone" />,
       title: 'Locations',
-      sectionDescription: 'Manage branches and workspace site defaults.',
+      sectionDescription:
+        'Manage organization locations and control where location-owned data is created and visible.',
       render: () => (
         <div className="space-y-5">
           <LocationPolicySettingsSection
@@ -500,18 +483,14 @@ export function SettingsPage() {
             onChange={handleWorkspaceSettingsChange}
           />
           <div>
-            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">{LOCATIONS_TITLE}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{LOCATIONS_DESCRIPTION}</p>
-              </div>
-              {osirisRuntime?.createOrgLocation ? (
+            {osirisRuntime?.createOrgLocation ? (
+              <div className="mb-3 flex justify-end">
                 <Button type="button" variant="outline" size="sm" onClick={openCreateLocation}>
                   <PlusIcon size={14} aria-hidden="true" />
                   {ADD_LOCATION_LABEL}
                 </Button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
             <WorkspaceLocationsOverview
               locations={locationRows}
               onEdit={osirisRuntime?.updateOrgLocation ? openEditLocation : undefined}
@@ -526,33 +505,8 @@ export function SettingsPage() {
       ),
     },
     {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: <NotificationsIcon size={16} weight="duotone" />,
-      title: 'Notifications',
-      sectionDescription: 'Choose how Oktavius keeps you informed.',
-      render: () => (
-        <SettingsSection
-          title="Notifications"
-          description="Choose how Oktavius keeps you informed."
-        >
-          <SettingsRow
-            label="Daily email digest"
-            description="Summary of tasks, approvals, and overdue items."
-          >
-            <Switch checked={emailDigest} onCheckedChange={setEmailDigest} />
-          </SettingsRow>
-          <SettingsRow
-            label="Approval alerts"
-            description="Notify when a record needs your sign-off."
-          >
-            <Switch checked={approvalAlerts} onCheckedChange={setApprovalAlerts} />
-          </SettingsRow>
-        </SettingsSection>
-      ),
-    },
-    {
       id: 'mail',
+      group: 'Workspace',
       label: t('settings.mailTab', undefined, 'Mail'),
       icon: <EmailIcon size={16} weight="duotone" />,
       title: t('settings.mailSettingsTitle', undefined, 'Mail'),
@@ -566,6 +520,7 @@ export function SettingsPage() {
     },
     {
       id: 'whatsapp',
+      group: 'Workspace',
       label: t('settings.whatsappTab', undefined, 'WhatsApp'),
       icon: <WhatsAppIcon size={16} weight="duotone" />,
       title: t('settings.whatsappSettingsTitle', undefined, 'WhatsApp'),
@@ -579,6 +534,7 @@ export function SettingsPage() {
     },
     {
       id: 'catalogs',
+      group: 'Workspace',
       label: 'Catalogs',
       icon: <DocumentIcon size={16} weight="duotone" />,
       title: 'Catalogs',
@@ -600,7 +556,7 @@ export function SettingsPage() {
   return (
     <ModulePage
       title="Settings"
-      subtitle="Workspace preferences and catalog configuration"
+      subtitle="Your account and workspace configuration"
       icon={settingsPageIcon()}
       layoutClassName={MODULE_PAGE_SECTION_NAV_CLASS}
     >
@@ -608,6 +564,7 @@ export function SettingsPage() {
         sections={settingsSections}
         activeKey={activeSection}
         onActiveKeyChange={setActiveSection}
+        groupOrder={['Account', 'Workspace']}
       />
       <SubEntityFormDialog<Record<string, FormFieldValue>>
         open={locationDialogOpen}
@@ -617,7 +574,7 @@ export function SettingsPage() {
         fields={locationFormFields}
         defaultValues={locationToFormValues(editingLocation)}
         submitLabel={editingLocation ? 'Save' : 'Create'}
-        isSubmitting={isSavingLocation}
+        isSubmitting={locationMutations.saveLocation.isPending}
         onSubmit={handleSaveLocation}
       />
     </ModulePage>
