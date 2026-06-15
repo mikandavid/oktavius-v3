@@ -30,6 +30,9 @@ export function SupportPage() {
   const statusFilter: SupportStatus | undefined =
     tab === 'all' ? undefined : (tab as SupportStatus);
 
+  // v1 limitation: list is capped at the first 50 tickets fetched server-side;
+  // client-side pagination is applied via useListPageState below.
+  // Server-side pagination wiring is deferred to a future iteration.
   const { data, isLoading } = useSupportTickets({
     page: 1,
     pageSize: 50,
@@ -47,8 +50,6 @@ export function SupportPage() {
     queryNamespace: 'support',
   });
 
-  if (!ready) return null;
-
   function openTicket(id: string) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -65,6 +66,8 @@ export function SupportPage() {
     });
   }
 
+  if (!ready) return null;
+
   const reportButton = (
     <Button variant="cta" onClick={() => setDialogOpen(true)}>
       <PlusIcon size={16} aria-hidden />
@@ -73,7 +76,7 @@ export function SupportPage() {
   );
 
   return (
-    <ModulePage title={t('support.pageTitle')} icon={supportPageIcon()} actions={reportButton}>
+    <ModulePage title={t('support.title')} icon={supportPageIcon()} actions={reportButton}>
       {ticketId ? (
         <SupportTicketDetail ticketId={ticketId} onBack={clearTicketParam} />
       ) : (
