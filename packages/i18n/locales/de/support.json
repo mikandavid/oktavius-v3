@@ -98,5 +98,7 @@
   "emptyInboxDescription": "Tickets aus der gesamten Organisation erscheinen hier.",
   "reportProblem": "Problem melden",
   "loading": "Wird geladen…",
-  "replyPlaceholder": "Antwort schreiben…"
+  "replyPlaceholder": "Antwort schreiben…",
+  "viewMine": "Meine Anfragen",
+  "viewInbox": "Postfach"
 }

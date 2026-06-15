@@ -3,52 +3,32 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { ModulePage } from '@/components/common/PageLayout';
-import { CrudListShell } from '@/components/data/CrudListShell';
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { PlusIcon } from '@/lib/icons';
 import { supportPageIcon } from '@/lib/modulePageIcons';
-import { useListPageState } from '@/lib/useListPageState';
+import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
-import type { SupportStatus } from './data/types';
-import { useSupportTickets } from './data/useSupportData';
 import { ReportProblemDialog } from './ReportProblemDialog';
-import { inboxColumns, type TicketRow, toTicketRow } from './shared';
+import { SupportInboxView } from './SupportInboxView';
+import { SupportRequesterView } from './SupportRequesterView';
 import { SupportTicketDetail } from './SupportTicketDetail';
 
-const STATUS_TABS = ['all', 'open', 'in_progress', 'resolved', 'closed'] as const;
-type StatusTab = (typeof STATUS_TABS)[number];
+type ViewMode = 'mine' | 'inbox';
 
 export function SupportPage() {
   const { ready } = usePreloadNamespaces(['support']);
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tab, setTab] = useState<StatusTab>('all');
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+
+  // Superadmin detection: only superadmins can switch to the inbox view.
+  const isSuperadmin = useOptionalOsirisRuntime()?.permissionSubject?.isSuperadmin ?? false;
 
   const ticketId = searchParams.get('ticket');
+  const viewParam = searchParams.get('view');
 
-  const statusFilter: SupportStatus | undefined =
-    tab === 'all' ? undefined : (tab as SupportStatus);
-
-  // v1 limitation: list is capped at the first 50 tickets fetched server-side;
-  // client-side pagination is applied via useListPageState below.
-  // Server-side pagination wiring is deferred to a future iteration.
-  const { data, isLoading } = useSupportTickets({
-    page: 1,
-    pageSize: 50,
-    status: statusFilter,
-    sort: '-updated_at',
-  });
-
-  const rows: TicketRow[] = (data?.data ?? []).map((ticket) => toTicketRow(ticket, t));
-
-  const listState = useListPageState<TicketRow>({
-    rows,
-    defaultSort: 'updatedAt',
-    filterKeys: [],
-    searchKeys: ['subject', 'message'],
-    queryNamespace: 'support',
-  });
+  // Non-superadmins always see 'mine'; superadmins can request 'inbox' via ?view=inbox.
+  const effectiveView: ViewMode = viewParam === 'inbox' && isSuperadmin ? 'inbox' : 'mine';
 
   function openTicket(id: string) {
     setSearchParams((prev) => {
@@ -66,54 +46,62 @@ export function SupportPage() {
     });
   }
 
+  function handleViewChange(view: string) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      // Clear ticket when switching views to avoid stale detail pane.
+      next.delete('ticket');
+      if (view === 'inbox') {
+        next.set('view', 'inbox');
+      } else {
+        next.delete('view');
+      }
+      return next;
+    });
+  }
+
   if (!ready) return null;
 
-  const reportButton = (
-    <Button variant="cta" onClick={() => setDialogOpen(true)}>
-      <PlusIcon size={16} aria-hidden />
-      {t('support.reportProblem')}
-    </Button>
+  const title = effectiveView === 'inbox' ? t('support.inboxTitle') : t('support.title');
+  const subtitle = effectiveView === 'inbox' ? t('support.inboxDescription') : undefined;
+
+  const actions = (
+    <>
+      {isSuperadmin && (
+        <Tabs value={effectiveView} onValueChange={handleViewChange}>
+          <TabsList>
+            <TabsTrigger value="mine">{t('support.viewMine')}</TabsTrigger>
+            <TabsTrigger value="inbox">{t('support.viewInbox')}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+      {effectiveView === 'mine' && (
+        <Button variant="cta" onClick={() => setReportOpen(true)}>
+          <PlusIcon size={16} aria-hidden />
+          {t('support.reportProblem')}
+        </Button>
+      )}
+    </>
   );
 
   return (
-    <ModulePage title={t('support.title')} icon={supportPageIcon()} actions={reportButton}>
+    <ModulePage title={title} subtitle={subtitle} icon={supportPageIcon()} actions={actions}>
       {ticketId ? (
-        <SupportTicketDetail ticketId={ticketId} onBack={clearTicketParam} />
+        <SupportTicketDetail
+          ticketId={ticketId}
+          onBack={clearTicketParam}
+          admin={effectiveView === 'inbox'}
+        />
+      ) : effectiveView === 'inbox' ? (
+        <SupportInboxView onOpenTicket={openTicket} />
       ) : (
         <>
-          <Tabs value={tab} onValueChange={(v) => setTab(v as StatusTab)}>
-            <TabsList>
-              {STATUS_TABS.map((s) => (
-                <TabsTrigger key={s} value={s}>
-                  {s === 'all' ? t('support.filterAll') : t(`support.statusLabel_${s}`)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-
-          <CrudListShell<TicketRow>
-            search={listState.search}
-            onSearchChange={listState.onSearchChange}
-            rows={listState.paged}
-            columns={inboxColumns(t)}
-            sort={listState.sort}
-            onSortChange={listState.onSortChange}
-            page={listState.page}
-            pageSize={listState.pageSize}
-            total={listState.total}
-            totalPages={listState.totalPages}
-            onPageChange={listState.onPageChange}
-            isLoading={isLoading}
-            onRowClick={(row) => openTicket(row.id)}
-            emptyTitle={t('support.noTickets')}
-            enableListCrud={false}
-          />
-
+          <SupportRequesterView onOpenTicket={openTicket} />
           <ReportProblemDialog
-            open={dialogOpen}
-            onOpenChange={setDialogOpen}
+            open={reportOpen}
+            onOpenChange={setReportOpen}
             onCreated={(ticket) => {
-              setDialogOpen(false);
+              setReportOpen(false);
               openTicket(ticket.id);
             }}
           />

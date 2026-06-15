@@ -98,5 +98,7 @@
   "emptyInboxDescription": "Tickets from across the organization will appear here.",
   "reportProblem": "Report a problem",
   "loading": "Loading…",
-  "replyPlaceholder": "Write a reply…"
+  "replyPlaceholder": "Write a reply…",
+  "viewMine": "My requests",
+  "viewInbox": "Inbox"
 }

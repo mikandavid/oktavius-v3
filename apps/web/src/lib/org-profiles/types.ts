@@ -10,8 +10,7 @@ export type OrgModuleId =
   | 'members'
   | 'settings'
   | 'showcase'
-  | 'support'
-  | 'support-inbox';
+  | 'support';
 
 /** Free-form vocabulary map; industry presets fill it per locale. */
 export type OrgTerminology = Record<string, string>;

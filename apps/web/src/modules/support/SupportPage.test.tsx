@@ -31,6 +31,14 @@ vi.mock('@/core/i18n', async (importOriginal) => {
   return { ...(real as object), usePreloadNamespaces: () => ({ ready: true }) };
 });
 
+// Default: non-superadmin runtime (no toggle shown).
+vi.mock('@/runtime/osiris/useOsirisRuntime', () => ({
+  useOptionalOsirisRuntime: () => ({
+    activeOrgId: 'o1',
+    permissionSubject: { isSuperadmin: false, role: 'member', permissions: [] },
+  }),
+}));
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -54,10 +62,11 @@ afterEach(() => {
   act(() => root.unmount());
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
+  vi.resetModules();
 });
 
-describe('SupportPage', () => {
-  it('renders the report problem button', async () => {
+describe('SupportPage — non-superadmin', () => {
+  it('renders the report problem button and no view toggle', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     await act(async () => {
       root.render(
@@ -72,8 +81,43 @@ describe('SupportPage', () => {
         </MemoryRouter>,
       );
     });
-    // TestI18nProvider renders keys as [namespace.key] when the i18n mock
-    // replaces usePreloadNamespaces; the report button key must be present.
+    // TestI18nProvider renders keys as [namespace.key]; the report button must be present.
     expect(container.textContent).toContain('support.reportProblem');
+    // No view-toggle keys should appear for non-superadmins.
+    expect(container.textContent).not.toContain('support.viewMine');
+    expect(container.textContent).not.toContain('support.viewInbox');
+  });
+});
+
+describe('SupportPage — superadmin', () => {
+  it('renders the My requests / Inbox view toggle for superadmins', async () => {
+    // Override the runtime mock for this describe block to return a superadmin.
+    vi.doMock('@/runtime/osiris/useOsirisRuntime', () => ({
+      useOptionalOsirisRuntime: () => ({
+        activeOrgId: 'o1',
+        permissionSubject: { isSuperadmin: true, role: 'admin', permissions: [] },
+      }),
+    }));
+
+    // Dynamically import SupportPage after the override is in place.
+    const { SupportPage: SuperSupportPage } = await import('./SupportPage');
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/support']}>
+          <NuqsAdapter>
+            <QueryClientProvider client={queryClient}>
+              <TestI18nProvider>
+                <SuperSupportPage />
+              </TestI18nProvider>
+            </QueryClientProvider>
+          </NuqsAdapter>
+        </MemoryRouter>,
+      );
+    });
+    // Both toggle trigger keys must appear in the DOM for superadmins.
+    expect(container.textContent).toContain('support.viewMine');
+    expect(container.textContent).toContain('support.viewInbox');
   });
 });

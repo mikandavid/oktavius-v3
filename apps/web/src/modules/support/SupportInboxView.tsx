@@ -1,14 +1,12 @@
-import { useSearchParams } from 'react-router-dom';
+// SupportInboxView — extracted body of the admin inbox (superadmin Inbox) experience.
+// Does NOT render ModulePage; that is the orchestrator's (SupportPage) responsibility.
 
-import { ModulePage } from '@/components/common/PageLayout';
 import { CrudListShell } from '@/components/data/CrudListShell';
-import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
-import { supportPageIcon } from '@/lib/modulePageIcons';
+import { useTranslation } from '@/core/i18n';
 import { useListPageState } from '@/lib/useListPageState';
 
 import { useSupportStats, useSupportTickets } from './data/useSupportData';
 import { inboxColumns, type TicketRow, toTicketRow } from './shared';
-import { SupportTicketDetail } from './SupportTicketDetail';
 
 interface StatTileProps {
   label: string;
@@ -24,12 +22,12 @@ function StatTile({ label, value }: StatTileProps) {
   );
 }
 
-export function SupportInboxPage() {
-  const { ready } = usePreloadNamespaces(['support']);
-  const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
+interface SupportInboxViewProps {
+  onOpenTicket: (id: string) => void;
+}
 
-  const ticketId = searchParams.get('ticket');
+export function SupportInboxView({ onOpenTicket }: SupportInboxViewProps) {
+  const { t } = useTranslation();
 
   // v1 limitation: list is capped at the first 50 tickets fetched server-side;
   // client-side pagination is applied via useListPageState below.
@@ -40,7 +38,7 @@ export function SupportInboxPage() {
     sort: '-updated_at',
   });
 
-  const { data: stats } = useSupportStats(!ticketId);
+  const { data: stats } = useSupportStats(true);
 
   const rows: TicketRow[] = (data?.data ?? []).map((ticket) => toTicketRow(ticket, t));
 
@@ -49,41 +47,11 @@ export function SupportInboxPage() {
     defaultSort: 'updatedAt',
     filterKeys: [],
     searchKeys: ['subject', 'message', 'requester'],
-    queryNamespace: 'support-inbox',
+    queryNamespace: 'support',
   });
 
-  function openTicket(id: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.set('ticket', id);
-      return next;
-    });
-  }
-
-  function clearTicketParam() {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete('ticket');
-      return next;
-    });
-  }
-
-  if (!ready) return null;
-
-  if (ticketId) {
-    return (
-      <ModulePage title={t('support.inboxTitle')} icon={supportPageIcon()}>
-        <SupportTicketDetail ticketId={ticketId} onBack={clearTicketParam} admin />
-      </ModulePage>
-    );
-  }
-
   return (
-    <ModulePage
-      title={t('support.inboxTitle')}
-      subtitle={t('support.inboxDescription')}
-      icon={supportPageIcon()}
-    >
+    <>
       {/* Stats strip */}
       <div className="flex flex-wrap gap-3">
         <StatTile label={t('support.statRowOpen')} value={stats?.open ?? 0} />
@@ -105,11 +73,11 @@ export function SupportInboxPage() {
         totalPages={listState.totalPages}
         onPageChange={listState.onPageChange}
         isLoading={isLoading}
-        onRowClick={(row) => openTicket(row.id)}
+        onRowClick={(row) => onOpenTicket(row.id)}
         emptyTitle={t('support.emptyInboxTitle')}
         emptyDescription={t('support.emptyInboxDescription')}
         enableListCrud={false}
       />
-    </ModulePage>
+    </>
   );
 }

@@ -121,7 +121,7 @@ describe('members manifest entry', () => {
 });
 
 describe('support manifest entries', () => {
-  it('registers a requester support module in the primary section', () => {
+  it('registers a single support module in the primary section (superadmin toggle is in-page)', () => {
     const entry = APP_NAV_MODULES.find((module) => module.id === 'support');
     expect(entry).toBeDefined();
     expect(entry?.section).toBe('primary');
@@ -130,11 +130,8 @@ describe('support manifest entries', () => {
     expect(entry?.superadminOnly).toBeUndefined();
   });
 
-  it('registers an admin support-inbox module gated to superadmins', () => {
+  it('does not register a separate support-inbox nav entry', () => {
     const entry = APP_NAV_MODULES.find((module) => module.id === 'support-inbox');
-    expect(entry).toBeDefined();
-    expect(entry?.section).toBe('admin');
-    expect(entry?.path).toBe('/support-inbox');
-    expect(entry?.superadminOnly).toBe(true);
+    expect(entry).toBeUndefined();
   });
 });

@@ -130,17 +130,6 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     pageExport: 'MembersPage',
   },
   {
-    id: 'support-inbox',
-    path: '/support-inbox',
-    label: 'Support Inbox',
-    labelKey: 'navigation.supportInbox',
-    icon: LifeBuoyIcon,
-    section: 'admin',
-    superadminOnly: true,
-    loadPage: () => import('@/modules/support/SupportInboxPage'),
-    pageExport: 'SupportInboxPage',
-  },
-  {
     id: 'settings',
     path: '/settings',
     label: 'Settings',
