@@ -96,5 +96,7 @@
   "triageSoon": "Bald",
   "emptyInboxTitle": "Keine Tickets",
   "emptyInboxDescription": "Tickets aus der gesamten Organisation erscheinen hier.",
-  "reportProblem": "Problem melden"
+  "reportProblem": "Problem melden",
+  "loading": "Wird geladen…",
+  "replyPlaceholder": "Antwort schreiben…"
 }

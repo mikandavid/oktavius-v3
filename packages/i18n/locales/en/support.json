@@ -96,5 +96,7 @@
   "triageSoon": "Soon",
   "emptyInboxTitle": "No tickets",
   "emptyInboxDescription": "Tickets from across the organization will appear here.",
-  "reportProblem": "Report a problem"
+  "reportProblem": "Report a problem",
+  "loading": "Loading…",
+  "replyPlaceholder": "Write a reply…"
 }
