@@ -131,7 +131,7 @@ describe('support manifest entries', () => {
   });
 
   it('does not register a separate support-inbox nav entry', () => {
-    const entry = APP_NAV_MODULES.find((module) => module.id === 'support-inbox');
-    expect(entry).toBeUndefined();
+    const ids = APP_NAV_MODULES.map((module) => module.id as string);
+    expect(ids).not.toContain('support-inbox');
   });
 });
