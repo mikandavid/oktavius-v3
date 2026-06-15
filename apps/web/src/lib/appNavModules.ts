@@ -113,7 +113,7 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     label: 'Support',
     labelKey: 'navigation.support',
     icon: LifeBuoyIcon,
-    section: 'modules',
+    section: 'primary',
     permission: 'support.view',
     loadPage: () => import('@/modules/support/SupportPage'),
     pageExport: 'SupportPage',

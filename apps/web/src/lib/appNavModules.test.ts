@@ -121,10 +121,10 @@ describe('members manifest entry', () => {
 });
 
 describe('support manifest entries', () => {
-  it('registers a requester support module in the modules section', () => {
+  it('registers a requester support module in the primary section', () => {
     const entry = APP_NAV_MODULES.find((module) => module.id === 'support');
     expect(entry).toBeDefined();
-    expect(entry?.section).toBe('modules');
+    expect(entry?.section).toBe('primary');
     expect(entry?.path).toBe('/support');
     expect(entry?.permission).toBe('support.view');
     expect(entry?.superadminOnly).toBeUndefined();
