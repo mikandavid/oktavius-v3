@@ -11,6 +11,7 @@ import {
   type IconProps,
   IncidentIcon,
   InvoiceIcon,
+  LifeBuoyIcon,
   LockIcon,
   OrderIcon,
   OrganizationIcon,
@@ -18,7 +19,6 @@ import {
   ProjectIcon,
   ProjectsIcon,
   PurchasingIcon,
-  ReportsIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
   TeamIcon,
@@ -43,7 +43,6 @@ export const productsPageIcon = () => modulePageIcon(ProductIcon);
 export const projectsPageIcon = () => modulePageIcon(ProjectIcon);
 export const usersPageIcon = () => modulePageIcon(UsersIcon);
 export const userRecordPageIcon = () => modulePageIcon(UserCircleIcon);
-export const reportsPageIcon = () => modulePageIcon(ReportsIcon);
 export const settingsPageIcon = () => modulePageIcon(SettingsIcon);
 export const membersPageIcon = () => modulePageIcon(TeamIcon);
 export const organizationPageIcon = () => modulePageIcon(OrganizationIcon);
@@ -58,3 +57,4 @@ export const leadsPageIcon = () => modulePageIcon(FunnelIcon);
 export const staffPageIcon = () => modulePageIcon(TeamIcon);
 export const purchasingPageIcon = () => modulePageIcon(PurchasingIcon);
 export const storagePageIcon = () => modulePageIcon(FolderIcon);
+export const supportPageIcon = () => modulePageIcon(LifeBuoyIcon);

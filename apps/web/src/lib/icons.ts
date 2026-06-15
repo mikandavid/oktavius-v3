@@ -181,6 +181,14 @@ import {
   UsersThree,
 } from '@phosphor-icons/react';
 
+// ─── Support module ──────────────────────────────────────────────────────────
+export {
+  Bug as BugIcon,
+  Lifebuoy as LifeBuoyIcon,
+  EnvelopeSimple as MailIcon,
+  Sparkle as SparklesIcon,
+} from '@phosphor-icons/react';
+
 // ─── Mail settings ───────────────────────────────────────────────────────────
 export { PlugsConnected as EmailConnectionIcon } from '@phosphor-icons/react';
 
