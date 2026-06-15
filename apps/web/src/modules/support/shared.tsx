@@ -44,12 +44,12 @@ export function inboxColumns(t: (key: string) => string): CrudColumn<TicketRow>[
   return [
     { key: 'subject', header: t('support.colSubject'), sortable: true },
     { key: 'requester', header: t('support.colRequester'), sortable: true, hideBelow: 'md' },
-    statusColumn('priorityLabel', t('support.colPriority'), PRIORITY_VARIANT, {
+    statusColumn<TicketRow>('priorityLabel', t('support.colPriority'), PRIORITY_VARIANT, {
       sortable: true,
-    }) as unknown as CrudColumn<TicketRow>,
-    statusColumn('statusLabel', t('support.colStatus'), STATUS_VARIANT, {
+    }),
+    statusColumn<TicketRow>('statusLabel', t('support.colStatus'), STATUS_VARIANT, {
       sortable: true,
-    }) as unknown as CrudColumn<TicketRow>,
+    }),
     {
       key: 'updatedAt',
       header: t('support.colUpdated'),

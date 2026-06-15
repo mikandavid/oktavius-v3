@@ -3,7 +3,7 @@ export type SupportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 export type SupportPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type SupportSource = 'web' | 'agent' | 'email';
 
-export interface SupportTicket {
+export type SupportTicket = {
   id: string;
   orgId: string | null;
   orgName: string | null;
@@ -24,7 +24,7 @@ export interface SupportTicket {
   agentConversationId: string | null;
   createdAt: string;
   updatedAt: string;
-}
+};
 
 export interface SupportComment {
   id: string;
