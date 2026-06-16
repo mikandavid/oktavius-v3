@@ -220,11 +220,22 @@ export async function runAgentTurn({
   content,
   createdAt,
   pageSnapshot,
+  modelMode,
+  webSearch,
+  memory,
   onStreamMessage,
   transport,
 }: RunAgentTurnOptions): Promise<AgentMessage[]> {
   if (transport) {
-    return transport({ content, createdAt, pageSnapshot, onStreamMessage });
+    return transport({
+      content,
+      createdAt,
+      pageSnapshot,
+      modelMode,
+      webSearch,
+      memory,
+      onStreamMessage,
+    });
   }
 
   void content;

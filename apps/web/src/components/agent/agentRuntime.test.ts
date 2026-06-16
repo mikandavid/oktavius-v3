@@ -17,6 +17,26 @@ const pageSnapshot: AgentPageContextSnapshot = {
 const SNAPSHOT = { moduleLabel: '', routeLabel: '' } as unknown as AgentPageContextSnapshot;
 
 describe('runAgentTurn', () => {
+  it('forwards modelMode, webSearch and memory to the transport', async () => {
+    const transport = vi.fn(() =>
+      Promise.resolve([{ id: 'a1', role: 'assistant' as const, createdAt: 'now', content: 'hi' }]),
+    );
+
+    await runAgentTurn({
+      content: 'hello',
+      createdAt: 'now',
+      pageSnapshot: SNAPSHOT,
+      modelMode: 'thinking',
+      webSearch: true,
+      memory: false,
+      transport,
+    });
+
+    expect(transport).toHaveBeenCalledWith(
+      expect.objectContaining({ modelMode: 'thinking', webSearch: true, memory: false }),
+    );
+  });
+
   it('forwards onStreamMessage to the transport', async () => {
     const onStreamMessage = vi.fn();
     const transport = vi.fn((request: AgentRuntimeRequest) => {
