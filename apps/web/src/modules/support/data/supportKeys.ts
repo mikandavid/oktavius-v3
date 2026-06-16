@@ -9,4 +9,5 @@ export const supportKeys = {
   ticket: (org: OrgId, id: string) => ['support', org, 'ticket', id] as const,
   comments: (org: OrgId, id: string) => ['support', org, 'comments', id] as const,
   attachments: (org: OrgId, id: string) => ['support', org, 'attachments', id] as const,
+  assignees: (org: OrgId) => ['support', org, 'assignees'] as const,
 };
