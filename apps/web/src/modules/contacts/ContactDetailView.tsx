@@ -148,7 +148,7 @@ export function ContactDetailView({ contactId }: { contactId: string }) {
         </div>
       }
     >
-      <DetailView title={contact.name} subtitle={typeLabel} fields={fields} />
+      <DetailView title={t('contacts.detailsSection', undefined, 'Details')} fields={fields} />
 
       <ConfirmActionDialog
         open={confirmOpen}
