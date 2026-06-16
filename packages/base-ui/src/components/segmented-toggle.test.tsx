@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => {
@@ -44,16 +45,43 @@ describe('SegmentedToggle', () => {
 
   it('moves selection with arrow keys (wrapping)', async () => {
     const onChange = vi.fn();
-    render(
-      <SegmentedToggle ariaLabel="Theme" value="system" options={OPTIONS} onChange={onChange} />,
-    );
+    function Controlled() {
+      const [value, setValue] = useState<'light' | 'dark' | 'system'>('system');
+      return (
+        <SegmentedToggle
+          ariaLabel="Theme"
+          value={value}
+          options={OPTIONS}
+          onChange={(next) => {
+            onChange(next);
+            setValue(next);
+          }}
+        />
+      );
+    }
+    render(<Controlled />);
     const user = userEvent.setup();
-    const active = screen.getByRole('radio', { name: 'System' });
-    active.focus();
+    screen.getByRole('radio', { name: 'System' }).focus();
+    // System (index 2) + ArrowRight wraps past the end to Light (index 0).
     await user.keyboard('{ArrowRight}');
-    expect(onChange).toHaveBeenLastCalledWith('light'); // wraps past end
+    expect(onChange).toHaveBeenLastCalledWith('light');
+    // From Light, focus follows selection; ArrowLeft wraps before the start to System.
     await user.keyboard('{ArrowLeft}');
-    expect(onChange).toHaveBeenLastCalledWith('dark'); // wraps before start
+    expect(onChange).toHaveBeenLastCalledWith('system');
+  });
+
+  it('moves DOM focus to the newly selected radio on arrow navigation', async () => {
+    function Controlled() {
+      const [value, setValue] = useState<'light' | 'dark' | 'system'>('system');
+      return (
+        <SegmentedToggle ariaLabel="Theme" value={value} options={OPTIONS} onChange={setValue} />
+      );
+    }
+    render(<Controlled />);
+    const user = userEvent.setup();
+    screen.getByRole('radio', { name: 'System' }).focus();
+    await user.keyboard('{ArrowRight}'); // wraps System -> Light
+    expect(screen.getByRole('radio', { name: 'Light' })).toHaveFocus();
   });
 
   it('uses option.ariaLabel for the accessible name when provided', () => {

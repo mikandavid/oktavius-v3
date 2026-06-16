@@ -1,4 +1,5 @@
 import type { KeyboardEvent, ReactNode } from 'react';
+import { useRef } from 'react';
 
 import { buttonFocusClasses } from '../lib/controlStates';
 import { cn } from '../lib/utils';
@@ -29,6 +30,7 @@ export function SegmentedToggle<T extends string>({
   ariaLabel,
   className,
 }: SegmentedToggleProps<T>) {
+  const buttonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const direction =
       event.key === 'ArrowRight' || event.key === 'ArrowDown'
@@ -44,6 +46,7 @@ export function SegmentedToggle<T extends string>({
     const nextOption = options[next];
     if (nextOption) {
       onChange(nextOption.value);
+      buttonRefs.current[next]?.focus();
     }
   };
 
@@ -58,6 +61,9 @@ export function SegmentedToggle<T extends string>({
         return (
           <button
             key={option.value}
+            ref={(el) => {
+              buttonRefs.current[index] = el;
+            }}
             type="button"
             role="radio"
             aria-checked={active}
