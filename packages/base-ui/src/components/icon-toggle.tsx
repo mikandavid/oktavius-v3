@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
+import { buttonDisabledClasses, buttonFocusClasses } from '../lib/controlStates';
+import { pressableMicroClasses } from '../lib/microInteractions';
 import { cn } from '../lib/utils';
 
 export type IconToggleTone = 'neutral' | 'info' | 'accent';
@@ -35,7 +37,10 @@ export function IconToggle({
       type={type}
       aria-pressed={pressed}
       className={cn(
-        'flex h-7 w-7 items-center justify-center rounded-full transition-colors disabled:pointer-events-none disabled:opacity-40',
+        'flex h-7 w-7 items-center justify-center rounded-full',
+        pressableMicroClasses,
+        buttonFocusClasses,
+        buttonDisabledClasses,
         bordered && 'border',
         pressed
           ? PRESSED_TONE[tone]

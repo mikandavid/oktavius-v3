@@ -41,6 +41,24 @@ describe('IconToggle', () => {
     expect(btn.className).not.toContain('text-info');
   });
 
+  it('applies the accent tone classes when pressed', () => {
+    render(
+      <IconToggle pressed bordered tone="accent" aria-label="Memory">
+        <svg />
+      </IconToggle>,
+    );
+    expect(screen.getByRole('button', { name: 'Memory' }).className).toContain('text-accent');
+  });
+
+  it('applies the neutral tone background when pressed', () => {
+    render(
+      <IconToggle pressed tone="neutral" aria-label="Voice">
+        <svg />
+      </IconToggle>,
+    );
+    expect(screen.getByRole('button', { name: 'Voice' }).className).toContain('bg-muted');
+  });
+
   it('fires onClick and respects disabled', async () => {
     const onClick = vi.fn();
     const { rerender } = render(
