@@ -99,6 +99,10 @@
   "reportProblem": "Report a problem",
   "loading": "Loading…",
   "replyPlaceholder": "Write a reply…",
-  "viewMine": "My requests",
-  "viewInbox": "Inbox"
+  "issuesTitle": "Issues",
+  "issuesDescription": "Triage and respond to tickets across the organization.",
+  "countOpen": "{{count}} Open",
+  "countClosed": "{{count}} Closed",
+  "filterPriorityAll": "All priorities",
+  "filterCategoryAll": "All categories"
 }

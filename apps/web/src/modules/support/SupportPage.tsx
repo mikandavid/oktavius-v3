@@ -1,4 +1,4 @@
-import { Button, Tabs, TabsList, TabsTrigger } from '@oktavius/base-ui';
+import { Button } from '@oktavius/base-ui';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -9,11 +9,9 @@ import { supportPageIcon } from '@/lib/modulePageIcons';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { ReportProblemDialog } from './ReportProblemDialog';
-import { SupportInboxView } from './SupportInboxView';
+import { SupportIssuesView } from './SupportIssuesView';
 import { SupportRequesterView } from './SupportRequesterView';
 import { SupportTicketDetail } from './SupportTicketDetail';
-
-type ViewMode = 'mine' | 'inbox';
 
 export function SupportPage() {
   const { ready } = usePreloadNamespaces(['support']);
@@ -21,14 +19,10 @@ export function SupportPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [reportOpen, setReportOpen] = useState(false);
 
-  // Superadmin detection: only superadmins can switch to the inbox view.
+  // Superadmins get the global issues board; everyone else gets the requester view.
   const isSuperadmin = useOptionalOsirisRuntime()?.permissionSubject?.isSuperadmin ?? false;
 
   const ticketId = searchParams.get('ticket');
-  const viewParam = searchParams.get('view');
-
-  // Non-superadmins always see 'mine'; superadmins can request 'inbox' via ?view=inbox.
-  const effectiveView: ViewMode = viewParam === 'inbox' && isSuperadmin ? 'inbox' : 'mine';
 
   function openTicket(id: string) {
     setSearchParams((prev) => {
@@ -46,54 +40,25 @@ export function SupportPage() {
     });
   }
 
-  function handleViewChange(view: string) {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      // Clear ticket when switching views to avoid stale detail pane.
-      next.delete('ticket');
-      if (view === 'inbox') {
-        next.set('view', 'inbox');
-      } else {
-        next.delete('view');
-      }
-      return next;
-    });
-  }
-
   if (!ready) return null;
 
-  const title = effectiveView === 'inbox' ? t('support.inboxTitle') : t('support.title');
-  const subtitle = effectiveView === 'inbox' ? t('support.inboxDescription') : undefined;
+  const title = isSuperadmin ? t('support.issuesTitle') : t('support.title');
+  const subtitle = isSuperadmin ? t('support.issuesDescription') : undefined;
 
-  const actions = (
-    <>
-      {isSuperadmin && (
-        <Tabs value={effectiveView} onValueChange={handleViewChange}>
-          <TabsList>
-            <TabsTrigger value="mine">{t('support.viewMine')}</TabsTrigger>
-            <TabsTrigger value="inbox">{t('support.viewInbox')}</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      )}
-      {effectiveView === 'mine' && (
-        <Button variant="cta" onClick={() => setReportOpen(true)}>
-          <PlusIcon size={16} aria-hidden />
-          {t('support.reportProblem')}
-        </Button>
-      )}
-    </>
+  // Report-problem CTA only for non-superadmins (superadmins manage, don't file).
+  const actions = isSuperadmin ? undefined : (
+    <Button variant="cta" onClick={() => setReportOpen(true)}>
+      <PlusIcon size={16} aria-hidden />
+      {t('support.reportProblem')}
+    </Button>
   );
 
   return (
     <ModulePage title={title} subtitle={subtitle} icon={supportPageIcon()} actions={actions}>
       {ticketId ? (
-        <SupportTicketDetail
-          ticketId={ticketId}
-          onBack={clearTicketParam}
-          admin={effectiveView === 'inbox'}
-        />
-      ) : effectiveView === 'inbox' ? (
-        <SupportInboxView onOpenTicket={openTicket} />
+        <SupportTicketDetail ticketId={ticketId} onBack={clearTicketParam} admin={isSuperadmin} />
+      ) : isSuperadmin ? (
+        <SupportIssuesView onOpenTicket={openTicket} />
       ) : (
         <>
           <SupportRequesterView onOpenTicket={openTicket} />

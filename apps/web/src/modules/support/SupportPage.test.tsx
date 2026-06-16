@@ -66,7 +66,7 @@ afterEach(() => {
 });
 
 describe('SupportPage — non-superadmin', () => {
-  it('renders the report problem button and no view toggle', async () => {
+  it('renders the report problem button and the issue list (no toggle)', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     await act(async () => {
       root.render(
@@ -83,14 +83,16 @@ describe('SupportPage — non-superadmin', () => {
     });
     // TestI18nProvider renders keys as [namespace.key]; the report button must be present.
     expect(container.textContent).toContain('support.reportProblem');
-    // No view-toggle keys should appear for non-superadmins.
+    // Old toggle keys must be gone.
     expect(container.textContent).not.toContain('support.viewMine');
     expect(container.textContent).not.toContain('support.viewInbox');
+    // Open/Closed counts header present.
+    expect(container.textContent).toContain('support.countOpen');
   });
 });
 
 describe('SupportPage — superadmin', () => {
-  it('renders the My requests / Inbox view toggle for superadmins', async () => {
+  it('renders the issues board with no toggle and no report button', async () => {
     // Override the runtime mock for this describe block to return a superadmin.
     vi.doMock('@/runtime/osiris/useOsirisRuntime', () => ({
       useOptionalOsirisRuntime: () => ({
@@ -116,8 +118,10 @@ describe('SupportPage — superadmin', () => {
         </MemoryRouter>,
       );
     });
-    // Both toggle trigger keys must appear in the DOM for superadmins.
-    expect(container.textContent).toContain('support.viewMine');
-    expect(container.textContent).toContain('support.viewInbox');
+    // Superadmin board title + counts, but no report button and no old toggle.
+    expect(container.textContent).toContain('support.issuesTitle');
+    expect(container.textContent).toContain('support.countOpen');
+    expect(container.textContent).not.toContain('support.reportProblem');
+    expect(container.textContent).not.toContain('support.viewInbox');
   });
 });

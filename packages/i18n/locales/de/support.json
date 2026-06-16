@@ -99,6 +99,10 @@
   "reportProblem": "Problem melden",
   "loading": "Wird geladen…",
   "replyPlaceholder": "Antwort schreiben…",
-  "viewMine": "Meine Anfragen",
-  "viewInbox": "Postfach"
+  "issuesTitle": "Tickets",
+  "issuesDescription": "Tickets der gesamten Organisation sichten und beantworten.",
+  "countOpen": "{{count}} Offen",
+  "countClosed": "{{count}} Geschlossen",
+  "filterPriorityAll": "Alle Prioritäten",
+  "filterCategoryAll": "Alle Kategorien"
 }
