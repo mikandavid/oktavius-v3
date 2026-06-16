@@ -12,10 +12,12 @@ import { formatUserFacingApiError } from '@/lib/userFacingApiError';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { buildStorageZip } from '../data/downloadZip';
-import { isEditableTextFile } from '../data/textFiles';
+import { isEditableTextFile, markdownToFile, nextUntitledName } from '../data/textFiles';
 import type { StorageNode } from '../data/types';
+import { uploadFile } from '../data/uploadFile';
 import {
   useFavorites,
+  useInvalidateStorage,
   useRecent,
   useStorageClient,
   useStorageMutations,
@@ -47,6 +49,7 @@ export function StorageMainPane({
   const client = useStorageClient();
   const treeQuery = useStorageTree();
   const mutations = useStorageMutations();
+  const invalidate = useInvalidateStorage();
   const permissionSubject = useOptionalOsirisRuntime()?.permissionSubject ?? EMPTY_SUBJECT;
 
   const folderQuery = useStorageNodes(
@@ -100,6 +103,7 @@ export function StorageMainPane({
   const [trashIds, setTrashIds] = useState<string[] | null>(null);
   const [purgeIds, setPurgeIds] = useState<string[] | null>(null);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [creatingTextFile, setCreatingTextFile] = useState(false);
 
   // Reset selection when the visible list changes.
   useEffect(() => {
@@ -129,6 +133,21 @@ export function StorageMainPane({
   const onError = (error: unknown) => appToast.fromApiError(error, t('storage.errors.load'));
   const openNewFolder = () => setNewFolderOpen(true);
   const triggerUpload = () => document.dispatchEvent(new CustomEvent('storage:upload'));
+  const createTextFile = async () => {
+    if (creatingTextFile) return;
+    setCreatingTextFile(true);
+    const folderId = state.view === 'folder' ? state.currentFolderId : null;
+    const name = nextUntitledName(orderedNodes.map((item) => item.name));
+    try {
+      const { node } = await uploadFile(client, markdownToFile(name, ''), folderId);
+      invalidate();
+      state.setEditingNodeId(node.id);
+    } catch (error) {
+      onError(error);
+    } finally {
+      setCreatingTextFile(false);
+    }
+  };
   const isFolderView = state.view === 'folder';
   const showCreateCta = isFolderView && !state.search.term;
   const nameOf = (id: string) => orderedNodes.find((node) => node.id === id)?.name ?? '';
@@ -254,6 +273,7 @@ export function StorageMainPane({
         <StoragePaneContextMenu
           enabled={isFolderView}
           onNewFolder={openNewFolder}
+          onNewTextFile={() => void createTextFile()}
           onUpload={triggerUpload}
           className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]"
         >
