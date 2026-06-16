@@ -111,12 +111,10 @@ describe('app navigation module manifest', () => {
 });
 
 describe('members manifest entry', () => {
-  it('is an admin module gated by org.members.manage', () => {
-    const entry = APP_NAV_MODULES.find((module) => module.id === 'members');
-    expect(entry).toBeDefined();
-    expect(entry?.section).toBe('admin');
-    expect(entry?.path).toBe('/members');
-    expect(entry?.permission).toBe('org.members.manage');
+  it('is not a standalone nav module (members now lives in Settings; /members redirects)', () => {
+    const ids = APP_NAV_MODULES.map((module) => module.id as string);
+    expect(ids).not.toContain('members');
+    expect(APP_NAV_MODULES.some((module) => module.path === '/members')).toBe(false);
   });
 });
 
