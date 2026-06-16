@@ -1,10 +1,11 @@
-import type { BadgeProps } from '@oktavius/base-ui';
+import { Avatar, type BadgeProps } from '@oktavius/base-ui';
 
 import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FilterDef } from '@/components/data/FilterToolbar';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { FormField } from '@/components/forms/EntityForm';
 import type { useTranslation } from '@/core/i18n';
+import { OrganizationIcon, UserIcon } from '@/lib/icons';
 
 import type { Contact, ContactCategory, ContactInput } from './data/types';
 
@@ -40,12 +41,6 @@ export function toContactRow(
   };
 }
 
-function initials(name: string): string {
-  const parts = name.split(/\s+/).filter(Boolean).slice(0, 2);
-  const result = parts.map((part) => part[0]?.toUpperCase() ?? '').join('');
-  return result || '?';
-}
-
 export function contactColumns(t: TFn): CrudColumn<ContactRow>[] {
   return [
     {
@@ -54,9 +49,11 @@ export function contactColumns(t: TFn): CrudColumn<ContactRow>[] {
       sortable: true,
       render: (row) => (
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-accent-foreground">
-            {initials(row.name)}
-          </span>
+          <Avatar
+            label={row.name}
+            size="sm"
+            icon={row.isBusiness ? <OrganizationIcon /> : <UserIcon />}
+          />
           <span className="truncate font-medium text-foreground">{row.name}</span>
         </div>
       ),

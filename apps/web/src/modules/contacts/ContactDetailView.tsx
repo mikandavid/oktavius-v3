@@ -5,12 +5,14 @@ import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { type DetailFieldProps, DetailView } from '@/components/common/DetailView';
 import { ModulePage } from '@/components/common/PageLayout';
 import { IconDeleteButton, IconEditButton } from '@/components/common/RecordIconButtons';
+import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { useTranslation } from '@/core/i18n';
-import { UserCircleIcon } from '@/lib/icons';
+import { OrganizationIcon, UserCircleIcon, UserIcon } from '@/lib/icons';
 import { modulePageIcon } from '@/lib/modulePageIcons';
 import { appToast } from '@/lib/toast';
 
 import { useContact, useContactCategories, useContactMutations } from './data/useContactsData';
+import { TYPE_VARIANT } from './shared';
 
 export function ContactDetailView({ contactId }: { contactId: string }) {
   const { t } = useTranslation();
@@ -61,17 +63,17 @@ export function ContactDetailView({ contactId }: { contactId: string }) {
     {
       label: t('contacts.fieldEmail', undefined, 'Email'),
       value: contact.email || dash,
-      section: general,
+      importance: 'primary',
     },
     {
       label: t('contacts.fieldPhone', undefined, 'Phone'),
       value: contact.phone || dash,
-      section: general,
+      importance: 'primary',
     },
     {
       label: t('contacts.fieldMobile', undefined, 'Mobile'),
       value: contact.mobile || dash,
-      section: general,
+      importance: 'primary',
     },
     {
       label: t('contacts.fieldFax', undefined, 'Fax'),
@@ -132,7 +134,6 @@ export function ContactDetailView({ contactId }: { contactId: string }) {
   return (
     <ModulePage
       title={contact.name}
-      subtitle={[typeLabel, ...categoryNames].join(' · ')}
       icon={modulePageIcon(UserCircleIcon)}
       backTo="/contacts"
       actions={
@@ -148,7 +149,26 @@ export function ContactDetailView({ contactId }: { contactId: string }) {
         </div>
       }
     >
-      <DetailView title={t('contacts.detailsSection', undefined, 'Details')} fields={fields} />
+      <DetailView
+        title={contact.name}
+        visual={{
+          kind: 'avatar',
+          label: contact.name,
+          icon: contact.isBusiness ? <OrganizationIcon /> : <UserIcon />,
+          size: 'lg',
+        }}
+        visualLayout="identity"
+        identityTitle={contact.name}
+        identitySubtitle={categoryNames.join(' · ') || undefined}
+        identityTrailing={
+          <StatusBadge
+            status={contact.isBusiness ? 'business' : 'person'}
+            label={typeLabel}
+            variantMap={TYPE_VARIANT}
+          />
+        }
+        fields={fields}
+      />
 
       <ConfirmActionDialog
         open={confirmOpen}

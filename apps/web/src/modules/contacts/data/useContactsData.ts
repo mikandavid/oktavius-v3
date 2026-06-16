@@ -6,7 +6,7 @@ import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { createContactsClient } from './contactsClient';
 import { contactsKeys } from './contactsKeys';
-import type { ContactInput, ListContactsParams } from './types';
+import type { ContactInput, ListContactsParams, ListContactsResult } from './types';
 
 /** v1 fetches a single server page and filters client-side (see useListPageState).
  *  Documented limitation; server-side pagination is a follow-up. */
@@ -32,10 +32,19 @@ export function useContacts() {
 export function useContact(id: string | null) {
   const client = useContactsClient();
   const org = useOrgId();
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: contactsKeys.detail(org, id ?? ''),
     queryFn: () => client.getContact(id as string),
     enabled: Boolean(id),
+    // Render instantly from the already-loaded list while the full record refetches.
+    placeholderData: () => {
+      if (!id) return undefined;
+      const list = queryClient.getQueryData<ListContactsResult>(
+        contactsKeys.list(org, LIST_PARAMS),
+      );
+      return list?.data.find((contact) => contact.id === id);
+    },
   });
 }
 
