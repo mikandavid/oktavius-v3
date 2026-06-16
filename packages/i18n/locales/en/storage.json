@@ -289,5 +289,16 @@
     "preparing": "Preparing download…",
     "ready": "Download ready",
     "failed": "Could not create the download."
+  },
+  "newTextFile": "New text file",
+  "editor": {
+    "loading": "Loading document…",
+    "loadFailed": "Could not open this file",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "unsaved": "Unsaved changes",
+    "saveFailed": "Could not save changes",
+    "close": "Close",
+    "renameLabel": "File name"
   }
 }

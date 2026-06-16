@@ -289,5 +289,16 @@
     "preparing": "Download wird vorbereitet…",
     "ready": "Download bereit",
     "failed": "Download konnte nicht erstellt werden."
+  },
+  "newTextFile": "Neue Textdatei",
+  "editor": {
+    "loading": "Dokument wird geladen…",
+    "loadFailed": "Diese Datei konnte nicht geöffnet werden",
+    "saving": "Wird gespeichert…",
+    "saved": "Gespeichert",
+    "unsaved": "Nicht gespeicherte Änderungen",
+    "saveFailed": "Änderungen konnten nicht gespeichert werden",
+    "close": "Schließen",
+    "renameLabel": "Dateiname"
   }
 }
