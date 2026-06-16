@@ -6,6 +6,7 @@ import { useTranslation } from '@/core/i18n';
 import { useListPageState } from '@/lib/useListPageState';
 
 import { useSupportStats, useSupportTickets } from './data/useSupportData';
+import { useSupportUnread } from './data/useSupportUnread';
 import { IssueFilterBar } from './IssueFilterBar';
 import { IssueList } from './IssueList';
 import { type StatusGroup, type TicketRow, toTicketRow } from './shared';
@@ -20,6 +21,7 @@ interface SupportIssuesViewProps {
 export function SupportIssuesView({ onOpenTicket }: SupportIssuesViewProps) {
   const { t } = useTranslation();
   const [statusGroup, setStatusGroup] = useState<StatusGroup>('open');
+  const { isUnread } = useSupportUnread();
 
   // 50-row server cap retained (documented v1 limitation). Filtering is client-side.
   const { data, isLoading } = useSupportTickets({ page: 1, pageSize: 50, sort: '-updated_at' });
@@ -80,6 +82,7 @@ export function SupportIssuesView({ onOpenTicket }: SupportIssuesViewProps) {
         total={listState.total}
         totalPages={listState.totalPages}
         onPageChange={listState.onPageChange}
+        isUnread={isUnread}
       />
     </div>
   );

@@ -17,6 +17,7 @@ interface IssueListProps {
   total: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  isUnread?: (row: TicketRow) => boolean;
 }
 
 export function IssueList({
@@ -29,6 +30,7 @@ export function IssueList({
   total,
   totalPages,
   onPageChange,
+  isUnread,
 }: IssueListProps) {
   if (isLoading) {
     return (
@@ -48,7 +50,12 @@ export function IssueList({
     <div className="flex flex-col gap-3">
       <div className="flex flex-col">
         {rows.map((row) => (
-          <IssueRow key={row.id} row={row} onClick={onOpenTicket} />
+          <IssueRow
+            key={row.id}
+            row={row}
+            onClick={onOpenTicket}
+            unread={isUnread?.(row) ?? false}
+          />
         ))}
       </div>
       <Pagination

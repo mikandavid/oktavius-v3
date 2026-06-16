@@ -1,10 +1,13 @@
 import { Button } from '@oktavius/base-ui';
+import { useEffect } from 'react';
 
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import { useTranslation } from '@/core/i18n';
 import { BackIcon } from '@/lib/icons';
 
+import { AutomationPanel } from './AutomationPanel';
 import { useSupportTicket } from './data/useSupportData';
+import { useSupportUnread } from './data/useSupportUnread';
 import { PRIORITY_VARIANT, STATUS_VARIANT } from './shared';
 import { SupportTicketThread } from './SupportTicketThread';
 import { TriageControls } from './TriageControls';
@@ -18,6 +21,11 @@ interface SupportTicketDetailProps {
 export function SupportTicketDetail({ ticketId, onBack, admin }: SupportTicketDetailProps) {
   const { t } = useTranslation();
   const { data: ticket, isLoading } = useSupportTicket(ticketId);
+  const { markSeen } = useSupportUnread();
+
+  useEffect(() => {
+    if (ticket) markSeen(ticket.id, ticket.updatedAt);
+  }, [ticket, markSeen]);
 
   if (isLoading) {
     return (
@@ -79,11 +87,12 @@ export function SupportTicketDetail({ ticketId, onBack, admin }: SupportTicketDe
       {/* Body grid */}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
         <main>
-          <SupportTicketThread ticket={ticket} />
+          <SupportTicketThread ticket={ticket} admin={admin} />
         </main>
         {admin ? (
-          <aside>
+          <aside className="flex flex-col gap-4">
             <TriageControls ticket={ticket} />
+            <AutomationPanel ticket={ticket} />
           </aside>
         ) : null}
       </div>
