@@ -1,7 +1,8 @@
-import { Button, Textarea } from '@oktavius/base-ui';
+import { Button, Switch, Textarea } from '@oktavius/base-ui';
 import { useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
+import { LockIcon } from '@/lib/icons';
 import { appToast } from '@/lib/toast';
 
 import type { SupportTicket } from './data/types';
@@ -9,6 +10,7 @@ import { useSupportComments, useSupportMutations } from './data/useSupportData';
 
 interface SupportTicketThreadProps {
   ticket: SupportTicket;
+  admin?: boolean;
 }
 
 function formatDateTime(value: string): string {
@@ -23,11 +25,13 @@ interface TimelineEntry {
   date: string;
   body: string;
   label: string;
+  isInternal: boolean;
 }
 
-export function SupportTicketThread({ ticket }: SupportTicketThreadProps) {
+export function SupportTicketThread({ ticket, admin = false }: SupportTicketThreadProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState('');
+  const [internal, setInternal] = useState(false);
 
   const commentsQuery = useSupportComments(ticket.id);
   const { addComment } = useSupportMutations();
@@ -37,14 +41,18 @@ export function SupportTicketThread({ ticket }: SupportTicketThreadProps) {
     date: ticket.createdAt,
     body: ticket.message,
     label: t('support.initialRequest'),
+    isInternal: false,
   };
 
-  const commentEntries: TimelineEntry[] = (commentsQuery.data ?? []).map((comment) => ({
-    author: comment.userName ?? comment.userEmail ?? t('support.supportTeam'),
-    date: comment.createdAt,
-    body: comment.message,
-    label: t('support.commentEntry'),
-  }));
+  const commentEntries: TimelineEntry[] = (commentsQuery.data ?? [])
+    .filter((comment) => admin || !comment.isInternal)
+    .map((comment) => ({
+      author: comment.userName ?? comment.userEmail ?? t('support.supportTeam'),
+      date: comment.createdAt,
+      body: comment.message,
+      label: t('support.commentEntry'),
+      isInternal: comment.isInternal,
+    }));
 
   const timeline: TimelineEntry[] = [initialEntry, ...commentEntries];
 
@@ -52,8 +60,9 @@ export function SupportTicketThread({ ticket }: SupportTicketThreadProps) {
     const trimmed = message.trim();
     if (!trimmed) return;
     try {
-      await addComment.mutateAsync({ ticketId: ticket.id, message: trimmed });
+      await addComment.mutateAsync({ ticketId: ticket.id, message: trimmed, isInternal: internal });
       setMessage('');
+      setInternal(false);
       appToast.success(t('support.replySent'));
     } catch {
       appToast.error(t('support.replyFailed'));
@@ -63,11 +72,20 @@ export function SupportTicketThread({ ticket }: SupportTicketThreadProps) {
   return (
     <div className="flex flex-col gap-4">
       {timeline.map((entry, idx) => (
-        <div key={idx} className="rounded-card bg-card p-3">
+        <div
+          key={idx}
+          className={`rounded-card p-3 ${entry.isInternal ? 'bg-warning/10' : 'bg-card'}`}
+        >
           <div className="mb-1 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-foreground">{entry.author}</span>
               <span className="text-xs text-muted-foreground">{entry.label}</span>
+              {entry.isInternal && (
+                <span className="inline-flex items-center gap-1 rounded-control bg-warning/20 px-1.5 py-0.5 text-xs font-medium text-warning-foreground">
+                  <LockIcon className="h-3 w-3" aria-hidden="true" />
+                  {t('support.internalNoteBadge')}
+                </span>
+              )}
             </div>
             <span className="shrink-0 text-xs text-muted-foreground">
               {formatDateTime(entry.date)}
@@ -78,15 +96,29 @@ export function SupportTicketThread({ ticket }: SupportTicketThreadProps) {
       ))}
 
       {/* Reply composer */}
-      <div className="flex flex-col gap-2 rounded-card border border-border bg-card p-3">
+      <div className="flex flex-col gap-2 rounded-card bg-card p-3">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder={t('support.replyPlaceholder')}
+          placeholder={
+            internal ? t('support.internalNotePlaceholder') : t('support.replyPlaceholder')
+          }
           rows={3}
           className="resize-none"
         />
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-2">
+          {admin ? (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Switch
+                checked={internal}
+                onCheckedChange={setInternal}
+                aria-label={t('support.internalNoteToggle')}
+              />
+              {t('support.internalNoteToggle')}
+            </label>
+          ) : (
+            <span />
+          )}
           <Button
             type="button"
             onClick={handleSend}
