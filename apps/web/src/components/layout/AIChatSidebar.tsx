@@ -6,7 +6,7 @@ import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
 import { ChevronLeftIcon } from '@/lib/icons';
 import { getWindowStorage, safeStorageGet, safeStorageSet } from '@/lib/storage/safeStorage';
 
-import { OsirisChatShell } from './OsirisChatShell';
+import { AgentChatShell } from './AgentChatShell';
 
 const CHAT_SIDEBAR_WIDTH_KEY = 'chat-sidebar-width';
 const CHAT_SIDEBAR_COLLAPSED_KEY = 'chat-sidebar-collapsed';
@@ -199,7 +199,7 @@ export function AIChatSidebar() {
           </div>
 
           <div className="flex min-h-0 flex-1">
-            <OsirisChatShell mode="sidebar" className="h-full max-h-dvh" />
+            <AgentChatShell mode="sidebar" className="h-full max-h-dvh" />
           </div>
         </>
       )}

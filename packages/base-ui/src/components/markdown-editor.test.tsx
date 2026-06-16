@@ -34,4 +34,19 @@ describe('MarkdownEditor', () => {
     });
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it('updates content when the parent swaps value, without emitting onChange', () => {
+    const onChange = vi.fn();
+    act(() => {
+      root.render(<MarkdownEditor value={'# First'} onChange={onChange} />);
+    });
+    expect(container.innerHTML).toContain('First');
+    onChange.mockClear();
+    act(() => {
+      root.render(<MarkdownEditor value={'## Second doc'} onChange={onChange} />);
+    });
+    expect(container.innerHTML).toContain('Second doc');
+    expect(container.innerHTML).toContain('<h2');
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

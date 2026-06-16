@@ -49,7 +49,7 @@ import { MobileAgentLayout } from './MobileAgentLayout';
 
 type ShellConversation = StoredChatConversation;
 
-type OsirisChatShellProps = {
+type AgentChatShellProps = {
   mode: 'page' | 'sidebar' | 'module';
   className?: string;
   onCloseHistory?: () => void;
@@ -96,7 +96,7 @@ function getChatStorage() {
   return getWindowStorage('localStorage');
 }
 
-export function OsirisChatShell({ mode, className, onCloseHistory }: OsirisChatShellProps) {
+export function AgentChatShell({ mode, className, onCloseHistory }: AgentChatShellProps) {
   const pageContext = useAgentPageContext();
   const agentTransport = useMemo(
     () => createConfiguredAgentTransport({ env: import.meta.env }),

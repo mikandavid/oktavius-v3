@@ -1,9 +1,9 @@
-import { OsirisChatShell } from '@/components/layout/OsirisChatShell';
+import { AgentChatShell } from '@/components/layout/AgentChatShell';
 
 export function AIChatPage() {
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <OsirisChatShell mode="page" className="h-full min-h-0" />
+      <AgentChatShell mode="page" className="h-full min-h-0" />
     </div>
   );
 }

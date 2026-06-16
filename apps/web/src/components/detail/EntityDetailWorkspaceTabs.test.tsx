@@ -9,8 +9,8 @@ import { AgentPageContextProvider } from '@/components/agent/page-context';
 
 import { EntityDetailWorkspaceTabs } from './EntityDetailWorkspaceTabs';
 
-vi.mock('@/components/layout/OsirisChatShell', () => ({
-  OsirisChatShell: ({ mode }: { mode: string }) => (
+vi.mock('@/components/layout/AgentChatShell', () => ({
+  AgentChatShell: ({ mode }: { mode: string }) => (
     <div data-testid="chat-shell" data-mode={mode}>
       Scoped chat
     </div>
