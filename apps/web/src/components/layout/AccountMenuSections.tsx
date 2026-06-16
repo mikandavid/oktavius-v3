@@ -47,6 +47,18 @@ export function OrganizationMenuSection({
     return null;
   }
 
+  if (organizations.length === 1) {
+    return (
+      <div className="flex items-center gap-2 px-2 py-1.5 text-sm">
+        <OrganizationLogo name={activeOrg?.name} logoUrl={activeOrg?.logoUrl} />
+        <span className="min-w-0 flex-1 truncate text-left text-foreground">Organisation</span>
+        <span className="min-w-0 max-w-[45%] truncate text-right text-xs text-muted-foreground">
+          {activeOrg?.name}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <AccountSubmenu
       icon={<OrganizationLogo name={activeOrg?.name} logoUrl={activeOrg?.logoUrl} />}
@@ -101,6 +113,32 @@ function OrganizationLogo({ logoUrl, name }: { logoUrl?: string | null; name?: s
     <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
       <OrganizationIcon size={10} weight="duotone" />
     </span>
+  );
+}
+
+function IdentityPill({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+      {children}
+    </span>
+  );
+}
+
+export function IdentityPills({
+  orgName,
+  role,
+}: {
+  orgName?: string | null;
+  role?: string | null;
+}) {
+  if (!orgName && !role) {
+    return null;
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5 px-2 pb-2 pt-1">
+      {orgName ? <IdentityPill>{orgName}</IdentityPill> : null}
+      {role ? <IdentityPill>{role}</IdentityPill> : null}
+    </div>
   );
 }
 

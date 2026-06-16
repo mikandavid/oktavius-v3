@@ -33,7 +33,12 @@ vi.mock('@/core/i18n', async (importOriginal) => {
   };
 });
 
-import { LanguageMenuRow, ThemeMenuRow } from './AccountMenuSections';
+import {
+  IdentityPills,
+  LanguageMenuRow,
+  OrganizationMenuSection,
+  ThemeMenuRow,
+} from './AccountMenuSections';
 
 let container: HTMLDivElement;
 let root: Root;
@@ -85,5 +90,36 @@ describe('LanguageMenuRow', () => {
     clickRadio('Deutsch');
     expect(setLocale).toHaveBeenCalledWith('de');
     expect(setLanguage).toHaveBeenCalledWith('de');
+  });
+});
+
+describe('IdentityPills', () => {
+  it('renders org and role pills when both present', () => {
+    // eslint-disable-next-line jsx-a11y/aria-role -- `role` is a domain prop on IdentityPills, not an ARIA role.
+    renderRow(<IdentityPills orgName="Texterous" role="Owner" />);
+    const text = container.textContent ?? '';
+    expect(text).toContain('Texterous');
+    expect(text).toContain('Owner');
+  });
+
+  it('renders nothing when both are absent', () => {
+    // eslint-disable-next-line jsx-a11y/aria-role -- `role` is a domain prop on IdentityPills, not an ARIA role.
+    renderRow(<IdentityPills orgName={null} role={null} />);
+    expect(container.textContent).toBe('');
+  });
+});
+
+describe('OrganizationMenuSection (single org)', () => {
+  it('renders a static, non-interactive row for exactly one organization', () => {
+    renderRow(
+      <OrganizationMenuSection
+        activeOrgId="org_1"
+        organizations={[{ id: 'org_1', name: 'Texterous', slug: 'texterous' }]}
+        onSelectOrg={() => {}}
+      />,
+    );
+    expect(container.textContent).toContain('Texterous');
+    // Static label: no submenu trigger button rendered.
+    expect(container.querySelector('button')).toBeNull();
   });
 });
