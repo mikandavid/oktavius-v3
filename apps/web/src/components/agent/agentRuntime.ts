@@ -209,10 +209,11 @@ export async function runAgentTurn({
   content,
   createdAt,
   pageSnapshot,
+  onStreamMessage,
   transport,
 }: RunAgentTurnOptions): Promise<AgentMessage[]> {
   if (transport) {
-    return transport({ content, createdAt, pageSnapshot });
+    return transport({ content, createdAt, pageSnapshot, onStreamMessage });
   }
 
   void content;

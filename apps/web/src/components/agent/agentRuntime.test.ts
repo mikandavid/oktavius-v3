@@ -13,6 +13,33 @@ const pageSnapshot: AgentPageContextSnapshot = {
   links: [],
 };
 
+const SNAPSHOT = { moduleLabel: '', routeLabel: '' } as unknown as AgentPageContextSnapshot;
+
+describe('runAgentTurn', () => {
+  it('forwards onStreamMessage to the transport', async () => {
+    const onStreamMessage = vi.fn();
+    const transport = vi.fn((request: { onStreamMessage?: (m: unknown) => void }) => {
+      request.onStreamMessage?.({ id: 'a1', role: 'assistant', createdAt: 'now', content: 'hi' });
+      return Promise.resolve([
+        { id: 'a1', role: 'assistant' as const, createdAt: 'now', content: 'hi' },
+      ]);
+    });
+
+    await runAgentTurn({
+      content: 'hello',
+      createdAt: 'now',
+      pageSnapshot: SNAPSHOT,
+      onStreamMessage,
+      transport,
+    });
+
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(onStreamMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'a1', content: 'hi' }),
+    );
+  });
+});
+
 describe('agent runtime adapter', () => {
   it('returns assistant messages decorated with page context', async () => {
     const messages = await runAgentTurn({
