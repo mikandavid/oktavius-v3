@@ -7,6 +7,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
   formatDisplayDateTime,
+  IconToggle,
   MouseTooltip,
   ScrollArea,
 } from '@oktavius/base-ui';
@@ -529,67 +530,54 @@ export function AgentChatShell({ mode, className, onCloseHistory }: AgentChatShe
             placeholder={composerPlaceholder}
             rightControls={
               <MouseTooltip content={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}>
-                <button
-                  type="button"
+                <IconToggle
+                  pressed={isVoiceRecording}
+                  tone="neutral"
                   onClick={toggleVoiceInput}
                   tabIndex={-1}
                   aria-label={isVoiceRecording ? 'Stop voice input' : 'Start voice input'}
                   className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full transition-colors',
-                    isVoiceRecording
-                      ? 'bg-destructive/10 text-destructive hover:bg-destructive/20'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    isVoiceRecording &&
+                      'bg-destructive/10 text-destructive hover:bg-destructive/20',
                   )}
                 >
                   <MicIcon size={14} />
-                </button>
+                </IconToggle>
               </MouseTooltip>
             }
             bottomControls={
               <>
-                <button
-                  type="button"
+                <IconToggle
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isAssistantPending}
                   tabIndex={-1}
                   aria-label="Attach file"
                   title="Attach file"
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
                 >
                   <PaperclipIcon size={14} />
-                </button>
-                <button
-                  type="button"
+                </IconToggle>
+                <IconToggle
+                  bordered
+                  tone="info"
+                  pressed={webSearchMode}
                   onClick={() => setWebSearchMode((current) => !current)}
                   disabled={isAssistantPending}
-                  aria-pressed={webSearchMode}
                   aria-label="Web search mode"
                   title="Web search mode"
-                  className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-40',
-                    webSearchMode
-                      ? 'border-info bg-info/10 text-info hover:bg-info/15 hover:text-info'
-                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )}
                 >
                   <GlobeIcon size={14} />
-                </button>
-                <button
-                  type="button"
+                </IconToggle>
+                <IconToggle
+                  bordered
+                  tone="accent"
+                  pressed={instructionUpdateMode}
                   onClick={() => setInstructionUpdateMode((current) => !current)}
                   disabled={isAssistantPending}
-                  aria-pressed={instructionUpdateMode}
                   aria-label="Instruction update mode"
                   title="Instruction update mode"
-                  className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full border transition-colors disabled:pointer-events-none disabled:opacity-40',
-                    instructionUpdateMode
-                      ? 'border-accent bg-accent/10 text-accent hover:bg-accent/15 hover:text-accent'
-                      : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground',
-                  )}
                 >
                   <BrainIcon size={14} />
-                </button>
+                </IconToggle>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
