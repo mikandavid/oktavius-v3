@@ -1,4 +1,5 @@
 import type { OsirisStorageClient } from './storageClient';
+import type { StorageNode } from './types';
 
 const SHA_SKIP_BYTES = 50 * 1024 * 1024;
 
@@ -39,6 +40,7 @@ export async function putToSignedUrl(signedUrl: string, file: File): Promise<voi
 
 export interface UploadOutcome {
   duplicateOfNodeId: string | null;
+  node: StorageNode;
 }
 
 export async function uploadFile(
@@ -58,5 +60,5 @@ export async function uploadFile(
     sessionId: session.sessionId,
     contentSha256: sha ?? undefined,
   });
-  return { duplicateOfNodeId: result.duplicateOfNodeId };
+  return { duplicateOfNodeId: result.duplicateOfNodeId, node: result.node };
 }
