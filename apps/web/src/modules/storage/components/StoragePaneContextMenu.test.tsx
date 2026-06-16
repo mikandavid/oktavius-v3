@@ -30,7 +30,7 @@ describe('StoragePaneContextMenu', () => {
             onNewTextFile={vi.fn()}
             onUpload={vi.fn()}
           >
-            <div data-testid="child">x</div>
+            <div data-testid="child" />
           </StoragePaneContextMenu>
         </TestI18nProvider>,
       );
