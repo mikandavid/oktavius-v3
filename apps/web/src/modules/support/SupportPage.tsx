@@ -9,9 +9,8 @@ import { supportPageIcon } from '@/lib/modulePageIcons';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { ReportProblemDialog } from './ReportProblemDialog';
-import { SupportIssuesView } from './SupportIssuesView';
-import { SupportRequesterView } from './SupportRequesterView';
 import { SupportTicketDetail } from './SupportTicketDetail';
+import { SupportTicketList } from './SupportTicketList';
 
 export function SupportPage() {
   const { ready } = usePreloadNamespaces(['support']);
@@ -58,10 +57,10 @@ export function SupportPage() {
       {ticketId ? (
         <SupportTicketDetail ticketId={ticketId} onBack={clearTicketParam} admin={isSuperadmin} />
       ) : isSuperadmin ? (
-        <SupportIssuesView onOpenTicket={openTicket} />
+        <SupportTicketList admin onOpenTicket={openTicket} />
       ) : (
         <>
-          <SupportRequesterView onOpenTicket={openTicket} />
+          <SupportTicketList admin={false} onOpenTicket={openTicket} />
           <ReportProblemDialog
             open={reportOpen}
             onOpenChange={setReportOpen}

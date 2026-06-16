@@ -86,8 +86,9 @@ describe('SupportPage — non-superadmin', () => {
     // Old toggle keys must be gone.
     expect(container.textContent).not.toContain('support.viewMine');
     expect(container.textContent).not.toContain('support.viewInbox');
-    // Open/Closed counts header present.
-    expect(container.textContent).toContain('support.countOpen');
+    // CRUD list rendered (FilterToolbar search input present); old counts gone.
+    expect(container.querySelector('input')).not.toBeNull();
+    expect(container.textContent).not.toContain('support.countOpen');
   });
 });
 
@@ -118,9 +119,10 @@ describe('SupportPage — superadmin', () => {
         </MemoryRouter>,
       );
     });
-    // Superadmin board title + counts, but no report button and no old toggle.
+    // Superadmin board title present, no report button, no old toggle.
     expect(container.textContent).toContain('support.issuesTitle');
-    expect(container.textContent).toContain('support.countOpen');
+    expect(container.querySelector('input')).not.toBeNull();
+    expect(container.textContent).not.toContain('support.countOpen');
     expect(container.textContent).not.toContain('support.reportProblem');
     expect(container.textContent).not.toContain('support.viewInbox');
   });
