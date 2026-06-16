@@ -20,7 +20,7 @@ function normalizeContact(value: unknown): Contact {
   const v = readRecord(value);
   return {
     id: readString(v.id),
-    orgId: readStringOrNull(v.org_id ?? v.orgId ?? null),
+    orgId: readStringOrNull(v.org_id ?? v.orgId),
     name: readString(v.name),
     isBusiness: Boolean(v.is_business ?? v.isBusiness ?? false),
     email: readString(v.email),
@@ -70,10 +70,10 @@ function toPayload(input: ContactInput): Record<string, unknown> {
   };
 }
 
-function buildQuery(params: Record<string, string | number | undefined>): string {
+function buildQuery(params: Record<string, string | number | null | undefined>): string {
   const sp = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value === undefined || value === '') continue;
+    if (value === undefined || value === null || value === '') continue;
     sp.set(key, String(value));
   }
   const query = sp.toString();
@@ -124,7 +124,9 @@ export function createContactsClient({ baseUrl }: { baseUrl: string }) {
     },
 
     async getContact(id: string): Promise<Contact> {
-      return normalizeContact(await getJson(`/contacts/${id}`, 'Failed to load contact.'));
+      return normalizeContact(
+        await getJson(`/contacts/${encodeURIComponent(id)}`, 'Failed to load contact.'),
+      );
     },
 
     async createContact(input: ContactInput): Promise<Contact> {
@@ -135,12 +137,17 @@ export function createContactsClient({ baseUrl }: { baseUrl: string }) {
 
     async updateContact(id: string, input: ContactInput): Promise<Contact> {
       return normalizeContact(
-        await sendJson('PATCH', `/contacts/${id}`, toPayload(input), 'Failed to update contact.'),
+        await sendJson(
+          'PATCH',
+          `/contacts/${encodeURIComponent(id)}`,
+          toPayload(input),
+          'Failed to update contact.',
+        ),
       );
     },
 
     async deleteContact(id: string): Promise<void> {
-      const response = await fetch(url(`/contacts/${id}`), {
+      const response = await fetch(url(`/contacts/${encodeURIComponent(id)}`), {
         method: 'DELETE',
         credentials: 'include',
       });

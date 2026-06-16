@@ -94,6 +94,16 @@ describe('contactsClient', () => {
   it('throws with the server message on a failed request', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ message: 'nope' }, 500));
     const client = createContactsClient({ baseUrl: BASE });
-    await expect(client.getContact('x')).rejects.toThrow();
+    await expect(client.getContact('x')).rejects.toThrow('nope');
+  });
+
+  it('issues a DELETE for a contact', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 200 }));
+    const client = createContactsClient({ baseUrl: BASE });
+    await client.deleteContact('c9');
+    const [url, init] = vi.mocked(fetch).mock.calls[0];
+    expect(String(url)).toContain('/contacts/c9');
+    expect((init as RequestInit).method).toBe('DELETE');
+    expect((init as RequestInit).credentials).toBe('include');
   });
 });
