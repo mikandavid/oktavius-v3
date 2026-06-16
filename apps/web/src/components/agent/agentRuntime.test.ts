@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { AgentRuntimeRequest } from './agentRuntime';
 import {
   createApiAgentTransport,
   createConfiguredAgentTransport,
@@ -18,7 +19,7 @@ const SNAPSHOT = { moduleLabel: '', routeLabel: '' } as unknown as AgentPageCont
 describe('runAgentTurn', () => {
   it('forwards onStreamMessage to the transport', async () => {
     const onStreamMessage = vi.fn();
-    const transport = vi.fn((request: { onStreamMessage?: (m: unknown) => void }) => {
+    const transport = vi.fn((request: AgentRuntimeRequest) => {
       request.onStreamMessage?.({ id: 'a1', role: 'assistant', createdAt: 'now', content: 'hi' });
       return Promise.resolve([
         { id: 'a1', role: 'assistant' as const, createdAt: 'now', content: 'hi' },
@@ -181,5 +182,31 @@ describe('agent runtime adapter', () => {
         content: 'API response',
       },
     ]);
+  });
+});
+
+describe('createApiAgentTransport request body', () => {
+  it('includes modelMode, webSearch and memory flags', async () => {
+    const fetcher = vi.fn(async (_url: string, _init: { body: string }) => {
+      return new Response(JSON.stringify({ messages: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+
+    const transport = createApiAgentTransport({ endpoint: 'https://api.test/agent', fetcher });
+    await transport({
+      content: 'hi',
+      createdAt: 'now',
+      pageSnapshot: SNAPSHOT,
+      modelMode: 'thinking',
+      webSearch: true,
+      memory: false,
+    });
+
+    const body = JSON.parse(fetcher.mock.calls[0]![1].body) as Record<string, unknown>;
+    expect(body.modelMode).toBe('thinking');
+    expect(body.webSearch).toBe(true);
+    expect(body.memory).toBe(false);
   });
 });

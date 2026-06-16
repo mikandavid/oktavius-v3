@@ -1,10 +1,13 @@
 import type { AgentPageContextSnapshot } from './page-routing';
-import type { AgentMessage } from './types';
+import type { AgentMessage, AgentModelMode } from './types';
 
 export type AgentRuntimeRequest = {
   content: string;
   createdAt: string;
   pageSnapshot: AgentPageContextSnapshot;
+  modelMode?: AgentModelMode;
+  webSearch?: boolean;
+  memory?: boolean;
   onStreamMessage?: (message: AgentMessage) => void;
 };
 
@@ -159,7 +162,15 @@ export function createApiAgentTransport({
   token?: string;
   fetcher?: AgentRuntimeFetcher;
 }): AgentRuntimeTransport {
-  return async ({ content, createdAt, pageSnapshot, onStreamMessage }) => {
+  return async ({
+    content,
+    createdAt,
+    pageSnapshot,
+    modelMode,
+    webSearch,
+    memory,
+    onStreamMessage,
+  }) => {
     const resolvedFetcher = fetcher ?? getDefaultFetcher();
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -168,7 +179,7 @@ export function createApiAgentTransport({
     const response = await resolvedFetcher(endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ content, createdAt, pageSnapshot }),
+      body: JSON.stringify({ content, createdAt, pageSnapshot, modelMode, webSearch, memory }),
     });
 
     if (!response.ok) {
