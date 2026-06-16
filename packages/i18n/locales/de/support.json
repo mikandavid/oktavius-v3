@@ -101,8 +101,6 @@
   "replyPlaceholder": "Antwort schreiben…",
   "issuesTitle": "Tickets",
   "issuesDescription": "Tickets der gesamten Organisation sichten und beantworten.",
-  "filterPriorityAll": "Alle Prioritäten",
-  "filterCategoryAll": "Alle Kategorien",
   "statusFieldLabel": "Status",
   "priorityFieldLabel": "Priorität",
   "triageStatusUpdated": "Status aktualisiert.",
