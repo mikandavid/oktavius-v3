@@ -16,6 +16,8 @@ import {
   CatalogOptionsManager,
 } from '@/components/settings/CatalogOptionsManager';
 import { LocationPolicySettingsSection } from '@/components/settings/LocationPolicySettingsSection';
+import { MembersPeopleSection } from '@/components/settings/members/MembersPeopleSection';
+import { MembersRolesSection } from '@/components/settings/members/MembersRolesSection';
 import { NotificationSettingsSection } from '@/components/settings/NotificationSettingsSection';
 import { OrganizationSettingsSection } from '@/components/settings/OrganizationSettingsSection';
 import { CONTROL_WIDTH, SettingsAutosaveFooter } from '@/components/settings/settingsForm';
@@ -32,10 +34,12 @@ import {
   EmailIcon,
   GlobeIcon,
   LocationIcon,
+  LockIcon,
   NotificationsIcon,
   OrganizationIcon,
   PlusIcon,
   SlidersHorizontalIcon,
+  TeamIcon,
   UserCircleIcon,
   WhatsAppIcon,
 } from '@/lib/icons';
@@ -448,6 +452,26 @@ export function SettingsPage() {
           onChange={handleWorkspaceSettingsChange}
         />
       ),
+    },
+    {
+      id: 'people',
+      group: 'Workspace',
+      label: 'People',
+      icon: <TeamIcon size={16} weight="duotone" />,
+      title: 'People',
+      sectionDescription: 'Members, pending invitations, and invite links for this workspace.',
+      permission: 'org.members.manage',
+      render: () => <MembersPeopleSection />,
+    },
+    {
+      id: 'roles',
+      group: 'Workspace',
+      label: 'Roles',
+      icon: <LockIcon size={16} weight="duotone" />,
+      title: 'Custom roles',
+      sectionDescription: 'Organization-specific permission roles.',
+      permission: 'org.members.manage',
+      render: () => <MembersRolesSection />,
     },
     {
       id: 'ai',
