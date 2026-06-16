@@ -126,18 +126,18 @@ function IdentityPill({ children }: { children: ReactNode }) {
 
 export function IdentityPills({
   orgName,
-  role,
+  roleLabel,
 }: {
   orgName?: string | null;
-  role?: string | null;
+  roleLabel?: string | null;
 }) {
-  if (!orgName && !role) {
+  if (!orgName && !roleLabel) {
     return null;
   }
   return (
     <div className="flex flex-wrap gap-1.5 px-2 pb-2 pt-1">
       {orgName ? <IdentityPill>{orgName}</IdentityPill> : null}
-      {role ? <IdentityPill>{role}</IdentityPill> : null}
+      {roleLabel ? <IdentityPill>{roleLabel}</IdentityPill> : null}
     </div>
   );
 }

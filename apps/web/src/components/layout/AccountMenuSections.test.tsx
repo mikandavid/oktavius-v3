@@ -95,16 +95,14 @@ describe('LanguageMenuRow', () => {
 
 describe('IdentityPills', () => {
   it('renders org and role pills when both present', () => {
-    // eslint-disable-next-line jsx-a11y/aria-role -- `role` is a domain prop on IdentityPills, not an ARIA role.
-    renderRow(<IdentityPills orgName="Texterous" role="Owner" />);
+    renderRow(<IdentityPills orgName="Texterous" roleLabel="Owner" />);
     const text = container.textContent ?? '';
     expect(text).toContain('Texterous');
     expect(text).toContain('Owner');
   });
 
   it('renders nothing when both are absent', () => {
-    // eslint-disable-next-line jsx-a11y/aria-role -- `role` is a domain prop on IdentityPills, not an ARIA role.
-    renderRow(<IdentityPills orgName={null} role={null} />);
+    renderRow(<IdentityPills orgName={null} roleLabel={null} />);
     expect(container.textContent).toBe('');
   });
 });
