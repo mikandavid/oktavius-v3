@@ -121,10 +121,12 @@ function PreferenceRow({ label, children }: { label: string; children: ReactNode
 
 export function ThemeMenuRow() {
   const { theme, setTheme } = useUserPreferences();
+  const { t } = useTranslation();
+  const label = t('common.theme', undefined, 'Theme');
   return (
-    <PreferenceRow label="Theme">
+    <PreferenceRow label={label}>
       <SegmentedToggle
-        ariaLabel="Theme"
+        ariaLabel={label}
         value={theme}
         onChange={(value) => setTheme(value as UiTheme)}
         options={UI_THEME_OPTIONS.map((option) => ({
