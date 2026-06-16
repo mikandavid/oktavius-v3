@@ -40,6 +40,8 @@ export function OrganizationMenuSection({
   onSelectOrg,
   organizations,
 }: OrganizationMenuSectionProps) {
+  const { t } = useTranslation();
+  const orgLabel = t('common.organization', undefined, 'Organisation');
   const activeOrg = organizations.find((org) => org.id === activeOrgId) ?? organizations[0];
   const isReadOnly = !onSelectOrg;
 
@@ -51,7 +53,7 @@ export function OrganizationMenuSection({
     return (
       <div className="flex items-center gap-2 px-2 py-1.5 text-sm">
         <OrganizationLogo name={activeOrg?.name} logoUrl={activeOrg?.logoUrl} />
-        <span className="min-w-0 flex-1 truncate text-left text-foreground">Organisation</span>
+        <span className="min-w-0 flex-1 truncate text-left text-foreground">{orgLabel}</span>
         <span className="min-w-0 max-w-[45%] truncate text-right text-xs text-muted-foreground">
           {activeOrg?.name}
         </span>
@@ -62,7 +64,7 @@ export function OrganizationMenuSection({
   return (
     <AccountSubmenu
       icon={<OrganizationLogo name={activeOrg?.name} logoUrl={activeOrg?.logoUrl} />}
-      label="Organisation"
+      label={orgLabel}
       hint={activeOrg?.name}
     >
       {organizations.map((org) => {
@@ -143,9 +145,9 @@ export function IdentityPills({
 }
 
 const THEME_ICON: Record<UiTheme, ReactNode> = {
-  light: <SunIcon size={13} className="text-muted-foreground" />,
-  dark: <MoonIcon size={13} className="text-muted-foreground" />,
-  system: <SystemThemeIcon size={13} className="text-muted-foreground" />,
+  light: <SunIcon size={13} />,
+  dark: <MoonIcon size={13} />,
+  system: <SystemThemeIcon size={13} />,
 };
 
 function PreferenceRow({ label, children }: { label: string; children: ReactNode }) {
