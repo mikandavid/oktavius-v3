@@ -37,13 +37,20 @@ export function useContact(id: string | null) {
     queryKey: contactsKeys.detail(org, id ?? ''),
     queryFn: () => client.getContact(id as string),
     enabled: Boolean(id),
-    // Render instantly from the already-loaded list while the full record refetches.
+    // Render instantly from any already-loaded contacts list while the full record
+    // refetches. Org-agnostic so it still hits on a fresh deep-link where activeOrgId
+    // has not resolved yet (the org-scoped key would otherwise miss).
     placeholderData: () => {
       if (!id) return undefined;
-      const list = queryClient.getQueryData<ListContactsResult>(
-        contactsKeys.list(org, LIST_PARAMS),
-      );
-      return list?.data.find((contact) => contact.id === id);
+      const lists = queryClient.getQueriesData<ListContactsResult>({ queryKey: ['contacts'] });
+      for (const [, data] of lists) {
+        const rows = data?.data;
+        if (Array.isArray(rows)) {
+          const found = rows.find((contact) => contact.id === id);
+          if (found) return found;
+        }
+      }
+      return undefined;
     },
   });
 }
