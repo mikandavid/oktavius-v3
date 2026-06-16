@@ -145,9 +145,176 @@ describe('createSupportClient', () => {
     expect(result[0]!.createdAt).toBe('2026-01-01T00:00:00Z');
   });
 
-  it('updateStatus throws NOT_IMPLEMENTED (scaffold)', async () => {
-    const client = createSupportClient({ baseUrl: BASE });
-    await expect(client.updateStatus('t1', 'resolved')).rejects.toThrow('NOT_IMPLEMENTED');
-    expect(fetchMock).not.toHaveBeenCalled();
+  describe('triage mutations', () => {
+    it('updateStatus PATCHes the ticket with status only', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          id: 't1',
+          status: 'in_progress',
+          user_id: 'u1',
+          user_email: 'a@b.c',
+          subject: 's',
+          message: 'm',
+          category: 'bug',
+          priority: 'normal',
+          source: 'web',
+          tags: [],
+          created_at: '',
+          updated_at: '',
+        }),
+      );
+      const client = createSupportClient({ baseUrl: BASE });
+      const ticket = await client.updateStatus('t1', 'in_progress');
+      const [url, init] = fetchMock.mock.calls[0]!;
+      expect(url).toContain('/support/tickets/t1');
+      expect((init as RequestInit).method).toBe('PATCH');
+      expect(JSON.parse((init as RequestInit).body as string)).toEqual({ status: 'in_progress' });
+      expect(ticket.status).toBe('in_progress');
+    });
+
+    it('updatePriority PATCHes priority only', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          id: 't1',
+          priority: 'high',
+          user_id: 'u1',
+          user_email: 'a@b.c',
+          subject: 's',
+          message: 'm',
+          category: 'bug',
+          status: 'open',
+          source: 'web',
+          tags: [],
+          created_at: '',
+          updated_at: '',
+        }),
+      );
+      const client = createSupportClient({ baseUrl: BASE });
+      await client.updatePriority('t1', 'high');
+      const [, init] = fetchMock.mock.calls[0]!;
+      expect(JSON.parse((init as RequestInit).body as string)).toEqual({ priority: 'high' });
+    });
+
+    it('assign PATCHes assigneeUserId (null clears)', async () => {
+      const ticketStub = {
+        id: 't1',
+        user_id: 'u1',
+        user_email: 'a@b.c',
+        subject: 's',
+        message: 'm',
+        category: 'bug',
+        status: 'open',
+        priority: 'normal',
+        source: 'web',
+        tags: [],
+        created_at: '',
+        updated_at: '',
+      };
+      fetchMock.mockResolvedValueOnce(jsonResponse(ticketStub));
+      fetchMock.mockResolvedValueOnce(jsonResponse(ticketStub));
+      const client = createSupportClient({ baseUrl: BASE });
+
+      // positive case: assigning a user
+      await client.assign('t1', 'u1');
+      const [, initPositive] = fetchMock.mock.calls[0]!;
+      expect(JSON.parse((initPositive as RequestInit).body as string)).toEqual({
+        assigneeUserId: 'u1',
+      });
+
+      // null case: clearing the assignee
+      await client.assign('t1', null);
+      const [, initNull] = fetchMock.mock.calls[1]!;
+      expect(JSON.parse((initNull as RequestInit).body as string)).toEqual({
+        assigneeUserId: null,
+      });
+    });
+
+    it('resolve POSTs to the resolve endpoint with the message', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          id: 't1',
+          status: 'resolved',
+          user_id: 'u1',
+          user_email: 'a@b.c',
+          subject: 's',
+          message: 'm',
+          category: 'bug',
+          priority: 'normal',
+          source: 'web',
+          tags: [],
+          created_at: '',
+          updated_at: '',
+        }),
+      );
+      const client = createSupportClient({ baseUrl: BASE });
+      await client.resolve('t1', 'Fixed in build 42.');
+      const [url, init] = fetchMock.mock.calls[0]!;
+      expect(url).toContain('/support/tickets/t1/resolve');
+      expect((init as RequestInit).method).toBe('POST');
+      expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+        resolutionMessage: 'Fixed in build 42.',
+      });
+    });
+
+    it('addComment forwards isInternal', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          id: 'c1',
+          ticket_id: 't1',
+          user_id: 'u1',
+          message: 'internal note',
+          is_internal: true,
+          created_at: '',
+          updated_at: '',
+        }),
+      );
+      const client = createSupportClient({ baseUrl: BASE });
+      await client.addComment('t1', 'internal note', true);
+      const [, init] = fetchMock.mock.calls[0]!;
+      expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+        message: 'internal note',
+        isInternal: true,
+      });
+    });
+
+    it('listAssignees normalizes the data array', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({ data: [{ user_id: 'u1', name: 'Ada', email: 'ada@x.io' }] }),
+      );
+      const client = createSupportClient({ baseUrl: BASE });
+      const assignees = await client.listAssignees();
+      const url = fetchMock.mock.calls[0]![0] as string;
+      expect(url).toContain('/support/assignees');
+      expect(assignees).toEqual([{ userId: 'u1', name: 'Ada', email: 'ada@x.io' }]);
+    });
+
+    it('normalizeTicket maps assignee + automation fields', async () => {
+      fetchMock.mockResolvedValueOnce(
+        jsonResponse({
+          id: 't1',
+          user_id: 'u1',
+          user_email: 'a@b.c',
+          subject: 's',
+          message: 'm',
+          category: 'bug',
+          status: 'open',
+          priority: 'normal',
+          source: 'web',
+          tags: [],
+          created_at: '',
+          updated_at: '',
+          assignee_user_id: 'u1',
+          assignee_name: 'Ada',
+          automation_status: 'pr_created',
+          automation_pr_url: 'https://gh/pr/1',
+        }),
+      );
+      const client = createSupportClient({ baseUrl: BASE });
+      const ticket = await client.getTicket('t1');
+      expect(ticket.assigneeUserId).toBe('u1');
+      expect(ticket.assigneeName).toBe('Ada');
+      expect(ticket.automationStatus).toBe('pr_created');
+      expect(ticket.automationPrUrl).toBe('https://gh/pr/1');
+    });
   });
 });

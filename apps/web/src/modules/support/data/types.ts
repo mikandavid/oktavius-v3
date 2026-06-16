@@ -3,6 +3,14 @@ export type SupportStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 export type SupportPriority = 'low' | 'normal' | 'high' | 'urgent';
 export type SupportSource = 'web' | 'agent' | 'email';
 
+export type SupportAutomationStatus =
+  | 'not_requested'
+  | 'queued'
+  | 'pr_created'
+  | 'needs_input'
+  | 'no_changes'
+  | 'failed';
+
 export type SupportTicket = {
   id: string;
   orgId: string | null;
@@ -20,6 +28,13 @@ export type SupportTicket = {
   resolutionMessage: string | null;
   resolvedAt: string | null;
   resolvedBy: string | null;
+  assigneeUserId: string | null;
+  assigneeName: string | null;
+  automationStatus: SupportAutomationStatus | null;
+  automationPrUrl: string | null;
+  automationBranchName: string | null;
+  automationWorkflowRunUrl: string | null;
+  automationError: string | null;
   currentPageUrl: string | null;
   agentConversationId: string | null;
   createdAt: string;
@@ -36,6 +51,12 @@ export interface SupportComment {
   isInternal: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SupportAssignee {
+  userId: string;
+  name: string;
+  email: string;
 }
 
 export interface SupportStats {
