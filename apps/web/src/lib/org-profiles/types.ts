@@ -7,7 +7,6 @@ export type OrgModuleId =
   | 'email'
   | 'calendar'
   | 'storage'
-  | 'members'
   | 'settings'
   | 'showcase'
   | 'support';

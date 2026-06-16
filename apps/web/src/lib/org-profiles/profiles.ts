@@ -7,7 +7,6 @@ const DEFAULT_ORG_MODULES: OrgModuleId[] = [
   'email',
   'calendar',
   'storage',
-  'members',
   'settings',
   'support',
 ];
