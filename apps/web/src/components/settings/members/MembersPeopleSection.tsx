@@ -30,9 +30,11 @@ export function MembersPeopleSection() {
   const rolesQuery = useCustomRoles();
   const mutations = useMembersMutations();
 
-  const members = useMemo(() => membersQuery.data ?? [], [membersQuery.data]);
-  const invitations = useMemo(() => invitationsQuery.data ?? [], [invitationsQuery.data]);
-  const links = useMemo(() => linksQuery.data ?? [], [linksQuery.data]);
+  const members = membersQuery.data ?? [];
+  const invitations = invitationsQuery.data ?? [];
+  const links = linksQuery.data ?? [];
+  // Memoized because roleOptions derives from it; a fresh `?? []` each render
+  // would otherwise re-run buildRoleOptions on every render.
   const customRoles = useMemo(() => rolesQuery.data ?? [], [rolesQuery.data]);
   const roleOptions = useMemo(() => buildRoleOptions(customRoles), [customRoles]);
 
@@ -98,7 +100,6 @@ export function MembersPeopleSection() {
       <section className="space-y-4">
         <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={() => setInviteOpen(true)}>
-            {}
             <UserAddIcon size={14} className="mr-1.5" aria-hidden="true" />
             Invite member
           </Button>
@@ -113,13 +114,11 @@ export function MembersPeopleSection() {
       </section>
 
       <section className="space-y-3">
-        {}
         <h3 className="text-sm font-semibold text-foreground">Pending invitations</h3>
         <InvitationsSection invitations={invitations} onRevoke={handleRevokeInvitation} />
       </section>
 
       <section className="space-y-3">
-        {}
         <h3 className="text-sm font-semibold text-foreground">Invite links</h3>
         <InviteLinksSection
           links={links}
