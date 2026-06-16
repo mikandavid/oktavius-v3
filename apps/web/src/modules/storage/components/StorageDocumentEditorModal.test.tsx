@@ -27,6 +27,8 @@ const node: StorageNode = {
 
 const save = vi.fn().mockResolvedValue({ ...node, id: 'n2' });
 
+let textData: string | undefined = '# Notes';
+
 vi.mock('@oktavius/base-ui', async (importOriginal) => {
   const actual = await importOriginal<typeof BaseUi>();
   return {
@@ -39,7 +41,7 @@ vi.mock('@oktavius/base-ui', async (importOriginal) => {
 
 vi.mock('../data/useStorageData', () => ({
   useStorageNode: () => ({ data: node, isLoading: false, error: null }),
-  useFileTextContent: () => ({ data: '# Notes', isLoading: false, error: null }),
+  useFileTextContent: () => ({ data: textData, isLoading: false, error: null }),
   useSaveTextFile: () => ({ mutateAsync: save, isPending: false }),
 }));
 
@@ -49,6 +51,7 @@ let root: Root;
 beforeEach(() => {
   vi.useFakeTimers();
   save.mockClear();
+  textData = '# Notes';
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
@@ -125,5 +128,21 @@ describe('StorageDocumentEditorModal', () => {
       vi.advanceTimersByTime(2000);
     });
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite in-progress edits when server content refetches', async () => {
+    renderModal();
+    const textarea = document.querySelector<HTMLTextAreaElement>('[data-testid="md"]')!;
+    act(() => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
+      setter.call(textarea, '# my local edit');
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    // Simulate a refetch returning different server content while still dirty
+    // (do NOT advance timers, so no save/flush has run yet — doc is dirty).
+    textData = '# different server text';
+    renderModal(); // re-render; the load effect must NOT adopt the new server text
+    const after = document.querySelector<HTMLTextAreaElement>('[data-testid="md"]')!;
+    expect(after.value).toBe('# my local edit');
   });
 });

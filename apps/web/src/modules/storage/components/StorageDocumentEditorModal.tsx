@@ -32,13 +32,14 @@ export function StorageDocumentEditorModal({
   const dirtyRef = useRef(false);
 
   // Load text into local state once it arrives (and when switching files).
+  // Skip while the user has unsaved edits or a save is in flight, so a refetch
+  // triggered by the post-save node-id remap can't stomp in-progress keystrokes.
   useEffect(() => {
-    if (contentQuery.data !== undefined) {
-      setMarkdown(contentQuery.data);
-      setStatus('idle');
-      dirtyRef.current = false;
-    }
-  }, [contentQuery.data]);
+    if (contentQuery.data === undefined) return;
+    if (dirtyRef.current || status === 'saving') return;
+    setMarkdown(contentQuery.data);
+    setStatus('idle');
+  }, [contentQuery.data, status]);
 
   const flush = async (current: string) => {
     if (!node || !dirtyRef.current) return;
