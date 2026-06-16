@@ -1,4 +1,4 @@
-// apps/web/src/modules/members/shared.tsx
+// apps/web/src/components/settings/members/shared.tsx
 import type { BadgeProps, ComboboxOption } from '@oktavius/base-ui';
 import { formatDisplayDate } from '@oktavius/base-ui';
 

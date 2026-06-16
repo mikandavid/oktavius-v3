@@ -1,4 +1,4 @@
-// apps/web/src/modules/members/InviteLinksSection.tsx
+// apps/web/src/components/settings/members/InviteLinksSection.tsx
 import { Button, SettingsTable, type SettingsTableColumn } from '@oktavius/base-ui';
 import { useState } from 'react';
 

@@ -6,6 +6,24 @@ import { PageHeaderCtaButton } from '@/components/common/PageHeaderButtons';
 import { ModulePage } from '@/components/common/PageLayout';
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormFieldValue } from '@/components/forms/EntityForm';
+import { CustomRolesSection } from '@/components/settings/members/CustomRolesSection';
+import {
+  useCustomRoles,
+  useInvitations,
+  useInviteLinks,
+  useMembers,
+  useMembersMutations,
+} from '@/components/settings/members/data/useMembersData';
+import { InvitationsSection } from '@/components/settings/members/InvitationsSection';
+import { InviteLinksSection } from '@/components/settings/members/InviteLinksSection';
+import { MembersSection } from '@/components/settings/members/MembersSection';
+import {
+  buildRoleOptions,
+  CUSTOM_ROLE_FORM_FIELDS,
+  INVITE_LINK_FORM_FIELDS,
+  inviteFormFields,
+  roleValueToInput,
+} from '@/components/settings/members/shared';
 import {
   SettingsPageFactory,
   type SettingsSectionConfig,
@@ -13,25 +31,6 @@ import {
 import { LinkIcon, LockIcon, TeamIcon, UserAddIcon } from '@/lib/icons';
 import { membersPageIcon } from '@/lib/modulePageIcons';
 import type { OsirisCustomRole } from '@/runtime/osiris/customRolesAdminClient';
-
-import { CustomRolesSection } from './CustomRolesSection';
-import {
-  useCustomRoles,
-  useInvitations,
-  useInviteLinks,
-  useMembers,
-  useMembersMutations,
-} from './data/useMembersData';
-import { InvitationsSection } from './InvitationsSection';
-import { InviteLinksSection } from './InviteLinksSection';
-import { MembersSection } from './MembersSection';
-import {
-  buildRoleOptions,
-  CUSTOM_ROLE_FORM_FIELDS,
-  INVITE_LINK_FORM_FIELDS,
-  inviteFormFields,
-  roleValueToInput,
-} from './shared';
 
 export function MembersPage() {
   const membersQuery = useMembers();

@@ -1,4 +1,4 @@
-// apps/web/src/modules/members/MembersSection.test.tsx
+// apps/web/src/components/settings/members/MembersSection.test.tsx
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';

@@ -1,4 +1,4 @@
-// apps/web/src/modules/members/MembersSection.tsx
+// apps/web/src/components/settings/members/MembersSection.tsx
 import { useMemo, useState } from 'react';
 
 import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';

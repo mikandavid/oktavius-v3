@@ -34,13 +34,13 @@ vi.mock('@/lib/locations/ActiveLocationContext', () => ({
   }),
 }));
 
+import { membersKeys } from '@/components/settings/members/data/membersKeys';
 import { TestI18nProvider } from '@/core/i18n';
 import {
   OsirisRuntimeContext,
   type OsirisRuntimeContextValue,
 } from '@/runtime/osiris/useOsirisRuntime';
 
-import { membersKeys } from './data/membersKeys';
 import { MembersPage } from './MembersPage';
 
 type MemberRowData = { fullName: string };

@@ -1,4 +1,4 @@
-// apps/web/src/modules/members/CustomRolesSection.tsx
+// apps/web/src/components/settings/members/CustomRolesSection.tsx
 import { Button, SettingsTable, type SettingsTableColumn } from '@oktavius/base-ui';
 import { useState } from 'react';
 
