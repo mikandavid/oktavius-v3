@@ -68,6 +68,14 @@ export function StorageDocumentEditorModal({
     onClose();
   };
 
+  // Cancel any pending autosave if the modal unmounts without going through handleClose.
+  useEffect(
+    () => () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    },
+    [],
+  );
+
   // Warn before unloading the tab while a save is pending (native beforeunload is
   // the only permitted native dialog).
   useEffect(() => {
@@ -88,7 +96,9 @@ export function StorageDocumentEditorModal({
         ? t('storage.editor.saved')
         : status === 'dirty'
           ? t('storage.editor.unsaved')
-          : '';
+          : status === 'error'
+            ? t('storage.editor.saveFailed')
+            : '';
 
   return (
     <Dialog open={Boolean(nodeId)} onOpenChange={(value) => (!value ? handleClose() : undefined)}>
@@ -103,6 +113,7 @@ export function StorageDocumentEditorModal({
           </span>
           <button
             type="button"
+            data-testid="editor-close"
             aria-label={t('storage.editor.close')}
             className="text-muted-foreground hover:text-foreground"
             onClick={handleClose}

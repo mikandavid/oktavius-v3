@@ -96,4 +96,34 @@ describe('StorageDocumentEditorModal', () => {
     expect(save.mock.calls[0]![0].markdown).toBe('# Notes edited');
     expect(onNodeIdChange).toHaveBeenCalledWith('n2');
   });
+
+  it('flushes a pending save when closed before the debounce elapses', async () => {
+    const onClose = vi.fn();
+    renderModal(vi.fn(), onClose);
+
+    const textarea = document.querySelector<HTMLTextAreaElement>('[data-testid="md"]')!;
+    act(() => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!;
+      setter.call(textarea, '# closing edit');
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    // Close BEFORE advancing past the 1500ms debounce.
+    const closeBtn = document.querySelector<HTMLButtonElement>('[data-testid="editor-close"]')!;
+    await act(async () => {
+      closeBtn.click();
+    });
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0]![0].markdown).toBe('# closing edit');
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it('does not save when the document was not edited', async () => {
+    renderModal();
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(save).not.toHaveBeenCalled();
+  });
 });
