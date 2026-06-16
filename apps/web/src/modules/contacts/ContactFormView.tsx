@@ -29,6 +29,20 @@ export function ContactFormView({ mode, contactId }: ContactFormViewProps) {
   const fields = useMemo(() => contactFormFields(t, categories ?? []), [t, categories]);
   const cancelHref = mode === 'edit' && contactId ? `/contacts?id=${contactId}` : '/contacts';
 
+  if (mode === 'edit' && existing.isError) {
+    return (
+      <ModulePage
+        title={t('contacts.notFoundTitle', undefined, 'Contact not found')}
+        icon={modulePageIcon(UserCircleIcon)}
+        backTo={cancelHref}
+      >
+        <p className="text-sm text-muted-foreground">
+          {t('contacts.notFoundDescription', undefined, 'This contact may have been deleted.')}
+        </p>
+      </ModulePage>
+    );
+  }
+
   if (mode === 'edit' && !existing.data) {
     return (
       <ModulePage
@@ -78,11 +92,7 @@ export function ContactFormView({ mode, contactId }: ContactFormViewProps) {
       backTo={cancelHref}
     >
       <EntityForm<ContactInput>
-        title={
-          mode === 'create'
-            ? t('contacts.newContact', undefined, 'New contact')
-            : t('contacts.editTitle', undefined, 'Edit contact')
-        }
+        title=""
         showHeader={false}
         surface="page"
         fields={fields}
