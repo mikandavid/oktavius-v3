@@ -249,33 +249,34 @@ export function AgentChatShell({ mode, className, onCloseHistory }: AgentChatShe
     setIsVoiceRecording(false);
     setIsAssistantPending(true);
 
-    window.setTimeout(() => {
-      const pageSnapshot = captureAgentPageContext(document, window.location.href, pageContext);
-      void runAgentTurn({
-        content,
-        createdAt: new Date().toISOString(),
-        pageSnapshot,
-        transport: agentTransport,
-        onStreamMessage: (message) => {
-          if (targetConversationId) {
-            appendToConversation(targetConversationId, [message]);
-          }
-        },
+    const pageSnapshot = captureAgentPageContext(document, window.location.href, pageContext);
+    void runAgentTurn({
+      content,
+      createdAt: new Date().toISOString(),
+      pageSnapshot,
+      modelMode,
+      webSearch: webSearchMode,
+      memory: instructionUpdateMode,
+      transport: agentTransport,
+      onStreamMessage: (message) => {
+        if (targetConversationId) {
+          appendToConversation(targetConversationId, [message]);
+        }
+      },
+    })
+      .then((followUp) => {
+        if (targetConversationId) {
+          appendToConversation(targetConversationId, followUp);
+        }
       })
-        .then((followUp) => {
-          if (targetConversationId) {
-            appendToConversation(targetConversationId, followUp);
-          }
-        })
-        .catch((error: unknown) => {
-          appToast.fromApiError(error, 'Oktavius could not complete the request.');
-        })
-        .finally(() => {
-          setIsAssistantPending(false);
-          const viewport = scrollRef.current?.parentElement;
-          if (viewport) viewport.scrollTop = viewport.scrollHeight;
-        });
-    }, 900);
+      .catch((error: unknown) => {
+        appToast.fromApiError(error, 'Oktavius could not complete the request.');
+      })
+      .finally(() => {
+        setIsAssistantPending(false);
+        const viewport = scrollRef.current?.parentElement;
+        if (viewport) viewport.scrollTop = viewport.scrollHeight;
+      });
 
     window.setTimeout(() => {
       const viewport = scrollRef.current?.parentElement;
