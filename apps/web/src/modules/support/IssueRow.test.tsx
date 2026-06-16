@@ -1,9 +1,22 @@
+import enSupport from '@oktavius/i18n/locales/en/support.json';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { IssueRow } from './IssueRow';
 import type { TicketRow } from './shared';
+
+// Resolve the real English support strings so aria-label assertions match.
+const support = enSupport as Record<string, string>;
+vi.mock('@/core/i18n', () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const inner = key.startsWith('support.') ? key.slice('support.'.length) : key;
+      return support[inner] ?? key;
+    },
+    language: 'en',
+  }),
+}));
 
 const row: TicketRow = {
   id: 'abc123def456',

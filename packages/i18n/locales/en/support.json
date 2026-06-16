@@ -119,7 +119,6 @@
   "resolveCancel": "Cancel",
   "resolveSuccess": "Ticket resolved.",
   "resolveFailed": "Could not resolve the ticket.",
-  "assigneeLoadFailed": "Could not load assignees.",
   "internalNoteToggle": "Internal note",
   "internalNoteBadge": "Internal",
   "internalNotePlaceholder": "Add an internal note (not visible to the requester)…",

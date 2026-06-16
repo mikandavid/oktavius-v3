@@ -119,7 +119,6 @@
   "resolveCancel": "Abbrechen",
   "resolveSuccess": "Ticket gelöst.",
   "resolveFailed": "Ticket konnte nicht gelöst werden.",
-  "assigneeLoadFailed": "Zuständige konnten nicht geladen werden.",
   "internalNoteToggle": "Interne Notiz",
   "internalNoteBadge": "Intern",
   "internalNotePlaceholder": "Interne Notiz hinzufügen (für den Anfragenden nicht sichtbar)…",

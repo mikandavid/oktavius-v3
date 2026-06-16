@@ -1,6 +1,7 @@
 // IssueRow — one ticket rendered GitHub-issue style. Thin wrapper over base-ui ListRow.
 import { Badge, ListRow, RelativeTime, StatusDot } from '@oktavius/base-ui';
 
+import { useTranslation } from '@/core/i18n';
 import { SuccessIcon } from '@/lib/icons';
 
 import { PRIORITY_VARIANT, type TicketRow } from './shared';
@@ -12,6 +13,7 @@ interface IssueRowProps {
 }
 
 export function IssueRow({ row, onClick, unread = false }: IssueRowProps) {
+  const { t } = useTranslation();
   const shortId = row.id.slice(0, 6);
   const isClosed = row.statusGroup === 'closed';
 
@@ -27,7 +29,7 @@ export function IssueRow({ row, onClick, unread = false }: IssueRowProps) {
         <span
           className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-info"
           role="img"
-          aria-label="Unread activity"
+          aria-label={t('support.unreadIndicator')}
         />
       ) : null}
       <span className="tabular-nums">#{shortId}</span>
