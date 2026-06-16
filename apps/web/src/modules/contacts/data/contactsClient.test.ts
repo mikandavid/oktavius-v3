@@ -44,7 +44,7 @@ describe('contactsClient', () => {
     const client = createContactsClient({ baseUrl: BASE });
     const result = await client.listContacts({ page: 1, pageSize: 100, sort: '-created_at' });
 
-    const url = vi.mocked(fetch).mock.calls[0][0] as string;
+    const url = vi.mocked(fetch).mock.calls[0]![0] as string;
     expect(url).toContain('/contacts?');
     expect(url).toContain('pageSize=100');
     expect(result.total).toBe(1);
@@ -84,7 +84,7 @@ describe('contactsClient', () => {
       notes: '',
     });
 
-    const init = vi.mocked(fetch).mock.calls[0][1] as RequestInit;
+    const init = vi.mocked(fetch).mock.calls[0]![1] as RequestInit;
     expect(init.method).toBe('POST');
     const body = JSON.parse(init.body as string);
     expect(body).toMatchObject({ name: 'Acme GmbH', isBusiness: true, categoryIds: ['cat1'] });
@@ -101,7 +101,7 @@ describe('contactsClient', () => {
     vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 200 }));
     const client = createContactsClient({ baseUrl: BASE });
     await client.deleteContact('c9');
-    const [url, init] = vi.mocked(fetch).mock.calls[0];
+    const [url, init] = vi.mocked(fetch).mock.calls[0]!;
     expect(String(url)).toContain('/contacts/c9');
     expect((init as RequestInit).method).toBe('DELETE');
     expect((init as RequestInit).credentials).toBe('include');
