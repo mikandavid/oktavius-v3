@@ -1,17 +1,18 @@
-import { cn, InlineEmptyState, Skeleton } from '@oktavius/base-ui';
+import { Button, cn, InlineEmptyState, Skeleton } from '@oktavius/base-ui';
 import { useEffect, useMemo, useState } from 'react';
 
 import { CrudTableBulkActionBar } from '@/components/data/CrudTableBulkActionBar';
 import type { BulkAction } from '@/components/data/crudTableTypes';
 import { toggleAllIds, toggleId } from '@/components/data/gridUtils';
 import { useTranslation } from '@/core/i18n';
-import { DeleteIcon, DownloadIcon, MoveToFolderIcon } from '@/lib/icons';
+import { DeleteIcon, DownloadIcon, MoveToFolderIcon, NewFolderIcon, UploadIcon } from '@/lib/icons';
 import type { PermissionSubject } from '@/lib/permissions';
 import { appToast } from '@/lib/toast';
 import { formatUserFacingApiError } from '@/lib/userFacingApiError';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { buildStorageZip } from '../data/downloadZip';
+import { isEditableTextFile } from '../data/textFiles';
 import type { StorageNode } from '../data/types';
 import {
   useFavorites,
@@ -24,9 +25,11 @@ import {
 } from '../data/useStorageData';
 import type { StorageViewState } from '../useStorageViewState';
 import { ConfirmDialog, MoveDialog, NameDialog } from './StorageDialogs';
+import { StorageDocumentEditorModal } from './StorageDocumentEditorModal';
 import { StorageGrid } from './StorageGrid';
 import type { StorageItemActions } from './StorageItemMenu';
 import { StorageList } from './StorageList';
+import { StoragePaneContextMenu } from './StoragePaneContextMenu';
 import { StoragePreviewModal } from './StoragePreviewModal';
 import { StorageToolbar } from './StorageToolbar';
 import { StorageUploadLayer } from './StorageUploadLayer';
@@ -124,14 +127,25 @@ export function StorageMainPane({
   }, []);
 
   const onError = (error: unknown) => appToast.fromApiError(error, t('storage.errors.load'));
+  const openNewFolder = () => setNewFolderOpen(true);
+  const triggerUpload = () => document.dispatchEvent(new CustomEvent('storage:upload'));
+  const isFolderView = state.view === 'folder';
+  const showCreateCta = isFolderView && !state.search.term;
   const nameOf = (id: string) => orderedNodes.find((node) => node.id === id)?.name ?? '';
   const confirmBody = (ids: string[], one: string, many: string) =>
     ids.length === 1 ? t(one, { name: nameOf(ids[0] ?? '') }) : t(many, { count: ids.length });
 
   const actions: StorageItemActions = {
     isStarred: (node) => starredIds.has(node.id),
-    onOpen: (node) =>
-      node.nodeType === 'folder' ? state.openFolder(node.id) : state.setPreviewNodeId(node.id),
+    onOpen: (node) => {
+      if (node.nodeType === 'folder') {
+        state.openFolder(node.id);
+      } else if (isEditableTextFile(node)) {
+        state.setEditingNodeId(node.id);
+      } else {
+        state.setPreviewNodeId(node.id);
+      }
+    },
     onDownload: async (node) => {
       try {
         const url = await client.downloadUrl(node.id);
@@ -237,13 +251,30 @@ export function StorageMainPane({
         permissionSubject={permissionSubject}
       />
       <StorageUploadLayer folderId={state.view === 'folder' ? state.currentFolderId : null}>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]">
+        <StoragePaneContextMenu
+          enabled={isFolderView}
+          onNewFolder={openNewFolder}
+          onUpload={triggerUpload}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-gutter:stable]"
+        >
           {isLoading ? (
             <GridSkeleton />
           ) : orderedNodes.length === 0 ? (
             <InlineEmptyState
               centered
               text={t(state.search.term ? 'storage.empty.search' : `storage.empty.${state.view}`)}
+              action={
+                showCreateCta ? (
+                  <>
+                    <Button variant="outline" onClick={openNewFolder}>
+                      <NewFolderIcon size={16} /> {t('storage.newFolder')}
+                    </Button>
+                    <Button variant="cta" onClick={triggerUpload}>
+                      <UploadIcon size={16} /> {t('storage.actions.upload')}
+                    </Button>
+                  </>
+                ) : undefined
+              }
             />
           ) : state.displayMode === 'grid' ? (
             <StorageGrid
@@ -265,7 +296,7 @@ export function StorageMainPane({
               onOpen={actions.onOpen}
             />
           )}
-        </div>
+        </StoragePaneContextMenu>
       </StorageUploadLayer>
       <StoragePreviewModal
         nodes={orderedNodes}
@@ -277,6 +308,11 @@ export function StorageMainPane({
           state.setPreviewNodeId(null);
           actions.onTrash(node);
         }}
+      />
+      <StorageDocumentEditorModal
+        nodeId={state.editingNodeId}
+        onClose={() => state.setEditingNodeId(null)}
+        onNodeIdChange={(id) => state.setEditingNodeId(id)}
       />
       <NameDialog
         open={newFolderOpen}

@@ -106,6 +106,38 @@ describe('StorageGrid', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it('invokes onOpen with the clicked node', async () => {
+    const actions = makeActions();
+    const editableNode: StorageNode = {
+      ...node,
+      name: 'Readme.md',
+      fileExtension: 'md',
+      mimeType: 'text/markdown',
+    };
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <TestI18nProvider>
+            <StorageGrid
+              nodes={[editableNode]}
+              actions={actions}
+              inTrash={false}
+              selectedIds={[]}
+              onToggleSelect={vi.fn()}
+              onOpen={actions.onOpen}
+            />
+          </TestI18nProvider>
+        </QueryClientProvider>,
+      );
+    });
+    const card = container.querySelector('[role="button"]') as HTMLElement;
+    expect(card).not.toBeNull();
+    await act(async () => {
+      card.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(actions.onOpen).toHaveBeenCalledWith(editableNode);
+  });
+
   it('opens on Enter and toggles selection on Space', async () => {
     const onToggleSelect = vi.fn();
     const onOpen = vi.fn();

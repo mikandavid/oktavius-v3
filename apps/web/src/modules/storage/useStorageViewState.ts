@@ -20,6 +20,8 @@ export interface StorageViewState {
   sort: StorageSort;
   search: { term: string; scope: StorageSearchScope };
   previewNodeId: string | null;
+  editingNodeId: string | null;
+  setEditingNodeId: (id: string | null) => void;
   setView: (view: StorageView) => void;
   openFolder: (folderId: string | null) => void;
   setDisplayMode: (mode: StorageDisplayMode) => void;
@@ -46,6 +48,7 @@ export function useStorageViewState(): StorageViewState {
     scope: 'current',
   });
   const [previewNodeId, setPreviewNodeId] = useState<string | null>(null);
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 
   const setDisplayMode = useCallback(
     (mode: StorageDisplayMode) => {
@@ -89,6 +92,8 @@ export function useStorageViewState(): StorageViewState {
     sort,
     search,
     previewNodeId,
+    editingNodeId,
+    setEditingNodeId,
     setView,
     openFolder,
     setDisplayMode,
