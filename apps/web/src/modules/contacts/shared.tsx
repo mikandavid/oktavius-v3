@@ -4,10 +4,12 @@ import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FilterDef } from '@/components/data/FilterToolbar';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 import type { FormField } from '@/components/forms/EntityForm';
+import type { useTranslation } from '@/core/i18n';
 
 import type { Contact, ContactCategory, ContactInput } from './data/types';
 
-type TFn = (key: string, vars?: Record<string, unknown>, fallback?: string) => string;
+/** The translate function returned by useTranslation — `(key, params?, fallback?) => string`. */
+type TFn = ReturnType<typeof useTranslation>['t'];
 
 export const TYPE_VARIANT: Record<string, BadgeProps['variant']> = {
   business: 'info',
