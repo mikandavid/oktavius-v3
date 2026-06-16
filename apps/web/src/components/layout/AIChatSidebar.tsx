@@ -1,5 +1,5 @@
 import { cn, MouseTooltip } from '@oktavius/base-ui';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { OctopusIcon } from '@/components/agent/OctopusIcon';
 import { APP_SHELL_SURFACE_CLASS } from '@/components/common/pageChrome';
@@ -38,7 +38,7 @@ function readStoredCollapsedState() {
   return stored === 'true';
 }
 
-export function AIChatSidebar() {
+function AIChatSidebarComponent() {
   const [collapsed, setCollapsed] = useState(readStoredCollapsedState);
   const [width, setWidth] = useState(readStoredSidebarWidth);
   const [isResizing, setIsResizing] = useState(false);
@@ -206,3 +206,9 @@ export function AIChatSidebar() {
     </div>
   );
 }
+
+/** Memoized: takes no props, so it never re-renders from AppLayout's
+ *  per-navigation re-render (AppLayout subscribes to useLocation). Combined with
+ *  the stabilized AgentPageContext value, this stops the heavy agent panel from
+ *  re-rendering on every navigation. */
+export const AIChatSidebar = memo(AIChatSidebarComponent);

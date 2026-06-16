@@ -25,14 +25,15 @@ export function AgentPageContextProvider({ children }: { children: ReactNode }) 
     [location.pathname, profile],
   );
 
+  // NOTE: `url`/`search` are intentionally omitted here. They change on every
+  // navigation (incl. list search/filter/sort/pagination via query params), and
+  // including them would re-render every AgentPageContext consumer — notably the
+  // always-mounted agent chat panel — on each keystroke. The live url/search are
+  // read directly from window.location by `captureAgentPageContext` at send time
+  // (see page-routing.ts), so omitting them here changes nothing the agent sees.
   const pageContextMetadata = useMemo<AgentPageContextMetadata>(() => {
-    const currentUrl =
-      typeof window !== 'undefined' && window.location ? window.location.href : location.pathname;
-
     return {
-      url: currentUrl,
       pathname: location.pathname,
-      ...(location.search ? { search: location.search } : {}),
       ...(registration?.moduleId
         ? { moduleId: registration.moduleId }
         : matchedModule
@@ -46,7 +47,7 @@ export function AgentPageContextProvider({ children }: { children: ReactNode }) 
       ...(registration?.routeLabel ? { routeLabel: registration.routeLabel } : {}),
       ...(registration?.primaryEntity ? { primaryEntity: registration.primaryEntity } : {}),
     };
-  }, [location.pathname, location.search, matchedModule, registration]);
+  }, [location.pathname, matchedModule, registration]);
 
   const value = useMemo(
     () => ({
