@@ -17,6 +17,9 @@ export function MembersRolesSection() {
   const [roleOpen, setRoleOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<OsirisCustomRole | null>(null);
 
+  // Intentionally not wrapped in try/catch: on failure the rejection propagates
+  // so SubEntityFormDialog keeps the dialog open; the error surfaces via the
+  // mutation's onError toast. (handleDeleteRole has no dialog, so it swallows.)
   const handleSaveRole = async (values: Record<string, FormFieldValue>) => {
     // TODO(members): permission + module multiselect editors (sent empty for now).
     await mutations.saveCustomRole.mutateAsync({
