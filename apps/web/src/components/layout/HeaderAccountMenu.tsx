@@ -15,9 +15,10 @@ import { appToast } from '@/lib/toast';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import {
-  DesignMenuSection,
-  LanguageMenuSection,
+  IdentityPills,
+  LanguageMenuRow,
   OrganizationMenuSection,
+  ThemeMenuRow,
 } from './AccountMenuSections';
 
 type HeaderAccountMenuProps = {
@@ -89,24 +90,29 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
 
       <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuItem
-          onSelect={() => navigate('/profile')}
+          onSelect={() => navigate('/settings?section=account')}
           className="h-auto flex-col items-start gap-0.5 px-2 py-2 font-normal focus:bg-muted/50"
         >
           <span className="text-sm font-medium leading-tight text-foreground">{userLabel}</span>
           <span className="w-full truncate text-xs leading-tight text-muted-foreground">
             {currentUser.email ?? 'No email'}
           </span>
-          {activeOrg ? (
-            <span className="w-full truncate text-xs leading-tight text-muted-foreground/80">
-              {activeOrg.name}
-              {roleLabel ? ` · ${roleLabel}` : null}
-            </span>
-          ) : (
-            <span className="text-xs leading-tight text-muted-foreground/80">
-              {roleLabel ?? 'No active organization'}
-            </span>
-          )}
         </DropdownMenuItem>
+
+        <IdentityPills orgName={activeOrg?.name ?? null} roleLabel={roleLabel} />
+
+        <DropdownMenuSeparator />
+
+        <div className="px-2 pb-1 pt-1.5 text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground/70">
+          Preferences
+        </div>
+        <ThemeMenuRow />
+        <LanguageMenuRow />
+        <OrganizationMenuSection
+          activeOrgId={activeOrg?.id ?? activeOrgId}
+          organizations={organizations}
+          onSelectOrg={switchOrganization}
+        />
 
         <DropdownMenuSeparator />
 
@@ -114,15 +120,6 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
           <SettingsIcon size={14} />
           Settings
         </DropdownMenuItem>
-        <OrganizationMenuSection
-          activeOrgId={activeOrg?.id ?? activeOrgId}
-          organizations={organizations}
-          onSelectOrg={switchOrganization}
-        />
-        <LanguageMenuSection />
-        <DesignMenuSection />
-
-        <DropdownMenuSeparator />
 
         <DropdownMenuItem
           disabled={!handleSignOut}
