@@ -47,16 +47,20 @@ and on-system. Untouched except the rename in §2.
 
 ### 2. Component-system alignment
 
-- **`ChatComposer` primitive in `@oktavius/base-ui`** that reproduces **today's
-  exact look** (the current colored active toggle states are intentionally
-  preserved — chosen as option A in brainstorming), replacing the raw
-  `<button>` markup currently inline in `OsirisChatShell`. Existing local
-  `ChatComposer` (`layout/ChatComposer`) is promoted/generalized into base-ui.
-- **Shared icon-toggle primitive** (the round on/off pill). Web-search, memory,
-  mic, and model-mode trigger all consume this one component rather than
-  hand-rolled `<button>` + `cn(...)` blocks. It must support: ghost/idle,
-  active (the current tinted+bordered state, including the `info`/`accent`
-  color variants), and disabled.
+- **Shared `IconToggle` primitive in `@oktavius/base-ui`** (the round on/off
+  pill). Web-search, memory, mic, and model-mode trigger all consume this one
+  component rather than the hand-rolled `<button>` + `cn(...)` blocks currently
+  inline in the shell. It reproduces **today's exact look** (option A in
+  brainstorming) and must support: ghost/idle, active (the current
+  tinted+bordered state, including `info`/`accent`/neutral color variants), and
+  disabled. The icon is passed as `children`, so the primitive has no app-icon
+  dependency (mirrors the existing `CalendarViewSwitcher` pattern).
+- **`ChatComposer` stays in apps/web** (`layout/ChatComposer`). It is already a
+  reusable primitive with `leftControls`/`rightControls`/`bottomControls` slots;
+  the drift is in the raw `<button>`s the shell passes into those slots, not in
+  `ChatComposer` itself. Relocating it to base-ui is rejected because it imports
+  app icons (`@/lib/icons`) that base-ui cannot import. The shell's toggles are
+  refactored to use the new base-ui `IconToggle`.
 - **Rename `OsirisChatShell` → `AgentChatShell`** and the file accordingly; drop
   the legacy "osiris" name. Update all imports (`AIChatSidebar`, route(s), any
   `page`/`module` mounts).
@@ -70,14 +74,20 @@ Chosen treatment (brainstorming option: hybrid, assistant-flat):
 
 - **User turns:** tinted bubble, right-aligned (current bubble style retained).
 - **Assistant prose:** flat, full-width — **no** bubble.
-- **All 19 card kinds + confirmation cards:** render inside one shared
-  **borderless white tile** wrapper (`AgentCardTile`) on the tinted wash,
-  matching the V3 surface aesthetic (borderless white tiles, soft shadow, no
-  border). This wrapper is the single shell every card type sits in;
-  `AgentMessageList` routes each `card.kind` / `confirmation` / `ui` payload
-  into it.
-- No new card kinds are introduced; existing card renderers move inside the
-  shared tile wrapper.
+- **Cards — light touch (keeps semantic tone).** A shared **borderless white
+  tile** wrapper (`AgentCardTile`) matching the V3 surface aesthetic (white,
+  soft shadow, no border) is applied to **neutral** cards (entity-list,
+  entity-detail, project-summary, catalog-item, search-results, timeline,
+  action-items, financial, schedule, planner, memory, context-dump,
+  sales-document, document, email-compose). Cards where color carries meaning
+  keep their existing semantic tone and are **not** wrapped: `AgentConfirmationCard`
+  (warning/approved/rejected), `AgentSkillApprovalCard`, `AgentDocProcessingCard`
+  (status), `AgentPythonExecutionCard` (error). This avoids double-wrapping
+  (each card already renders its own container) and preserves signal.
+- `AgentCardTile` is a thin presentational wrapper applied at the
+  `renderAgentCard` call site for neutral kinds; the neutral card components have
+  their own outer border/background removed so the tile is the single container.
+- No new card kinds are introduced.
 
 ### 4. Finish backend wiring (the product layer)
 
@@ -90,12 +100,17 @@ Chosen treatment (brainstorming option: hybrid, assistant-flat):
   Extend `AgentRuntimeRequest` to carry these.
 - **Remove the artificial `setTimeout(…, 900)`** latency in `submitDraft` once
   real streaming is in place.
-- **Confirmation & tool round-trips:** approving/rejecting a confirmation card
-  and returning tool results post back to the backend, not just mutate local
-  message state (`handleConfirmationRespond` currently only flips local status).
 - **Token stats:** surface the existing `AgentTokenStats` (defined in `types.ts`,
-  currently unused) in the UI (e.g. context-usage / token indicator), fed from
-  the stream/response.
+  currently unused) in the UI (a small context/token indicator). The transport
+  parses an optional `tokenStats` field from the stream/response if present and
+  no-ops when absent — fully client-side, no backend dependency.
+- **Confirmation & tool round-trips (deferred, needs API contract):** approving/
+  rejecting a confirmation card currently only flips local status
+  (`handleConfirmationRespond`). Posting the decision back requires the backend's
+  confirmation endpoint shape, which is not yet known. This sub-task is **carved
+  out of this plan** and added once the endpoint contract is provided; the
+  client keeps a clear callback seam (`onConfirmationRespond`) so wiring it later
+  touches only one function.
 
 ### Conversation storage (confirmed assumption)
 
@@ -115,14 +130,14 @@ conversations are **explicitly out of scope** for this round.
 
 ## Components / units
 
-| Unit                                     | Purpose                                                                            | Depends on                                                |
-| ---------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `ChatComposer` (base-ui)                 | Reusable composer input + toolbar, current look                                    | icon-toggle primitive, base-ui Button/DropdownMenu        |
-| icon-toggle primitive (base-ui)          | Round on/off control with idle/active/disabled states                              | base-ui tokens                                            |
-| `AgentChatShell` (was `OsirisChatShell`) | Chat column + history orchestration; page/sidebar/module modes                     | ChatComposer, AgentMessageList, chatStorage, agentRuntime |
-| `AgentCardTile`                          | Single borderless-white-tile wrapper for all card/confirmation/ui payloads         | base-ui surface tokens                                    |
-| `AgentMessageList`                       | Routes messages → bubble (user) / flat prose (assistant) / `AgentCardTile` (cards) | AgentCardTile                                             |
-| `agentRuntime`                           | Transport + `runAgentTurn`; streaming + request enrichment                         | AgentRuntimeRequest types                                 |
+| Unit                                     | Purpose                                                                                  | Depends on                                                            |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `IconToggle` (base-ui)                   | Round on/off control; idle/active/disabled; info/accent/neutral tones; icon via children | base-ui tokens, `cn`                                                  |
+| `ChatComposer` (apps/web, stays put)     | Reusable composer input + toolbar slots                                                  | base-ui `cn`, app icons                                               |
+| `AgentChatShell` (was `OsirisChatShell`) | Chat column + history orchestration; modes; toggles now use `IconToggle`                 | ChatComposer, IconToggle, AgentMessageList, chatStorage, agentRuntime |
+| `AgentCardTile` (apps/web)               | Borderless-white-tile wrapper for **neutral** cards only                                 | base-ui surface tokens                                                |
+| `AgentMessageList`                       | Routes user→bubble, assistant→flat, neutral cards→tile, semantic cards→keep tone         | AgentCardTile, renderAgentCard                                        |
+| `agentRuntime`                           | Transport + `runAgentTurn`; forwards `onStreamMessage` + request enrichment              | AgentRuntimeRequest types                                             |
 
 ## Data flow
 
