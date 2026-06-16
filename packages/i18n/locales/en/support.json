@@ -101,8 +101,6 @@
   "replyPlaceholder": "Write a reply…",
   "issuesTitle": "Issues",
   "issuesDescription": "Triage and respond to tickets across the organization.",
-  "countOpen": "{{count}} Open",
-  "countClosed": "{{count}} Closed",
   "filterPriorityAll": "All priorities",
   "filterCategoryAll": "All categories",
   "statusFieldLabel": "Status",

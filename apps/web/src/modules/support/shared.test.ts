@@ -37,15 +37,7 @@ const base: SupportTicket = {
   updatedAt: '2026-06-16T00:00:00Z',
 };
 
-describe('toTicketRow statusGroup', () => {
-  it('maps open and in_progress to "open"', () => {
-    expect(toTicketRow({ ...base, status: 'open' }, t).statusGroup).toBe('open');
-    expect(toTicketRow({ ...base, status: 'in_progress' }, t).statusGroup).toBe('open');
-  });
-  it('maps resolved and closed to "closed"', () => {
-    expect(toTicketRow({ ...base, status: 'resolved' }, t).statusGroup).toBe('closed');
-    expect(toTicketRow({ ...base, status: 'closed' }, t).statusGroup).toBe('closed');
-  });
+describe('toTicketRow', () => {
   it('uses requester name fallback to email', () => {
     expect(toTicketRow({ ...base, userName: null }, t).requester).toBe('a@b.c');
   });

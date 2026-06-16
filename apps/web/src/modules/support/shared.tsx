@@ -4,7 +4,7 @@ import type { CrudColumn } from '@/components/data/CrudTable';
 import type { FilterDef } from '@/components/data/FilterToolbar';
 import { StatusBadge } from '@/components/feedback/StatusBadge';
 
-import type { SupportStatus, SupportTicket } from './data/types';
+import type { SupportTicket } from './data/types';
 
 export const STATUS_VARIANT: Record<string, BadgeProps['variant']> = {
   open: 'info',
@@ -20,19 +20,12 @@ export const PRIORITY_VARIANT: Record<string, BadgeProps['variant']> = {
   low: 'outline',
 };
 
-export type StatusGroup = 'open' | 'closed';
-
-export function statusGroupOf(status: SupportStatus): StatusGroup {
-  return status === 'open' || status === 'in_progress' ? 'open' : 'closed';
-}
-
 /** Row shape consumed by useListPageState (requires `id`). */
 export type TicketRow = SupportTicket & {
   requester: string;
   statusLabel: string;
   priorityLabel: string;
   categoryLabel: string;
-  statusGroup: StatusGroup;
 };
 
 export function toTicketRow(ticket: SupportTicket, t: (key: string) => string): TicketRow {
@@ -42,7 +35,6 @@ export function toTicketRow(ticket: SupportTicket, t: (key: string) => string): 
     statusLabel: t(`support.statusLabel_${ticket.status}`),
     priorityLabel: t(`support.priorityLabel_${ticket.priority}`),
     categoryLabel: t(`support.categoryLabel_${ticket.category}`),
-    statusGroup: statusGroupOf(ticket.status),
   };
 }
 
