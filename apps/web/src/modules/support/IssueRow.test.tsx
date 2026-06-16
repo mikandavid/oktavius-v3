@@ -70,4 +70,20 @@ describe('IssueRow', () => {
     act(() => clickable.click());
     expect(clicked).toBe('abc123def456');
   });
+
+  it('shows an unread indicator when unread', () => {
+    act(() => {
+      root.render(<IssueRow row={row} onClick={() => {}} unread />);
+    });
+    const dot = container.querySelector('[aria-label="Unread activity"]');
+    expect(dot).not.toBeNull();
+  });
+
+  it('omits the unread indicator when read', () => {
+    act(() => {
+      root.render(<IssueRow row={row} onClick={() => {}} unread={false} />);
+    });
+    const dot = container.querySelector('[aria-label="Unread activity"]');
+    expect(dot).toBeNull();
+  });
 });

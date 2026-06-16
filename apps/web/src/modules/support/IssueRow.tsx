@@ -8,9 +8,10 @@ import { PRIORITY_VARIANT, type TicketRow } from './shared';
 interface IssueRowProps {
   row: TicketRow;
   onClick: (id: string) => void;
+  unread?: boolean;
 }
 
-export function IssueRow({ row, onClick }: IssueRowProps) {
+export function IssueRow({ row, onClick, unread = false }: IssueRowProps) {
   const shortId = row.id.slice(0, 6);
   const isClosed = row.statusGroup === 'closed';
 
@@ -22,6 +23,13 @@ export function IssueRow({ row, onClick }: IssueRowProps) {
 
   const meta = (
     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      {unread ? (
+        <span
+          className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-info"
+          role="img"
+          aria-label="Unread activity"
+        />
+      ) : null}
       <span className="tabular-nums">#{shortId}</span>
       <span aria-hidden>·</span>
       <span>{row.requester}</span>
