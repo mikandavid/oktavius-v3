@@ -122,6 +122,57 @@ describe('SupportTicketThread', () => {
     expect(findByText('Internal')).not.toBeNull();
   });
 
+  it('non-admin: internal note toggle is not present in the DOM', () => {
+    act(() => {
+      root.render(<SupportTicketThread ticket={ticket} />);
+    });
+    // The Switch stand-in renders as role="switch"; it must not appear for non-admins.
+    const toggle = document.body.querySelector('[data-switch]');
+    expect(toggle).toBeNull();
+    // Belt-and-suspenders: no element with role="switch" either.
+    const byRole = document.body.querySelector('[role="switch"]');
+    expect(byRole).toBeNull();
+  });
+
+  it('toggle resets to off after a successful send', async () => {
+    act(() => {
+      root.render(<SupportTicketThread ticket={ticket} admin />);
+    });
+
+    // Turn on the internal-note toggle.
+    const toggle = document.body.querySelector('[data-switch]') as HTMLButtonElement | null;
+    expect(toggle).not.toBeNull();
+    act(() => toggle!.click());
+    // Confirm it is now checked.
+    expect(document.body.querySelector('[data-switch]')?.getAttribute('aria-checked')).toBe('true');
+
+    // Type a message.
+    const textarea = container.querySelector('textarea') as HTMLTextAreaElement | null;
+    expect(textarea).not.toBeNull();
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      'value',
+    )!.set!;
+    act(() => {
+      nativeSetter.call(textarea, 'reset test message');
+      textarea!.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    // Click Send and await the resolved mutation.
+    const sendBtn = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Send Reply',
+    );
+    expect(sendBtn).toBeDefined();
+    await act(async () => {
+      sendBtn!.click();
+    });
+
+    // After a successful send, the component calls setInternal(false).
+    // The MockSwitch re-renders with checked={false} → aria-checked="false".
+    const toggleAfter = document.body.querySelector('[data-switch]');
+    expect(toggleAfter?.getAttribute('aria-checked')).toBe('false');
+  });
+
   it('admin: toggling Internal note, typing, and sending posts isInternal:true', async () => {
     act(() => {
       root.render(<SupportTicketThread ticket={ticket} admin />);
