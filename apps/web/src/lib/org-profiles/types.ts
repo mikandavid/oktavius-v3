@@ -6,6 +6,7 @@ export type OrgModuleId =
   | 'ai-chat'
   | 'email'
   | 'calendar'
+  | 'contacts'
   | 'storage'
   | 'settings'
   | 'showcase'

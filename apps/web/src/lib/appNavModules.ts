@@ -10,6 +10,7 @@ import {
   LifeBuoyIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
+  UserCircleIcon,
 } from '@/lib/icons';
 import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 
@@ -105,6 +106,17 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     permission: 'storage.view',
     loadPage: () => import('@/modules/storage/StoragePage'),
     pageExport: 'StoragePage',
+  },
+  {
+    id: 'contacts',
+    path: '/contacts',
+    label: 'Contacts',
+    labelKey: 'navigation.contacts',
+    icon: UserCircleIcon,
+    section: 'modules',
+    permission: 'contacts.view',
+    loadPage: () => import('@/modules/contacts/ContactsPage'),
+    pageExport: 'ContactsPage',
   },
   {
     id: 'support',
