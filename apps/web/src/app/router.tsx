@@ -5,6 +5,7 @@ import {
   createBrowserRouter,
   Navigate,
   Outlet,
+  type RouteObject,
   RouterProvider,
   useLocation,
 } from 'react-router-dom';
@@ -107,7 +108,6 @@ const AuthCallbackPage = lazyPage(
   'AuthCallbackPage',
 );
 const InvitePage = lazyPage(() => import('@/modules/auth/AuthPlaceholderPage'), 'InvitePage');
-const ProfilePage = lazyPage(() => import('@/modules/profile/ProfilePage'), 'ProfilePage');
 
 /** One lazy component per manifest entry; created once at module scope so Vite splits chunks. */
 const MODULE_PAGES = new Map(
@@ -165,6 +165,18 @@ function AppRootProviders() {
 // No-op when Sentry is disabled (no DSN).
 const sentryCreateBrowserRouter = Sentry.wrapCreateBrowserRouterV6(createBrowserRouter);
 
+export const PROTECTED_ROUTE_CHILDREN: RouteObject[] = [
+  { path: '/', element: <Navigate to="/dashboard" replace /> },
+  ...APP_NAV_MODULES.map((module) => ({
+    path: module.path,
+    element: moduleRouteElement(module),
+  })),
+  { path: '/members', element: <Navigate to="/settings?section=people" replace /> },
+  { path: '/profile', element: <Navigate to="/settings?section=account" replace /> },
+  { path: '/access-denied', element: modulePageElement('access-denied', AccessDeniedPage) },
+  { path: '*', element: modulePageElement('not-found', AppNotFoundPage) },
+];
+
 const appRouter = sentryCreateBrowserRouter([
   {
     element: <AppRootProviders />,
@@ -182,16 +194,7 @@ const appRouter = sentryCreateBrowserRouter([
           </OsirisAccessGate>
         ),
         errorElement: <RouteErrorPage />,
-        children: [
-          { path: '/', element: <Navigate to="/dashboard" replace /> },
-          ...APP_NAV_MODULES.map((module) => ({
-            path: module.path,
-            element: moduleRouteElement(module),
-          })),
-          { path: '/profile', element: modulePageElement('profile', ProfilePage) },
-          { path: '/access-denied', element: modulePageElement('access-denied', AccessDeniedPage) },
-          { path: '*', element: modulePageElement('not-found', AppNotFoundPage) },
-        ],
+        children: PROTECTED_ROUTE_CHILDREN,
       },
     ],
   },

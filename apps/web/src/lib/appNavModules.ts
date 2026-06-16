@@ -10,7 +10,6 @@ import {
   LifeBuoyIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
-  TeamIcon,
 } from '@/lib/icons';
 import type { OrgModuleId, OrgProfile, OrgTerminology } from '@/lib/org-profiles/types';
 
@@ -117,17 +116,6 @@ export const APP_NAV_MODULES: AppNavModule[] = [
     permission: 'support.view',
     loadPage: () => import('@/modules/support/SupportPage'),
     pageExport: 'SupportPage',
-  },
-  {
-    id: 'members',
-    path: '/members',
-    label: 'Members',
-    labelKey: 'navigation.members',
-    icon: TeamIcon,
-    section: 'admin',
-    permission: 'org.members.manage',
-    loadPage: () => import('@/modules/members/MembersPage'),
-    pageExport: 'MembersPage',
   },
   {
     id: 'settings',
