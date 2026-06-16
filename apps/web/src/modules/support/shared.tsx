@@ -46,7 +46,7 @@ export function toTicketRow(ticket: SupportTicket, t: (key: string) => string): 
   };
 }
 
-type TFn = (key: string, vars?: Record<string, unknown>) => string;
+type TFn = (key: string) => string;
 
 export function ticketColumns(opts: {
   t: TFn;

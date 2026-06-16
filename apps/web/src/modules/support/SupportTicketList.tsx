@@ -15,11 +15,6 @@ export function SupportTicketList({ admin, onOpenTicket }: SupportTicketListProp
   const { t } = useTranslation();
   const { isUnread } = useSupportUnread();
 
-  // The ticket factories declare a looser TFn (Record<string, unknown> vars) than
-  // useTranslation's t (InterpolationParams = Record<string, string | number>).
-  // Both factories only ever call t(key) with no vars, so adapt the signature here.
-  const tf = (key: string, vars?: Record<string, unknown>) => t(key, vars as never);
-
   // 50-row server cap retained (documented v1 limitation). Filtering is client-side.
   const { data, isLoading } = useSupportTickets({ page: 1, pageSize: 50, sort: '-updated_at' });
   const rows: TicketRow[] = (data?.data ?? []).map((ticket) => toTicketRow(ticket, t));
@@ -37,12 +32,12 @@ export function SupportTicketList({ admin, onOpenTicket }: SupportTicketListProp
       search={list.search}
       onSearchChange={list.onSearchChange}
       searchPlaceholder={t('support.searchPlaceholder')}
-      filters={ticketFilters({ t: tf, admin })}
+      filters={ticketFilters({ t, admin })}
       values={list.values}
       onFilterChange={list.onFilterChange}
       onReset={list.onReset}
       rows={list.paged}
-      columns={ticketColumns({ t: tf, admin, isUnread })}
+      columns={ticketColumns({ t, admin, isUnread })}
       sort={list.sort}
       onSortChange={list.onSortChange}
       page={list.page}
