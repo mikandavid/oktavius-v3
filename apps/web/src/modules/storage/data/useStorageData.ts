@@ -6,7 +6,9 @@ import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import { createOsirisStorageClient } from './storageClient';
 import { storageKeys } from './storageKeys';
-import type { ListNodesParams } from './types';
+import { markdownToFile } from './textFiles';
+import type { ListNodesParams, StorageNode } from './types';
+import { uploadFile } from './uploadFile';
 
 export function useStorageClient() {
   return useMemo(() => createOsirisStorageClient({ baseUrl: resolveOsirisApiBaseUrl() }), []);
@@ -123,4 +125,44 @@ export function useStorageMutations() {
   });
 
   return { createFolder, rename, move, trash, restore, purge, toggleFavorite };
+}
+
+export function useStorageNode(id: string | null) {
+  const client = useStorageClient();
+  const org = useOrgId();
+  return useQuery({
+    queryKey: [...storageKeys.root(org), 'node', id],
+    queryFn: () => client.getNode(id as string),
+    enabled: Boolean(id),
+  });
+}
+
+export function useFileTextContent(node: StorageNode | null | undefined) {
+  const client = useStorageClient();
+  const org = useOrgId();
+  return useQuery({
+    // Keyed by updatedAt so a save that bumps the node refetches fresh text.
+    queryKey: [...storageKeys.root(org), 'text', node?.id, node?.updatedAt],
+    queryFn: async () => {
+      const url = await client.previewUrl(node!.id);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to load file (${response.status})`);
+      return response.text();
+    },
+    enabled: Boolean(node?.id),
+    staleTime: Infinity,
+  });
+}
+
+export function useSaveTextFile() {
+  const client = useStorageClient();
+  const invalidate = useInvalidateStorage();
+  return useMutation({
+    mutationFn: async (input: { node: StorageNode; markdown: string }): Promise<StorageNode> => {
+      const file = markdownToFile(input.node.name, input.markdown);
+      const outcome = await uploadFile(client, file, input.node.parentId);
+      return outcome.node;
+    },
+    onSuccess: invalidate,
+  });
 }
