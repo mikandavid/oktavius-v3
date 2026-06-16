@@ -37,30 +37,32 @@ export function AutomationPanel({ ticket }: AutomationPanelProps) {
       {ticket.automationError ? (
         <p className="text-xs text-destructive">{ticket.automationError}</p>
       ) : null}
-      <div className="flex flex-col gap-1.5">
-        {ticket.automationPrUrl ? (
-          <a
-            href={ticket.automationPrUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline"
-          >
-            <ExternalLinkIcon size={14} aria-hidden />
-            {t('support.automationViewPr')}
-          </a>
-        ) : null}
-        {ticket.automationWorkflowRunUrl ? (
-          <a
-            href={ticket.automationWorkflowRunUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 text-xs text-primary hover:underline"
-          >
-            <ExternalLinkIcon size={14} aria-hidden />
-            {t('support.automationViewRun')}
-          </a>
-        ) : null}
-      </div>
+      {ticket.automationPrUrl || ticket.automationWorkflowRunUrl ? (
+        <div className="flex flex-col gap-1.5">
+          {ticket.automationPrUrl ? (
+            <a
+              href={ticket.automationPrUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+            >
+              <ExternalLinkIcon size={14} aria-hidden />
+              {t('support.automationViewPr')}
+            </a>
+          ) : null}
+          {ticket.automationWorkflowRunUrl ? (
+            <a
+              href={ticket.automationWorkflowRunUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+            >
+              <ExternalLinkIcon size={14} aria-hidden />
+              {t('support.automationViewRun')}
+            </a>
+          ) : null}
+        </div>
+      ) : null}
     </SectionCard>
   );
 }

@@ -100,4 +100,49 @@ describe('AutomationPanel', () => {
     expect(prLink).toBeDefined();
     expect(prLink!.textContent?.trim()).toMatch(/View pull request/);
   });
+
+  it("renders error message with text-destructive class when status is 'failed'", () => {
+    act(() => {
+      root.render(
+        <AutomationPanel
+          ticket={{
+            ...baseTicket,
+            automationStatus: 'failed',
+            automationError: 'Deploy failed',
+          }}
+        />,
+      );
+    });
+
+    const errorEl = container.querySelector('p');
+    expect(errorEl).toBeDefined();
+    expect(errorEl!.textContent).toContain('Deploy failed');
+    expect(errorEl!.className).toContain('text-destructive');
+  });
+
+  it('renders two anchors with correct hrefs when both PR and workflow run URLs are set', () => {
+    act(() => {
+      root.render(
+        <AutomationPanel
+          ticket={{
+            ...baseTicket,
+            automationStatus: 'pr_created',
+            automationPrUrl: 'https://gh/pr/42',
+            automationWorkflowRunUrl: 'https://gh/actions/run/99',
+          }}
+        />,
+      );
+    });
+
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('a'));
+    expect(links).toHaveLength(2);
+
+    const prLink = links.find((a) => a.href === 'https://gh/pr/42');
+    expect(prLink).toBeDefined();
+    expect(prLink!.textContent?.trim()).toMatch(/View pull request/);
+
+    const runLink = links.find((a) => a.href === 'https://gh/actions/run/99');
+    expect(runLink).toBeDefined();
+    expect(runLink!.textContent?.trim()).toMatch(/View workflow run/);
+  });
 });
