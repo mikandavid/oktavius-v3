@@ -298,7 +298,6 @@
     "saved": "Saved",
     "unsaved": "Unsaved changes",
     "saveFailed": "Could not save changes",
-    "close": "Close",
-    "renameLabel": "File name"
+    "close": "Close"
   }
 }

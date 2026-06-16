@@ -298,7 +298,6 @@
     "saved": "Gespeichert",
     "unsaved": "Nicht gespeicherte Änderungen",
     "saveFailed": "Änderungen konnten nicht gespeichert werden",
-    "close": "Schließen",
-    "renameLabel": "Dateiname"
+    "close": "Schließen"
   }
 }
