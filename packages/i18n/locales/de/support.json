@@ -130,5 +130,6 @@
   "automationStatus_failed": "Fehlgeschlagen",
   "automationViewPr": "Pull Request ansehen",
   "automationViewRun": "Workflow-Lauf ansehen",
-  "unreadIndicator": "Ungelesene Aktivität"
+  "unreadIndicator": "Ungelesene Aktivität",
+  "colCategory": "Kategorie"
 }

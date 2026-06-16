@@ -130,5 +130,6 @@
   "automationStatus_failed": "Failed",
   "automationViewPr": "View pull request",
   "automationViewRun": "View workflow run",
-  "unreadIndicator": "Unread activity"
+  "unreadIndicator": "Unread activity",
+  "colCategory": "Category"
 }
