@@ -3,6 +3,7 @@ import type { OrgModuleId, OrgProfile } from './types';
 
 const DEFAULT_ORG_MODULES: OrgModuleId[] = [
   'dashboard',
+  'contacts',
   'ai-chat',
   'email',
   'calendar',
