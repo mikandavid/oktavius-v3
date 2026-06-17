@@ -35,7 +35,7 @@ describe('createChangelogClient.listReleases', () => {
     const client = createChangelogClient({ baseUrl: '/v1' });
     const result = await client.listReleases();
 
-    const [url, init] = fetchMock.mock.calls[0];
+    const [url, init] = fetchMock.mock.calls[0]!;
     expect(url).toBe('/v1/changelog');
     expect((init as RequestInit).credentials).toBe('include');
     expect(result.releases).toHaveLength(1);
@@ -67,7 +67,7 @@ describe('createChangelogClient.listReleases', () => {
     const result = await client.listReleases();
 
     expect(result.releases.map((r) => r.version)).toEqual(['3.4.0', '3.3.0']);
-    expect(result.releases[1].items[0].type).toBe('improved');
+    expect(result.releases[1]!.items[0]!.type).toBe('improved');
   });
 
   it('drops items with no text and tolerates a missing releases array', async () => {
@@ -90,8 +90,8 @@ describe('createChangelogClient.listReleases', () => {
     const client = createChangelogClient({ baseUrl: '/v1' });
     const result = await client.listReleases();
 
-    expect(result.releases[0].items).toEqual([{ type: 'added', text: 'kept' }]);
-    expect(result.releases[1].items).toEqual([]);
+    expect(result.releases[0]!.items).toEqual([{ type: 'added', text: 'kept' }]);
+    expect(result.releases[1]!.items).toEqual([]);
   });
 
   it('returns an empty result on 404 (endpoint not built yet)', async () => {

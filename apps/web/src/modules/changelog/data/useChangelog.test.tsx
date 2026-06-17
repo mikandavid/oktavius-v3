@@ -69,6 +69,6 @@ describe('useChangelog', () => {
     );
     expect(changelogCalls).toHaveLength(1);
     expect(captured.isSuccess).toBe(true);
-    expect(captured.data?.releases[0].version).toBe('3.4.0');
+    expect(captured.data?.releases[0]!.version).toBe('3.4.0');
   });
 });
