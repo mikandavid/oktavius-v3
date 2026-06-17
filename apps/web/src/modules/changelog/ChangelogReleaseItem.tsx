@@ -11,7 +11,7 @@ export function ChangelogReleaseItem({ release }: { release: ChangelogRelease })
   return (
     <li className="relative pl-8">
       <span
-        aria-hidden
+        aria-hidden="true"
         className="absolute left-0 top-2 flex h-3 w-3 -translate-x-1/2 items-center justify-center"
       >
         <span className="h-2.5 w-2.5 rounded-full border-2 border-background bg-muted-foreground/40" />
