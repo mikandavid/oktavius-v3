@@ -1,0 +1,15 @@
+{
+  "title": "Änderungsprotokoll",
+  "subtitle": "Aktuelle Aktualisierungen und Verbesserungen im Arbeitsbereich.",
+  "loading": "Änderungsprotokoll wird geladen…",
+  "emptyTitle": "Noch keine Versionen",
+  "emptyBody": "Versionshinweise erscheinen hier, sobald Updates veröffentlicht werden.",
+  "errorTitle": "Änderungsprotokoll konnte nicht geladen werden",
+  "errorBody": "Beim Laden der Versionshinweise ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+  "releasesListLabel": "Versionsverlauf",
+  "type": {
+    "added": "Hinzugefügt",
+    "improved": "Verbessert",
+    "fixed": "Behoben"
+  }
+}

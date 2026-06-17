@@ -1,0 +1,15 @@
+{
+  "title": "Changelog",
+  "subtitle": "Recent updates and improvements to the workspace.",
+  "loading": "Loading changelog…",
+  "emptyTitle": "No releases yet",
+  "emptyBody": "Release notes will appear here as updates ship.",
+  "errorTitle": "Couldn't load the changelog",
+  "errorBody": "Something went wrong while loading release notes. Please try again later.",
+  "releasesListLabel": "Release history",
+  "type": {
+    "added": "Added",
+    "improved": "Improved",
+    "fixed": "Fixed"
+  }
+}

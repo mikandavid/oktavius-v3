@@ -9,6 +9,7 @@ export type TranslationNamespace =
   | 'calendar'
   | 'calendarV2'
   | 'catalog'
+  | 'changelog'
   | 'clients'
   | 'common'
   | 'contacts'
@@ -57,6 +58,7 @@ export const ALL_NAMESPACES: TranslationNamespace[] = [
   'calendar',
   'calendarV2',
   'catalog',
+  'changelog',
   'clients',
   'common',
   'contacts',
@@ -114,6 +116,7 @@ export const LAZY_NAMESPACES: TranslationNamespace[] = [
   'calendar',
   'calendarV2',
   'catalog',
+  'changelog',
   'clients',
   'contacts',
   'customers',
