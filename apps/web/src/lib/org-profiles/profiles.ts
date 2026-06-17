@@ -10,6 +10,7 @@ const DEFAULT_ORG_MODULES: OrgModuleId[] = [
   'storage',
   'settings',
   'support',
+  'changelog',
 ];
 
 export function createDefaultOrgProfile(orgId?: string | null): OrgProfile {
