@@ -7,6 +7,7 @@ import {
   EmailIcon,
   FolderIcon,
   FunnelIcon,
+  HistoryIcon,
   HomeIcon,
   type IconProps,
   IncidentIcon,
@@ -58,3 +59,4 @@ export const staffPageIcon = () => modulePageIcon(TeamIcon);
 export const purchasingPageIcon = () => modulePageIcon(PurchasingIcon);
 export const storagePageIcon = () => modulePageIcon(FolderIcon);
 export const supportPageIcon = () => modulePageIcon(LifeBuoyIcon);
+export const changelogPageIcon = () => modulePageIcon(HistoryIcon);
