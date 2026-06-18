@@ -8,9 +8,10 @@ import {
   type SettingsSectionConfig,
 } from '@/components/settings/SettingsPageFactory';
 import { useTranslation } from '@/core/i18n';
-import { BrainIcon, RobotIcon } from '@/lib/icons';
+import { BrainIcon, LinkIcon, RobotIcon } from '@/lib/icons';
 
 import { AGENT_SECTION_PARAM, resolveInitialAgentSection } from './agentSectionParam';
+import { AgentIntegrationsSection } from './sections/AgentIntegrationsSection';
 import { AgentSettingsSection } from './sections/AgentSettingsSection';
 
 export function AgentAdminPage() {
@@ -35,7 +36,17 @@ export function AgentAdminPage() {
       permission: 'org.manage',
       render: () => <AgentSettingsSection />,
     },
-    // Integrations (Phase 2), Automations (Phase 3), Heartbeat & Queue (Phase 4)
+    {
+      id: 'integrations',
+      group: t('agent_admin.groupConfiguration', undefined, 'Configuration'),
+      label: t('agent_admin.sectionIntegrations', undefined, 'Integrations'),
+      icon: <LinkIcon size={16} weight="duotone" />,
+      title: t('agent_admin.sectionIntegrations', undefined, 'Integrations'),
+      sectionDescription: 'Connect external apps and native providers your agent can use.',
+      permission: 'org.manage',
+      render: () => <AgentIntegrationsSection />,
+    },
+    // Automations (Phase 3), Heartbeat & Queue (Phase 4)
     // are appended here in their respective phases.
   ];
 

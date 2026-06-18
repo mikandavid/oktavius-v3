@@ -1,5 +1,6 @@
 // apps/web/src/modules/agent-admin/AgentAdminPage.test.tsx
 import type * as BaseUi from '@oktavius/base-ui';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
@@ -80,6 +81,24 @@ const baseRuntime: OsirisRuntimeContextValue = {
   updateWorkspaceSettings: vi.fn(async (settings) => settings),
 };
 
+function makeQueryClient() {
+  return new QueryClient({ defaultOptions: { queries: { retry: false } } });
+}
+
+function renderAt(root: Root, path: string, qc: QueryClient) {
+  return root.render(
+    <MemoryRouter initialEntries={[path]}>
+      <QueryClientProvider client={qc}>
+        <TestI18nProvider>
+          <OsirisRuntimeContext.Provider value={baseRuntime}>
+            <AgentAdminPage />
+          </OsirisRuntimeContext.Provider>
+        </TestI18nProvider>
+      </QueryClientProvider>
+    </MemoryRouter>,
+  );
+}
+
 describe('AgentAdminPage', () => {
   let root: Root;
   let container: HTMLDivElement;
@@ -97,23 +116,43 @@ describe('AgentAdminPage', () => {
     act(() => root.unmount());
     document.body.innerHTML = '';
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('renders the Settings section by default', async () => {
+    const qc = makeQueryClient();
     await act(async () => {
-      root.render(
-        <MemoryRouter initialEntries={['/agent']}>
-          <TestI18nProvider>
-            <OsirisRuntimeContext.Provider value={baseRuntime}>
-              <AgentAdminPage />
-            </OsirisRuntimeContext.Provider>
-          </TestI18nProvider>
-        </MemoryRouter>,
-      );
+      renderAt(root, '/agent', qc);
     });
 
     const sections = [...container.querySelectorAll('[data-testid="settings-section"]')];
     const titles = sections.map((section) => section.getAttribute('data-title'));
     expect(titles).toContain('AI Usage Budget');
+  });
+
+  it('renders the integrations section when deep-linked', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              connections: [],
+              integrations: [],
+              apps: [],
+              pipedream: { enabled: false, configured: false, environment: null, projectId: null },
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } },
+          ),
+        ),
+      ),
+    );
+
+    const qc = makeQueryClient();
+    await act(async () => {
+      renderAt(root, '/agent?section=integrations', qc);
+    });
+
+    expect(container.querySelector('[data-testid="agent-integrations-section"]')).toBeTruthy();
   });
 });
