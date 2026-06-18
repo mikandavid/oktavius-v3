@@ -1,51 +1,34 @@
 /**
  * AutomationDetail — prop-driven detail component for the agent-admin automations section.
  *
- * Ported from osiris_erp AutomationDetailPage.tsx.
- * Router navigation (useNavigate, useParams) replaced by taskId/onBack/onEdit props.
- * ConfirmActionDialog used for run-now / pause / resume confirmations (no window.confirm).
+ * Restyled (Task 3.6) to match David's ScheduledAgentActivationDetail look:
+ * back button, rounded-card border bg-muted/20 p-4 detail card with DetailField rows,
+ * and ActivationRunHistory styled run-history list for recurring tasks.
  *
- * Chat links: v3 has no standalone conversation deep-link route for scheduled agent runs.
- * Where osiris would open a conversation, we render the conversationId as plain text.
+ * CRUD actions (Edit, Pause/Resume, Run now) kept via ConfirmActionDialog + useTaskActions.
+ * v3 has no standalone conversation deep-link route — conversationId rendered as plain text.
  */
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@oktavius/base-ui';
+import { Button, cn, Skeleton } from '@oktavius/base-ui';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
-import { BotIcon, MessageSquareIcon, TimeIcon } from '@/lib/icons';
+import { BackIcon, MessageSquareIcon, WarningIcon, ZapIcon } from '@/lib/icons';
 import {
   useScheduledTask,
   useScheduledTaskRuns,
   useTaskActions,
 } from '@/modules/agent-admin/data/useScheduler';
-import type { ScheduledTaskRun } from '@/runtime/osiris/schedulerClient';
+import type { ScheduledTask, ScheduledTaskRun } from '@/runtime/osiris/schedulerClient';
 
 import {
-  deriveAutomationStatus,
-  describeRunTrigger,
-  describeSchedule,
-  describeTriggerFilters,
-  formatDateTimeSimple,
-  RUN_STATUS_KEY,
-  RUN_STATUS_VARIANT,
-  TASK_STATUS_VARIANT,
-} from './automationPresentation';
+  type AutomationActivationStatus,
+  deriveActivationStatus,
+  statusPillClass,
+} from './automationIcons';
+import { describeSchedule, formatDateTimeSimple, type TFunction } from './automationPresentation';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -56,6 +39,16 @@ export interface AutomationDetailProps {
   onBack: () => void;
   onEdit: (taskId: string) => void;
 }
+
+// ---------------------------------------------------------------------------
+// Status label key
+// ---------------------------------------------------------------------------
+
+const STATUS_LABEL_KEY: Record<AutomationActivationStatus, string> = {
+  scheduled: 'scheduler.automations.status.active',
+  paused: 'scheduler.automations.status.paused',
+  completed: 'scheduler.automations.status.completed',
+};
 
 // ---------------------------------------------------------------------------
 // AutomationDetail
@@ -89,8 +82,14 @@ export function AutomationDetail({ taskId, onBack, onEdit }: AutomationDetailPro
   if (!task) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          ← {t('scheduler.automations.backToList', {}, 'Back to automations')}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mb-3 h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+          onClick={onBack}
+        >
+          <BackIcon className="mr-1.5 h-3.5 w-3.5" />
+          {t('scheduler.automations.backToList', {}, 'Back to automations')}
         </Button>
         <div className="py-16 text-center text-sm text-muted-foreground">
           {t('scheduler.automations.notFoundHint', {}, 'This automation could not be found.')}
@@ -99,176 +98,189 @@ export function AutomationDetail({ taskId, onBack, onEdit }: AutomationDetailPro
     );
   }
 
-  const statusVariant = TASK_STATUS_VARIANT[deriveAutomationStatus(task)];
+  return (
+    <AutomationDetailInner
+      task={task}
+      runs={runs}
+      runsQuery={runsQuery}
+      pause={pause}
+      resume={resume}
+      runNow={runNow}
+      confirmPauseOpen={confirmPauseOpen}
+      setConfirmPauseOpen={setConfirmPauseOpen}
+      confirmResumeOpen={confirmResumeOpen}
+      setConfirmResumeOpen={setConfirmResumeOpen}
+      confirmRunNowOpen={confirmRunNowOpen}
+      setConfirmRunNowOpen={setConfirmRunNowOpen}
+      onBack={onBack}
+      onEdit={onEdit}
+      t={t}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AutomationDetailInner (extracted to keep hook count manageable)
+// ---------------------------------------------------------------------------
+
+function AutomationDetailInner({
+  task,
+  runs,
+  runsQuery,
+  pause,
+  resume,
+  runNow,
+  confirmPauseOpen,
+  setConfirmPauseOpen,
+  confirmResumeOpen,
+  setConfirmResumeOpen,
+  confirmRunNowOpen,
+  setConfirmRunNowOpen,
+  onBack,
+  onEdit,
+  t,
+}: {
+  task: ScheduledTask;
+  runs: ScheduledTaskRun[];
+  runsQuery: { isLoading: boolean; isError: boolean };
+  pause: { isPending: boolean; mutate: () => void };
+  resume: { isPending: boolean; mutate: () => void };
+  runNow: { isPending: boolean; mutate: () => void };
+  confirmPauseOpen: boolean;
+  setConfirmPauseOpen: (v: boolean) => void;
+  confirmResumeOpen: boolean;
+  setConfirmResumeOpen: (v: boolean) => void;
+  confirmRunNowOpen: boolean;
+  setConfirmRunNowOpen: (v: boolean) => void;
+  onBack: () => void;
+  onEdit: (taskId: string) => void;
+  t: TFunction;
+}) {
+  const status = deriveActivationStatus(task);
+  const pillClass = statusPillClass(status);
+  const isRecurring = task.scheduleType !== 'once';
+  const isMutating = pause.isPending || resume.isPending || runNow.isPending;
+
+  const prompt =
+    typeof task.targetPayload?.['prompt'] === 'string' ? task.targetPayload['prompt'] : null;
+
+  const recurrence = getRecurrenceLabel(task, t);
 
   return (
-    <div className="space-y-5" data-testid="automation-detail">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack} className="shrink-0">
-            ← {t('scheduler.automations.backToList', {}, 'Back')}
-          </Button>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card bg-muted/40 text-muted-foreground">
-            <BotIcon />
-          </div>
-          <div className="min-w-0">
-            <h2 className="truncate text-xl font-semibold tracking-tight">{task.name}</h2>
-            {task.description ? (
-              <p className="mt-0.5 truncate text-sm text-muted-foreground">{task.description}</p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={statusVariant}>
-            {t(`scheduler.automations.status.${deriveAutomationStatus(task)}`)}
-          </Badge>
-          <Button variant="outline" size="sm" onClick={() => onEdit(task.id)}>
-            {t('common.edit', {}, 'Edit')}
-          </Button>
-          {task.enabled ? (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pause.isPending}
-              onClick={() => setConfirmPauseOpen(true)}
+    <div className="space-y-4 px-3 pb-4 pt-2" data-testid="automation-detail">
+      {/* Back button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+        onClick={onBack}
+      >
+        <BackIcon className="mr-1.5 h-3.5 w-3.5" />
+        {t('scheduler.automations.backToList', {}, 'Back to automations')}
+      </Button>
+
+      {/* Detail card */}
+      <div className="space-y-4 rounded-card border border-border/60 bg-muted/20 p-4">
+        <DetailField label={t('common.name', {}, 'Name')} value={task.name} />
+        <DetailField
+          label={t('scheduler.automations.scheduleLabel', {}, 'Scheduled for')}
+          value={
+            task.nextRunAt
+              ? formatDateTimeSimple(task.nextRunAt, { dateStyle: 'medium', timeStyle: 'short' })
+              : task.scheduleType === 'once'
+                ? t('scheduler.automations.noUpcomingRun', {}, 'No upcoming run')
+                : describeSchedule(task, t, formatDateTimeSimple)
+          }
+        />
+        {recurrence ? (
+          <DetailField
+            label={t('scheduler.automations.recurrenceLabel', {}, 'Recurrence')}
+            value={recurrence}
+          />
+        ) : null}
+        <DetailField
+          label={t('common.status', {}, 'Status')}
+          value={
+            <span
+              className={cn(
+                'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                pillClass,
+              )}
             >
-              {t('scheduler.automations.pause', {}, 'Pause')}
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={resume.isPending}
-              onClick={() => setConfirmResumeOpen(true)}
-            >
-              {t('scheduler.automations.resume', {}, 'Resume')}
-            </Button>
-          )}
-          <Button size="sm" disabled={runNow.isPending} onClick={() => setConfirmRunNowOpen(true)}>
-            {t('scheduler.automations.runNow', {}, 'Run now')}
-          </Button>
-        </div>
+              {t(STATUS_LABEL_KEY[status], {}, status)}
+            </span>
+          }
+        />
+        {prompt ? (
+          <DetailField
+            label={t('scheduler.automations.prompt', {}, 'Prompt')}
+            value={
+              <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/90">
+                {prompt}
+              </p>
+            }
+          />
+        ) : null}
+        {task.lastRunAt ? (
+          <DetailField
+            label={t('scheduler.automations.lastRun', {}, 'Last run')}
+            value={formatDateTimeSimple(task.lastRunAt, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+          />
+        ) : null}
       </div>
 
-      {/* Details card */}
-      <Card>
-        <CardContent className="pt-6">
-          <dl className="grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('scheduler.automations.scheduleLabel', {}, 'Schedule')}
-              </dt>
-              <dd className="mt-1 flex items-center gap-1.5">
-                <TimeIcon
-                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                {describeSchedule(task, t, formatDateTimeSimple)}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('scheduler.automations.nextRun', {}, 'Next run')}
-              </dt>
-              <dd className="mt-1">
-                {task.nextRunAt
-                  ? formatDateTimeSimple(task.nextRunAt, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    })
-                  : '—'}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('scheduler.automations.lastRun', {}, 'Last run')}
-              </dt>
-              <dd className="mt-1">
-                {task.lastRunAt
-                  ? formatDateTimeSimple(task.lastRunAt, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    })
-                  : t('scheduler.automations.noRunsYet', {}, 'No runs yet')}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {t('scheduler.automations.timezone', {}, 'Timezone')}
-              </dt>
-              <dd className="mt-1">{task.timezone}</dd>
-            </div>
-            {task.scheduleType === 'event' ? (
-              <div className="sm:col-span-2 lg:col-span-4">
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('scheduler.automations.trigger.filtersLabel', {}, 'Trigger filters')}
-                </dt>
-                <dd className="mt-1 text-sm text-muted-foreground">
-                  {describeTriggerFilters(task.triggerConfig, t).join(' · ')}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        </CardContent>
-      </Card>
+      {/* Run history for recurring tasks */}
+      {isRecurring ? (
+        <AutomationRunHistory
+          runs={runs}
+          isLoading={runsQuery.isLoading}
+          isError={runsQuery.isError}
+          t={t}
+        />
+      ) : null}
 
-      {/* Run history */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">
-            {t('scheduler.automations.runHistory', {}, 'Run history')}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {t(
-              'scheduler.automations.runHistoryDescription',
-              {},
-              'Recent executions of this automation.',
-            )}
-          </p>
-        </CardHeader>
-        <CardContent>
-          {runsQuery.isLoading ? (
-            <RunsTableSkeleton />
-          ) : runsQuery.isError ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              {t('scheduler.automations.runsLoadError', {}, 'Could not load run history.')}
-            </div>
-          ) : runs.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              <TimeIcon className="mx-auto mb-3 h-8 w-8 opacity-40" />
-              <p className="text-sm">{t('scheduler.automations.runsEmpty', {}, 'No runs yet.')}</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    {t('scheduler.automations.runColumns.started', {}, 'Started')}
-                  </TableHead>
-                  <TableHead>
-                    {t('scheduler.automations.runColumns.finished', {}, 'Finished')}
-                  </TableHead>
-                  <TableHead>
-                    {t('scheduler.automations.runColumns.status', {}, 'Status')}
-                  </TableHead>
-                  <TableHead>
-                    {t('scheduler.automations.runColumns.details', {}, 'Details')}
-                  </TableHead>
-                  <TableHead className="w-px" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {runs.map((run) => (
-                  <RunRow key={run.id} run={run} />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* Action buttons */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="outline" size="sm" className="h-8" onClick={() => onEdit(task.id)}>
+          {t('common.edit', {}, 'Edit')}
+        </Button>
+        <Button
+          variant="default"
+          size="sm"
+          className="h-8"
+          disabled={isMutating}
+          onClick={() => setConfirmRunNowOpen(true)}
+        >
+          <ZapIcon className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          {t('scheduler.automations.runNow', {}, 'Run now')}
+        </Button>
+        {task.enabled ? (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            disabled={isMutating}
+            onClick={() => setConfirmPauseOpen(true)}
+          >
+            {t('scheduler.automations.pause', {}, 'Pause')}
+          </Button>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            disabled={isMutating}
+            onClick={() => setConfirmResumeOpen(true)}
+          >
+            {t('scheduler.automations.resume', {}, 'Resume')}
+          </Button>
+        )}
+      </div>
 
-      {/* Confirmations */}
+      {/* Confirmation dialogs */}
       <ConfirmActionDialog
         open={confirmPauseOpen}
         onOpenChange={setConfirmPauseOpen}
@@ -325,70 +337,124 @@ export function AutomationDetail({ taskId, onBack, onEdit }: AutomationDetailPro
 }
 
 // ---------------------------------------------------------------------------
-// RunRow
+// AutomationRunHistory — David's ActivationRunHistory adapted to ScheduledTaskRun
 // ---------------------------------------------------------------------------
 
-function RunRow({ run }: { run: ScheduledTaskRun }) {
-  const { t } = useTranslation();
-
-  const started = run.startedAt ?? run.scheduledFor;
-  const variant = RUN_STATUS_VARIANT[run.status] ?? 'secondary';
-  const key = RUN_STATUS_KEY[run.status];
-
+function AutomationRunHistory({
+  runs,
+  isLoading,
+  isError,
+  t,
+}: {
+  runs: ScheduledTaskRun[];
+  isLoading: boolean;
+  isError: boolean;
+  t: TFunction;
+}) {
   return (
-    <TableRow>
-      <TableCell className="whitespace-nowrap text-sm">
-        {formatDateTimeSimple(started, { dateStyle: 'medium', timeStyle: 'short' })}
-      </TableCell>
-      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-        {run.finishedAt
-          ? formatDateTimeSimple(run.finishedAt, { dateStyle: 'medium', timeStyle: 'short' })
-          : '—'}
-      </TableCell>
-      <TableCell>
-        <Badge variant={variant}>
-          {key ? t(`scheduler.automations.runStatus.${key}`) : t('common.unknown', {}, 'Unknown')}
-        </Badge>
-      </TableCell>
-      <TableCell className="max-w-[360px]">
-        {run.userError ? (
-          <p className="line-clamp-2 text-xs text-destructive" title={run.userError}>
-            {run.userError}
+    <div className="mt-4 space-y-2">
+      <div
+        data-testid="run-history-header"
+        className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60"
+      >
+        {t('scheduler.automations.runHistory', {}, 'Run history')}
+      </div>
+
+      <div className="rounded-card border border-border/60 bg-muted/10">
+        {isLoading ? (
+          <div className="space-y-2 p-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-9 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <p className="px-3 py-4 text-[13px] text-muted-foreground/70">
+            {t('scheduler.automations.runsLoadError', {}, 'Could not load run history.')}
           </p>
-        ) : describeRunTrigger(run.metadata?.trigger) ? (
-          <p
-            className="line-clamp-2 text-xs text-muted-foreground"
-            title={describeRunTrigger(run.metadata?.trigger) ?? undefined}
-          >
-            {describeRunTrigger(run.metadata?.trigger)}
+        ) : runs.length === 0 ? (
+          <p className="px-3 py-4 text-[13px] text-muted-foreground/70">
+            {t('scheduler.automations.runsEmpty', {}, 'No runs yet.')}
           </p>
         ) : (
-          <span className="text-xs text-muted-foreground">—</span>
+          <div className="divide-y divide-border/50">
+            {runs.map((run) => (
+              <RunHistoryRow key={run.id} run={run} t={t} />
+            ))}
+          </div>
         )}
-      </TableCell>
-      <TableCell className="text-right">
-        {/* v3 has no standalone conversation deep-link route yet; render conversationId as text only */}
-        {run.conversationId ? (
-          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <MessageSquareIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            {run.conversationId}
-          </span>
-        ) : null}
-      </TableCell>
-    </TableRow>
+      </div>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Skeleton
+// RunHistoryRow
 // ---------------------------------------------------------------------------
 
-function RunsTableSkeleton() {
+function RunHistoryRow({ run, t }: { run: ScheduledTaskRun; t: TFunction }) {
+  const isFailed = run.status === 'failed' || run.status === 'dead_letter';
+
+  const rowBody = (
+    <>
+      <div className="min-w-0">
+        <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground/90">
+          {isFailed ? (
+            <span
+              className="inline-flex shrink-0 text-destructive"
+              aria-label={t('scheduler.automations.runFailed', {}, 'Failed')}
+            >
+              <WarningIcon className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+          ) : null}
+          <span data-testid="run-timestamp">
+            {formatDateTimeSimple(run.finishedAt ?? run.scheduledFor, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
+          </span>
+        </div>
+      </div>
+      {/* v3 has no standalone conversation deep-link route — render as plain text */}
+      {run.conversationId ? (
+        <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground">
+          <MessageSquareIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('scheduler.automations.viewChat', {}, 'View chat')}
+        </span>
+      ) : null}
+    </>
+  );
+
   return (
-    <div className="space-y-3">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <Skeleton key={index} className="h-10 w-full" />
-      ))}
+    <div className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left">
+      {rowBody}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// DetailField
+// ---------------------------------------------------------------------------
+
+function DetailField({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+        {label}
+      </div>
+      <div className="text-[13px] text-foreground/90">{value}</div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Recurrence label helper
+// ---------------------------------------------------------------------------
+
+function getRecurrenceLabel(task: ScheduledTask, t: TFunction): string | null {
+  if (task.scheduleType === 'once') return null;
+  const typeLabel =
+    task.scheduleType === 'cron'
+      ? t('scheduler.automations.recurrenceCron', {}, 'Cron')
+      : t('scheduler.automations.recurrenceInterval', {}, 'Interval');
+  return `${typeLabel}: ${task.scheduleExpression} (${task.timezone})`;
 }

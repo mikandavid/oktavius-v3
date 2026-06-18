@@ -76,4 +76,105 @@ describe('AutomationsList', () => {
 
     expect(container.textContent).toContain('Daily digest');
   });
+
+  it('renders automation-type-heartbeat for a heartbeat task', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: [
+            {
+              id: 'hb1',
+              name: 'Heartbeat Task',
+              scheduleType: 'interval',
+              scheduleExpression: '60000',
+              enabled: true,
+              nextRunAt: null,
+              lastRunAt: null,
+              targetPayload: {
+                eventType: 'agent_activation',
+                activationKind: 'heartbeat',
+              },
+              triggerConfig: null,
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+          totalPages: 1,
+        }),
+        text: async () => '',
+      })) as unknown as typeof fetch,
+    );
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    await act(async () => {
+      root.render(
+        <TestI18nProvider>
+          <QueryClientProvider client={qc}>
+            <AutomationsList onOpen={() => {}} onCreate={() => {}} />
+          </QueryClientProvider>
+        </TestI18nProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    const el = container.querySelector('[data-testid="automation-type-heartbeat"]');
+    expect(el).not.toBeNull();
+  });
+
+  it('renders automation-type-scheduled for a cron task without heartbeat payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: [
+            {
+              id: 'sc1',
+              name: 'Scheduled Cron Task',
+              scheduleType: 'cron',
+              scheduleExpression: '0 9 * * 1',
+              enabled: true,
+              nextRunAt: null,
+              lastRunAt: null,
+              targetPayload: { eventType: 'agent_activation', prompt: 'Do something' },
+              triggerConfig: null,
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+          totalPages: 1,
+        }),
+        text: async () => '',
+      })) as unknown as typeof fetch,
+    );
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    await act(async () => {
+      root.render(
+        <TestI18nProvider>
+          <QueryClientProvider client={qc}>
+            <AutomationsList onOpen={() => {}} onCreate={() => {}} />
+          </QueryClientProvider>
+        </TestI18nProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    const el = container.querySelector('[data-testid="automation-type-scheduled"]');
+    expect(el).not.toBeNull();
+  });
 });

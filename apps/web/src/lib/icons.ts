@@ -134,6 +134,9 @@ export {
   Globe as WebIcon,
 } from '@phosphor-icons/react';
 
+// ─── Agent & Automation ──────────────────────────────────────────────────────
+export { Heartbeat as HeartbeatIcon } from '@phosphor-icons/react';
+
 // ─── Form & Input ────────────────────────────────────────────────────────────
 export {
   ArrowRight as ArrowRightIcon,

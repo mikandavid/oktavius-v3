@@ -1,38 +1,25 @@
 /**
  * AutomationsList — prop-driven list component for the agent-admin automations section.
  *
- * Ported from osiris_erp AutomationsPage.tsx.
- * Router navigation replaced by onOpen/onCreate callbacks.
+ * Restyled (Task 3.6) to match David's ScheduledAgentActivationsPanel look:
+ * per-row type icon box (heartbeat / email / halo / scheduled), name + scheduled-for
+ * line, and status pill — while keeping create affordance and CRUD callbacks.
  */
 
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@oktavius/base-ui';
-import type { ReactNode } from 'react';
+import { Button, cn, Skeleton } from '@oktavius/base-ui';
 
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
-import { BotIcon, PlusIcon } from '@/lib/icons';
-import { useScheduledTaskRuns, useScheduledTasks } from '@/modules/agent-admin/data/useScheduler';
-import type { ScheduledTask, ScheduledTaskRunStatus } from '@/runtime/osiris/schedulerClient';
+import { PlusIcon, TimeIcon } from '@/lib/icons';
+import { useScheduledTasks } from '@/modules/agent-admin/data/useScheduler';
+import type { ScheduledTask } from '@/runtime/osiris/schedulerClient';
 
 import {
-  deriveAutomationStatus,
-  describeSchedule,
-  formatDateTimeSimple,
-  RUN_STATUS_KEY,
-  RUN_STATUS_VARIANT,
-  TASK_STATUS_VARIANT,
-} from './automationPresentation';
+  type AutomationActivationStatus,
+  automationTypeIcon,
+  deriveActivationStatus,
+  statusPillClass,
+} from './automationIcons';
+import { describeSchedule, formatDateTimeSimple } from './automationPresentation';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -44,33 +31,14 @@ export interface AutomationsListProps {
 }
 
 // ---------------------------------------------------------------------------
-// Inline badge helpers
+// Status label helpers
 // ---------------------------------------------------------------------------
 
-function TaskStatusBadge({
-  task,
-}: {
-  task: Pick<ScheduledTask, 'enabled' | 'scheduleType' | 'lastRunAt'>;
-}) {
-  const { t } = useTranslation();
-  const status = deriveAutomationStatus(task);
-  return (
-    <Badge variant={TASK_STATUS_VARIANT[status]}>
-      {t(`scheduler.automations.status.${status}`)}
-    </Badge>
-  );
-}
-
-function RunStatusBadge({ status }: { status: ScheduledTaskRunStatus }) {
-  const { t } = useTranslation();
-  const variant = RUN_STATUS_VARIANT[status] ?? 'secondary';
-  const key = RUN_STATUS_KEY[status];
-  return (
-    <Badge variant={variant}>
-      {key ? t(`scheduler.automations.runStatus.${key}`) : t('common.unknown', {}, 'Unknown')}
-    </Badge>
-  );
-}
+const STATUS_LABEL_KEY: Record<AutomationActivationStatus, string> = {
+  scheduled: 'scheduler.automations.status.active',
+  paused: 'scheduler.automations.status.paused',
+  completed: 'scheduler.automations.status.completed',
+};
 
 // ---------------------------------------------------------------------------
 // AutomationsList
@@ -94,7 +62,8 @@ export function AutomationsList({ onOpen, onCreate }: AutomationsListProps) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      {/* Section header with create button */}
+      <div className="flex items-center justify-between px-1">
         <div>
           <h2 className="text-xl font-semibold tracking-tight">
             {t('scheduler.automations.title', {}, 'Automations')}
@@ -109,79 +78,54 @@ export function AutomationsList({ onOpen, onCreate }: AutomationsListProps) {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {isLoading ? (
-            <AutomationsTableSkeleton />
-          ) : isError ? (
-            <div className="py-16 text-center text-sm text-muted-foreground">
-              {t('scheduler.automations.loadError', {}, 'Could not load automations.')}
-            </div>
-          ) : tasks.length === 0 ? (
-            <div className="py-16 text-center text-muted-foreground">
-              <BotIcon className="mx-auto mb-3 h-10 w-10 opacity-40" />
-              <p className="text-sm font-medium">
-                {t('scheduler.automations.empty', {}, 'No automations yet')}
-              </p>
-              <p className="mt-1 text-xs">
-                {t(
-                  'scheduler.automations.emptyHint',
-                  {},
-                  'Create a scheduled or event-triggered automation to get started.',
-                )}
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('scheduler.automations.columns.name', {}, 'Name')}</TableHead>
-                  <TableHead>
-                    {t('scheduler.automations.columns.schedule', {}, 'Schedule')}
-                  </TableHead>
-                  <TableHead>{t('scheduler.automations.columns.status', {}, 'Status')}</TableHead>
-                  <TableHead>
-                    {t('scheduler.automations.columns.lastRun', {}, 'Last run')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <AutomationRow
-                    key={task.id}
-                    task={task}
-                    onOpen={() => onOpen(task.id)}
-                    RunStatusBadge={RunStatusBadge}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      {/* List body */}
+      {isLoading ? (
+        <AutomationsListSkeleton />
+      ) : isError ? (
+        <EmptyAutomationsState
+          message={t('scheduler.automations.loadError', {}, 'Could not load automations.')}
+        />
+      ) : tasks.length === 0 ? (
+        <EmptyAutomationsState
+          message={t('scheduler.automations.empty', {}, 'No automations yet')}
+        />
+      ) : (
+        <div className="space-y-px pt-1">
+          {tasks.map((task) => (
+            <AutomationListItem key={task.id} task={task} onOpen={() => onOpen(task.id)} t={t} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// AutomationRow
+// AutomationListItem — David's ActivationListItem adapted to ScheduledTask
 // ---------------------------------------------------------------------------
 
-function AutomationRow({
+function AutomationListItem({
   task,
   onOpen,
-  RunStatusBadge: RunBadge,
+  t,
 }: {
   task: ScheduledTask;
   onOpen: () => void;
-  RunStatusBadge: (props: { status: ScheduledTaskRunStatus }) => ReactNode;
+  t: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
 }) {
-  const { t } = useTranslation();
+  const { Icon, toneClass, label } = automationTypeIcon(task);
+  const status = deriveActivationStatus(task);
+  const pillClass = statusPillClass(status);
+
+  const scheduledFor = task.nextRunAt
+    ? formatDateTimeSimple(task.nextRunAt, { dateStyle: 'medium', timeStyle: 'short' })
+    : task.scheduleType === 'once'
+      ? t('scheduler.automations.noUpcomingRun', {}, 'No upcoming run')
+      : describeSchedule(task, t, formatDateTimeSimple);
 
   return (
-    <TableRow
-      role="link"
-      tabIndex={0}
+    <button
+      type="button"
       onClick={onOpen}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -189,80 +133,64 @@ function AutomationRow({
           onOpen();
         }
       }}
-      className="cursor-pointer"
+      className="mx-1 flex w-[calc(100%-0.5rem)] cursor-pointer items-start gap-3 rounded-card border border-transparent px-3 py-2.5 text-left transition-colors hover:border-border/40 hover:bg-muted/50"
     >
-      <TableCell className="max-w-[320px]">
-        <p className="truncate text-sm font-medium">{task.name}</p>
-        {task.description ? (
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">{task.description}</p>
-        ) : null}
-      </TableCell>
-      <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
-        {describeSchedule(task, t, formatDateTimeSimple)}
-      </TableCell>
-      <TableCell>
-        <TaskStatusBadge task={task} />
-      </TableCell>
-      <TableCell className="whitespace-nowrap">
-        <LastRunCell task={task} RunBadge={RunBadge} />
-      </TableCell>
-    </TableRow>
+      {/* Type icon box */}
+      <div
+        data-testid={`automation-type-${label}`}
+        className={cn(
+          'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-card border',
+          toneClass,
+        )}
+      >
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      </div>
+
+      {/* Text content */}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] font-medium leading-snug text-foreground/90">
+          {task.name}
+        </div>
+        <div className="mt-0.5 text-[11px] text-muted-foreground/70">{scheduledFor}</div>
+        <div className="mt-1">
+          <span
+            className={cn(
+              'inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide',
+              pillClass,
+            )}
+          >
+            {t(STATUS_LABEL_KEY[status], {}, status)}
+          </span>
+        </div>
+      </div>
+    </button>
   );
 }
 
 // ---------------------------------------------------------------------------
-// LastRunCell
+// Skeleton + empty state
 // ---------------------------------------------------------------------------
 
-function LastRunCell({
-  task,
-  RunBadge,
-}: {
-  task: ScheduledTask;
-  RunBadge: (props: { status: ScheduledTaskRunStatus }) => ReactNode;
-}) {
-  const { t } = useTranslation();
-  const { data, isLoading } = useScheduledTaskRuns(task.lastRunAt ? task.id : undefined, 1);
-
-  if (!task.lastRunAt) {
-    return (
-      <span className="text-sm text-muted-foreground">
-        {t('scheduler.automations.noRunsYet', {}, 'No runs yet')}
-      </span>
-    );
-  }
-
-  const lastRun = data?.data?.[0];
-
+function AutomationsListSkeleton() {
   return (
-    <div className="flex items-center gap-2">
-      {isLoading && !lastRun ? (
-        <Skeleton className="h-5 w-16" />
-      ) : lastRun ? (
-        <RunBadge status={lastRun.status} />
-      ) : null}
-      <span className="text-sm text-muted-foreground">
-        {formatDateTimeSimple(task.lastRunAt, { dateStyle: 'medium', timeStyle: 'short' })}
-      </span>
+    <div className="space-y-2 pt-2">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div key={index} className="mx-1 px-3 py-2.5">
+          <Skeleton className="mb-1.5 h-3.5 w-[65%]" />
+          <Skeleton className="h-2.5 w-[40%]" />
+        </div>
+      ))}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Skeleton
-// ---------------------------------------------------------------------------
-
-function AutomationsTableSkeleton() {
+function EmptyAutomationsState({ message }: { message: string }) {
   return (
-    <div className="space-y-3">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="flex items-center gap-4">
-          <Skeleton className="h-9 w-[35%]" />
-          <Skeleton className="h-9 w-[25%]" />
-          <Skeleton className="h-9 w-[15%]" />
-          <Skeleton className="h-9 w-[25%]" />
-        </div>
-      ))}
+    <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-card bg-muted/40">
+        <TimeIcon className="h-5 w-5 text-muted-foreground/35" aria-hidden="true" />
+      </div>
+      <p className="text-[13px] text-muted-foreground/70">{message}</p>
     </div>
   );
 }
