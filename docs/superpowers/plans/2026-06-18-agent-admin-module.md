@@ -2241,6 +2241,70 @@ git commit -m "feat(agent-admin): wire automations section"
 
 ---
 
+### Task 3.6: Restyle automations list + detail to David's activation look (user correction)
+
+User correction (2026-06-18): keep the CRUD automations (list + detail + create/edit/pause/resume/run-now built in Tasks 3.3–3.5), but adopt the visual style of David's osiris `ScheduledAgentActivationsPanel.tsx` ("Aktivierungsdetails"): the list shows a type-dependent icon per row (heartbeat vs other), and clicking a rule opens a detail view with a run-history list styled like David's panel.
+
+**Source of the look (READ, do not import):** `/Users/huti/Desktop/Projects/OktaviusV3/osiris_erp/apps/web/src/agent/components/ScheduledAgentActivationsPanel.tsx` — specifically `ActivationListItem` (icon box + name + scheduled-for + status pill), `ScheduledAgentActivationDetail` (back button + `DetailField` card + actions), `ActivationRunHistory` (run rows with failed icon + timestamp + chat link), and `DetailField`.
+
+**Files:**
+
+- Modify: `apps/web/src/modules/agent-admin/components/automations/AutomationsList.tsx`
+- Modify: `apps/web/src/modules/agent-admin/components/automations/AutomationDetail.tsx`
+- Create: `apps/web/src/modules/agent-admin/components/automations/automationIcons.ts` (small helper: heartbeat detection + icon/tint per task type)
+- Modify (if needed): `apps/web/src/lib/icons.ts` (add an Activity/Heartbeat icon alias following the existing Phosphor `X as XIcon` pattern; reuse `TimeIcon`/`ZapIcon`/`EmailIcon`/`LifeBuoyIcon` where they fit)
+- Test: extend `AutomationsList.test.tsx` and `AutomationDetail.test.tsx` (create the latter if absent)
+
+**Interfaces:**
+
+- Consumes: `ScheduledTask`, `ScheduledTaskRun`, trigger config types from `@/runtime/osiris/schedulerClient`; hooks from `@/modules/agent-admin/data/useScheduler`.
+- Produces: `isHeartbeatTask(task: ScheduledTask): boolean` and `automationTypeIcon(task: ScheduledTask): { Icon; toneClass: string; label: string }` in `automationIcons.ts`.
+
+**Heartbeat / type detection (`automationIcons.ts`):**
+
+- `isHeartbeatTask(task)` = `task.targetPayload?.eventType === 'agent_activation' && task.targetPayload?.activationKind === 'heartbeat'` (mirrors osiris `isHeartbeatTargetPayload`).
+- Icon + tone by type (use icons from `@/lib/icons` only):
+  - heartbeat → Activity/Heartbeat icon, destructive tone (`border-destructive/20 bg-destructive/10 text-destructive`).
+  - `triggerConfig?.kind === 'email_received'` → `EmailIcon`, primary tone.
+  - `triggerConfig?.kind === 'halo_ticket_created'` → ticket icon (e.g. `LifeBuoyIcon`), primary tone.
+  - else (scheduled once/interval/cron) → `TimeIcon`, primary tone (`border-primary/15 bg-primary/[0.05] text-primary/70`).
+
+**List restyle (`AutomationsList.tsx`):** replace the current row markup with the `ActivationListItem` look — a `<button onClick={() => onOpen(task.id)}>` row containing the 7×7 rounded icon box (icon/tone from `automationTypeIcon`), then name (truncate, 13px medium), a "scheduled for" line (next run formatted, or the cron/interval expression, or a "no upcoming run" string for completed `once`), and a status pill (scheduled=primary, paused=muted, completed=muted) derived from `{ enabled, nextRunAt, scheduleType, lastRunAt }` with the same rule David uses (paused if `!enabled`; completed if `scheduleType==='once' && !nextRunAt && lastRunAt`; else scheduled). Keep the existing "create" affordance (`onCreate`) and empty/loading states. Preserve keyboard accessibility (`role`/`tabIndex`/Enter-Space) already present.
+
+**Detail restyle (`AutomationDetail.tsx`):** adopt David's `ScheduledAgentActivationDetail` look — back button (`onBack`), a `DetailField` card (`rounded-lg border bg-muted/20 p-4`) with rows: Name, Scheduled for, Recurrence (for non-`once`), Status (pill), Prompt (from `targetPayload`), Last run; then for recurring tasks a run-history block styled like `ActivationRunHistory` (header label + list; each run row: `AlertCircle` failed icon when failed, finished/scheduled timestamp, and a "view chat" affordance when `conversationId` is present — render the conversation link only if a v3 chat route exists, else plain text per the no-dead-links rule). Keep the existing CRUD actions: **Edit** (`onEdit(task.id)`), plus pause/resume/run-now via the existing `ConfirmActionDialog` wiring and `useTaskActions`. Run data comes from `useScheduledTaskRuns(task.id)`.
+
+**Constraints:** icons only from `@/lib/icons`; no base-ui `Select`; `appToast` for feedback; no native confirm. Faithful to David's visual proportions/classes. Do NOT change the create/edit form (`AutomationForm.tsx`) behavior.
+
+- [ ] **Step 1: Write/extend the failing tests**
+
+In `AutomationsList.test.tsx` add an assertion that a heartbeat task (`targetPayload: { eventType: 'agent_activation', activationKind: 'heartbeat' }`) renders the heartbeat icon box (give the icon box an `aria-label`/`data-testid` like `automation-type-heartbeat`) and a non-heartbeat scheduled task renders `automation-type-scheduled`. In `AutomationDetail.test.tsx` assert that selecting a recurring task renders the run-history header and a stubbed run's timestamp row. Use the project createRoot harness + QueryClientProvider + providers (NO `@testing-library/react`); stub `fetch` for `/scheduler`, `/scheduler/{id}`, `/scheduler/runs`.
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `pnpm --filter @oktavius/web test -- AutomationsList AutomationDetail`
+Expected: FAIL (icon testids / run-history not present yet).
+
+- [ ] **Step 3: Implement `automationIcons.ts`, restyle list, restyle detail** per the spec above (read David's source for exact classes; transcribe the look, swap data to `ScheduledTask`/`ScheduledTaskRun` and icons to `@/lib/icons`).
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `pnpm --filter @oktavius/web test -- AutomationsList AutomationDetail`
+Expected: PASS.
+
+- [ ] **Step 5: Typecheck**
+
+Run: `pnpm --filter @oktavius/web typecheck` — clean (ignore only the known pre-existing TS2532 in the client test files).
+
+- [ ] **Step 6: Commit**
+
+Stage ONLY the touched automations component files (+ `automationIcons.ts`, + `icons.ts` if an alias was added, + the two test files). Never `git add -A`.
+
+```bash
+git commit -m "feat(agent-admin): restyle automations list/detail to activation-panel look"
+```
+
+---
+
 # PHASE 4 — Heartbeat & Queue section
 
 Deliverable: `/agent?section=heartbeat` shows heartbeat status with Activate/Kill, plus the scheduled-activations queue with runs, wired to `/scheduler/heartbeat/*` and the activations endpoints.
