@@ -5,6 +5,7 @@ const DEFAULT_ORG_MODULES: OrgModuleId[] = [
   'dashboard',
   'contacts',
   'ai-chat',
+  'agent-admin',
   'email',
   'calendar',
   'storage',

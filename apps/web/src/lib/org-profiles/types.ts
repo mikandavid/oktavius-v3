@@ -4,6 +4,7 @@ import type { LocationDetailItem } from '@/lib/locations/types';
 export type OrgModuleId =
   | 'dashboard'
   | 'ai-chat'
+  | 'agent-admin'
   | 'email'
   | 'calendar'
   | 'contacts'
