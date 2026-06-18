@@ -288,22 +288,6 @@ describe('SettingsPage', () => {
     );
   });
 
-  it('shows AI-owned organization controls in the AI settings tab', async () => {
-    const rendered = await renderSettingsPage();
-    roots.push(rendered.root);
-
-    await act(async () => {
-      [...rendered.container.querySelectorAll('button')]
-        .find((button) => button.textContent?.includes('Agent'))
-        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(rendered.container.textContent).toContain('AI Usage Budget');
-    expect(rendered.container.textContent).toContain('Agent Instructions');
-    expect(rendered.container.textContent).not.toContain('Company Information');
-    expect(rendered.container.textContent).not.toContain('Bank Details');
-  });
-
   it('shows location policy controls in the locations settings tab', async () => {
     const rendered = await renderSettingsPage();
     roots.push(rendered.root);

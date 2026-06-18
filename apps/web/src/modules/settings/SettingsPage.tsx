@@ -1,6 +1,6 @@
 import { Button, Combobox, SettingsRow, SettingsSection, Switch } from '@oktavius/base-ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 
 import { createConfiguredCatalogOptionsStore } from '@/api/apiStoreConfig';
 import { LanguageSelector } from '@/components/common/LanguageSelector';
@@ -10,7 +10,6 @@ import { SubEntityFormDialog } from '@/components/common/SubEntityFormDialog';
 import type { FormField, FormFieldValue } from '@/components/forms/EntityForm';
 import { useAppShellLayout } from '@/components/layout/AppShellLayoutContext';
 import { AccountSettingsSection } from '@/components/settings/AccountSettingsSection';
-import { AiSettingsSection } from '@/components/settings/AiSettingsSection';
 import {
   type CatalogOption,
   CatalogOptionsManager,
@@ -29,7 +28,6 @@ import { WorkspaceLocationsOverview } from '@/components/settings/WorkspaceLocat
 import { useTranslation } from '@/core/i18n';
 import { useDebouncedAutosave } from '@/lib/hooks/useDebouncedAutosave';
 import {
-  BrainIcon,
   DocumentIcon,
   EmailIcon,
   GlobeIcon,
@@ -338,6 +336,10 @@ export function SettingsPage() {
     }
   };
 
+  if (activeSection === 'ai') {
+    return <Navigate to="/agent?section=settings" replace />;
+  }
+
   const settingsSections: SettingsSectionConfig[] = [
     {
       id: 'account',
@@ -472,23 +474,6 @@ export function SettingsPage() {
       sectionDescription: 'Organization-specific permission roles.',
       permission: 'org.members.manage',
       render: () => <MembersRolesSection />,
-    },
-    {
-      id: 'ai',
-      group: 'Workspace',
-      label: 'Agent',
-      icon: <BrainIcon size={16} weight="duotone" />,
-      title: 'Agent',
-      sectionDescription: 'Usage guardrails and org-wide instructions for AI-assisted work.',
-      permission: 'org.manage',
-      render: () => (
-        <AiSettingsSection
-          settings={workspaceSettings}
-          saving={isSavingWorkspaceSettings}
-          savedAt={workspaceSettingsSavedAt}
-          onChange={handleWorkspaceSettingsChange}
-        />
-      ),
     },
     {
       id: 'locations',
