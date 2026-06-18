@@ -26,9 +26,14 @@ const FORBIDDEN = [
       'Use semantic design tokens (success, warning, info, teal, orange, cta, neutral-*) instead of raw Tailwind palette scales.',
   },
   {
-    pattern: /\brounded-lg\b/,
+    pattern: /\brounded-(?:lg|xl)\b/,
     message:
-      'Use rounded-card (surfaces) or rounded-control (inputs/buttons) instead of rounded-lg.',
+      'Use rounded-card (surfaces) or rounded-control (inputs/buttons) instead of rounded-lg/rounded-xl.',
+  },
+  {
+    pattern: /\bborder-input\b/,
+    message:
+      'No border-input — text inputs use the <Input> component (bg-muted/60, no border). See ui-system.md.',
   },
 ];
 

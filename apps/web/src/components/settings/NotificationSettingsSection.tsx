@@ -1,4 +1,4 @@
-import { Badge, cn, SettingsRow, SettingsSection } from '@oktavius/base-ui';
+import { Badge, cn, Combobox, SettingsRow, SettingsSection } from '@oktavius/base-ui';
 
 import type {
   NotificationChannel,
@@ -167,7 +167,7 @@ export function NotificationSettingsSection({ runtime }: NotificationSettingsSec
                       const controlKey = `${typeItem.key}:${channel.channel}`;
                       const label = channelLabel(t, channel.channel);
                       return (
-                        <label
+                        <div
                           key={controlKey}
                           className={cn(
                             'grid gap-1 rounded-md border border-border/60 bg-muted/20 p-2',
@@ -175,31 +175,30 @@ export function NotificationSettingsSection({ runtime }: NotificationSettingsSec
                           )}
                         >
                           <span className="text-xs font-medium text-foreground">{label}</span>
-                          <select
-                            aria-label={`${label} notifications for ${typeItem.title}`}
-                            className="h-9 rounded-control border border-border bg-background px-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                          <Combobox
+                            clearable={false}
                             value={channel.explicitState}
                             disabled={!channel.allowed || savingKey === controlKey}
-                            onChange={(event) =>
-                              updateChannel(
-                                typeItem.key,
-                                channel.channel,
-                                event.target.value as NotificationExplicitPreferenceState,
-                              )
-                            }
-                          >
-                            {availableStates(channel).map((state) => (
-                              <option key={state} value={state}>
-                                {state === 'inherited'
+                            options={availableStates(channel).map((state) => ({
+                              value: state,
+                              label:
+                                state === 'inherited'
                                   ? t(
                                       'profile.notificationStateInheritedWithDefault',
                                       { state: stateLabel(t, channel.defaultState) },
                                       `Default: ${stateLabel(t, channel.defaultState)}`,
                                     )
-                                  : stateLabel(t, state)}
-                              </option>
-                            ))}
-                          </select>
+                                  : stateLabel(t, state),
+                            }))}
+                            onChange={(next) => {
+                              if (!next) return;
+                              updateChannel(
+                                typeItem.key,
+                                channel.channel,
+                                next as NotificationExplicitPreferenceState,
+                              );
+                            }}
+                          />
                           <span className="text-xs text-muted-foreground">
                             {channel.allowed
                               ? t(
@@ -210,7 +209,7 @@ export function NotificationSettingsSection({ runtime }: NotificationSettingsSec
                               : (channel.disabledReason ??
                                 t('common.disabled', undefined, 'Disabled'))}
                           </span>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>

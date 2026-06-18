@@ -144,7 +144,10 @@ const runtime = {
   })),
 } satisfies OsirisRuntimeContextValue;
 
-async function renderSettingsPage(value: OsirisRuntimeContextValue = runtime) {
+async function renderSettingsPage(
+  value: OsirisRuntimeContextValue = runtime,
+  initialRoute = '/settings',
+) {
   const container = document.createElement('div');
   document.body.append(container);
   const root = createRoot(container);
@@ -152,7 +155,7 @@ async function renderSettingsPage(value: OsirisRuntimeContextValue = runtime) {
 
   await act(async () => {
     root.render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialRoute]}>
         <TestI18nProvider>
           <QueryClientProvider client={queryClient}>
             <OsirisRuntimeContext.Provider value={value}>
@@ -207,7 +210,7 @@ describe('SettingsPage', () => {
   });
 
   it('loads workspace settings without autosaving on load', async () => {
-    const rendered = await renderSettingsPage();
+    const rendered = await renderSettingsPage(runtime, '/settings?section=localization');
     roots.push(rendered.root);
 
     expect(runtime.loadWorkspaceSettings).toHaveBeenCalledWith('org_1');

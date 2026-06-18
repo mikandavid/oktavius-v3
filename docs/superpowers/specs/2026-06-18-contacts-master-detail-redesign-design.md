@@ -2,7 +2,11 @@
 
 **Date:** 2026-06-18
 **Branch:** FE
-**Status:** Design approved, pending spec review
+**Status:** SUPERSEDED (2026-06-18) by
+`2026-06-18-shared-detail-view-two-column-profile-design.md`. That direction
+reshapes the _shared_ `DetailView` default (all modules) and leaves the contacts
+list untouched, instead of this bespoke contacts-only master–detail rebuild.
+Never implemented. Kept for reference / the parallel stream that authored it.
 
 ## Problem
 

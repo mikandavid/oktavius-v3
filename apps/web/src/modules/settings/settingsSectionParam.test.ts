@@ -7,11 +7,11 @@ describe('resolveInitialSettingsSection', () => {
     expect(resolveInitialSettingsSection('mail')).toBe('mail');
   });
 
-  it('falls back to general when no section is requested', () => {
-    expect(resolveInitialSettingsSection(null)).toBe('general');
+  it('falls back to the account section when no section is requested', () => {
+    expect(resolveInitialSettingsSection(null)).toBe('account');
   });
 
-  it('falls back to general for a blank section', () => {
-    expect(resolveInitialSettingsSection('   ')).toBe('general');
+  it('falls back to the account section for a blank section', () => {
+    expect(resolveInitialSettingsSection('   ')).toBe('account');
   });
 });

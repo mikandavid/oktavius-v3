@@ -3,7 +3,6 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  SegmentedToggle,
 } from '@oktavius/base-ui';
 import type { ReactNode } from 'react';
 
@@ -11,6 +10,7 @@ import { useI18n, useTranslation } from '@/core/i18n';
 import {
   CheckIcon,
   ChevronRightIcon,
+  GlobeIcon,
   MoonIcon,
   OrganizationIcon,
   SunIcon,
@@ -118,90 +118,61 @@ function OrganizationLogo({ logoUrl, name }: { logoUrl?: string | null; name?: s
   );
 }
 
-function IdentityPill({ children }: { children: ReactNode }) {
-  return (
-    <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-      {children}
-    </span>
-  );
-}
-
-export function IdentityPills({
-  orgName,
-  roleLabel,
-}: {
-  orgName?: string | null;
-  roleLabel?: string | null;
-}) {
-  if (!orgName && !roleLabel) {
-    return null;
-  }
-  return (
-    <div className="flex flex-wrap gap-1.5 px-2 pb-2 pt-1">
-      {orgName ? <IdentityPill>{orgName}</IdentityPill> : null}
-      {roleLabel ? <IdentityPill>{roleLabel}</IdentityPill> : null}
-    </div>
-  );
-}
-
-const THEME_ICON: Record<UiTheme, ReactNode> = {
-  light: <SunIcon size={13} />,
-  dark: <MoonIcon size={13} />,
-  system: <SystemThemeIcon size={13} />,
-};
-
-function PreferenceRow({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-2 px-2 py-1.5 text-sm">
-      <span className="min-w-0 flex-1 truncate text-left text-foreground">{label}</span>
-      {children}
-    </div>
-  );
-}
-
-export function ThemeMenuRow() {
-  const { theme, setTheme } = useUserPreferences();
+export function ThemeMenuSection() {
+  const { theme, setTheme, themeLabel } = useUserPreferences();
   const { t } = useTranslation();
-  const label = t('common.theme', undefined, 'Theme');
+
   return (
-    <PreferenceRow label={label}>
-      <SegmentedToggle
-        ariaLabel={label}
-        value={theme}
-        onChange={(value) => setTheme(value as UiTheme)}
-        options={UI_THEME_OPTIONS.map((option) => ({
-          value: option.value,
-          label: option.label,
-          icon: THEME_ICON[option.value],
-          ariaLabel: option.label,
-        }))}
-      />
-    </PreferenceRow>
+    <AccountSubmenu
+      icon={<SunIcon size={14} className="text-muted-foreground" />}
+      label={t('common.theme', undefined, 'Theme')}
+      hint={themeLabel}
+    >
+      {UI_THEME_OPTIONS.map((option) => (
+        <AccountSubmenuOption
+          key={option.value}
+          active={theme === option.value}
+          label={option.label}
+          leading={
+            option.value === 'light' ? (
+              <SunIcon size={14} className="text-muted-foreground" />
+            ) : option.value === 'dark' ? (
+              <MoonIcon size={14} className="text-muted-foreground" />
+            ) : (
+              <SystemThemeIcon size={14} className="text-muted-foreground" />
+            )
+          }
+          onSelect={() => setTheme(option.value as UiTheme)}
+        />
+      ))}
+    </AccountSubmenu>
   );
 }
 
-export function LanguageMenuRow() {
-  const { locale, setLocale } = useUserPreferences();
+export function LanguageMenuSection() {
+  const { locale, setLocale, localeLabel } = useUserPreferences();
   const { setLanguage } = useI18n();
   const { t } = useTranslation();
-  const label = t('common.language', undefined, 'Language');
+
   return (
-    <PreferenceRow label={label}>
-      <SegmentedToggle
-        ariaLabel={label}
-        value={locale}
-        onChange={(value) => {
-          const next = value as UiLocale;
-          setLocale(next);
-          void setLanguage(next);
-        }}
-        options={UI_LOCALE_OPTIONS.map((option) => ({
-          value: option.value,
-          label: option.value.toUpperCase(),
-          ariaLabel: option.label,
-        }))}
-      />
-    </PreferenceRow>
+    <AccountSubmenu
+      icon={<GlobeIcon size={14} className="text-muted-foreground" />}
+      label={t('common.language', undefined, 'Language')}
+      hint={localeLabel}
+    >
+      {UI_LOCALE_OPTIONS.map((option) => (
+        <AccountSubmenuOption
+          key={option.value}
+          active={locale === option.value}
+          label={option.label}
+          onSelect={() => {
+            const next = option.value as UiLocale;
+            setLocale(next);
+            void setLanguage(next);
+          }}
+        />
+      ))}
+    </AccountSubmenu>
   );
 }
 
@@ -233,5 +204,24 @@ function AccountSubmenu({ icon, label, hint, children }: AccountSubmenuProps) {
         {children}
       </DropdownMenuSubContent>
     </DropdownMenuSub>
+  );
+}
+
+type AccountSubmenuOptionProps = {
+  active: boolean;
+  label: string;
+  leading?: ReactNode;
+  onSelect: () => void;
+};
+
+function AccountSubmenuOption({ active, label, leading, onSelect }: AccountSubmenuOptionProps) {
+  return (
+    <DropdownMenuItem className="gap-2" onSelect={onSelect}>
+      <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+        {active ? <CheckIcon size={14} weight="bold" className="text-foreground" /> : null}
+      </span>
+      {leading}
+      <span className="truncate">{label}</span>
+    </DropdownMenuItem>
   );
 }

@@ -97,15 +97,12 @@ export function ForgotPasswordPage() {
         ) : null}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground" htmlFor="email">
-            {t('auth.email')}
-          </label>
-          <input
+          <Label htmlFor="email">{t('auth.email')}</Label>
+          <Input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
-            className="flex h-9 w-full rounded-control border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             placeholder={t('common.emailPlaceholder')}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -205,15 +202,12 @@ export function ResetPasswordPage() {
         ) : null}
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground" htmlFor="password">
-            {t('auth.newPassword')}
-          </label>
-          <input
+          <Label htmlFor="password">{t('auth.newPassword')}</Label>
+          <Input
             id="password"
             name="password"
             type="password"
             autoComplete="new-password"
-            className="flex h-9 w-full rounded-control border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             placeholder={t('common.passwordPlaceholder')}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -222,15 +216,12 @@ export function ResetPasswordPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground" htmlFor="confirmPassword">
-            {t('auth.confirmPassword')}
-          </label>
-          <input
+          <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
+          <Input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
             autoComplete="new-password"
-            className="flex h-9 w-full rounded-control border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             placeholder={t('common.passwordPlaceholder')}
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}

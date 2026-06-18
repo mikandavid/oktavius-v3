@@ -2,7 +2,7 @@ import { Button, Skeleton } from '@oktavius/base-ui';
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/EmptyState';
-import { useTranslation } from '@/core/i18n';
+import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { PlusIcon } from '@/lib/icons';
 import { canUsePermissionRequirement, EMPTY_PERMISSION_SUBJECT } from '@/lib/permissions';
 import {
@@ -22,6 +22,7 @@ import { useAppLogos } from './useAppLogos';
 
 export function OrgAgentIntegrationsPanel() {
   const { t } = useTranslation();
+  const { ready } = usePreloadNamespaces(['settings']);
   const osirisRuntime = useOptionalOsirisRuntime();
   const isAdmin = canUsePermissionRequirement(
     osirisRuntime?.permissionSubject ?? EMPTY_PERMISSION_SUBJECT,
@@ -66,7 +67,7 @@ export function OrgAgentIntegrationsPanel() {
           {action}
         </div>
         {items.length > 0 ? (
-          <div className="divide-y divide-border/60 rounded-xl border border-border/70 bg-background">
+          <div className="divide-y divide-border/60 rounded-card border border-border/70 bg-background">
             {items.map((connection) => (
               <ConnectionRow
                 key={connection.id}
@@ -79,7 +80,7 @@ export function OrgAgentIntegrationsPanel() {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-border/60 bg-muted/10 px-4 py-4 text-sm text-muted-foreground">
+          <div className="rounded-card border border-dashed border-border/60 bg-muted/10 px-4 py-4 text-sm text-muted-foreground">
             {t('settings.integrationNoConnections')}
           </div>
         )}
@@ -87,11 +88,11 @@ export function OrgAgentIntegrationsPanel() {
     );
   }
 
-  if (connectionsQuery.isLoading) {
+  if (!ready || connectionsQuery.isLoading) {
     return (
       <div className="space-y-3">
         {[0, 1, 2].map((index) => (
-          <div key={index} className="flex items-center gap-3 rounded-xl border px-4 py-3">
+          <div key={index} className="flex items-center gap-3 rounded-card border px-4 py-3">
             <Skeleton className="h-9 w-9 rounded-control" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-3.5 w-44" />

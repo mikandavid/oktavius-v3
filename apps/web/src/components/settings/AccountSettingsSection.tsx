@@ -118,7 +118,7 @@ export function AccountSettingsSection() {
               onChange={(event) => setFullName(event.target.value)}
               disabled={isSavingProfile}
             />
-            <Button type="submit" size="sm" variant="cta" disabled={isSavingProfile}>
+            <Button type="submit" size="sm" variant="default" disabled={isSavingProfile}>
               {isSavingProfile ? 'Saving...' : 'Save'}
             </Button>
           </div>

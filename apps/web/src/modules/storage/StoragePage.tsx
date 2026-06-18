@@ -4,6 +4,7 @@ import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
 import { UploadIcon } from '@/lib/icons';
 import { storagePageIcon } from '@/lib/modulePageIcons';
 
+import { StorageDocumentEditorPage } from './components/StorageDocumentEditorPage';
 import { StorageMainPane } from './components/StorageMainPane';
 import { StorageRail } from './components/StorageRail';
 import { useStorageViewState } from './useStorageViewState';
@@ -21,6 +22,16 @@ export function StoragePage() {
   );
 
   if (!ready) return null;
+
+  if (state.documentNodeId) {
+    return (
+      <StorageDocumentEditorPage
+        nodeId={state.documentNodeId}
+        onClose={() => state.closeDocument()}
+        onNodeIdChange={(id) => state.openDocument(id)}
+      />
+    );
+  }
 
   return (
     <ModulePage

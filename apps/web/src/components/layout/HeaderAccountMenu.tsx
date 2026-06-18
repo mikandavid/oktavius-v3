@@ -15,10 +15,9 @@ import { appToast } from '@/lib/toast';
 import { useOptionalOsirisRuntime } from '@/runtime/osiris/useOsirisRuntime';
 
 import {
-  IdentityPills,
-  LanguageMenuRow,
+  LanguageMenuSection,
   OrganizationMenuSection,
-  ThemeMenuRow,
+  ThemeMenuSection,
 } from './AccountMenuSections';
 
 type HeaderAccountMenuProps = {
@@ -37,11 +36,8 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
 
   const activeOrgId = osirisRuntime?.activeOrgId ?? null;
   const organizations = osirisRuntime?.organizations ?? [];
-  const memberships = osirisRuntime?.memberships ?? [];
   const userLabel = currentUser.fullName ?? currentUser.email ?? 'User';
   const activeOrg = organizations.find((org) => org.id === activeOrgId) ?? organizations[0];
-  const activeMembership = memberships.find((membership) => membership.org_id === activeOrg?.id);
-  const roleLabel = activeMembership?.role ?? null;
   const setActiveOrgId = osirisRuntime?.setActiveOrgId;
   const switchOrganization = setActiveOrgId
     ? (orgId: string) => {
@@ -89,25 +85,42 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuItem
-          onSelect={() => navigate('/settings?section=account')}
-          className="h-auto flex-col items-start gap-0.5 px-2 py-2 font-normal focus:bg-muted/50"
-        >
-          <span className="text-sm font-medium leading-tight text-foreground">{userLabel}</span>
-          <span className="w-full truncate text-xs leading-tight text-muted-foreground">
-            {currentUser.email ?? 'No email'}
-          </span>
+        <div className="flex items-center gap-2.5 px-2 py-2">
+          <Avatar
+            label={userLabel}
+            size="md"
+            tone="muted"
+            icon={<UserIcon size={16} weight="duotone" />}
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium leading-tight text-foreground">
+              {userLabel}
+            </p>
+            <p className="truncate text-xs leading-tight text-muted-foreground">
+              {currentUser.email ?? 'No email'}
+            </p>
+          </div>
+        </div>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem onSelect={() => navigate('/settings?section=account')} className="gap-2">
+          <UserIcon size={14} />
+          Profile
         </DropdownMenuItem>
 
-        <IdentityPills orgName={activeOrg?.name ?? null} roleLabel={roleLabel} />
+        <DropdownMenuItem onSelect={() => navigate('/settings')} className="gap-2">
+          <SettingsIcon size={14} />
+          Settings
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
         <div className="px-2 pb-1 pt-1.5 text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground/70">
           Preferences
         </div>
-        <ThemeMenuRow />
-        <LanguageMenuRow />
+        <ThemeMenuSection />
+        <LanguageMenuSection />
         <OrganizationMenuSection
           activeOrgId={activeOrg?.id ?? activeOrgId}
           organizations={organizations}
@@ -115,11 +128,6 @@ export function HeaderAccountMenu({ compact = false, className }: HeaderAccountM
         />
 
         <DropdownMenuSeparator />
-
-        <DropdownMenuItem onSelect={() => navigate('/settings')} className="gap-2">
-          <SettingsIcon size={14} />
-          Settings
-        </DropdownMenuItem>
 
         <DropdownMenuItem
           disabled={!handleSignOut}

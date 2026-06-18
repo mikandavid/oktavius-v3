@@ -1,3 +1,4 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@oktavius/base-ui';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -34,10 +35,9 @@ vi.mock('@/core/i18n', async (importOriginal) => {
 });
 
 import {
-  IdentityPills,
-  LanguageMenuRow,
+  LanguageMenuSection,
   OrganizationMenuSection,
-  ThemeMenuRow,
+  ThemeMenuSection,
 } from './AccountMenuSections';
 
 let container: HTMLDivElement;
@@ -62,48 +62,31 @@ function renderRow(node: React.ReactNode) {
   });
 }
 
-function clickRadio(name: string) {
-  const radio = Array.from(container.querySelectorAll('[role="radio"]')).find(
-    (el) => el.getAttribute('aria-label') === name,
+// Submenu sections only render inside an open DropdownMenu; wrap them so the
+// submenu trigger row mounts and we can assert its label + active-state hint.
+function renderInOpenMenu(node: React.ReactNode) {
+  renderRow(
+    <DropdownMenu defaultOpen>
+      <DropdownMenuTrigger>menu</DropdownMenuTrigger>
+      <DropdownMenuContent forceMount>{node}</DropdownMenuContent>
+    </DropdownMenu>,
   );
-  if (!radio) {
-    throw new Error(`radio not found: ${name}`);
-  }
-  act(() => {
-    (radio as HTMLButtonElement).click();
-  });
 }
 
-describe('ThemeMenuRow', () => {
-  it('renders one radio per theme and calls setTheme on click', () => {
-    renderRow(<ThemeMenuRow />);
-    expect(container.querySelectorAll('[role="radio"]')).toHaveLength(3);
-    clickRadio('Light');
-    expect(setTheme).toHaveBeenCalledWith('light');
+describe('ThemeMenuSection', () => {
+  it('renders a submenu trigger showing the active theme as hint', () => {
+    renderInOpenMenu(<ThemeMenuSection />);
+    // The submenu trigger row mounts immediately; its options open on hover.
+    expect(document.querySelector('[role="menuitem"]')).not.toBeNull();
+    expect(document.body.textContent ?? '').toContain('System');
   });
 });
 
-describe('LanguageMenuRow', () => {
-  it('renders DE/EN radios and updates both locale and language on click', () => {
-    renderRow(<LanguageMenuRow />);
-    expect(container.querySelectorAll('[role="radio"]')).toHaveLength(2);
-    clickRadio('Deutsch');
-    expect(setLocale).toHaveBeenCalledWith('de');
-    expect(setLanguage).toHaveBeenCalledWith('de');
-  });
-});
-
-describe('IdentityPills', () => {
-  it('renders org and role pills when both present', () => {
-    renderRow(<IdentityPills orgName="Texterous" roleLabel="Owner" />);
-    const text = container.textContent ?? '';
-    expect(text).toContain('Texterous');
-    expect(text).toContain('Owner');
-  });
-
-  it('renders nothing when both are absent', () => {
-    renderRow(<IdentityPills orgName={null} roleLabel={null} />);
-    expect(container.textContent).toBe('');
+describe('LanguageMenuSection', () => {
+  it('renders a submenu trigger showing the active locale as hint', () => {
+    renderInOpenMenu(<LanguageMenuSection />);
+    expect(document.querySelector('[role="menuitem"]')).not.toBeNull();
+    expect(document.body.textContent ?? '').toContain('English');
   });
 });
 
