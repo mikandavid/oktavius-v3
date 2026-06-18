@@ -335,7 +335,11 @@ export function Combobox({
             aria-autocomplete="list"
             aria-controls={listboxId}
             aria-expanded={open}
-            aria-activedescendant={open ? `${listboxId}-opt-${activeIndex}` : undefined}
+            aria-activedescendant={
+              open && !isLoading && !isFetching && displayOptions.length > 0
+                ? `${listboxId}-opt-${activeIndex}`
+                : undefined
+            }
             aria-invalid={resolvedValidation === 'invalid' ? true : undefined}
             onFocus={() => {
               openField();
