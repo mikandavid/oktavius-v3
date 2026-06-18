@@ -74,11 +74,17 @@ export function DetailLayoutSection() {
         </div>
       </ShowcaseBlock>
 
-      <ShowcaseBlock title="DetailView" meta="RecordInfoHero · DetailFieldGrid · RecordVisual">
+      <ShowcaseBlock
+        title="DetailView"
+        meta="Two-column profile · RecordIdentity · RecordKeyFacts · DetailFieldGrid"
+      >
         <DetailView
           title="Client profile"
           visual={{ kind: 'icon', icon: <ProjectsIcon size={16} weight="duotone" /> }}
-          visualLayout="header"
+          identityTitle="Apex Technologies GmbH"
+          identityTrailing={
+            <StatusBadge status="active" label="Active" variantMap={{ active: 'success' }} />
+          }
           fields={[
             { label: 'Company', value: inlineValue, importance: 'primary' },
             { label: 'Industry', value: 'Technology', section: 'Profile' },
@@ -93,6 +99,18 @@ export function DetailLayoutSection() {
             { label: 'Created', value: '10.01.2024', section: 'Meta', importance: 'meta' },
           ]}
         />
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">
+            Single-column fallback — no identity / primary / meta
+          </p>
+          <DetailView
+            title="Notes"
+            fields={[
+              { label: 'Summary', value: 'Renewal due Q3.', section: 'Notes' },
+              { label: 'Owner', value: 'Anna Hofer', section: 'Notes' },
+            ]}
+          />
+        </div>
         <div className="mt-4 border-t border-border/50 pt-4">
           <p className="mb-2 text-xs font-medium text-muted-foreground">
             InlineEdit — click to edit
