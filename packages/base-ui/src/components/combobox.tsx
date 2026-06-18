@@ -1,8 +1,11 @@
 /**
- * Combobox — searchable single-select dropdown.
+ * Combobox — editable typeahead single-select.
+ *
+ * The field itself is the search input: focus it, type to filter, the dropdown
+ * below shows matches, selecting fills the field.
  *
  * Modes:
- *   - Static: pass `options`, client-side filter runs automatically
+ *   - Static: pass `options`, client-side filter runs as you type
  *   - Async:  pass `asyncItems`, disable client filter, debounce 200ms
  *   - Create: pass `onCreate` to show an inline "add option" field
  *   - Footer: pass `footerAction` for a contextual footer button (e.g. "Manage options")
@@ -10,7 +13,7 @@
  * For multi-select use MultiSelect. Do not use Select in app UI — Combobox is the standard single-select.
  */
 
-import { CaretDown, Check, MagnifyingGlass, SpinnerGap, X } from '@phosphor-icons/react';
+import { CaretDown, Check, SpinnerGap, X } from '@phosphor-icons/react';
 import * as React from 'react';
 
 import {
@@ -25,7 +28,7 @@ import { limitSelectOptions } from '../lib/limit-select-options';
 import { cn } from '../lib/utils';
 import { Button } from './button';
 import { Input } from './input';
-import { dropdownPopoverPanelClasses, Popover, PopoverContent, PopoverTrigger } from './popover';
+import { dropdownPopoverPanelClasses, Popover, PopoverAnchor, PopoverContent } from './popover';
 import { SelectOptionsOverflowHint } from './select-options-overflow-hint';
 
 export interface ComboboxOption {
@@ -40,6 +43,7 @@ export interface ComboboxProps {
   value?: string;
   onChange?: (value: string | null) => void;
   placeholder?: string;
+  /** @deprecated The field is now the search input; this prop is ignored. */
   searchPlaceholder?: string;
   disabled?: boolean;
   clearable?: boolean;
@@ -70,7 +74,7 @@ export function Combobox({
   value,
   onChange,
   placeholder = 'Select…',
-  searchPlaceholder = 'Search…',
+  searchPlaceholder: _searchPlaceholder,
   disabled = false,
   clearable = true,
   emptyText = 'No results.',
@@ -85,7 +89,9 @@ export function Combobox({
   invalid,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [query, setQuery] = React.useState('');
+  const [inputValue, setInputValue] = React.useState('');
+  const [userTyped, setUserTyped] = React.useState(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
   const [remoteOptions, setRemoteOptions] = React.useState<ComboboxOption[]>([]);
   const [isFetching, setIsFetching] = React.useState(false);
   const [isCreating, setIsCreating] = React.useState(false);
@@ -94,12 +100,22 @@ export function Combobox({
   const [isFooterPending, setIsFooterPending] = React.useState(false);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const listboxId = React.useId();
+  const fieldRef = React.useRef<HTMLDivElement>(null);
   const createInputRef = React.useRef<HTMLInputElement>(null);
+  const listboxId = React.useId();
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // ─── Async fetch ────────────────────────────────────────────────────────────
+  const selectedOption = [...options, ...remoteOptions].find((o) => o.value === value);
 
+  // Filter text is only the typed query — never the resting selected label.
+  const query = userTyped ? inputValue : '';
+
+  // ─── Sync the displayed text with the selected option when not typing ──────────
+  React.useEffect(() => {
+    if (!userTyped) setInputValue(selectedOption?.label ?? '');
+  }, [selectedOption?.label, userTyped]);
+
+  // ─── Async fetch ────────────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (!asyncItems || !open) return;
     clearTimeout(debounceRef.current);
@@ -114,11 +130,13 @@ export function Combobox({
     return () => clearTimeout(debounceRef.current);
   }, [asyncItems, open, query]);
 
+  // ─── Reset transient state on close ───────────────────────────────────────────────
   React.useEffect(() => {
     if (!open) {
-      setQuery('');
+      setUserTyped(false);
       setIsCreating(false);
       setCreateLabel('');
+      setActiveIndex(0);
     }
   }, [open]);
 
@@ -126,8 +144,7 @@ export function Combobox({
     if (isCreating) setTimeout(() => createInputRef.current?.focus(), 0);
   }, [isCreating]);
 
-  // ─── Derived options ─────────────────────────────────────────────────────────
-
+  // ─── Derived options ──────────────────────────────────────────────────────────────
   const matchedOptions = React.useMemo(() => {
     if (asyncItems) {
       return query.trim()
@@ -143,25 +160,33 @@ export function Combobox({
   }, [asyncItems, options, query, remoteOptions]);
 
   const { visible: displayOptions, truncated: truncatedOptions } = React.useMemo(
-    () =>
-      limitSelectOptions(matchedOptions, {
-        selectedValue: value,
-      }),
+    () => limitSelectOptions(matchedOptions, { selectedValue: value }),
     [matchedOptions, value],
   );
 
-  const selectedOption = [...options, ...remoteOptions].find((o) => o.value === value);
   const hasFooter = Boolean(onCreate || footerAction);
 
-  // ─── Handlers ────────────────────────────────────────────────────────────────
+  // ─── Keep activeIndex in range and pointed at an enabled option ─────────────────────
+  React.useEffect(() => {
+    if (!open) return;
+    setActiveIndex((current) => {
+      if (current < displayOptions.length && !displayOptions[current]?.disabled) return current;
+      const firstEnabled = displayOptions.findIndex((o) => !o.disabled);
+      return firstEnabled === -1 ? 0 : firstEnabled;
+    });
+  }, [open, displayOptions]);
 
-  const handleOpen = (nextOpen: boolean) => {
+  // ─── Scroll the active option into view ─────────────────────────────────────────────
+  React.useEffect(() => {
+    if (!open) return;
+    const el = document.getElementById(`${listboxId}-opt-${activeIndex}`);
+    el?.scrollIntoView?.({ block: 'nearest' });
+  }, [open, activeIndex, listboxId]);
+
+  // ─── Handlers ────────────────────────────────────────────────────────────────────────
+  const openField = () => {
     if (disabled) return;
-    setOpen(nextOpen);
-    if (nextOpen) {
-      setQuery('');
-      setTimeout(() => inputRef.current?.focus(), 0);
-    }
+    setOpen(true);
   };
 
   const handleSelect = (option: ComboboxOption) => {
@@ -171,24 +196,81 @@ export function Combobox({
     } else {
       onChange?.(option.value);
     }
+    setUserTyped(false);
     setOpen(false);
   };
 
-  const selectFirstMatch = () => {
-    if (isLoading || isFetching || isCreating) return;
-    const first = displayOptions.find((option) => !option.disabled);
-    if (first) handleSelect(first);
+  const moveActive = (delta: number) => {
+    if (displayOptions.length === 0) return;
+    setActiveIndex((current) => {
+      let next = current;
+      for (let i = 0; i < displayOptions.length; i += 1) {
+        next = (next + delta + displayOptions.length) % displayOptions.length;
+        if (!displayOptions[next]?.disabled) return next;
+      }
+      return current;
+    });
   };
 
-  const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      setOpen(false);
-      return;
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        if (!open) openField();
+        else moveActive(1);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        if (!open) openField();
+        else moveActive(-1);
+        break;
+      case 'Home':
+        if (open) {
+          event.preventDefault();
+          const first = displayOptions.findIndex((o) => !o.disabled);
+          if (first !== -1) setActiveIndex(first);
+        }
+        break;
+      case 'End':
+        if (open) {
+          event.preventDefault();
+          for (let i = displayOptions.length - 1; i >= 0; i -= 1) {
+            if (!displayOptions[i]?.disabled) {
+              setActiveIndex(i);
+              break;
+            }
+          }
+        }
+        break;
+      case 'Enter': {
+        if (!open) return;
+        event.preventDefault();
+        if (isLoading || isFetching || isCreating) return;
+        const option = displayOptions[activeIndex] ?? displayOptions.find((o) => !o.disabled);
+        if (option) handleSelect(option);
+        break;
+      }
+      case 'Escape':
+        if (open) {
+          event.preventDefault();
+          setOpen(false);
+        }
+        break;
+      case 'Tab':
+        setOpen(false);
+        break;
+      default:
+        break;
     }
-    if (event.key !== 'Enter') return;
+  };
+
+  const handleClear = (event: React.MouseEvent) => {
     event.preventDefault();
-    selectFirstMatch();
+    event.stopPropagation();
+    onChange?.(null);
+    setUserTyped(false);
+    setInputValue('');
+    setOpen(false);
   };
 
   const handleCreate = async () => {
@@ -200,6 +282,7 @@ export function Combobox({
       const created = await onCreate.onSubmit(trimmed);
       if (created) {
         onChange?.(created);
+        setUserTyped(false);
         setOpen(false);
       }
     } finally {
@@ -218,59 +301,104 @@ export function Combobox({
     }
   };
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
-
-  const resolvedValidation = resolveControlValidationState({
-    validationState,
-    valid,
-    invalid,
-  });
+  // ─── Render ──────────────────────────────────────────────────────────────────────────
+  const resolvedValidation = resolveControlValidationState({ validationState, valid, invalid });
+  const showClear = clearable && Boolean(value) && !disabled;
 
   return (
-    <Popover open={open} onOpenChange={handleOpen}>
-      <PopoverTrigger asChild>
-        <button
-          id={id}
-          type="button"
-          disabled={disabled}
-          aria-expanded={open}
-          aria-invalid={resolvedValidation === 'invalid' ? true : undefined}
+    <Popover open={open} onOpenChange={(next) => (next ? openField() : setOpen(false))}>
+      <PopoverAnchor asChild>
+        <div
+          ref={fieldRef}
+          data-disabled={disabled ? '' : undefined}
           data-valid={resolvedValidation === 'valid' ? 'true' : undefined}
           className={cn(
-            'flex h-9 w-full items-center justify-between px-3 py-1 text-sm',
+            'flex h-9 w-full items-center gap-1 px-3 py-1 text-sm',
             filledControlSurfaceClasses,
             controlHoverClasses,
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+            'focus-within:outline-none focus-within:ring-2 focus-within:ring-ring/40',
             controlDisabledClasses,
             controlValidationClasses(resolvedValidation),
-            !selectedOption && 'text-muted-foreground',
             className,
           )}
         >
-          <span className="truncate">{selectedOption?.label ?? placeholder}</span>
-          <CaretDown className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        </button>
-      </PopoverTrigger>
-
-      <PopoverContent className={dropdownPopoverPanelClasses} align="start">
-        <div className="flex items-center border-b border-border px-3 py-2 gap-2">
-          <MagnifyingGlass className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
-            placeholder={searchPlaceholder}
+            id={id}
+            type="text"
             role="combobox"
+            autoComplete="off"
+            spellCheck={false}
+            disabled={disabled}
+            value={inputValue}
+            placeholder={placeholder}
             aria-autocomplete="list"
             aria-controls={listboxId}
             aria-expanded={open}
-            className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
+            aria-activedescendant={open ? `${listboxId}-opt-${activeIndex}` : undefined}
+            aria-invalid={resolvedValidation === 'invalid' ? true : undefined}
+            onFocus={() => {
+              openField();
+              setTimeout(() => inputRef.current?.select(), 0);
+            }}
+            onClick={() => openField()}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              setUserTyped(true);
+              setOpen(true);
+              setActiveIndex(0);
+            }}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              'min-w-0 flex-1 bg-transparent text-sm focus:outline-none',
+              'placeholder:text-muted-foreground disabled:cursor-not-allowed',
+            )}
           />
+          {showClear ? (
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label="Clear"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={handleClear}
+              className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={open ? 'Close options' : 'Open options'}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              if (open) {
+                setOpen(false);
+              } else {
+                openField();
+                inputRef.current?.focus();
+              }
+            }}
+            className="shrink-0 text-muted-foreground"
+          >
+            <CaretDown className="h-3.5 w-3.5" />
+          </button>
         </div>
+      </PopoverAnchor>
 
+      <PopoverContent
+        className={dropdownPopoverPanelClasses}
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
+        onInteractOutside={(e) => {
+          if (fieldRef.current?.contains(e.target as Node)) e.preventDefault();
+        }}
+      >
         <div
           id={listboxId}
+          role="listbox"
           className={cn('overflow-y-auto p-1', hasFooter ? 'max-h-52' : 'max-h-60')}
         >
           {isLoading || isFetching ? (
@@ -281,16 +409,22 @@ export function Combobox({
             <div className="py-3 text-center text-xs text-muted-foreground">{emptyText}</div>
           ) : (
             <>
-              {displayOptions.map((option) => (
+              {displayOptions.map((option, index) => (
                 <button
                   key={option.value}
+                  id={`${listboxId}-opt-${index}`}
                   type="button"
+                  role="option"
+                  aria-selected={option.value === value}
                   disabled={option.disabled}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => handleSelect(option)}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-left',
-                    'transition-colors hover:bg-muted focus:bg-muted focus:outline-none',
+                    'transition-colors focus:outline-none',
                     'disabled:pointer-events-none disabled:opacity-50',
+                    index === activeIndex && 'bg-muted',
                     option.value === value && 'bg-muted/50',
                   )}
                 >
@@ -337,7 +471,7 @@ export function Combobox({
                         setCreateLabel('');
                       }
                     }}
-                    placeholder={onCreate.placeholder ?? searchPlaceholder}
+                    placeholder={onCreate.placeholder ?? placeholder}
                     disabled={isCreatingPending}
                     className="h-8 flex-1"
                   />
@@ -377,8 +511,9 @@ export function Combobox({
                   variant="ghost"
                   className="h-8 w-full justify-start px-2 text-sm font-normal"
                   onClick={() => {
+                    setCreateLabel(inputValue.trim());
+                    setUserTyped(false);
                     setIsCreating(true);
-                    setCreateLabel(query.trim());
                   }}
                 >
                   {onCreate.label}

@@ -44,9 +44,11 @@ describe('InlineEdit', () => {
       />,
     );
 
+    // InlineEdit at rest renders the value as a clickable span; click it to enter edit mode
     await user.click(screen.getByRole('button', { name: /apex gmbh/i }));
-    await user.click(screen.getByRole('button', { name: /apex gmbh/i }));
-    await user.click(screen.getByRole('button', { name: /donau logistics ag/i }));
+    // Now in edit mode — the Combobox is rendered; open the dropdown and choose Donau Logistics
+    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: /donau logistics ag/i }));
 
     expect(onSave).toHaveBeenCalledWith('Donau Logistics AG');
   });
