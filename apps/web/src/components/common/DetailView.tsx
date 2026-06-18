@@ -4,9 +4,8 @@ import {
   InlineEdit,
   type InlineEditProps,
   RecordIdentity,
-  RecordInfoHero,
   RecordInfoMeta,
-  RecordVisual,
+  RecordKeyFacts,
   type RecordVisualProps,
   SectionCard,
 } from '@oktavius/base-ui';
@@ -22,16 +21,24 @@ export type DetailFieldProps = BaseDetailFieldProps & {
   permission?: PermissionRequirement;
   /** Render this field value through the shared compact click-to-edit control. */
   inlineEdit?: Omit<InlineEditProps, 'className'>;
+  /** Override which column this field lands in. Defaults: primary/meta → aside, default → main. */
+  placement?: 'main' | 'aside';
 };
 
+/** Retained for backward compatibility; the visual now always anchors the rail. */
 export type DetailViewVisualLayout = 'identity' | 'header';
+
+function placementOf(field: DetailFieldProps): 'main' | 'aside' {
+  if (field.placement) return field.placement;
+  if (field.importance === 'primary' || field.importance === 'meta') return 'aside';
+  return 'main';
+}
 
 export function DetailView({
   title,
   fields,
   subtitle,
   visual,
-  visualLayout = 'identity',
   identityTitle,
   identitySubtitle,
   identityMeta,
@@ -40,11 +47,11 @@ export function DetailView({
   title: string;
   fields: DetailFieldProps[];
   subtitle?: ReactNode;
-  /** Logo, avatar, or module icon — anchors the card visually */
+  /** Logo, avatar, or module icon — anchors the rail identity */
   visual?: RecordVisualProps;
-  /** `identity` = full hero band; `header` = compact icon beside section title (when page title already names the record) */
+  /** Retained for compatibility; no longer changes layout. */
   visualLayout?: DetailViewVisualLayout;
-  /** When `visual` is set, overrides `title` for the hero identity line */
+  /** When `visual` is set, overrides `title` for the rail identity line */
   identityTitle?: ReactNode;
   identitySubtitle?: ReactNode;
   identityMeta?: ReactNode;
@@ -72,13 +79,13 @@ export function DetailView({
       ),
     [permittedFields],
   );
-  const primaryFields = displayFields.filter((field) => field.importance === 'primary');
-  const metaFields = displayFields.filter((field) => field.importance === 'meta');
-  const defaultFields = displayFields.filter(
-    (field) => field.importance !== 'primary' && field.importance !== 'meta',
-  );
 
-  const groupedDefaults = defaultFields.reduce(
+  const asideFields = displayFields.filter((field) => placementOf(field) === 'aside');
+  const mainFields = displayFields.filter((field) => placementOf(field) === 'main');
+  const keyFacts = asideFields.filter((field) => field.importance !== 'meta');
+  const railMeta = asideFields.filter((field) => field.importance === 'meta');
+
+  const groupedMain = mainFields.reduce(
     (sections, field) => {
       const key = field.section ?? 'General';
       if (!sections[key]) sections[key] = [];
@@ -88,60 +95,70 @@ export function DetailView({
     {} as Record<string, DetailFieldProps[]>,
   );
 
-  const hasDefaultSections = Object.keys(groupedDefaults).length > 0;
-  const useIdentityBand = Boolean(visual && visualLayout === 'identity');
-  const useHeaderVisual = Boolean(visual && visualLayout === 'header');
+  const hasIdentity = Boolean(visual);
+  const hasRail = hasIdentity || keyFacts.length > 0 || railMeta.length > 0;
+  const hasMain = Object.keys(groupedMain).length > 0;
 
+  const mainContent = (
+    <div className="space-y-4">
+      {Object.entries(groupedMain).map(([section, sectionFields], index) => (
+        <section
+          key={section}
+          className={index === 0 ? 'space-y-3' : 'space-y-3 border-t border-border/70 pt-4'}
+        >
+          {section !== 'General' ? (
+            <h3 className="text-xs font-semibold text-muted-foreground">{section}</h3>
+          ) : null}
+          <DetailFieldGrid fields={sectionFields} />
+        </section>
+      ))}
+    </div>
+  );
+
+  const railContent = (
+    <div className="space-y-4">
+      {hasIdentity ? (
+        <RecordIdentity
+          visual={visual!}
+          title={identityTitle ?? title}
+          subtitle={identitySubtitle ?? subtitle}
+          meta={identityMeta}
+          trailing={identityTrailing}
+        />
+      ) : null}
+      {keyFacts.length > 0 ? (
+        <RecordKeyFacts
+          fields={keyFacts}
+          className={hasIdentity ? 'border-t border-border/50 pt-4' : undefined}
+        />
+      ) : null}
+      {railMeta.length > 0 ? <RecordInfoMeta fields={railMeta} /> : null}
+    </div>
+  );
+
+  // No rail content → single full-width card (unchanged from the prior layout).
+  if (!hasRail) {
+    return (
+      <SectionCard title={title} meta={subtitle}>
+        {mainContent}
+      </SectionCard>
+    );
+  }
+
+  // Rail content but no main sections → rail alone, full width.
+  if (!hasMain) {
+    return <SectionCard>{railContent}</SectionCard>;
+  }
+
+  // Two-column profile. Rail is first in DOM (mobile-top) and placed right on lg.
   return (
-    <SectionCard
-      title={useIdentityBand ? undefined : title}
-      meta={useIdentityBand ? undefined : subtitle}
-      leading={
-        useHeaderVisual ? <RecordVisual {...visual!} size={visual!.size ?? 'md'} /> : undefined
-      }
-    >
-      <div className="space-y-4">
-        {useIdentityBand ? (
-          <RecordIdentity
-            visual={visual!}
-            title={identityTitle ?? title}
-            subtitle={identitySubtitle ?? subtitle}
-            meta={identityMeta}
-            trailing={identityTrailing}
-          />
-        ) : null}
-
-        {primaryFields.length > 0 ? (
-          <RecordInfoHero
-            fields={primaryFields}
-            className={useIdentityBand ? 'border-t border-border/50 pt-4' : undefined}
-          />
-        ) : null}
-
-        {hasDefaultSections ? (
-          <div
-            className={
-              primaryFields.length > 0 || useIdentityBand
-                ? 'space-y-4 border-t border-border/50 pt-4'
-                : 'space-y-4'
-            }
-          >
-            {Object.entries(groupedDefaults).map(([section, sectionFields], index) => (
-              <section
-                key={section}
-                className={index === 0 ? 'space-y-3' : 'space-y-3 border-t border-border/70 pt-4'}
-              >
-                {section !== 'General' ? (
-                  <h3 className="text-xs font-semibold text-muted-foreground">{section}</h3>
-                ) : null}
-                <DetailFieldGrid fields={sectionFields} />
-              </section>
-            ))}
-          </div>
-        ) : null}
-
-        {metaFields.length > 0 ? <RecordInfoMeta fields={metaFields} /> : null}
+    <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
+      <div data-testid="detail-rail" className="lg:order-2">
+        <SectionCard>{railContent}</SectionCard>
       </div>
-    </SectionCard>
+      <div data-testid="detail-main" className="lg:order-1">
+        <SectionCard>{mainContent}</SectionCard>
+      </div>
+    </div>
   );
 }
