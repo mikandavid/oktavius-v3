@@ -65,6 +65,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@pipedream/sdk':
+        specifier: ^3.1.1
+        version: 3.1.1
       '@sentry/react':
         specifier: ^10.40.0
         version: 10.58.0(react@19.2.6)
@@ -645,6 +648,10 @@ packages:
     peerDependencies:
       react: '>= 16.8'
       react-dom: '>= 16.8'
+
+  '@pipedream/sdk@3.1.1':
+    resolution: {integrity: sha512-y/mL3vL7SZAthYwRpDgdPDHdy0wdgCq8VW4zhyMCaq1l+ZbNYiZeJ1zmlinMNUdpnd1bAL78L9kJXwocRq+Atw==}
+    engines: {node: '>=18.0.0'}
 
   '@radix-ui/number@1.1.1':
     resolution: {integrity: sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g==}
@@ -4344,6 +4351,8 @@ snapshots:
     dependencies:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
+
+  '@pipedream/sdk@3.1.1': {}
 
   '@radix-ui/number@1.1.1': {}
 
