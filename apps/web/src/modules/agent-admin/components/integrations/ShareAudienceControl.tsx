@@ -224,7 +224,7 @@ export function ShareAudienceControl({ grants, onChange, disabled }: ShareAudien
                             </span>
                           ) : null}
                         </span>
-                        <Check
+                        <CheckIcon
                           className={cn('h-4 w-4 shrink-0', selected ? 'opacity-100' : 'opacity-0')}
                           aria-hidden
                         />
