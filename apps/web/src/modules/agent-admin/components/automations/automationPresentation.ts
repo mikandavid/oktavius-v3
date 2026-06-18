@@ -10,7 +10,6 @@
 import type {
   RunTriggerContext,
   ScheduledTask,
-  ScheduledTaskRunStatus,
   ScheduleType,
   TriggerConfig,
 } from '@/runtime/osiris/schedulerClient';
@@ -26,50 +25,6 @@ export type TFunction = (
 ) => string;
 
 export type FormatDateTime = (value: Date | string, options?: Intl.DateTimeFormatOptions) => string;
-
-// ---------------------------------------------------------------------------
-// Task status (enabled / paused / completed)
-// ---------------------------------------------------------------------------
-
-export type AutomationStatus = 'active' | 'paused' | 'completed';
-
-export function deriveAutomationStatus(
-  task: Pick<ScheduledTask, 'enabled' | 'scheduleType' | 'lastRunAt'>,
-): AutomationStatus {
-  if (task.scheduleType === 'once' && task.lastRunAt) return 'completed';
-  return task.enabled ? 'active' : 'paused';
-}
-
-export const TASK_STATUS_VARIANT: Record<AutomationStatus, 'success' | 'secondary' | 'outline'> = {
-  active: 'success',
-  paused: 'secondary',
-  completed: 'outline',
-};
-
-// ---------------------------------------------------------------------------
-// Run status
-// ---------------------------------------------------------------------------
-
-export const RUN_STATUS_VARIANT: Record<
-  ScheduledTaskRunStatus,
-  'info' | 'success' | 'destructive' | 'secondary'
-> = {
-  claimed: 'info',
-  running: 'info',
-  completed: 'success',
-  failed: 'destructive',
-  dead_letter: 'destructive',
-  skipped: 'secondary',
-};
-
-export const RUN_STATUS_KEY: Record<ScheduledTaskRunStatus, string> = {
-  claimed: 'claimed',
-  running: 'running',
-  completed: 'completed',
-  failed: 'failed',
-  dead_letter: 'deadLetter',
-  skipped: 'skipped',
-};
 
 // ---------------------------------------------------------------------------
 // Human-readable schedule

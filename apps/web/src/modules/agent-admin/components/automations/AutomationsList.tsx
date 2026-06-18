@@ -19,7 +19,7 @@ import {
   deriveActivationStatus,
   statusPillClass,
 } from './automationIcons';
-import { describeSchedule, formatDateTimeSimple } from './automationPresentation';
+import { describeSchedule, formatDateTimeSimple, type TFunction } from './automationPresentation';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -111,7 +111,7 @@ function AutomationListItem({
 }: {
   task: ScheduledTask;
   onOpen: () => void;
-  t: (key: string, params?: Record<string, string | number>, fallback?: string) => string;
+  t: TFunction;
 }) {
   const { Icon, toneClass, label } = automationTypeIcon(task);
   const status = deriveActivationStatus(task);
