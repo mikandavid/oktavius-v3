@@ -120,6 +120,40 @@ export function RecordInfoMeta({ fields }: { fields: DetailFieldProps[] }) {
   );
 }
 
+/** Compact stacked label/value list for the detail rail. Max 8 items. */
+export function RecordKeyFacts({
+  fields,
+  className,
+}: {
+  fields: DetailFieldProps[];
+  className?: string;
+}) {
+  if (fields.length === 0) return null;
+
+  const items = fields.slice(0, 8);
+
+  return (
+    <dl className={cn('space-y-3', className)}>
+      {items.map((field, index) => (
+        <div
+          key={field.key ?? `${field.label}-${index}`}
+          className="flex min-w-0 items-start gap-2.5"
+        >
+          {field.icon ? (
+            <span className="mt-0.5 shrink-0 text-muted-foreground/70 [&_svg]:size-4">
+              {field.icon}
+            </span>
+          ) : null}
+          <div className="min-w-0 space-y-0.5">
+            <dt className={CARD_CONTENT_TIERS.label}>{field.label}</dt>
+            <dd className={cn(CARD_CONTENT_TIERS.body, 'break-words')}>{field.value}</dd>
+          </div>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 /** Standard two-column field grid for default-importance fields. */
 export function DetailFieldGrid({
   fields,
