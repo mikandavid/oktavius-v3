@@ -16,7 +16,6 @@ import {
   Label,
   StatusDot,
 } from '@oktavius/base-ui';
-import { cn } from '@oktavius/base-ui';
 import React, { useState } from 'react';
 
 import { useTranslation } from '@/core/i18n';
@@ -37,6 +36,7 @@ import {
 } from '@/runtime/osiris/agentIntegrationsClient';
 
 import { NATIVE_INTEGRATION_LOGOS } from './connectionPresentation';
+import { EntityAvatar } from './EntityAvatar';
 import { NativeIntegrationForm } from './NativeIntegrationForm';
 import { launchPipedreamConnect } from './pipedreamConnect';
 import { ShareAudienceControl } from './ShareAudienceControl';
@@ -52,75 +52,6 @@ function useDebouncedValue<T>(value: T, delay: number): T {
     return () => clearTimeout(id);
   }, [value, delay]);
   return debounced;
-}
-
-// ---------------------------------------------------------------------------
-// Inline EntityAvatar (not available in v3 yet)
-// ---------------------------------------------------------------------------
-
-type EntityAvatarSize = 'xs' | 'sm' | 'md';
-type EntityAvatarTone = 'muted' | 'primary';
-
-interface EntityAvatarProps {
-  label: string;
-  src?: string | null;
-  size?: EntityAvatarSize;
-  tone?: EntityAvatarTone;
-  className?: string;
-}
-
-const AVATAR_SIZE: Record<EntityAvatarSize, string> = {
-  xs: 'h-5 w-5 text-[9px]',
-  sm: 'h-7 w-7 text-xs',
-  md: 'h-9 w-9 text-sm',
-};
-
-const AVATAR_TONE: Record<EntityAvatarTone, string> = {
-  muted: 'bg-muted text-muted-foreground',
-  primary: 'bg-primary/10 text-primary',
-};
-
-function entityInitials(label: string): string {
-  const trimmed = label.trim();
-  if (!trimmed) return '·';
-  const tokens = trimmed.split(/\s+/);
-  return (
-    tokens
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((t) => t.charAt(0).toUpperCase())
-      .join('') || trimmed.charAt(0).toUpperCase()
-  );
-}
-
-function EntityAvatar({ label, src, size = 'md', tone = 'muted', className }: EntityAvatarProps) {
-  const text = entityInitials(label);
-  return (
-    <span
-      className={cn(
-        'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold leading-none select-none',
-        AVATAR_SIZE[size],
-        AVATAR_TONE[tone],
-        className,
-      )}
-      aria-label={label}
-      role="img"
-    >
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          className="h-full w-full object-cover"
-          loading="lazy"
-          onError={(event) => {
-            (event.currentTarget as HTMLImageElement).style.display = 'none';
-          }}
-        />
-      ) : (
-        <span aria-hidden>{text}</span>
-      )}
-    </span>
-  );
 }
 
 // ---------------------------------------------------------------------------

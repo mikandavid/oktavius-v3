@@ -1,6 +1,7 @@
 import { Button, Combobox, type ComboboxOption, Input, Label } from '@oktavius/base-ui';
 import { useState } from 'react';
 
+import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { useTranslation } from '@/core/i18n';
 import { appToast } from '@/lib/toast';
 import {
@@ -36,6 +37,7 @@ export function NativeIntegrationForm({ integration, onDone }: NativeIntegration
   const disconnect = useDisconnectNativeIntegration();
   const isHalo = integration.key === 'halo';
 
+  const [confirmDisconnectOpen, setConfirmDisconnectOpen] = useState(false);
   const [authorizationServer, setAuthorizationServer] = useState('');
   const [baseUrl, setBaseUrl] = useState(integration.baseUrl ?? '');
   const [tenant, setTenant] = useState('');
@@ -100,6 +102,8 @@ export function NativeIntegrationForm({ integration, onDone }: NativeIntegration
       onDone?.();
     } catch (error) {
       appToast.error(error instanceof Error ? error.message : t('common.genericError'));
+    } finally {
+      setConfirmDisconnectOpen(false);
     }
   }
 
@@ -209,7 +213,7 @@ export function NativeIntegrationForm({ integration, onDone }: NativeIntegration
               variant="outline"
               className="text-destructive hover:text-destructive"
               disabled={disconnect.isPending}
-              onClick={() => void handleDisconnect()}
+              onClick={() => setConfirmDisconnectOpen(true)}
             >
               {t('settings.agentIntegrationsDisconnect')}
             </Button>
@@ -219,6 +223,15 @@ export function NativeIntegrationForm({ integration, onDone }: NativeIntegration
           {t('settings.agentIntegrationsSave')}
         </Button>
       </div>
+      <ConfirmActionDialog
+        open={confirmDisconnectOpen}
+        onOpenChange={setConfirmDisconnectOpen}
+        title={t('settings.integrationDisconnectTitle', { name: integration.name })}
+        description={t('settings.integrationDisconnectDescription')}
+        confirmLabel={t('settings.agentIntegrationsDisconnect')}
+        confirmDisabled={disconnect.isPending}
+        onConfirm={() => void handleDisconnect()}
+      />
     </div>
   );
 }
