@@ -333,6 +333,10 @@ export function StorageMainPane({
         nodeId={state.editingNodeId}
         onClose={() => state.setEditingNodeId(null)}
         onNodeIdChange={(id) => state.setEditingNodeId(id)}
+        onOpenFullPage={(id) => {
+          state.setEditingNodeId(null);
+          state.openDocument(id);
+        }}
       />
       <NameDialog
         open={newFolderOpen}

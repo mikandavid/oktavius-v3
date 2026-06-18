@@ -145,4 +145,34 @@ describe('StorageDocumentEditorModal', () => {
     const after = document.querySelector<HTMLTextAreaElement>('[data-testid="md"]')!;
     expect(after.value).toBe('# my local edit');
   });
+
+  it('opens the current document in full page after flushing', async () => {
+    const onOpenFullPage = vi.fn();
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    act(() => {
+      root.render(
+        <QueryClientProvider client={client}>
+          <TestI18nProvider>
+            <StorageDocumentEditorModal
+              nodeId="n1"
+              onClose={vi.fn()}
+              onNodeIdChange={vi.fn()}
+              onOpenFullPage={onOpenFullPage}
+            />
+          </TestI18nProvider>
+        </QueryClientProvider>,
+      );
+    });
+
+    const expandBtn = document.querySelector<HTMLButtonElement>(
+      '[data-testid="editor-open-full-page"]',
+    )!;
+    await act(async () => {
+      expandBtn.click();
+    });
+
+    // No edits were made, so flush resolves to the current node id without saving.
+    expect(save).not.toHaveBeenCalled();
+    expect(onOpenFullPage).toHaveBeenCalledWith('n1');
+  });
 });

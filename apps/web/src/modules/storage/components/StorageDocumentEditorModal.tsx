@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogTitle, MarkdownEditor } from '@oktavius/base-ui';
 
 import { useTranslation } from '@/core/i18n';
-import { CloseIcon } from '@/lib/icons';
+import { CloseIcon, ExpandIcon } from '@/lib/icons';
 
 import { useDocumentEditorSession } from '../data/useDocumentEditorSession';
 
@@ -9,10 +9,12 @@ export function StorageDocumentEditorModal({
   nodeId,
   onClose,
   onNodeIdChange,
+  onOpenFullPage,
 }: {
   nodeId: string | null;
   onClose: () => void;
   onNodeIdChange: (id: string) => void;
+  onOpenFullPage?: (nodeId: string) => void;
 }) {
   const { t } = useTranslation();
   const { node, markdown, statusLabel, handleChange, flush, isLoading, error } =
@@ -21,6 +23,11 @@ export function StorageDocumentEditorModal({
   const handleClose = () => {
     void flush();
     onClose();
+  };
+
+  const handleOpenFullPage = async () => {
+    const id = await flush();
+    if (id) onOpenFullPage?.(id);
   };
 
   return (
@@ -34,6 +41,17 @@ export function StorageDocumentEditorModal({
           <span className="text-xs text-muted-foreground" data-testid="save-status">
             {statusLabel}
           </span>
+          {onOpenFullPage ? (
+            <button
+              type="button"
+              data-testid="editor-open-full-page"
+              aria-label={t('storage.editor.openFullPage')}
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => void handleOpenFullPage()}
+            >
+              <ExpandIcon size={18} />
+            </button>
+          ) : null}
           <button
             type="button"
             data-testid="editor-close"

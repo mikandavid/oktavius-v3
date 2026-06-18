@@ -298,6 +298,9 @@
     "saved": "Saved",
     "unsaved": "Unsaved changes",
     "saveFailed": "Could not save changes",
-    "close": "Close"
+    "close": "Close",
+    "openFullPage": "Open in full page",
+    "backToStorage": "Back to storage",
+    "titleLabel": "Document title"
   }
 }

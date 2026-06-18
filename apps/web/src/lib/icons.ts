@@ -19,6 +19,7 @@ export {
   Scroll as ContractIcon,
   FileText as DocumentIcon,
   DotsSixVertical as DragHandleIcon,
+  ArrowsOut as ExpandIcon,
   Folder as FolderIcon,
   ArrowsOutLineHorizontal as FullWidthIcon,
   ArrowsInLineHorizontal as HalfWidthIcon,

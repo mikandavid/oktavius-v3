@@ -22,6 +22,9 @@ export interface StorageViewState {
   previewNodeId: string | null;
   editingNodeId: string | null;
   setEditingNodeId: (id: string | null) => void;
+  documentNodeId: string | null;
+  openDocument: (id: string) => void;
+  closeDocument: () => void;
   setView: (view: StorageView) => void;
   openFolder: (folderId: string | null) => void;
   setDisplayMode: (mode: StorageDisplayMode) => void;
@@ -38,6 +41,7 @@ export function useStorageViewState(): StorageViewState {
     VIEWS.includes(searchParams.get('view') as StorageView) ? searchParams.get('view') : 'folder'
   ) as StorageView;
   const currentFolderId = searchParams.get('folder');
+  const documentNodeId = searchParams.get('doc');
 
   const [displayMode, setDisplayModeState] = useState<StorageDisplayMode>(
     () => (storage?.getItem(DISPLAY_MODE_KEY) as StorageDisplayMode) || 'list',
@@ -81,6 +85,23 @@ export function useStorageViewState(): StorageViewState {
     [setSearchParams],
   );
 
+  const openDocument = useCallback(
+    (id: string) => {
+      setSearchParams((params) => {
+        params.set('doc', id);
+        return params;
+      });
+    },
+    [setSearchParams],
+  );
+
+  const closeDocument = useCallback(() => {
+    setSearchParams((params) => {
+      params.delete('doc');
+      return params;
+    });
+  }, [setSearchParams]);
+
   useEffect(() => {
     setSearch((prev) => (prev.term ? { ...prev, term: '' } : prev));
   }, [view, currentFolderId]);
@@ -94,6 +115,9 @@ export function useStorageViewState(): StorageViewState {
     previewNodeId,
     editingNodeId,
     setEditingNodeId,
+    documentNodeId,
+    openDocument,
+    closeDocument,
     setView,
     openFolder,
     setDisplayMode,
