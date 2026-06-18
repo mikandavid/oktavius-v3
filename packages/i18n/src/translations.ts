@@ -35,6 +35,7 @@ const lazyLoaders: Record<LanguageCode, Record<string, LazyLoader>> = {
   en: {
     'addresses': () => import('../locales/en/addresses.json').then((m) => m.default),
     'admin': () => import('../locales/en/admin.json').then((m) => m.default),
+    'agent_admin': () => import('../locales/en/agent_admin.json').then((m) => m.default),
     'ai_usage': () => import('../locales/en/ai_usage.json').then((m) => m.default),
     'auth': () => import('../locales/en/auth.json').then((m) => m.default),
     'bills': () => import('../locales/en/bills.json').then((m) => m.default),
@@ -79,6 +80,7 @@ const lazyLoaders: Record<LanguageCode, Record<string, LazyLoader>> = {
   de: {
     'addresses': () => import('../locales/de/addresses.json').then((m) => m.default),
     'admin': () => import('../locales/de/admin.json').then((m) => m.default),
+    'agent_admin': () => import('../locales/de/agent_admin.json').then((m) => m.default),
     'ai_usage': () => import('../locales/de/ai_usage.json').then((m) => m.default),
     'auth': () => import('../locales/de/auth.json').then((m) => m.default),
     'bills': () => import('../locales/de/bills.json').then((m) => m.default),
