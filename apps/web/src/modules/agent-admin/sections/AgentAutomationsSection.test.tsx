@@ -100,8 +100,11 @@ describe('AgentAutomationsSection', () => {
     // Verify the task name is visible in the list
     expect(container.textContent).toContain('Daily digest');
 
-    // Find the table row (role="link") and click it to trigger navigation
-    const row = container.querySelector('tr[role="link"]');
+    // Find the clickable button row and click it to trigger navigation.
+    // Each row is a <button> containing a type-icon box with data-testid="automation-type-<label>".
+    const iconBox = container.querySelector('[data-testid^="automation-type-"]');
+    expect(iconBox).not.toBeNull();
+    const row = iconBox!.closest('button');
     expect(row).not.toBeNull();
 
     await act(async () => {
