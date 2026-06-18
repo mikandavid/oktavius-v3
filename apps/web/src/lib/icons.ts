@@ -135,7 +135,7 @@ export {
 } from '@phosphor-icons/react';
 
 // ─── Agent & Automation ──────────────────────────────────────────────────────
-export { Heartbeat as HeartbeatIcon } from '@phosphor-icons/react';
+export { Heartbeat as HeartbeatIcon, Heart as HeartIcon } from '@phosphor-icons/react';
 
 // ─── Form & Input ────────────────────────────────────────────────────────────
 export {

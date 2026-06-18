@@ -129,7 +129,7 @@ describe('AutomationsList', () => {
     expect(el).not.toBeNull();
   });
 
-  it('renders automation-type-scheduled for a cron task without heartbeat payload', async () => {
+  it('renders automation-type-cron for a cron task without heartbeat payload', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({
@@ -174,7 +174,56 @@ describe('AutomationsList', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
-    const el = container.querySelector('[data-testid="automation-type-scheduled"]');
+    const el = container.querySelector('[data-testid="automation-type-cron"]');
+    expect(el).not.toBeNull();
+  });
+
+  it('renders automation-type-email for an email_received trigger task', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          data: [
+            {
+              id: 'em1',
+              name: 'Email Trigger Task',
+              scheduleType: 'event',
+              scheduleExpression: null,
+              enabled: true,
+              nextRunAt: null,
+              lastRunAt: null,
+              targetPayload: { eventType: 'agent_activation', prompt: 'Handle email' },
+              triggerConfig: { kind: 'email_received' },
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 100,
+          totalPages: 1,
+        }),
+        text: async () => '',
+      })) as unknown as typeof fetch,
+    );
+
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    await act(async () => {
+      root.render(
+        <TestI18nProvider>
+          <QueryClientProvider client={qc}>
+            <AutomationsList onOpen={() => {}} onCreate={() => {}} />
+          </QueryClientProvider>
+        </TestI18nProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    const el = container.querySelector('[data-testid="automation-type-email"]');
     expect(el).not.toBeNull();
   });
 });

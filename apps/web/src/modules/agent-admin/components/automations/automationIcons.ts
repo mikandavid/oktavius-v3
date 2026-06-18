@@ -7,7 +7,15 @@
 
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
 
-import { EmailIcon, HeartbeatIcon, LifeBuoyIcon, TimeIcon } from '@/lib/icons';
+import {
+  CalendarIcon,
+  EmailIcon,
+  HeartIcon,
+  LifeBuoyIcon,
+  RefreshIcon,
+  TimeIcon,
+  ZapIcon,
+} from '@/lib/icons';
 import type { ScheduledTask } from '@/runtime/osiris/schedulerClient';
 
 // ---------------------------------------------------------------------------
@@ -56,7 +64,7 @@ export function deriveActivationStatus(
 export interface AutomationTypeIcon {
   Icon: PhosphorIcon;
   toneClass: string;
-  label: 'heartbeat' | 'email' | 'halo' | 'scheduled';
+  label: 'heartbeat' | 'email' | 'halo' | 'once' | 'interval' | 'cron' | 'event';
 }
 
 const DESTRUCTIVE_TONE = 'border-destructive/20 bg-destructive/10 text-destructive';
@@ -64,12 +72,18 @@ const PRIMARY_TONE = 'border-primary/15 bg-primary/[0.05] text-primary/70';
 
 /**
  * Returns the icon component, CSS tone class, and a stable label for testids/a11y.
- * Logic mirrors David's `ActivationListItem`: heartbeat → Activity icon;
- * email/halo triggers → appropriate icon; else → Timer/Clock.
+ * Logic mirrors David's `ActivationListItem` with distinct per-type icons:
+ *   heartbeat     → Heart (destructive tone)
+ *   email_received → Email
+ *   halo_ticket_created → LifeBuoy
+ *   once          → Calendar
+ *   interval      → Refresh (ArrowsClockwise)
+ *   cron          → Time (Clock)
+ *   event / other → Zap (Lightning)
  */
 export function automationTypeIcon(task: ScheduledTask): AutomationTypeIcon {
   if (isHeartbeatTask(task)) {
-    return { Icon: HeartbeatIcon, toneClass: DESTRUCTIVE_TONE, label: 'heartbeat' };
+    return { Icon: HeartIcon, toneClass: DESTRUCTIVE_TONE, label: 'heartbeat' };
   }
   const kind = task.triggerConfig?.kind;
   if (kind === 'email_received') {
@@ -78,7 +92,16 @@ export function automationTypeIcon(task: ScheduledTask): AutomationTypeIcon {
   if (kind === 'halo_ticket_created') {
     return { Icon: LifeBuoyIcon, toneClass: PRIMARY_TONE, label: 'halo' };
   }
-  return { Icon: TimeIcon, toneClass: PRIMARY_TONE, label: 'scheduled' };
+  switch (task.scheduleType) {
+    case 'once':
+      return { Icon: CalendarIcon, toneClass: PRIMARY_TONE, label: 'once' };
+    case 'interval':
+      return { Icon: RefreshIcon, toneClass: PRIMARY_TONE, label: 'interval' };
+    case 'cron':
+      return { Icon: TimeIcon, toneClass: PRIMARY_TONE, label: 'cron' };
+    default:
+      return { Icon: ZapIcon, toneClass: PRIMARY_TONE, label: 'event' };
+  }
 }
 
 // ---------------------------------------------------------------------------
