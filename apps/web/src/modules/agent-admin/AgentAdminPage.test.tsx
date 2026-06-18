@@ -130,6 +130,39 @@ describe('AgentAdminPage', () => {
     expect(titles).toContain('AI Usage Budget');
   });
 
+  it('renders the automations section when deep-linked', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: [], total: 0, page: 1, pageSize: 100, totalPages: 1 }),
+        text: async () => '',
+      })) as unknown as typeof fetch,
+    );
+    // scheduler.view is not in baseRuntime permissions; use superadmin to see all sections
+    const superadminRuntime: OsirisRuntimeContextValue = {
+      ...baseRuntime,
+      currentUser: { ...baseRuntime.currentUser!, isSuperadmin: true },
+      permissionSubject: { isSuperadmin: true, role: 'admin', permissions: ['org.manage'] },
+    };
+    const qc = makeQueryClient();
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/agent?section=automations']}>
+          <QueryClientProvider client={qc}>
+            <TestI18nProvider>
+              <OsirisRuntimeContext.Provider value={superadminRuntime}>
+                <AgentAdminPage />
+              </OsirisRuntimeContext.Provider>
+            </TestI18nProvider>
+          </QueryClientProvider>
+        </MemoryRouter>,
+      );
+    });
+    expect(container.querySelector('[data-testid="agent-automations-section"]')).toBeTruthy();
+  });
+
   it('renders the integrations section when deep-linked', async () => {
     vi.stubGlobal(
       'fetch',

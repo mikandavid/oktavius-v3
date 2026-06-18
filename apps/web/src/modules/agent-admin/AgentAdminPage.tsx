@@ -8,9 +8,10 @@ import {
   type SettingsSectionConfig,
 } from '@/components/settings/SettingsPageFactory';
 import { useTranslation } from '@/core/i18n';
-import { BrainIcon, LinkIcon, RobotIcon } from '@/lib/icons';
+import { BrainIcon, CalendarIcon, LinkIcon, RobotIcon } from '@/lib/icons';
 
 import { AGENT_SECTION_PARAM, resolveInitialAgentSection } from './agentSectionParam';
+import { AgentAutomationsSection } from './sections/AgentAutomationsSection';
 import { AgentIntegrationsSection } from './sections/AgentIntegrationsSection';
 import { AgentSettingsSection } from './sections/AgentSettingsSection';
 
@@ -46,8 +47,21 @@ export function AgentAdminPage() {
       permission: 'org.manage',
       render: () => <AgentIntegrationsSection />,
     },
-    // Automations (Phase 3), Heartbeat & Queue (Phase 4)
-    // are appended here in their respective phases.
+    {
+      id: 'automations',
+      group: t('agent_admin.groupOperations', undefined, 'Operations'),
+      label: t('agent_admin.sectionAutomations', undefined, 'Automations'),
+      icon: <CalendarIcon size={16} weight="duotone" />,
+      title: t('agent_admin.sectionAutomations', undefined, 'Automations'),
+      sectionDescription: 'Scheduled and triggered agent tasks.',
+      permission: 'scheduler.view',
+      render: () => (
+        <div data-testid="agent-automations-section">
+          <AgentAutomationsSection />
+        </div>
+      ),
+    },
+    // Heartbeat & Queue (Phase 4) is appended here.
   ];
 
   return (
