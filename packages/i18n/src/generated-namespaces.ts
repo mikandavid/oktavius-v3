@@ -3,6 +3,7 @@
 export type TranslationNamespace =
   | 'addresses'
   | 'admin'
+  | 'agent_admin'
   | 'ai_usage'
   | 'auth'
   | 'bills'
@@ -52,6 +53,7 @@ export type TranslationNamespace =
 export const ALL_NAMESPACES: TranslationNamespace[] = [
   'addresses',
   'admin',
+  'agent_admin',
   'ai_usage',
   'auth',
   'bills',
@@ -110,6 +112,7 @@ export const CORE_NAMESPACES: TranslationNamespace[] = [
 export const LAZY_NAMESPACES: TranslationNamespace[] = [
   'addresses',
   'admin',
+  'agent_admin',
   'ai_usage',
   'auth',
   'bills',

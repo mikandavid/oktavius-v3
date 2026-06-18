@@ -60,5 +60,6 @@
   "superAdminWebsiteAnalytics": "Website",
   "aiChat": "Oktavius",
   "reports": "Berichte",
-  "componentShowcase": "Komponenten-Showcase"
+  "componentShowcase": "Komponenten-Showcase",
+  "agentAdmin": "KI-Agent"
 }

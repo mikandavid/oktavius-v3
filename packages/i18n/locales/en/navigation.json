@@ -60,5 +60,6 @@
   "superAdminWebsiteAnalytics": "Website",
   "aiChat": "Oktavius",
   "reports": "Reports",
-  "componentShowcase": "Component showcase"
+  "componentShowcase": "Component showcase",
+  "agentAdmin": "AI Agent"
 }

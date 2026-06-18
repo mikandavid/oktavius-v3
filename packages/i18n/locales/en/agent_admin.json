@@ -1,0 +1,10 @@
+{
+  "title": "AI Agent",
+  "subtitle": "Settings, integrations, automations, and runtime for your AI agent",
+  "sectionSettings": "Settings",
+  "sectionIntegrations": "Integrations",
+  "sectionAutomations": "Automations",
+  "sectionHeartbeat": "Heartbeat & Queue",
+  "groupConfiguration": "Configuration",
+  "groupOperations": "Operations"
+}

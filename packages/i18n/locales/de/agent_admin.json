@@ -1,0 +1,10 @@
+{
+  "title": "KI-Agent",
+  "subtitle": "Einstellungen, Integrationen, Automatisierungen und Laufzeit für Ihren KI-Agenten",
+  "sectionSettings": "Einstellungen",
+  "sectionIntegrations": "Integrationen",
+  "sectionAutomations": "Automatisierungen",
+  "sectionHeartbeat": "Heartbeat & Warteschlange",
+  "groupConfiguration": "Konfiguration",
+  "groupOperations": "Betrieb"
+}
