@@ -1,21 +1,33 @@
 /**
  * AutomationDetail — prop-driven detail component for the agent-admin automations section.
  *
- * Restyled (Task 3.6) to match David's ScheduledAgentActivationDetail look:
- * back button, rounded-card border bg-muted/20 p-4 detail card with DetailField rows,
- * and ActivationRunHistory styled run-history list for recurring tasks.
- *
- * CRUD actions (Edit, Pause/Resume, Run now) kept via ConfirmActionDialog + useTaskActions.
+ * Rebuilt (Task 3.7) with v3 base-ui primitives:
+ *   - SectionCard for detail card + run-history container (borderless white tile)
+ *   - DetailFieldGrid + DetailFieldProps for labeled field rows
+ *   - Badge for status value field
+ *   - StatusDot tone="destructive" for failed run indicator
+ *   - InlineEmptyState for empty / error run-history
+ *   - Skeleton for loading
+ *   - Button (base-ui) for Edit / pause / resume / run-now
+ *   - ConfirmActionDialog + useTaskActions wiring preserved
  * v3 has no standalone conversation deep-link route — conversationId rendered as plain text.
  */
 
-import { Button, cn, Skeleton } from '@oktavius/base-ui';
-import type { ReactNode } from 'react';
+import {
+  Badge,
+  Button,
+  DetailFieldGrid,
+  type DetailFieldProps,
+  InlineEmptyState,
+  SectionCard,
+  Skeleton,
+  StatusDot,
+} from '@oktavius/base-ui';
 import { useState } from 'react';
 
 import { ConfirmActionDialog } from '@/components/common/ConfirmActionDialog';
 import { usePreloadNamespaces, useTranslation } from '@/core/i18n';
-import { BackIcon, MessageSquareIcon, WarningIcon, ZapIcon } from '@/lib/icons';
+import { BackIcon, MessageSquareIcon, ZapIcon } from '@/lib/icons';
 import {
   useScheduledTask,
   useScheduledTaskRuns,
@@ -23,11 +35,7 @@ import {
 } from '@/modules/agent-admin/data/useScheduler';
 import type { ScheduledTask, ScheduledTaskRun } from '@/runtime/osiris/schedulerClient';
 
-import {
-  type AutomationActivationStatus,
-  deriveActivationStatus,
-  statusPillClass,
-} from './automationIcons';
+import { type AutomationActivationStatus, deriveActivationStatus } from './automationIcons';
 import { describeSchedule, formatDateTimeSimple, type TFunction } from './automationPresentation';
 
 // ---------------------------------------------------------------------------
@@ -41,13 +49,22 @@ export interface AutomationDetailProps {
 }
 
 // ---------------------------------------------------------------------------
-// Status label key
+// Status label key + badge variant mapping
 // ---------------------------------------------------------------------------
 
 const STATUS_LABEL_KEY: Record<AutomationActivationStatus, string> = {
   scheduled: 'scheduler.automations.status.active',
   paused: 'scheduler.automations.status.paused',
   completed: 'scheduler.automations.status.completed',
+};
+
+const STATUS_BADGE_VARIANT: Record<
+  AutomationActivationStatus,
+  'success' | 'secondary' | 'outline'
+> = {
+  scheduled: 'success',
+  paused: 'secondary',
+  completed: 'outline',
 };
 
 // ---------------------------------------------------------------------------
@@ -120,7 +137,7 @@ export function AutomationDetail({ taskId, onBack, onEdit }: AutomationDetailPro
 }
 
 // ---------------------------------------------------------------------------
-// AutomationDetailInner (extracted to keep hook count manageable)
+// AutomationDetailInner
 // ---------------------------------------------------------------------------
 
 function AutomationDetailInner({
@@ -157,7 +174,7 @@ function AutomationDetailInner({
   t: TFunction;
 }) {
   const status = deriveActivationStatus(task);
-  const pillClass = statusPillClass(status);
+  const badgeVariant = STATUS_BADGE_VARIANT[status];
   const isRecurring = task.scheduleType !== 'once';
   const isMutating = pause.isPending || resume.isPending || runNow.isPending;
 
@@ -165,6 +182,62 @@ function AutomationDetailInner({
     typeof task.targetPayload?.['prompt'] === 'string' ? task.targetPayload['prompt'] : null;
 
   const recurrence = getRecurrenceLabel(task, t);
+
+  // Build the DetailFieldGrid fields
+  const scheduledForValue = task.nextRunAt
+    ? formatDateTimeSimple(task.nextRunAt, { dateStyle: 'medium', timeStyle: 'short' })
+    : task.scheduleType === 'once'
+      ? t('scheduler.automations.noUpcomingRun', {}, 'No upcoming run')
+      : describeSchedule(task, t, formatDateTimeSimple);
+
+  const fields: DetailFieldProps[] = [
+    {
+      label: t('common.name', {}, 'Name'),
+      value: task.name,
+      importance: 'primary',
+    },
+    {
+      label: t('scheduler.automations.scheduleLabel', {}, 'Scheduled for'),
+      value: scheduledForValue,
+    },
+    ...(recurrence
+      ? [
+          {
+            label: t('scheduler.automations.recurrenceLabel', {}, 'Recurrence'),
+            value: recurrence,
+          } satisfies DetailFieldProps,
+        ]
+      : []),
+    {
+      label: t('common.status', {}, 'Status'),
+      value: <Badge variant={badgeVariant}>{t(STATUS_LABEL_KEY[status], {}, status)}</Badge>,
+    },
+    ...(prompt
+      ? [
+          {
+            label: t('scheduler.automations.prompt', {}, 'Prompt'),
+            value: (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                {prompt}
+              </p>
+            ),
+            colSpan: 2,
+          } satisfies DetailFieldProps,
+        ]
+      : []),
+    ...(task.lastRunAt
+      ? [
+          {
+            label: t('scheduler.automations.lastRun', {}, 'Last run'),
+            value: formatDateTimeSimple(task.lastRunAt, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            }),
+            importance: 'meta',
+          } satisfies DetailFieldProps,
+        ]
+      : []),
+  ];
 
   return (
     <div className="space-y-4 px-3 pb-4 pt-2" data-testid="automation-detail">
@@ -179,58 +252,50 @@ function AutomationDetailInner({
         {t('scheduler.automations.backToList', {}, 'Back to automations')}
       </Button>
 
-      {/* Detail card */}
-      <div className="space-y-4 rounded-card border border-border/60 bg-muted/20 p-4">
-        <DetailField label={t('common.name', {}, 'Name')} value={task.name} />
-        <DetailField
-          label={t('scheduler.automations.scheduleLabel', {}, 'Scheduled for')}
-          value={
-            task.nextRunAt
-              ? formatDateTimeSimple(task.nextRunAt, { dateStyle: 'medium', timeStyle: 'short' })
-              : task.scheduleType === 'once'
-                ? t('scheduler.automations.noUpcomingRun', {}, 'No upcoming run')
-                : describeSchedule(task, t, formatDateTimeSimple)
-          }
-        />
-        {recurrence ? (
-          <DetailField
-            label={t('scheduler.automations.recurrenceLabel', {}, 'Recurrence')}
-            value={recurrence}
-          />
-        ) : null}
-        <DetailField
-          label={t('common.status', {}, 'Status')}
-          value={
-            <span
-              className={cn(
-                'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
-                pillClass,
-              )}
+      {/* Detail card — SectionCard (borderless white tile) */}
+      <SectionCard
+        title={t('scheduler.automations.detailTitle', {}, 'Automation details')}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8" onClick={() => onEdit(task.id)}>
+              {t('common.edit', {}, 'Edit')}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8"
+              disabled={isMutating}
+              onClick={() => setConfirmRunNowOpen(true)}
             >
-              {t(STATUS_LABEL_KEY[status], {}, status)}
-            </span>
-          }
-        />
-        {prompt ? (
-          <DetailField
-            label={t('scheduler.automations.prompt', {}, 'Prompt')}
-            value={
-              <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-foreground/90">
-                {prompt}
-              </p>
-            }
-          />
-        ) : null}
-        {task.lastRunAt ? (
-          <DetailField
-            label={t('scheduler.automations.lastRun', {}, 'Last run')}
-            value={formatDateTimeSimple(task.lastRunAt, {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })}
-          />
-        ) : null}
-      </div>
+              <ZapIcon className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+              {t('scheduler.automations.runNow', {}, 'Run now')}
+            </Button>
+            {task.enabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                disabled={isMutating}
+                onClick={() => setConfirmPauseOpen(true)}
+              >
+                {t('scheduler.automations.pause', {}, 'Pause')}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                disabled={isMutating}
+                onClick={() => setConfirmResumeOpen(true)}
+              >
+                {t('scheduler.automations.resume', {}, 'Resume')}
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <DetailFieldGrid fields={fields} />
+      </SectionCard>
 
       {/* Run history for recurring tasks */}
       {isRecurring ? (
@@ -241,44 +306,6 @@ function AutomationDetailInner({
           t={t}
         />
       ) : null}
-
-      {/* Action buttons */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" className="h-8" onClick={() => onEdit(task.id)}>
-          {t('common.edit', {}, 'Edit')}
-        </Button>
-        <Button
-          variant="default"
-          size="sm"
-          className="h-8"
-          disabled={isMutating}
-          onClick={() => setConfirmRunNowOpen(true)}
-        >
-          <ZapIcon className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-          {t('scheduler.automations.runNow', {}, 'Run now')}
-        </Button>
-        {task.enabled ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            disabled={isMutating}
-            onClick={() => setConfirmPauseOpen(true)}
-          >
-            {t('scheduler.automations.pause', {}, 'Pause')}
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8"
-            disabled={isMutating}
-            onClick={() => setConfirmResumeOpen(true)}
-          >
-            {t('scheduler.automations.resume', {}, 'Resume')}
-          </Button>
-        )}
-      </div>
 
       {/* Confirmation dialogs */}
       <ConfirmActionDialog
@@ -337,7 +364,7 @@ function AutomationDetailInner({
 }
 
 // ---------------------------------------------------------------------------
-// AutomationRunHistory — David's ActivationRunHistory adapted to ScheduledTaskRun
+// AutomationRunHistory — SectionCard container + InlineEmptyState
 // ---------------------------------------------------------------------------
 
 function AutomationRunHistory({
@@ -352,38 +379,32 @@ function AutomationRunHistory({
   t: TFunction;
 }) {
   return (
-    <div className="mt-4 space-y-2">
-      <div
-        data-testid="run-history-header"
-        className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60"
-      >
+    <SectionCard title={t('scheduler.automations.runHistory', {}, 'Run history')}>
+      {/* data-testid anchors preserved for test selectors */}
+      <span data-testid="run-history-header" className="sr-only">
         {t('scheduler.automations.runHistory', {}, 'Run history')}
-      </div>
+      </span>
 
-      <div className="rounded-card border border-border/60 bg-muted/10">
-        {isLoading ? (
-          <div className="space-y-2 p-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-9 w-full" />
-            ))}
-          </div>
-        ) : isError ? (
-          <p className="px-3 py-4 text-[13px] text-muted-foreground/70">
-            {t('scheduler.automations.runsLoadError', {}, 'Could not load run history.')}
-          </p>
-        ) : runs.length === 0 ? (
-          <p className="px-3 py-4 text-[13px] text-muted-foreground/70">
-            {t('scheduler.automations.runsEmpty', {}, 'No runs yet.')}
-          </p>
-        ) : (
-          <div className="divide-y divide-border/50">
-            {runs.map((run) => (
-              <RunHistoryRow key={run.id} run={run} t={t} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-9 w-full" />
+          ))}
+        </div>
+      ) : isError ? (
+        <InlineEmptyState
+          text={t('scheduler.automations.runsLoadError', {}, 'Could not load run history.')}
+        />
+      ) : runs.length === 0 ? (
+        <InlineEmptyState text={t('scheduler.automations.runsEmpty', {}, 'No runs yet.')} />
+      ) : (
+        <div className="divide-y divide-border/50">
+          {runs.map((run) => (
+            <RunHistoryRow key={run.id} run={run} t={t} />
+          ))}
+        </div>
+      )}
+    </SectionCard>
   );
 }
 
@@ -394,54 +415,30 @@ function AutomationRunHistory({
 function RunHistoryRow({ run, t }: { run: ScheduledTaskRun; t: TFunction }) {
   const isFailed = run.status === 'failed' || run.status === 'dead_letter';
 
-  const rowBody = (
-    <>
-      <div className="min-w-0">
-        <div className="flex items-center gap-1.5 text-[13px] font-medium text-foreground/90">
-          {isFailed ? (
-            <span
-              className="inline-flex shrink-0 text-destructive"
-              aria-label={t('scheduler.automations.runFailed', {}, 'Failed')}
-            >
-              <WarningIcon className="h-3.5 w-3.5" aria-hidden="true" />
-            </span>
-          ) : null}
-          <span data-testid="run-timestamp">
-            {formatDateTimeSimple(run.finishedAt ?? run.scheduledFor, {
-              dateStyle: 'medium',
-              timeStyle: 'short',
-            })}
-          </span>
-        </div>
+  return (
+    <div className="flex w-full items-center justify-between gap-3 py-2.5 text-left">
+      <div className="flex items-center gap-1.5">
+        {isFailed ? (
+          <StatusDot
+            tone="destructive"
+            size="sm"
+            aria-label={t('scheduler.automations.runFailed', {}, 'Failed')}
+          />
+        ) : null}
+        <span data-testid="run-timestamp" className="text-sm text-foreground/90">
+          {formatDateTimeSimple(run.finishedAt ?? run.scheduledFor, {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          })}
+        </span>
       </div>
       {/* v3 has no standalone conversation deep-link route — render as plain text */}
       {run.conversationId ? (
-        <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-muted-foreground">
+        <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
           <MessageSquareIcon className="h-3.5 w-3.5" aria-hidden="true" />
           {t('scheduler.automations.viewChat', {}, 'View chat')}
         </span>
       ) : null}
-    </>
-  );
-
-  return (
-    <div className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left">
-      {rowBody}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// DetailField
-// ---------------------------------------------------------------------------
-
-function DetailField({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-        {label}
-      </div>
-      <div className="text-[13px] text-foreground/90">{value}</div>
     </div>
   );
 }
